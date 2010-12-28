@@ -1,4 +1,8 @@
 ﻿using System;
+using System.IO;
+using CNCMaps.VirtualFileSystem;
+using CNCMaps.FileFormats;
+using System.Text;
 
 namespace CNCMaps {
 	enum StartPositionMarking {
@@ -9,10 +13,10 @@ namespace CNCMaps {
 
 	enum EngineType {
 		AutoDetect,
-		ForceRedAlert2,
-		ForceYurisRevenge,
-		ForceTiberianSun,
-		ForceFireStorm
+		RedAlert2,
+		YurisRevenge,
+		TiberianSun,
+		FireStorm
 	}
 
 	struct RenderSettings {
@@ -64,13 +68,15 @@ namespace CNCMaps {
 	class Program {
 
 		public static void Main(string[] args) {
+			int start_tick = Environment.TickCount;
+			
 			RenderSettings rs = RenderSettings.CreateDefaults();
 			var options = new NDesk.Options.OptionSet() {
 				{ "i|infile=", "Input file", v => rs.InputFile = v },
 				{ "o|outfile=", "Output file, without extension", v => rs.OutputFile = v },
 				{ "d|outdir=", "Output directiory", v => rs.OutputDir = v },
-				{ "Y|force-yr", "Force using the Yuri's Revenge engine for rendering", v => rs.Engine = EngineType.ForceYurisRevenge },
-				{ "y|force-ra2", "Force using the Red Alert 2 engine for rendering", v => rs.Engine = EngineType.ForceRedAlert2 },
+				{ "Y|force-yr", "Force using the Yuri's Revenge engine for rendering", v => rs.Engine = EngineType.YurisRevenge },
+				{ "y|force-ra2", "Force using the Red Alert 2 engine for rendering", v => rs.Engine = EngineType.RedAlert2 },
 				{ "j", "Output JPEG file", v => rs.SaveJPEG = true },
 				{ "q|jpeg-quality=", "Set JPEG quality level (0-100)", (int v) => rs.JPEGCompression = v },
 				{ "p", "Output PNG file", v => rs.SavePNG = true },
@@ -116,6 +122,22 @@ namespace CNCMaps {
 			else if (rs.OutputDir != "" && !System.IO.Directory.Exists(rs.OutputDir)) {
 				Console.WriteLine("Error: specified output directory does not exist");
 			}
+
+			var vfs = VirtuaFileSystem.GetInstance();
+			Console.WriteLine("{0:0000} - Initializing virtual filesystem", Environment.TickCount - start_tick);
+			vfs.ScanMixDir(VirtuaFileSystem.RA2InstallDir, false);
+
+			MapFile map = new MapFile(File.Open(rs.InputFile, FileMode.Open, FileAccess.Read, FileShare.Read));
+			map.FileName = rs.InputFile;
+
+			map.LoadMap();
+			
+			if (rs.OutputFile == "") {
+				rs.OutputFile = map.DetermineMapName();
+			}
+
+
+
 		}
 	}
 }

@@ -6,7 +6,7 @@
     <ProductVersion>8.0.30703</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{BA2CD618-F414-4AD5-960F-2232221323F1}</ProjectGuid>
-    <OutputType>WinExe</OutputType>
+    <OutputType>Exe</OutputType>
     <AppDesignerFolder>.</AppDesignerFolder>
     <RootNamespace>CNCMaps</RootNamespace>
     <AssemblyName>CNCMaps</AssemblyName>
@@ -34,6 +34,9 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
+  <PropertyGroup>
+    <StartupObject />
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -47,25 +50,40 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Utility\MiniLZO.cs" />
-    <Compile Include="FileFormats\CSF.cs" />
-    <Compile Include="FileFormats\HVA.cs" />
-    <Compile Include="FileFormats\INI.cs" />
-    <Compile Include="FileFormats\PAL.cs" />
-    <Compile Include="FileFormats\SHP.cs" />
-    <Compile Include="FileFormats\TMP.cs" />
-    <Compile Include="FileFormats\VXL.cs" />
+    <Compile Include="Encodings\Blowfish.cs" />
+    <Compile Include="Encodings\BlowfishKeyProvider.cs" />
+    <Compile Include="Encodings\CRC32.cs" />
+    <Compile Include="Encodings\Format2.cs" />
+    <Compile Include="Encodings\Format40.cs" />
+    <Compile Include="Encodings\Format5.cs" />
+    <Compile Include="Encodings\Format80.cs" />
+    <Compile Include="Encodings\MiniLZO.cs" />
+    <Compile Include="FileFormats\CsfFile.cs" />
+    <Compile Include="FileFormats\HvaFile.cs" />
+    <Compile Include="FileFormats\IniFile.cs" />
+    <Compile Include="FileFormats\MapFile.cs" />
+    <Compile Include="FileFormats\MissionsFile.cs" />
+    <Compile Include="FileFormats\PalFile.cs" />
+    <Compile Include="FileFormats\PktFile.cs" />
+    <Compile Include="FileFormats\ShpFile.cs" />
+    <Compile Include="FileFormats\TmpFile.cs" />
+    <Compile Include="FileFormats\VxlFile.cs" />
+    <Compile Include="MapLogic\RA2Objects.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="MapLogic\ObjectCollection.cs" />
     <Compile Include="MapLogic\Theater.cs" />
     <Compile Include="MapLogic\TileCollection.cs" />
     <Compile Include="AssemblyInfo.cs" />
-    <Compile Include="FileFormats\MIX.cs" />
+    <Compile Include="FileFormats\MixFile.cs" />
+    <Compile Include="Utility\EzMarshal.cs" />
     <Compile Include="Utility\Options.cs" />
     <Compile Include="VirtualFileSystem\Archive.cs" />
+    <Compile Include="VirtualFileSystem\DirArchive.cs" />
+    <Compile Include="VirtualFileSystem\MemoryFile.cs" />
     <Compile Include="VirtualFileSystem\VirtualFile.cs" />
     <Compile Include="VirtualFileSystem\MixArchive.cs" />
-    <Compile Include="VirtualFileSystem\VFS.cs" />
+    <Compile Include="VirtualFileSystem\VirtuaFileSystem.cs" />
+    <Compile Include="VirtualFileSystem\VirtualTextFile.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="VirtualFileSystem\Mix Decryption\" />
