@@ -3,7 +3,9 @@ using System.Linq;
 
 namespace CNCMaps.Encodings {
 
+	/// <summary>Blowfish key provider.</summary>
 	class BlowfishKeyProvider {
+		/// <summary> The public key string </summary>
 		const string pubkeyStr = "AihRvNoIbTn85FZRYNZRcT+i6KpU+maCsEqr3Q5q+LDB5tH7Tz2qQ38V";
 
 		static sbyte[] char2num = {
@@ -24,11 +26,13 @@ namespace CNCMaps.Encodings {
     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1};
 
+		/// <summary>Public key.</summary>
 		class PublicKey {
 			public uint[] key1 = new uint[64];
 			public uint[] key2 = new uint[64];
 			public uint len;
 		}
+
 		PublicKey pubkey = new PublicKey();
 
 		uint[] glob1 = new uint[64];
@@ -130,7 +134,6 @@ namespace CNCMaps.Encodings {
 		}
 
 		int cmp_bignum(uint[] n1, uint[] n2, uint len) {
-
 			while (len > 0) {
 				--len;
 				if (n1[len] < n2[len]) return -1;
@@ -209,7 +212,6 @@ namespace CNCMaps.Encodings {
 				i2 = *ps2++;
 				*pd++ = (ushort)(i1 - i2 - carry);
 				if (((i1 - i2 - carry) & 0x10000) != 0) carry = 1; else carry = 0;
-
 			}
 			return carry;
 		}

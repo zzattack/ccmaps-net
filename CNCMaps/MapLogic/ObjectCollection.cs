@@ -1,15 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Generic;
+using System.Drawing;
+using System.Drawing.Imaging;
+using System.IO;
 using System.Text;
 using CNCMaps.FileFormats;
-using System.Drawing.Imaging;
 using CNCMaps.VirtualFileSystem;
-using System.IO;
-using System.Drawing;
 
 namespace CNCMaps.MapLogic {
-
 	public enum CollectionType {
 		Aircraft,
 		Building,
@@ -28,6 +25,7 @@ namespace CNCMaps.MapLogic {
 		public Point offset;
 		public bool hasShadow;
 		public int ySort;
+
 		public DrawProperties(Point offset, bool hasShadow, int ySort) {
 			this.offset = offset;
 			this.hasShadow = hasShadow;
@@ -36,7 +34,9 @@ namespace CNCMaps.MapLogic {
 	}
 
 	class DrawableObject {
+
 		public virtual void Draw(RA2Object obj, int x, int y, DrawingSurface s) { }
+
 		Palette palette;
 		ShpFile alphaImage = null;
 		Point globalOffset = new Point(0, 0);
@@ -108,7 +108,7 @@ namespace CNCMaps.MapLogic {
 			voxelProperties.Add(new DrawProperties(new Point(xOffset, yOffset), hasShadow, ySort));
 		}
 
-		internal void AddShp(ShpFile shpFile, int xOffset = 0, int yOffset = 0, bool hasShadow =false, int ySort = 0) {
+		internal void AddShp(ShpFile shpFile, int xOffset = 0, int yOffset = 0, bool hasShadow = false, int ySort = 0) {
 			shpSections.Add(shpFile);
 			shpProperties.Add(new DrawProperties(new Point(xOffset, yOffset), hasShadow, ySort));
 		}
@@ -123,7 +123,6 @@ namespace CNCMaps.MapLogic {
 			shpFireProperties.Add(new DrawProperties(new Point(xOffset, yOffset), false, 0));
 		}
 	}
-
 
 	class ObjectCollection {
 		private CollectionType collectionType;
@@ -154,7 +153,7 @@ namespace CNCMaps.MapLogic {
 		private void LoadObject(string objName) {
 			IniFile.IniSection rulesSection = rules.GetSection(objName);
 			var drawableObject = new DrawableObject();
-				this.objects.Add(drawableObject);
+			this.objects.Add(drawableObject);
 
 			if (rulesSection == null || rulesSection.ReadBool("IsRubble"))
 				return;
@@ -183,7 +182,6 @@ namespace CNCMaps.MapLogic {
 			}
 			else imageFileName += TheaterDefaults.GetExtension(theaterType, collectionType);
 
-			
 			// See if a theater-specific image is used
 			bool NewTheater = artSection.ReadBool("NewTheater");
 			if (NewTheater) {
@@ -214,7 +212,7 @@ namespace CNCMaps.MapLogic {
 				drawableObject.SetPalette(palettes.libPalette);
 				paletteChosen = true;
 			}
-			
+
 			if (rulesSection.ReadString("AlphaImage") != "") {
 				string alphaImageFile = rulesSection.ReadString("AlphaImage") + ".shp";
 				if (VFS.Exists(alphaImageFile)) {
@@ -227,7 +225,7 @@ namespace CNCMaps.MapLogic {
 				Palette p = palettes.GetPalette(TheaterDefaults.GetPaletteType(collectionType));
 				drawableObject.SetPalette(p);
 			}
-			
+
 			bool shadow = TheaterDefaults.GetShadowAssumption(collectionType);
 			if (rulesSection.ReadString("Shadow") != "")
 				drawableObject.SetShadow(rulesSection.ReadBool("Shadow"));
@@ -275,7 +273,6 @@ namespace CNCMaps.MapLogic {
 				drawableObject.AddDamagedShp(VFS.Open(imageFileName) as ShpFile, 0, 0, shadow, 0);
 
 				foreach (string extraImage in ExtraBuildingImages) {
-
 					string extraImageDamaged = extraImage + "Damaged";
 					string extraImageSectionName = artSection.ReadString(extraImage);
 					string extraImageDamagedSectionName = artSection.ReadString(extraImageDamaged, extraImageSectionName);
@@ -286,7 +283,7 @@ namespace CNCMaps.MapLogic {
 						int ySort = 0;
 						bool extraShadow = false;
 						string extraImageFileName = extraImageSectionName;
-						
+
 						if (extraArtSection != null) {
 							ySort = extraArtSection.ReadInt("YSort", artSection.ReadInt(extraImage + "YSort"));
 							extraShadow = extraArtSection.ReadBool("Shadow", false); // additional building need shadows listed explicitly
@@ -302,7 +299,7 @@ namespace CNCMaps.MapLogic {
 
 						AddImageToObject(drawableObject, extraImageFileName, 0, 0, extraShadow, ySort);
 					}
-					
+
 					if (extraImageDamagedSectionName != "") {
 						IniFile.IniSection extraArtDamagedSection = art.GetSection(extraImageDamagedSectionName);
 
@@ -345,7 +342,6 @@ namespace CNCMaps.MapLogic {
 					int y = int.Parse(df2.Substring(df2.IndexOf(',') + 1));
 					drawableObject.AddFire(VFS.Open("fire03.shp") as ShpFile, x, y);
 				}
-
 			}
 
 			else if (collectionType == CollectionType.Vehicle) {
@@ -363,7 +359,6 @@ namespace CNCMaps.MapLogic {
 					rulesSection.ReadInt("TurretAnimX"),
 					rulesSection.ReadInt("TurretAnimY"));
 			}
-
 		}
 
 		private void AddImageToObject(DrawableObject drawableObject, string fileName, int xOffset = 0, int yOffset = 0, bool hasShadow = false, int ySort = 0) {
@@ -395,6 +390,5 @@ namespace CNCMaps.MapLogic {
 			}
 			imageFileName = sb.ToString();
 		}
-
 	}
 }

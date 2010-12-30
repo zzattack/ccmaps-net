@@ -1,13 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using CNCMaps.VirtualFileSystem;
-using System.Runtime.InteropServices;
-
-namespace CNCMaps.Encodings {
+﻿namespace CNCMaps.Encodings {
 
 	class Format5 {
+
 		public unsafe static uint DecodeInto(byte[] src, byte[] dest, int format = 5) {
 			fixed (byte* pr = src, pw = dest) {
 				byte* r = pr, w = pw;
@@ -21,7 +15,7 @@ namespace CNCMaps.Encodings {
 
 					if (size_in == 0 || size_out == 0)
 						break;
-					
+
 					if (format == 80)
 						Format80.DecodeInto(r, w);
 					else
@@ -32,8 +26,5 @@ namespace CNCMaps.Encodings {
 				return (uint)(w - pw);
 			}
 		}
-			 
-
-
 	}
 }

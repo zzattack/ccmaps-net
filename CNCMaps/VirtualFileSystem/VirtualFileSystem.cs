@@ -1,17 +1,17 @@
-﻿using Microsoft.Win32;
-using System.IO;
+﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
-using System;
 using CNCMaps.FileFormats;
-using CNCMaps.FileFormats;
+using Microsoft.Win32;
 
 namespace CNCMaps.VirtualFileSystem {
-	
-	class VFS {
 
+	class VFS {
 		private static VFS instance = new VFS();
+
 		public VFS() { }
+
 		public static VFS GetInstance() {
 			return instance;
 		}
@@ -19,12 +19,15 @@ namespace CNCMaps.VirtualFileSystem {
 		public static VirtualFile Open(string filename) {
 			return instance.OpenFile(filename);
 		}
+
 		public static VirtualFile Open(string filename, FileFormat format = FileFormat.None) {
 			return instance.OpenFile(filename, format);
 		}
+
 		public static bool Add(string filename) {
 			return instance.AddFile(filename);
 		}
+
 		public static bool Exists(string imageFileName) {
 			return instance.FileExists(imageFileName);
 		}
@@ -34,10 +37,12 @@ namespace CNCMaps.VirtualFileSystem {
 		bool FileExists(string filename) {
 			return AllArchives.Any(v => v.ContainsFile(filename));
 		}
+
 		public VirtualFile OpenFile(string filename) {
 			var format = FormatHelper.GuessFormat(filename);
 			return OpenFile(filename, format);
 		}
+
 		public VirtualFile OpenFile(string filename, FileFormat format = FileFormat.None) {
 			var archive = AllArchives.FirstOrDefault(v => v.ContainsFile(filename));
 			if (archive == null)
@@ -45,6 +50,7 @@ namespace CNCMaps.VirtualFileSystem {
 
 			return archive.OpenFile(filename, format);
 		}
+
 		public bool AddFile(string path) {
 			// directory
 			if (Directory.Exists(path)) {
@@ -70,11 +76,12 @@ namespace CNCMaps.VirtualFileSystem {
 			}
 			return false;
 		}
+
 		public bool AddMix(MixFile mix) {
 			AllArchives.Add(mix);
 			return true;
 		}
-		
+
 		public void ScanMixDir(string mixDir, bool YR) {
 			// see http://modenc.renegadeprojects.com/MIX for more info
 			Console.WriteLine("Initializing filesystem on {0}, {1} Yuri's Revenge support", mixDir, YR ? "with" : "without");
@@ -107,15 +114,15 @@ namespace CNCMaps.VirtualFileSystem {
 			AddFile("local.mix");
 
 			if (YR) AddFile("audiomd.mix");
-			
+
 			foreach (string file in Directory.GetFiles(mixDir, "ecache*.mix")) {
 				AddFile(Path.Combine(mixDir, file));
 			}
-			
+
 			foreach (string file in Directory.GetFiles(mixDir, "elocal*.mix")) {
 				AddFile(Path.Combine(mixDir, file));
 			}
-						
+
 			foreach (string file in Directory.GetFiles(mixDir, "*.mmx")) {
 				AddFile(Path.Combine(mixDir, file));
 			}
@@ -140,7 +147,6 @@ namespace CNCMaps.VirtualFileSystem {
 			}
 		}
 
-
 		public static string RA2InstallPath {
 			get {
 				return ReadRegistryString(Registry.LocalMachine, "SOFTWARE\\Westwood\\Red Alert 2", "InstallPath");
@@ -161,8 +167,5 @@ namespace CNCMaps.VirtualFileSystem {
 			catch { }
 			return ret;
 		}
-
-
-
 	}
 }

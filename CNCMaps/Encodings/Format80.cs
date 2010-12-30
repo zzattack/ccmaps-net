@@ -5,6 +5,7 @@ using CNCMaps.VirtualFileSystem;
 namespace CNCMaps.Encodings {
 
 	public static class Format80 {
+
 		static void ReplicatePrevious(byte[] dest, int destIndex, int srcIndex, int count) {
 			if (srcIndex > destIndex)
 				throw new NotImplementedException(string.Format("srcIndex > destIndex  {0}  {1}", srcIndex, destIndex));
@@ -77,7 +78,6 @@ namespace CNCMaps.Encodings {
 				}
 			}
 		}
-
 
 		public unsafe static uint DecodeInto(byte* src, byte* dest) {
 			byte* pdest = dest;

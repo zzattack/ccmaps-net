@@ -1,8 +1,7 @@
 ﻿using System;
 using System.IO;
-using CNCMaps.VirtualFileSystem;
 using CNCMaps.FileFormats;
-using System.Text;
+using CNCMaps.VirtualFileSystem;
 
 namespace CNCMaps {
 	enum StartPositionMarking {
@@ -69,7 +68,7 @@ namespace CNCMaps {
 
 		public static void Main(string[] args) {
 			int start_tick = Environment.TickCount;
-			
+
 			RenderSettings rs = RenderSettings.CreateDefaults();
 			var options = new NDesk.Options.OptionSet() {
 				{ "i|infile=", "Input file", v => rs.InputFile = v },
@@ -131,11 +130,9 @@ namespace CNCMaps {
 			map.FileName = rs.InputFile;
 
 			map.LoadMap(rs.Engine);
-			
+
 			if (rs.OutputFile == "")
 				rs.OutputFile = map.DetermineMapName();
-			
-
 		}
 	}
 }

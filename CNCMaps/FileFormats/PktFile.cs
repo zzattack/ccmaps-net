@@ -1,21 +1,21 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using CNCMaps.VirtualFileSystem;
 using System.IO;
+using System.Linq;
+using CNCMaps.VirtualFileSystem;
 
 namespace CNCMaps.FileFormats {
+
 	class PktFile : IniFile {
 
 		public Dictionary<string, PktMapEntry> MapEntries { get; set; }
 
 		public PktFile(VirtualFile f, bool isBuffered = true) : this(f, 0, f.Length, isBuffered) { }
+
 		public PktFile(Stream baseStream, int offset, long length, bool isBuffered = true)
 			: base(baseStream, offset, length, isBuffered) {
-				Parse();
+			Parse();
 		}
-
 
 		private void Parse() {
 			MapEntries = new Dictionary<string, PktMapEntry>();
@@ -26,6 +26,7 @@ namespace CNCMaps.FileFormats {
 					MapEntries.Add(v.Value.ToLower(), new PktMapEntry(mapsection));
 			}
 		}
+
 		public PktMapEntry GetMapEntry(string mapname) {
 			// skip extension
 			if (mapname.Contains('.'))
@@ -49,10 +50,15 @@ namespace CNCMaps.FileFormats {
 		}
 
 		public class PktMapEntry {
+
 			public string Description { get; private set; }
+
 			public int MinPlayers { get; private set; }
+
 			public int MaxPlayer { get; private set; }
+
 			public GameMode GameModes { get; private set; }
+
 			public PktMapEntry(IniSection sect) {
 				this.Description = sect.ReadString("Description");
 				MinPlayers = sect.ReadInt("MinPlayers");

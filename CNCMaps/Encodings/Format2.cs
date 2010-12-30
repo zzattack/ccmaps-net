@@ -1,6 +1,8 @@
 ﻿using System.IO;
 using CNCMaps.VirtualFileSystem;
+
 namespace CNCMaps.Encodings {
+
 	public static class Format2 {
 
 		public static uint DecodeInto(byte[] src, byte[] dest) {
@@ -34,7 +36,5 @@ namespace CNCMaps.Encodings {
 			}
 			return idx;
 		}
-
-
 	}
 }

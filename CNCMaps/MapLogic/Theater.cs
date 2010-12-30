@@ -1,9 +1,9 @@
-﻿using CNCMaps.FileFormats;
+﻿using System;
 using System.Drawing;
+using CNCMaps.FileFormats;
 using CNCMaps.VirtualFileSystem;
-using System;
-namespace CNCMaps.MapLogic {
 
+namespace CNCMaps.MapLogic {
 	public enum TheaterType {
 		Temperate, TemperateYR,
 		Urban, UrbanYR,
@@ -65,6 +65,7 @@ namespace CNCMaps.MapLogic {
 			this.rules = rules;
 			this.art = art;
 		}
+
 		public Theater(TheaterType theaterType, EngineType engine) {
 			this.theaterType = theaterType;
 			this.engine = engine;
@@ -169,9 +170,11 @@ namespace CNCMaps.MapLogic {
 
 		void DrawObject(RA2Object obj, Bitmap bm) {
 			if (obj is SmudgeObject) {
-
 			}
 		}
 
+		internal TileCollection GetTileCollection() {
+			return tileTypes;
+		}
 	}
 }

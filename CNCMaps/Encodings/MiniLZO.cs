@@ -1,9 +1,10 @@
 #region Copyright notice
+
 /**
  * ManagedLZO.MiniLZO
- * 
+ *
  * Minimalistic reimplementation of minilzo in C#
- * 
+ *
  * @author Shane Eric Bryldt, Copyright (C) 2006, All Rights Reserved
  * @note Uses unsafe/fixed pointer contexts internally
  * @liscence Bound by same liscence as minilzo as below, see file COPYING
@@ -49,15 +50,14 @@
  *   the full LZO package can be found at
  *   http://www.oberhumer.com/opensource/lzo/
  */
+
 #endregion
 
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
-using System.Text;
 
 namespace ManagedLZO {
+
 	public static class MiniLZO {
 		private const uint M2_MAX_LEN = 8;
 		private const uint M3_MAX_LEN = 33;
@@ -447,7 +447,6 @@ namespace ManagedLZO {
 							for (int x = 0; x < 4; ++x, ++op, ++pos)
 								*op = *pos;
 							t -= 4;
-
 						} while (t >= 4);
 						if (t > 0) {
 							do {
@@ -505,18 +504,23 @@ namespace ManagedLZO {
 		private unsafe static uint D_INDEX1(byte* input) {
 			return D_MS(D_MUL(0x21, D_X3(input, 5, 5, 6)) >> 5, 0);
 		}
+
 		private static uint D_INDEX2(uint idx) {
 			return (idx & (D_MASK & 0x7FF)) ^ (((D_MASK >> 1) + 1) | 0x1F);
 		}
+
 		private static uint D_MS(uint v, byte s) {
 			return (v & (D_MASK >> s)) << s;
 		}
+
 		private static uint D_MUL(uint a, uint b) {
 			return a * b;
 		}
+
 		private unsafe static uint D_X2(byte* input, byte s1, byte s2) {
 			return (uint)((((input[2] << s2) ^ input[1]) << s1) ^ input[0]);
 		}
+
 		private unsafe static uint D_X3(byte* input, byte s1, byte s2, byte s3) {
 			return (D_X2(input + 1, s2, s3) << s1) ^ input[0];
 		}

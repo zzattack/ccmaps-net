@@ -1,11 +1,12 @@
-﻿using CNCMaps.VirtualFileSystem;
-using System.IO;
+﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
-using System;
+using CNCMaps.VirtualFileSystem;
 
 namespace CNCMaps.FileFormats {
+
 	class IniFile : VirtualTextFile {
 
 		public List<IniSection> Sections { get; set; }
@@ -80,9 +81,11 @@ namespace CNCMaps.FileFormats {
 		}
 
 		public class IniSection {
+
 			public string Name { get; set; }
 
-			public Dictionary<string, string> SortedEntries  { get; set; }
+			public Dictionary<string, string> SortedEntries { get; set; }
+
 			public List<KeyValuePair<string, string>> OrderedEntries { get; set; }
 
 			public IniSection(string name) {
@@ -96,7 +99,7 @@ namespace CNCMaps.FileFormats {
 				sb.Append('[');
 				sb.Append(Name);
 				sb.AppendLine("]");
-				foreach (var v in OrderedEntries){
+				foreach (var v in OrderedEntries) {
 					sb.Append(v.Key);
 					sb.Append('=');
 					sb.AppendLine(v.Value);
@@ -213,6 +216,4 @@ namespace CNCMaps.FileFormats {
 			}
 		}
 	}
-
-
 }

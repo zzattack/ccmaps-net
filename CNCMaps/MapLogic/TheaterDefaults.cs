@@ -1,10 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using CNCMaps.MapLogic;
 
 namespace CNCMaps.FileFormats {
+
 	public static class TheaterDefaults {
 
 		public static char GetTheaterPrefix(TheaterType T) {

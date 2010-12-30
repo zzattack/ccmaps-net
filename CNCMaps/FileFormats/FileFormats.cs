@@ -1,30 +1,50 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.IO;
 using System.Linq;
-using System.Text;
-using System.IO;
-using CNCMaps.VirtualFileSystem;
 using CNCMaps.FileFormats;
+using CNCMaps.VirtualFileSystem;
 
 namespace CNCMaps {
+	/// <summary>Values that represent FileFormat.</summary>
 	public enum FileFormat {
-		Csf, Hva,
-		Ini, Map,
-		Missions, Mix,
-		Pal, Pkt,
-		Shp, Tmp,
-		Vxl, Ukn,
+		/// <summary>Strings file.</summary>
+		Csf,
+		/// <summary>Voxel transformation file.</summary>
+		Hva,
+		/// <summary>Ini file.</summary>
+		Ini,
+		/// <summary>Map file.</summary>
+		Map,
+		/// <summary>Missions file.</summary>
+		Missions,
+		/// <summary>Mix file container.</summary>
+		Mix,
+		/// <summary>Palette file.</summary>
+		Pal,
+		/// <summary>Pkt file, for listing maps.</summary>
+		Pkt,
+		/// <summary>SHP file, for buildings and infantry.</summary>
+		Shp,
+		/// <summary>Tile file used for the map's terrain.</summary>
+		Tmp,
+		/// <summary>Voxel file used for 3d units.</summary>
+		Vxl,
+		/// <summary>Unknown file type.</summary>
+		Ukn,
+		/// <summary>No specific type.</summary>
 		None
 	}
 
+	/// <summary>Format helper functions.</summary>
 	public static partial class FormatHelper {
+
 		static FormatHelper() {
 			MixArchiveExtensions = new string[] { ".mix", ".yro", ".mmx" };
 			MapExtensions = new string[] { ".map", ".yrm", ".mpr" };
 		}
+
 		public static readonly string[] MixArchiveExtensions;
 		public static readonly string[] MapExtensions;
-		
+
 		public static FileFormat GuessFormat(string filename) {
 			string extension = Path.GetExtension(filename).ToLower();
 			if (extension == ".csf") return FileFormat.Csf;
@@ -58,37 +78,37 @@ namespace CNCMaps {
 			VirtualFile ret;
 			switch (format) {
 				case FileFormat.Csf:
-					ret =  new CsfFile(baseStream, offset, length, true);
+					ret = new CsfFile(baseStream, offset, length, true);
 					break;
 				case FileFormat.Hva:
-					ret =  new HvaFile(baseStream, offset, length, true);
+					ret = new HvaFile(baseStream, offset, length, true);
 					break;
 				case FileFormat.Ini:
-					ret =  new IniFile(baseStream, offset, length, true);
+					ret = new IniFile(baseStream, offset, length, true);
 					break;
 				case FileFormat.Map:
-					ret =  new MapFile(baseStream, offset, length, true);
+					ret = new MapFile(baseStream, offset, length, true);
 					break;
 				case FileFormat.Missions:
-					ret =  new MissionsFile(baseStream, offset, length, true);
+					ret = new MissionsFile(baseStream, offset, length, true);
 					break;
 				case FileFormat.Mix:
-					ret =  new MixFile(baseStream, offset, length, true);
+					ret = new MixFile(baseStream, offset, length, true);
 					break;
 				case FileFormat.Pal:
-					ret =  new PalFile(baseStream, offset, length, true);
+					ret = new PalFile(baseStream, offset, length, true);
 					break;
 				case FileFormat.Pkt:
-					ret =  new PktFile(baseStream, offset, length, true);
+					ret = new PktFile(baseStream, offset, length, true);
 					break;
 				case FileFormat.Shp:
-					ret =  new ShpFile(baseStream, offset, length, true);
+					ret = new ShpFile(baseStream, offset, length, true);
 					break;
 				case FileFormat.Tmp:
-					ret =  new TmpFile(baseStream, offset, length, true);
+					ret = new TmpFile(baseStream, offset, length, true);
 					break;
 				case FileFormat.Vxl:
-					ret =  new VxlFile(baseStream, offset, length, true);
+					ret = new VxlFile(baseStream, offset, length, true);
 					break;
 				case FileFormat.Ukn:
 				default:

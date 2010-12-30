@@ -1,23 +1,19 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using CNCMaps.VirtualFileSystem;
+﻿using System.Collections.Generic;
 using System.IO;
 
 namespace CNCMaps.FileFormats {
+
 	class MissionsFile : IniFile {
 
 		public Dictionary<string, MissionEntry> MissionEntries { get; set; }
 
-		public MissionsFile(Stream baseStream, bool isBuffered = true) 
+		public MissionsFile(Stream baseStream, bool isBuffered = true)
 			: this(baseStream, 0, baseStream.Length, isBuffered) { }
-		
+
 		public MissionsFile(Stream baseStream, int offset, long length, bool isBuffered = true)
 			: base(baseStream, offset, length, isBuffered) {
 			Parse();
 		}
-
 
 		private void Parse() {
 			MissionEntries = new Dictionary<string, MissionEntry>();
@@ -34,15 +30,25 @@ namespace CNCMaps.FileFormats {
 		}
 
 		public class MissionEntry {
+
 			public string Briefing { get; set; }
+
 			public string UIName { get; set; }
+
 			public string LSLoadMessage { get; set; }
+
 			public string LSLoadBriefing { get; set; }
+
 			public int LS640BriefLocX { get; set; }
+
 			public int LS640BriefLocY { get; set; }
+
 			public int LS800BriefLocX { get; set; }
+
 			public int LS800BriefLocY { get; set; }
+
 			public string LS640BkgdName { get; set; }
+
 			public string LS800BkgdName { get; set; }
 
 			public MissionEntry(IniSection iniSection) {

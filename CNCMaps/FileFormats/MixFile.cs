@@ -10,17 +10,17 @@ using CNCMaps.VirtualFileSystem;
 namespace CNCMaps.FileFormats {
 
 	class MixFile : VirtualFile, IArchive {
-
 		Dictionary<uint, MixEntry> index;
 		bool isRmix, isEncrypted;
 		long dataStart;
 
 		public MixFile(Stream baseStream, bool isBuffered = false) : this(baseStream, 0, baseStream.Length, isBuffered) { }
+
 		public MixFile(Stream baseStream, int baseOffset, long fileSize, bool isBuffered = false)
 			: base(baseStream, baseOffset, fileSize, isBuffered) {
 			ParseHeader();
 		}
-				
+
 		public bool ContainsFile(string filename) {
 			return index.ContainsKey(MixEntry.HashFilename(filename));
 		}
@@ -110,12 +110,11 @@ namespace CNCMaps.FileFormats {
 			dataStart = s.Position;
 			return items;
 		}
-		
+
 		class MixEntry {
 			public readonly uint Hash;
 			public readonly uint Offset;
 			public readonly uint Length;
-
 
 			public MixEntry(uint hash, uint offset, uint length) {
 				Hash = hash;
@@ -166,13 +165,13 @@ namespace CNCMaps.FileFormats {
 			if (!index.TryGetValue(MixEntry.HashFilename(filename), out e))
 				return null;
 			else
-				return FormatHelper.OpenAsFormat(BaseStream, filename, (int)(baseOffset + dataStart + e.Offset), (int)e.Length, f);		
+				return FormatHelper.OpenAsFormat(baseStream, filename, (int)(baseOffset + dataStart + e.Offset), (int)e.Length, f);
 		}
 
 		public IEnumerable<uint> AllFileHashes() {
 			return index.Keys;
 		}
-		
+
 		[Flags]
 		enum MixFileFlags : uint {
 			Checksum = 0x10000,

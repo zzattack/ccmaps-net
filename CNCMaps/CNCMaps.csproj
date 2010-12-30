@@ -63,7 +63,7 @@
     <Compile Include="FileFormats\FileFormats.cs" />
     <Compile Include="FileFormats\HvaFile.cs" />
     <Compile Include="FileFormats\IniFile.cs" />
-    <Compile Include="FileFormats\MapFile.cs" />
+    <Compile Include="MapLogic\MapFile.cs" />
     <Compile Include="FileFormats\MissionsFile.cs" />
     <Compile Include="FileFormats\PalFile.cs" />
     <Compile Include="FileFormats\PktFile.cs" />

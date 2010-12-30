@@ -1,15 +1,17 @@
-﻿using CNCMaps.VirtualFileSystem;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
-using System;
-using System.Text;
 using System.Linq;
 using System.Runtime.InteropServices;
-using System.Collections.Generic;
+using System.Text;
+using CNCMaps.VirtualFileSystem;
 
 namespace CNCMaps.FileFormats {
 
 	class CsfFile : VirtualFile {
+
 		public CsfFile(Stream baseStream, bool isBuffered = true) : this(baseStream, 0, baseStream.Length, isBuffered) { }
+
 		public CsfFile(Stream baseStream, int baseOffset, long fileSize, bool isBuffered = true)
 			: base(baseStream, baseOffset, fileSize, isBuffered) {
 			Parse();
@@ -28,8 +30,11 @@ namespace CNCMaps.FileFormats {
 		}
 
 		class CsfEntry {
+
 			public string Value { get; set; }
+
 			public string ExtraValue { get; set; }
+
 			public CsfEntry(string value, string extraValue) {
 				this.Value = value;
 				this.ExtraValue = extraValue;
@@ -87,9 +92,9 @@ namespace CNCMaps.FileFormats {
 		string ReadString() {
 			return Encoding.ASCII.GetString(Read(ReadInt32()));
 		}
+
 		string ReadWstring() {
 			return ConvertToString(Encoding.Unicode.GetString(Read(ReadInt32() * 2)));
 		}
-
 	}
 }

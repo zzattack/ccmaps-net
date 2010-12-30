@@ -4,33 +4,32 @@ using System;
 using System.Drawing;
 
 namespace CNCMaps.Utility {
+
 	// My HSV considers Hue Sat and Val as values from 0 - 255.
 	public class HsvColor {
-		private int hue;
-		private int sat;
-		private int val;
+
 		public HsvColor(int h, int s, int v) {
-			hue = h; sat = s; val = v;
+			Hue = h; Saturation = s; Value = v;
 		}
+
 		public HsvColor(Color color) {
-			hue = 0; sat = 0; val = 0; FromRGB(color);
+			Hue = 0;
+			Saturation = 0;
+			Value = 0;
+			FromRGB(color);
 		}
-		public int Hue {
-			get { return hue; }
-			set { hue = value; }
-		}
-		public int Saturation {
-			get { return sat; }
-			set { sat = value; }
-		}
-		public int Value {
-			get { return val; }
-			set { val = value; }
-		}
+
+		public int Hue { get; set; }
+
+		public int Saturation { get; set; }
+
+		public int Value { get; set; }
+
 		public Color Color {
 			get { return ToRGB(); }
 			set { FromRGB(value); }
 		}
+
 		private void FromRGB(Color color) {
 			double min; double max; double delta;
 			double r = (double)color.R / 255D;
@@ -66,6 +65,7 @@ namespace CNCMaps.Utility {
 			Saturation = (int)(s * 255D);
 			Value = (int)(v * 255D);
 		}
+
 		public Color ToRGB() {
 			double h;
 			double s;
@@ -74,9 +74,9 @@ namespace CNCMaps.Utility {
 			double g = 0;
 			double b = 0;
 
-			h = ((double)Hue / 255D * 360D) % 360D;
-			s = (double)Saturation / 255D;
-			v = (double)Value / 255D;
+			h = ((double)Hue / 255.0 * 360.0) % 360.0;
+			s = (double)Saturation / 255.0;
+			v = (double)Value / 255.0;
 
 			if (s == 0) {
 				r = v;
@@ -92,7 +92,7 @@ namespace CNCMaps.Utility {
 				int sectorNumber;
 				double sectorPos;
 
-				sectorPos = h / 60D;
+				sectorPos = h / 60.0;
 				sectorNumber = (int)(Math.Floor(sectorPos));
 
 				fractionalSector = sectorPos - sectorNumber;
@@ -110,13 +110,7 @@ namespace CNCMaps.Utility {
 					case 5: r = v; g = p; b = q; break;
 				}
 			}
-			return Color.FromArgb((int)(r * 255D), (int)(g * 255D), (int)(b * 255D));
-		}
-		public static bool operator !=(HsvColor left, HsvColor right) {
-			return !(left == right);
-		}
-		public static bool operator ==(HsvColor left, HsvColor right) {
-			return (left.Hue == right.Hue && left.Value == right.Value && left.Saturation == right.Saturation);
+			return Color.FromArgb((int)(r * 255.0), (int)(g * 255.0), (int)(b * 255.0));
 		}
 	}
 }

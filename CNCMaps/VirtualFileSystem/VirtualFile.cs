@@ -1,16 +1,19 @@
-﻿using System.IO;
-using System;
+﻿using System;
+using System.IO;
 
 namespace CNCMaps.VirtualFileSystem {
+
 	/// <summary>
 	/// Virtual file class
 	/// </summary>
 	public class VirtualFile : Stream {
-		protected Stream BaseStream;
+		protected Stream baseStream;
 		protected int baseOffset;
 		protected long size;
 		protected long pos = 0;
+
 		virtual public string FileName { get; set; }
+
 		byte[] buff;
 		bool isBuffered;
 		bool IsBufferInitialized = false;
@@ -18,12 +21,12 @@ namespace CNCMaps.VirtualFileSystem {
 		public VirtualFile(Stream BaseStream, int baseOffset, long fileSize, bool isBuffered = false) {
 			this.size = fileSize;
 			this.baseOffset = baseOffset;
-			this.BaseStream = BaseStream;
+			this.baseStream = BaseStream;
 			this.isBuffered = isBuffered;
 		}
 
 		public VirtualFile(Stream BaseStream, bool isBuffered = false) {
-			this.BaseStream = BaseStream;
+			this.baseStream = BaseStream;
 			this.baseOffset = 0;
 			this.size = BaseStream.Length;
 			this.isBuffered = isBuffered;
@@ -49,24 +52,23 @@ namespace CNCMaps.VirtualFileSystem {
 			if (isBuffered) {
 				if (!IsBufferInitialized)
 					InitBuffer();
-				
+
 				Array.Copy(this.buff, pos, buffer, offset, count);
 			}
 			else {
 				// ensure
-				BaseStream.Position = baseOffset + pos;
-				BaseStream.Read(buffer, offset, count);
+				baseStream.Position = baseOffset + pos;
+				baseStream.Read(buffer, offset, count);
 			}
 			pos += count;
 			return count;
 		}
 
 		private void InitBuffer() {
-
 			// ensure
-			BaseStream.Position = baseOffset + pos;
+			baseStream.Position = baseOffset + pos;
 			this.buff = new byte[this.size];
-			BaseStream.Read(this.buff, 0, (int)this.size);
+			baseStream.Read(this.buff, 0, (int)this.size);
 			IsBufferInitialized = true;
 		}
 
@@ -79,27 +81,34 @@ namespace CNCMaps.VirtualFileSystem {
 		public new byte ReadByte() {
 			return ReadUInt8();
 		}
+
 		public byte ReadUInt8() {
 			return Read(1)[0];
 		}
+
 		public int ReadInt32() {
 			return BitConverter.ToInt32(Read(sizeof(Int32)), 0);
 		}
+
 		public uint ReadUInt32() {
 			return BitConverter.ToUInt32(Read(sizeof(UInt32)), 0);
 		}
+
 		public short ReadInt16() {
 			return BitConverter.ToInt16(Read(sizeof(Int16)), 0);
 		}
+
 		public ushort ReadUInt16() {
 			return BitConverter.ToUInt16(Read(sizeof(UInt16)), 0);
 		}
+
 		public float ReadFloat() {
 			return BitConverter.ToSingle(Read(sizeof(Single)), 0);
 		}
+
 		public double ReadDouble() {
 			return BitConverter.ToDouble(Read(sizeof(Double)), 0);
-		}		
+		}
 
 		public override void Write(byte[] buffer, int offset, int count) {
 			throw new NotSupportedException();
@@ -116,7 +125,7 @@ namespace CNCMaps.VirtualFileSystem {
 			set {
 				pos = value;
 				if (!isBuffered)
-					BaseStream.Seek(pos + baseOffset, SeekOrigin.Begin);
+					baseStream.Seek(pos + baseOffset, SeekOrigin.Begin);
 			}
 		}
 
@@ -138,6 +147,5 @@ namespace CNCMaps.VirtualFileSystem {
 			}
 			return Position;
 		}
-
 	}
 }

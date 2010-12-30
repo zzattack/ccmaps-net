@@ -1,5 +1,7 @@
 namespace CNCMaps.Encodings.FileFormats {
+
 	class Blowfish {
+
 		public Blowfish(byte[] key) {
 			for (int i = 0, j = 0; i < 18; ++i) {
 				uint a = key[j++ % key.Length];
@@ -27,6 +29,7 @@ namespace CNCMaps.Encodings.FileFormats {
 		}
 
 		public uint[] Encrypt(uint[] data) { return RunCipher(data, Encrypt); }
+
 		public uint[] Decrypt(uint[] data) { return RunCipher(data, Decrypt); }
 
 		delegate void CipherFunc(ref uint a, ref uint b);
@@ -374,7 +377,6 @@ namespace CNCMaps.Encodings.FileFormats {
 				0x90d4f869, 0xa65cdea0, 0x3f09252d, 0xc208e69f,
 				0xb74e6132, 0xce77e25b, 0x578fdfe3, 0x3ac372e6
 			}
-
 		};
 	}
 }

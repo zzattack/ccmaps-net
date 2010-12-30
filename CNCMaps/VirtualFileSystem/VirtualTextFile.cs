@@ -1,14 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.IO;
+﻿using System.IO;
 
 namespace CNCMaps.VirtualFileSystem {
+
 	class VirtualTextFile : VirtualFile {
 		StreamReader sr;
 
-		public VirtualTextFile(Stream File) : base(File, true) {
+		public VirtualTextFile(Stream File)
+			: base(File, true) {
 			Position = 0;
 			sr = new StreamReader(this);
 		}
@@ -24,6 +22,7 @@ namespace CNCMaps.VirtualFileSystem {
 				return pos < size || !sr.EndOfStream;
 			}
 		}
+
 		public string ReadLine() {
 			return sr.ReadLine();
 		}
@@ -39,6 +38,5 @@ namespace CNCMaps.VirtualFileSystem {
 		public int ReadBlock(char[] buffer, int index, int count) {
 			return sr.ReadBlock(buffer, index, count);
 		}
-
 	}
 }

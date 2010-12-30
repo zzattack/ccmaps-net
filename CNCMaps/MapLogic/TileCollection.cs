@@ -1,7 +1,8 @@
-﻿using CNCMaps.FileFormats;
+﻿using System;
 using System.Collections.Generic;
+using CNCMaps.FileFormats;
 using CNCMaps.VirtualFileSystem;
-using System;
+
 namespace CNCMaps.MapLogic {
 
 	class TileCollection {
@@ -14,9 +15,13 @@ namespace CNCMaps.MapLogic {
 		List<RandomizedTileSet> TileSets = new List<RandomizedTileSet>();
 
 		class TileSet {
+
 			public string FileName { get; private set; }
+
 			public string SetName { get; private set; }
+
 			public int TilesInSet { get; private set; }
+
 			public TileSet(string fileName, string setName, int tilesInSet) {
 				this.FileName = fileName;
 				this.SetName = setName;
@@ -66,6 +71,7 @@ namespace CNCMaps.MapLogic {
 			this.theaterIni = VFS.Open(TheaterDefaults.GetTheaterIni(theaterType)) as IniFile;
 
 			#region Set numbers
+
 			IniFile.IniSection General = theaterIni.GetSection("General");
 			ACliffMMPieces = General.ReadInt("ACliffMMPieces", -1);
 			ACliffPieces = General.ReadInt("ACliffPieces", -1);
@@ -132,6 +138,7 @@ namespace CNCMaps.MapLogic {
 			WaterfallSouth = General.ReadInt("WaterfallSouth", -1);
 			WaterfallWest = General.ReadInt("WaterfallWest", -1);
 			WoodBridgeSet = General.ReadInt("WoodBridgeSet", -1);
+
 			#endregion
 
 			int i = 0;
@@ -176,7 +183,7 @@ namespace CNCMaps.MapLogic {
 			}
 		}
 
-		bool ConnectTiles(int tileNum1, int tileNum2) {
+		public bool ConnectTiles(int tileNum1, int tileNum2) {
 			int setNum1 = GetSetNum(tileNum1);
 			int setNum2 = GetSetNum(tileNum2);
 
@@ -248,10 +255,73 @@ namespace CNCMaps.MapLogic {
 				return -1;
 		}
 
-		private int GetSetNum(int tileNum) {
+		public int GetSetNum(int tileNum) {
+			if (tileNum < 0) return 0;
 			return TileNumToSet[tileNum];
 		}
 
+		public int GetTileNumFromSet(int setNum, byte tileNumWithinSet = 0) {
+			return SetNumToFirstTile[setNum] + tileNumWithinSet;
+		}
 
+		/// <summary>Recalculates tile system. </summary>
+		public void RecalculateTileSystem(MapTile[,] tiles) {
+			for (int x = 0; x < tiles.GetLength(0); x++) {
+				for (int y = 0; y < tiles.GetLength(1); y++) {
+					MapTile t = tiles[x, y];
+					// If this tile comes from a CLAT (connecting lat) set,
+					// then replace it's set and tilenr by corresponding LAT sets'
+					if (IsCLAT(t.TileNum)) {
+						int latSetNum = GetLAT(t.TileNum);
+						t.TileNum = (short)GetTileNumFromSet(latSetNum);
+					}
+				}
+			}
+
+			// Recalculate LAT system (tile connecting)
+			for (int x = 0; x < tiles.GetLength(0); x++) {
+				for (int y = 0; y < tiles.GetLength(1); y++) {
+					MapTile t = tiles[x, y];
+					// If this tile is a LAT tile, we might have to connect it
+					if (IsLAT(t.TileNum)) {
+						// Find Tileset that contains the connecting pieces
+						int clatSet = GetCLATSet(t.TileNum);
+						// Which tile to use from that tileset
+						byte transitionTile = 0;
+
+						// Find out setnums of adjacent cells
+						int top_right = t.TileNum, top_left = t.TileNum, bottom_right = t.TileNum, bottom_left = t.TileNum;
+
+						if (t.Dx < tiles.GetLength(0) - 1)
+							top_right = tiles[x + 1, y].TileNum;
+						if (x > 1)
+							top_left = tiles[x - 1, y].TileNum;
+						if (y < tiles.GetLength(1) - 1)
+							bottom_right = tiles[x, y + 1].TileNum;
+						if (y > 1)
+							bottom_left = tiles[x, y - 1].TileNum;
+
+						if (ConnectTiles(t.TileNum, top_right))
+							transitionTile += 1;
+
+						if (ConnectTiles(t.TileNum, bottom_right))
+							transitionTile += 2;
+
+						if (ConnectTiles(t.TileNum, bottom_left))
+							transitionTile += 4;
+
+						if (ConnectTiles(t.TileNum, top_left))
+							transitionTile += 8;
+
+						if (transitionTile > 0) {
+							// Do not change this setnum, as then we could recognize it as
+							// a different tileset for later tiles around this one.
+							// (T->SetNum = clatSet;)
+							t.TileNum = (short)GetTileNumFromSet(clatSet, transitionTile);
+						}
+					}
+				}
+			}
+		}
 	}
 }
