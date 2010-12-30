@@ -9,6 +9,7 @@ using System.IO;
 using System.Drawing;
 
 namespace CNCMaps.MapLogic {
+
 	public enum CollectionType {
 		Aircraft,
 		Building,
@@ -23,6 +24,17 @@ namespace CNCMaps.MapLogic {
 		BitmapData bmd;
 	}
 
+	public class DrawProperties {
+		public Point offset;
+		public bool hasShadow;
+		public int ySort;
+		public DrawProperties(Point offset, bool hasShadow, int ySort) {
+			this.offset = offset;
+			this.hasShadow = hasShadow;
+			this.ySort = ySort;
+		}
+	}
+
 	class DrawableObject {
 		public virtual void Draw(RA2Object obj, int x, int y, DrawingSurface s) { }
 		Palette palette;
@@ -31,7 +43,6 @@ namespace CNCMaps.MapLogic {
 		Point shadowOffset = new Point(0, 0);
 
 		int heightOffset;
-		int ySort;
 		bool objectOverrides = false;
 		Size foundation = new Size(1, 1);
 		int direction; // for voxels
@@ -39,17 +50,17 @@ namespace CNCMaps.MapLogic {
 		bool hasShadow;
 
 		List<VxlFile> voxels = new List<VxlFile>();
-		List<Point> voxelOffsets = new List<Point>();
+		List<DrawProperties> voxelProperties = new List<DrawProperties>();
 
 		List<HvaFile> hvas = new List<HvaFile>();
 		List<ShpFile> shpFires = new List<ShpFile>();
-		List<Point> fireOffsets = new List<Point>();
+		List<DrawProperties> shpFireProperties = new List<DrawProperties>();
 
 		List<ShpFile> shpSections = new List<ShpFile>();
-		List<Point> shpOffsets = new List<Point>();
+		List<DrawProperties> shpProperties = new List<DrawProperties>();
 
 		List<ShpFile> shpDamagedSections = new List<ShpFile>();
-		List<Point> shpDamagedOffsets = new List<Point>();
+		List<DrawProperties> shpDamagedProperties = new List<DrawProperties>();
 
 		public void SetPalette(Palette p) {
 			this.palette = p;
@@ -86,24 +97,30 @@ namespace CNCMaps.MapLogic {
 			this.hasShadow = hasShadow;
 		}
 
-		internal void AddVoxel(VxlFile vxlFile, HvaFile hvaFile, int xOffset = 0, int yOffset = 0) {
-			voxels.Add(vxlFile);
-			hvas.Add(hvaFile);
-			voxelOffsets.Add(new Point(xOffset, yOffset));
-		}
-
 		internal void AddOffset(int extraXOffset, int extraYOffset) {
 			globalOffset.X += extraXOffset;
 			globalOffset.Y += extraYOffset;
 		}
 
-		internal void AddShp(ShpFile shpFile, int xOffset = 0, int yOffset = 0) {
-			shpSections.Add(shpFile);
-			shpOffsets.Add(new Point(xOffset, yOffset));
+		internal void AddVoxel(VxlFile vxlFile, HvaFile hvaFile, int xOffset = 0, int yOffset = 0, bool hasShadow = false, int ySort = 0) {
+			voxels.Add(vxlFile);
+			hvas.Add(hvaFile);
+			voxelProperties.Add(new DrawProperties(new Point(xOffset, yOffset), hasShadow, ySort));
 		}
-		internal void AddDamagedShp(ShpFile shpFile, int xOffset = 0, int yOffset = 0) {
+
+		internal void AddShp(ShpFile shpFile, int xOffset = 0, int yOffset = 0, bool hasShadow =false, int ySort = 0) {
+			shpSections.Add(shpFile);
+			shpProperties.Add(new DrawProperties(new Point(xOffset, yOffset), hasShadow, ySort));
+		}
+
+		internal void AddDamagedShp(ShpFile shpFile, int xOffset = 0, int yOffset = 0, bool hasShadow = false, int ySort = 0) {
 			shpDamagedSections.Add(shpFile);
-			shpDamagedOffsets.Add(new Point(xOffset, yOffset));
+			shpDamagedProperties.Add(new DrawProperties(new Point(xOffset, yOffset), hasShadow, ySort));
+		}
+
+		internal void AddFire(ShpFile shpFile, int xOffset, int yOffset) {
+			shpFires.Add(shpFile);
+			shpFireProperties.Add(new DrawProperties(new Point(xOffset, yOffset), false, 0));
 		}
 	}
 
@@ -116,7 +133,7 @@ namespace CNCMaps.MapLogic {
 
 		private List<DrawableObject> objects = new List<DrawableObject>();
 
-		static readonly string[] ExtraImages = {
+		static readonly string[] ExtraBuildingImages = {
 			"ActiveAnim",	"ActiveAnimTwo",	"ActiveAnimThree",	"ActiveAnimFour",
 			"SpecialAnim",	"SpecialAnimTwo",	"SpecialAnimThree",	"SpecialAnimFour",
 			"BibShape", "Turret", "SuperAnim"
@@ -170,7 +187,7 @@ namespace CNCMaps.MapLogic {
 			// See if a theater-specific image is used
 			bool NewTheater = artSection.ReadBool("NewTheater");
 			if (NewTheater) {
-				ApplyNewTheater(ref imageFileName, theaterType);
+				ApplyNewTheater(ref imageFileName);
 				drawableObject.SetPalette(palettes.unitPalette);
 				paletteChosen = true;
 			}
@@ -255,6 +272,79 @@ namespace CNCMaps.MapLogic {
 
 			// Buildings often consist of multiple SHP files
 			if (collectionType == CollectionType.Building) {
+				drawableObject.AddDamagedShp(VFS.Open(imageFileName) as ShpFile, 0, 0, shadow, 0);
+
+				foreach (string extraImage in ExtraBuildingImages) {
+
+					string extraImageDamaged = extraImage + "Damaged";
+					string extraImageSectionName = artSection.ReadString(extraImage);
+					string extraImageDamagedSectionName = artSection.ReadString(extraImageDamaged, extraImageSectionName);
+
+					if (extraImageSectionName != "") {
+						IniFile.IniSection extraArtSection = art.GetSection(extraImageSectionName);
+
+						int ySort = 0;
+						bool extraShadow = false;
+						string extraImageFileName = extraImageSectionName;
+						
+						if (extraArtSection != null) {
+							ySort = extraArtSection.ReadInt("YSort", artSection.ReadInt(extraImage + "YSort"));
+							extraShadow = extraArtSection.ReadBool("Shadow", false); // additional building need shadows listed explicitly
+							extraImageFileName = extraArtSection.ReadString("Image", extraImageSectionName);
+						}
+						if (theaterExtension)
+							extraImageFileName += TheaterDefaults.GetExtension(theaterType);
+						else
+							extraImageFileName += TheaterDefaults.GetExtension(theaterType, collectionType);
+
+						if (NewTheater)
+							ApplyNewTheater(ref extraImageFileName);
+
+						AddImageToObject(drawableObject, extraImageFileName, 0, 0, extraShadow, ySort);
+					}
+					
+					if (extraImageDamagedSectionName != "") {
+						IniFile.IniSection extraArtDamagedSection = art.GetSection(extraImageDamagedSectionName);
+
+						int ySort = 0;
+						bool extraShadow = false;
+						string extraImageDamagedFileName = extraImageDamagedSectionName;
+						if (extraArtDamagedSection != null) {
+							ySort = extraArtDamagedSection.ReadInt("YSort", artSection.ReadInt(extraImage + "YSort"));
+							extraShadow = extraArtDamagedSection.ReadBool("Shadow", false); // additional building need shadows listed explicitly
+							extraImageDamagedFileName = extraArtDamagedSection.ReadString("Image", extraImageDamagedSectionName);
+						}
+						if (theaterExtension)
+							extraImageDamagedFileName += TheaterDefaults.GetExtension(theaterType);
+						else
+							extraImageDamagedFileName += TheaterDefaults.GetExtension(theaterType, collectionType);
+
+						if (NewTheater)
+							ApplyNewTheater(ref extraImageDamagedFileName);
+
+						drawableObject.AddDamagedShp(VFS.Open(extraImageDamagedFileName) as ShpFile, 0, 0, extraShadow, ySort);
+					}
+				}
+
+				// Add fires
+				string df0 = artSection.ReadString("DamageFireOffset0");
+				if (df0 != "") {
+					int x = int.Parse(df0.Substring(0, df0.IndexOf(',')));
+					int y = int.Parse(df0.Substring(df0.IndexOf(',') + 1));
+					drawableObject.AddFire(VFS.Open("fire01.shp") as ShpFile, x, y);
+				}
+				string df1 = artSection.ReadString("DamageFireOffset1");
+				if (df1 != "") {
+					int x = int.Parse(df1.Substring(0, df1.IndexOf(',')));
+					int y = int.Parse(df1.Substring(df1.IndexOf(',') + 1));
+					drawableObject.AddFire(VFS.Open("fire02.shp") as ShpFile, x, y);
+				}
+				string df2 = artSection.ReadString("DamageFireOffset2");
+				if (df2 != "") {
+					int x = int.Parse(df2.Substring(0, df2.IndexOf(',')));
+					int y = int.Parse(df2.Substring(df2.IndexOf(',') + 1));
+					drawableObject.AddFire(VFS.Open("fire03.shp") as ShpFile, x, y);
+				}
 
 			}
 
@@ -282,7 +372,7 @@ namespace CNCMaps.MapLogic {
 				if (vxl != null) {
 					string hvaFileName = Path.ChangeExtension(fileName, ".hva");
 					var hva = VFS.Open(hvaFileName) as HvaFile;
-					drawableObject.AddVoxel(vxl, hva, xOffset, yOffset);
+					drawableObject.AddVoxel(vxl, hva, xOffset, yOffset, hasShadow, ySort);
 
 					if (collectionType == CollectionType.Building) // half tile to the left, center of 200x200px vxl render
 						drawableObject.AddOffset(-70, -100);
@@ -293,11 +383,11 @@ namespace CNCMaps.MapLogic {
 			else {
 				var shp = VFS.Open(fileName) as ShpFile;
 				if (shp != null)
-					drawableObject.AddShp(shp);
+					drawableObject.AddShp(shp, xOffset, yOffset, hasShadow, ySort);
 			}
 		}
 
-		private void ApplyNewTheater(ref string imageFileName, TheaterType theaterType) {
+		private void ApplyNewTheater(ref string imageFileName) {
 			StringBuilder sb = new StringBuilder(imageFileName);
 			sb[1] = TheaterDefaults.GetTheaterPrefix(theaterType);
 			if (VFS.Exists(imageFileName)) {
