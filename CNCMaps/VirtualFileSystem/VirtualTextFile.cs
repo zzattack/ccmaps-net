@@ -13,7 +13,7 @@ namespace CNCMaps.VirtualFileSystem {
 			sr = new StreamReader(this);
 		}
 
-		public VirtualTextFile(Stream File, int baseOffset, int length, bool isBuffered = true)
+		public VirtualTextFile(Stream File, int baseOffset, long length, bool isBuffered = true)
 			: base(File, baseOffset, length, isBuffered) {
 			Position = 0;
 			sr = new StreamReader(this);

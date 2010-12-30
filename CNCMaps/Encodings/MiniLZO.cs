@@ -268,7 +268,6 @@ namespace ManagedLZO {
 		}
 
 		public unsafe static uint Decompress(byte[] src, byte[] dst) {
-			uint t = 0;
 			fixed (byte* input = src, output = dst) {
 				return Decompress(input, output, src.Length, dst.Length);
 			}

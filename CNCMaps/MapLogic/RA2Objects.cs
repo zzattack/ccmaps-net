@@ -2,10 +2,11 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using CNCMaps.FileFormats;
 
 namespace CNCMaps.MapLogic {
 
-	public class Tile {
+	public class MapTile {
 		public ushort Dx { get; private set; }
 		public ushort Dy { get; private set; }
 		public ushort Rx { get; private set; }
@@ -14,7 +15,7 @@ namespace CNCMaps.MapLogic {
 		public ushort SubTile { get; private set; }
 		List<RA2Object> AllObjects = new List<RA2Object>();
 
-		public Tile(ushort dx, ushort dy, ushort rx, ushort ry, short tilenum, ushort subtile) {
+		public MapTile(ushort dx, ushort dy, ushort rx, ushort ry, short tilenum, ushort subtile) {
 			this.Dx = dx;
 			this.Dy = dy;
 			this.Rx = rx;
@@ -30,7 +31,8 @@ namespace CNCMaps.MapLogic {
 	}
 
 	public class RA2Object {
-		public Tile Tile { get; set; }
+		public MapTile Tile { get; set; }
+		public Palette Palette { get; set; }
 	}
 
 	public class SmudgeObject : RA2Object {

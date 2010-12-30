@@ -5,7 +5,7 @@ namespace CNCMaps.VirtualFileSystem {
 	/// <summary>
 	/// Virtual file class
 	/// </summary>
-	class VirtualFile : Stream {
+	public class VirtualFile : Stream {
 		protected Stream BaseStream;
 		protected int baseOffset;
 		protected long size;
@@ -15,7 +15,7 @@ namespace CNCMaps.VirtualFileSystem {
 		bool isBuffered;
 		bool IsBufferInitialized = false;
 
-		public VirtualFile(Stream BaseStream, int baseOffset, int fileSize, bool isBuffered = false) {
+		public VirtualFile(Stream BaseStream, int baseOffset, long fileSize, bool isBuffered = false) {
 			this.size = fileSize;
 			this.baseOffset = baseOffset;
 			this.BaseStream = BaseStream;

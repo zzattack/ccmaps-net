@@ -123,20 +123,18 @@ namespace CNCMaps {
 				Console.WriteLine("Error: specified output directory does not exist");
 			}
 
-			var vfs = VirtuaFileSystem.GetInstance();
 			Console.WriteLine("{0:0000} - Initializing virtual filesystem", Environment.TickCount - start_tick);
-			vfs.ScanMixDir(VirtuaFileSystem.RA2InstallDir, false);
+			var vfs = VFS.GetInstance();
+			vfs.ScanMixDir(VFS.RA2InstallDir, false);
 
 			MapFile map = new MapFile(File.Open(rs.InputFile, FileMode.Open, FileAccess.Read, FileShare.Read));
 			map.FileName = rs.InputFile;
 
-			map.LoadMap();
+			map.LoadMap(rs.Engine);
 			
-			if (rs.OutputFile == "") {
+			if (rs.OutputFile == "")
 				rs.OutputFile = map.DetermineMapName();
-			}
-
-
+			
 
 		}
 	}

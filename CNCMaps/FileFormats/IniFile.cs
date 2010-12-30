@@ -10,17 +10,13 @@ namespace CNCMaps.FileFormats {
 
 		public List<IniSection> Sections { get; set; }
 
-		IniSection CurrentSection_;
 		public IniSection CurrentSection {
 			get;
 			set;
 		}
 
-		public IniFile(Stream baseStream, int baseOffset, int fileSize, bool isBuffered = true)
+		public IniFile(Stream baseStream, int baseOffset, long fileSize, bool isBuffered = true)
 			: base(baseStream, baseOffset, fileSize, isBuffered) {
-		}
-		public IniFile(Stream baseStream)
-			: base(baseStream) {
 			Sections = new List<IniSection>();
 			Parse();
 		}
@@ -53,7 +49,7 @@ namespace CNCMaps.FileFormats {
 		}
 
 		void SetCurrentSection(string sectionName) {
-			Sections.Find(x => x.Name == sectionName);
+			CurrentSection = Sections.Find(x => x.Name == sectionName);
 		}
 
 		public void SetCurrentSection(IniSection section) {
@@ -96,7 +92,16 @@ namespace CNCMaps.FileFormats {
 			}
 
 			public override string ToString() {
-				return "[" + this.Name + "]";
+				StringBuilder sb = new StringBuilder();
+				sb.Append('[');
+				sb.Append(Name);
+				sb.AppendLine("]");
+				foreach (var v in OrderedEntries){
+					sb.Append(v.Key);
+					sb.Append('=');
+					sb.AppendLine(v.Value);
+				}
+				return sb.ToString();
 			}
 
 			public void Clear() {
@@ -156,32 +161,36 @@ namespace CNCMaps.FileFormats {
 			static string[] FalseValues = { "no", "0", "false", "off" };
 
 			public bool ReadBool(string key, bool defaultValue = false) {
-				if (SortedEntries.ContainsKey(key)) {
-					string entry = SortedEntries[key];
-					if (TrueValues.Contains(entry, StringComparer.InvariantCultureIgnoreCase))
-						return true;
-					if (FalseValues.Contains(entry, StringComparer.InvariantCultureIgnoreCase))
-						return false;
-				}
-				return defaultValue;
+				string entry = ReadString(key);
+				if (TrueValues.Contains(entry, StringComparer.InvariantCultureIgnoreCase))
+					return true;
+				else if (FalseValues.Contains(entry, StringComparer.InvariantCultureIgnoreCase))
+					return false;
+				else return defaultValue;
 			}
 
 			public string ReadString(string key, string defaultValue = "") {
-				if (SortedEntries.ContainsKey(key))
-					return SortedEntries[key];
-				return defaultValue;
+				string ret;
+				if (SortedEntries.TryGetValue(key, out ret))
+					return ret;
+				else
+					return defaultValue;
 			}
 
 			public int ReadInt(string key, int defaultValue = 0) {
-				if (SortedEntries.ContainsKey(key))
-					int.TryParse(SortedEntries[key], out defaultValue);
-				return defaultValue;
+				int ret;
+				if (int.TryParse(ReadString(key), out ret))
+					return ret;
+				else
+					return defaultValue;
 			}
 
 			public double ReadDouble(string key, double defaultValue = 0.0) {
-				if (SortedEntries.ContainsKey(key))
-					double.TryParse(SortedEntries[key], out defaultValue);
-				return defaultValue;
+				double ret;
+				if (double.TryParse(ReadString(key), out ret))
+					return ret;
+				else
+					return defaultValue;
 			}
 
 			public string ConcatenatedValues() {
@@ -191,6 +200,17 @@ namespace CNCMaps.FileFormats {
 				return sb.ToString();
 			}
 
+			/// <summary>
+			///  returns index of key:value
+			/// </summary>
+			/// <param name="p"></param>
+			/// <returns></returns>
+			public int FindValueIndex(string p) {
+				for (int i = 0; i < OrderedEntries.Count; i++)
+					if (OrderedEntries[i].Value == p)
+						return i;
+				return -1;
+			}
 		}
 	}
 

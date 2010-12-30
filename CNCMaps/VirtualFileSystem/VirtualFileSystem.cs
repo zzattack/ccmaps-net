@@ -4,39 +4,48 @@ using System.Collections.Generic;
 using System.Linq;
 using System;
 using CNCMaps.FileFormats;
+using CNCMaps.FileFormats;
 
 namespace CNCMaps.VirtualFileSystem {
+	
+	class VFS {
 
-	class VirtuaFileSystem {
-		private static VirtuaFileSystem instance = new VirtuaFileSystem();
-		private VirtuaFileSystem() { }
-		public static VirtuaFileSystem GetInstance() {
+		private static VFS instance = new VFS();
+		public VFS() { }
+		public static VFS GetInstance() {
 			return instance;
 		}
 
-		static string[] MixArchiveExtensions = { ".mix", ".yro", ".mmx" };
+		public static VirtualFile Open(string filename) {
+			return instance.OpenFile(filename);
+		}
+		public static VirtualFile Open(string filename, FileFormat format = FileFormat.None) {
+			return instance.OpenFile(filename, format);
+		}
+		public static bool Add(string filename) {
+			return instance.AddFile(filename);
+		}
+		public static bool Exists(string imageFileName) {
+			return instance.FileExists(imageFileName);
+		}
 
 		List<IArchive> AllArchives = new List<IArchive>();
 
 		bool FileExists(string filename) {
 			return AllArchives.Any(v => v.ContainsFile(filename));
 		}
-		public VirtualFile Open(string filename) {
+		public VirtualFile OpenFile(string filename) {
+			var format = FormatHelper.GuessFormat(filename);
+			return OpenFile(filename, format);
+		}
+		public VirtualFile OpenFile(string filename, FileFormat format = FileFormat.None) {
 			var archive = AllArchives.FirstOrDefault(v => v.ContainsFile(filename));
 			if (archive == null)
 				return null;
-			var file = archive.OpenFile(filename);
-			file.FileName = filename;
-			return file;
+
+			return archive.OpenFile(filename, format);
 		}
-		private MixFile OpenMix(string filename) {
-			var archive = AllArchives.FirstOrDefault(v => v.ContainsFile(filename));
-			if (archive == null)
-				return null;
-			else
-				return archive.OpenFile(filename, true) as MixFile;
-		}
-		public bool Add(string path) {
+		public bool AddFile(string path) {
 			// directory
 			if (Directory.Exists(path)) {
 				AllArchives.Add(new DirArchive(path));
@@ -46,83 +55,88 @@ namespace CNCMaps.VirtualFileSystem {
 			else if (File.Exists(path)) {
 				FileInfo fi = new FileInfo(path);
 				// mix file
-				if (MixArchiveExtensions.Contains(fi.Extension, StringComparer.InvariantCultureIgnoreCase)) {
+				if (FormatHelper.MixArchiveExtensions.Contains(fi.Extension, StringComparer.InvariantCultureIgnoreCase)) {
 					MixFile mf = new MixFile(File.Open(path, FileMode.Open, FileAccess.Read, FileShare.Read));
+					mf.FileName = path;
 					AllArchives.Add(mf);
 					return true;
 				}
 			}
 			// virtual mix file
-			else if (FileExists(path)) {
-				MixFile mx = OpenMix(path);
+			else if (Exists(path)) {
+				MixFile mx = Open(path) as MixFile;
 				AllArchives.Add(mx);
 				return true;
 			}
 			return false;
 		}
+		public bool AddMix(MixFile mix) {
+			AllArchives.Add(mix);
+			return true;
+		}
 		
 		public void ScanMixDir(string mixDir, bool YR) {
 			// see http://modenc.renegadeprojects.com/MIX for more info
 			Console.WriteLine("Initializing filesystem on {0}, {1} Yuri's Revenge support", mixDir, YR ? "with" : "without");
-			Add(mixDir);
+			AddFile(mixDir);
 
-			if (YR) Add(Path.Combine(mixDir, "langmd.mix"));
-			Add(Path.Combine(mixDir, "language.mix"));
+			if (YR) AddFile(Path.Combine(mixDir, "langmd.mix"));
+			AddFile(Path.Combine(mixDir, "language.mix"));
 
 			// try all expand\d{2}md?\.mix files
 			for (int i = 99; i >= 0; i--) {
 				string file = "expand" + i.ToString("00") + ".mix";
 				string path = Path.Combine(mixDir, file);
 				if (File.Exists(path))
-					Add(path);
+					AddFile(path);
 				if (YR) {
 					file = "expandmd" + i.ToString("00") + ".mix";
 					path = Path.Combine(mixDir, file);
 					if (File.Exists(path))
-						Add(path);
+						AddFile(path);
 				}
 			}
 
-			if (YR) Add(Path.Combine(mixDir, "ra2md.mix"));
-			Add(Path.Combine(mixDir, "ra2.mix"));
+			if (YR) AddFile(Path.Combine(mixDir, "ra2md.mix"));
+			AddFile(Path.Combine(mixDir, "ra2.mix"));
 
-			if (YR) Add("cachemd.mix");
-			Add("cache.mix");
+			if (YR) AddFile("cachemd.mix");
+			AddFile("cache.mix");
 
-			if (YR) Add("localmd.mix");
-			Add("local.mix");
+			if (YR) AddFile("localmd.mix");
+			AddFile("local.mix");
 
-			if (YR) Add("audiomd.mix");
+			if (YR) AddFile("audiomd.mix");
 			
 			foreach (string file in Directory.GetFiles(mixDir, "ecache*.mix")) {
-				Add(Path.Combine(mixDir, file));
+				AddFile(Path.Combine(mixDir, file));
 			}
 			
 			foreach (string file in Directory.GetFiles(mixDir, "elocal*.mix")) {
-				Add(Path.Combine(mixDir, file));
+				AddFile(Path.Combine(mixDir, file));
 			}
 						
 			foreach (string file in Directory.GetFiles(mixDir, "*.mmx")) {
-				Add(Path.Combine(mixDir, file));
+				AddFile(Path.Combine(mixDir, file));
 			}
 
 			foreach (string file in Directory.GetFiles(mixDir, "*.yro")) {
-				Add(Path.Combine(mixDir, file));
+				AddFile(Path.Combine(mixDir, file));
 			}
 
-			if (YR) Add("conqmd.mix");
-			if (YR) Add("genermd.mix");
-			Add("generic.mix");
-			if (YR) Add("isogenmd.mix");
-			Add("isogen.mix");
-			Add("conquer.mix");
-			if (YR) Add("cameomd.mix");
-			Add("cameo.mix");
+			if (YR) AddFile("conqmd.mix");
+			if (YR) AddFile("genermd.mix");
+			AddFile("generic.mix");
+			if (YR) AddFile("isogenmd.mix");
+			AddFile("isogen.mix");
+			AddFile("conquer.mix");
+			if (YR) AddFile("cameomd.mix");
+			AddFile("cameo.mix");
 			if (YR) {
-				Add(Path.Combine(mixDir, "mapsmd03.mix"));
-				Add(Path.Combine(mixDir, "multimd.mix"));
-				Add(Path.Combine(mixDir, "thememd.mix"));
-				Add(Path.Combine(mixDir, "movmd03.mix"));
+				AddFile(Path.Combine(mixDir, "mapsmd03.mix"));
+				AddFile(Path.Combine(mixDir, "multimd.mix"));
+				AddFile(Path.Combine(mixDir, "thememd.mix"));
+				AddFile(Path.Combine(mixDir, "movmd03.mix"));
 			}
 		}
 
@@ -147,6 +161,7 @@ namespace CNCMaps.VirtualFileSystem {
 			catch { }
 			return ret;
 		}
+
 
 
 	}

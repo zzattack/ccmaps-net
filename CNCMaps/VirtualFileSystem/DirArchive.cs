@@ -17,12 +17,9 @@ namespace CNCMaps.VirtualFileSystem {
 			return File.Exists(Path.Combine(this.path, filename));
 		}
 
-		public VirtualFile OpenFile(string filename, bool openAsMix = false) {
+		public VirtualFile OpenFile(string filename, FileFormat format = FileFormat.None) {
 			FileStream fs = new FileStream(Path.Combine(this.path, filename), FileMode.Open, FileAccess.Read, FileShare.Read);
-			if (openAsMix)
-				return new MixFile(fs, 0, (int)fs.Length, true);
- 			else
-				return new VirtualFile(fs, 0, (int)fs.Length, true);
+			return FormatHelper.OpenAsFormat(fs, filename, 0, (int)fs.Length, format);			
 		}
 	}
 }

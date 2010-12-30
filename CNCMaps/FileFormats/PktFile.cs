@@ -3,14 +3,21 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using CNCMaps.VirtualFileSystem;
+using System.IO;
 
 namespace CNCMaps.FileFormats {
 	class PktFile : IniFile {
 
 		public Dictionary<string, PktMapEntry> MapEntries { get; set; }
 
-		public PktFile(VirtualFile f)
-			: base(f) {
+		public PktFile(VirtualFile f, bool isBuffered = true) : this(f, 0, f.Length, isBuffered) { }
+		public PktFile(Stream baseStream, int offset, long length, bool isBuffered = true)
+			: base(baseStream, offset, length, isBuffered) {
+				Parse();
+		}
+
+
+		private void Parse() {
 			MapEntries = new Dictionary<string, PktMapEntry>();
 			IniSection maplist = GetSection("MultiMaps");
 			foreach (var v in maplist.OrderedEntries) {
@@ -19,7 +26,6 @@ namespace CNCMaps.FileFormats {
 					MapEntries.Add(v.Value.ToLower(), new PktMapEntry(mapsection));
 			}
 		}
-
 		public PktMapEntry GetMapEntry(string mapname) {
 			// skip extension
 			if (mapname.Contains('.'))

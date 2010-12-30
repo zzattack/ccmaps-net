@@ -34,7 +34,7 @@ namespace CNCMaps.Encodings {
 							return destIndex;
 
 						if ((count & 0x8000) == 0) {
-							// case 2
+							// case 2, skip
 							destIndex += (count & 0x7FFF);
 						}
 						else if ((count & 0x4000) == 0) {

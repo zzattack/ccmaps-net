@@ -8,6 +8,7 @@ using System.Text.RegularExpressions;
 using System.Drawing;
 using CNCMaps.MapLogic;
 using CNCMaps.Encodings;
+using CNCMaps.Utility;
 
 namespace CNCMaps.FileFormats {
 	class MapFile : IniFile {
@@ -17,7 +18,13 @@ namespace CNCMaps.FileFormats {
 		}
 		MapType mapType = MapType.RedAlert2;
 
-		Tile[,] tiles;
+		Rectangle fullSize, localSize;
+		EngineType engineType;
+		Theater theater;
+		IniFile rules;
+		IniFile art;
+
+		MapTile[,] tiles;
 		List<OverlayObject> overlayObjects = new List<OverlayObject>();
 		List<SmudgeObject> smudgeObjects = new List<SmudgeObject>();
 		List<TerrainObject> terrainObjects = new List<TerrainObject>();
@@ -25,6 +32,10 @@ namespace CNCMaps.FileFormats {
 		List<InfantryObject> infantryObjects = new List<InfantryObject>();
 		List<UnitObject> unitObjects = new List<UnitObject>();
 		List<AircraftObject> aircraftObjects = new List<AircraftObject>();
+
+		List<string> houses = new List<string>();
+		Dictionary<string, Color> countryColors = new Dictionary<string, Color>();
+		Dictionary<string, Color> namedColors = new Dictionary<string, Color>();
 
 		List<RA2Object> allObjects {
 			get {
@@ -39,7 +50,9 @@ namespace CNCMaps.FileFormats {
 			}
 		}
 
-		public MapFile(Stream s) : base(s) { }
+		public MapFile(Stream baseStream) : this(baseStream, 0, baseStream.Length) { }
+		public MapFile(Stream baseStream, int offset, long length, bool isBuffered = true) :
+			base(baseStream, offset, length, isBuffered) { }
 
 		internal string DetermineMapName() {
 			string infile_nopath = Path.GetFileNameWithoutExtension(this.FileName);
@@ -48,7 +61,6 @@ namespace CNCMaps.FileFormats {
 			if (Basic.ReadBool("Official") == false)
 				return Basic.ReadString("Name", infile_nopath);
 
-			var vfs = VirtuaFileSystem.GetInstance();
 			string mapext = Path.GetExtension(this.FileName);
 
 			string pktfile;
@@ -57,18 +69,21 @@ namespace CNCMaps.FileFormats {
 			string csfEntry;
 			string mapName = "";
 			PktFile.PktMapEntry mapEntry = null;
+			bool isMission;
 
 			// campaign mission
-			if (Basic.ReadBool("MultiplayerOnly") == false && Basic.ReadBool("Official")) {
-				MissionsFile mf = new MissionsFile(vfs.Open(isyr ? "missionmd.ini" : "mission.ini"));
+			if (!Basic.ReadBool("MultiplayerOnly") && Basic.ReadBool("Official")) {
+				MissionsFile mf = VFS.Open(isyr ? "missionmd.ini" : "mission.ini") as MissionsFile;
 				var me = mf.GetMissionEntry(Path.GetFileName(this.FileName));
 				csfEntry = me.UIName;
+				isMission = true;
 			}
 			// multiplayer map
 			else {
+				isMission = false;
 				if (mapext == ".mmx" || mapext == ".yro") {
 					// this file contains the pkt file
-					vfs.Add(this.FileName);				
+					VFS.Add(this.FileName);
 					pktfile = infile_nopath + ".pkt";
 					custom_pkt = true;
 					if (mapext == ".yro") // definitely YR map
@@ -79,16 +94,16 @@ namespace CNCMaps.FileFormats {
 				else
 					pktfile = "missions.pkt";
 
-				PktFile pkt = new PktFile(vfs.Open(pktfile));
+				PktFile pkt = VFS.Open(pktfile) as PktFile;
 				string pkt_mapname = "";
-				if (custom_pkt) 
+				if (custom_pkt)
 					pkt_mapname = pkt.MapEntries.First().Key;
 				else {
 					// fallback for multiplayer maps with, .map extension, 
 					// no YR objects so assumed to be ra2, but actually meant to be used on yr
 					if (!isyr && mapext == ".map" && !pkt.MapEntries.ContainsKey(infile_nopath) && Basic.ReadBool("MultiplayerOnly")) {
 						pktfile = "missionsmd.pkt";
-						var pkt_yr = new PktFile(vfs.Open(pktfile));
+						var pkt_yr = VFS.Open(pktfile) as PktFile;
 						if (pkt_yr.MapEntries.ContainsKey(infile_nopath)) {
 							isyr = true;
 							pkt = pkt_yr;
@@ -108,13 +123,22 @@ namespace CNCMaps.FileFormats {
 
 				string csfFile = isyr ? "ra2md.csf" : "ra2.csf";
 				Console.WriteLine("Loading csf file {0}", csfFile);
-				CsfFile csf = new CsfFile(vfs.Open(csfFile));
+				CsfFile csf = VFS.Open(csfFile) as CsfFile;
 				mapName = csf.GetValue(csfEntry);
 
 				if (mapName.IndexOf(" (") != -1)
 					mapName = mapName.Substring(0, mapName.IndexOf(" ("));
-								
-				if (mapEntry != null) {
+
+				if (isMission) {
+					if (mapName.Contains("Operation: ")) {
+						string missionMapName = Path.GetFileName(this.FileName);
+						if (char.IsDigit(missionMapName[3]) && char.IsDigit(missionMapName[4])) {
+							string missionNr = Path.GetFileName(this.FileName).Substring(3, 2);
+							mapName = mapName.Substring(0, mapName.IndexOf(":")) + " " + missionNr + " -" + mapName.Substring(mapName.IndexOf(":") + 1);
+						}
+					}
+				}
+				else {
 					// not standard map
 					if ((mapEntry.GameModes & PktFile.GameMode.Standard) == 0) {
 						if ((mapEntry.GameModes & PktFile.GameMode.Megawealth) == PktFile.GameMode.Megawealth)
@@ -125,6 +149,7 @@ namespace CNCMaps.FileFormats {
 							mapName += " (Naval War)";
 					}
 				}
+
 			}
 			mapName = MakeValidFileName(mapName);
 			Console.WriteLine("Mapname found: {0}", mapName);
@@ -137,8 +162,6 @@ namespace CNCMaps.FileFormats {
 			return Regex.Replace(name, invalidReStr, "_");
 		}
 
-		Rectangle fullSize, localSize;
-		EngineType engineType;
 
 		internal void LoadMap(EngineType et = EngineType.AutoDetect) {
 			var map = GetSection("Map");
@@ -149,31 +172,84 @@ namespace CNCMaps.FileFormats {
 
 			ReadAllObjects();
 
-			if (et == EngineType.AutoDetect)
-				this.engineType = DetectMapType();
-			else 
-				this.engineType = et;
+			// if we have to autodetect, we need to load rules.ini, 
+			// and we don't want to parse it again when constructing the theater
+			if (et == EngineType.AutoDetect) {
+				rules = VFS.Open("rules.ini") as IniFile;
+				this.engineType = DetectMapType(rules);
+				if (this.engineType == EngineType.YurisRevenge) {
+					rules = VFS.Open("rulesmd.ini") as IniFile;
+					art = VFS.Open("artmd.ini") as IniFile;
+				}
+				else art = VFS.Open("art.ini") as IniFile;
+			}
+			else {
+				if (this.engineType == EngineType.YurisRevenge) {
+					rules = VFS.Open("rulesmd.ini") as IniFile;
+					art = VFS.Open("artmd.ini") as IniFile;
+				}
+				else {
+					rules = VFS.Open("rules.ini") as IniFile;
+					art = VFS.Open("art.ini") as IniFile;
+				}
+			}
+			theater = new Theater(ReadString("Map", "Theater"), this.engineType, rules, art);
+			theater.Initialize();
+			LoadColors();
+			LoadCountries();
+			LoadHouses();
 		}
 
-		private EngineType DetectMapType() {
+		private void LoadCountries() {
+			var countriesSection = rules.GetSection("Countries");
+			foreach (var entry in countriesSection.OrderedEntries) {
+				IniSection countrySection = rules.GetSection(entry.Value);
+				this.countryColors[entry.Value] = this.namedColors[countrySection.ReadString("Color")];
+			}
+		}
+
+		private void LoadColors() {
+			var colorsSection = rules.GetSection("Colors");
+			foreach (var entry in colorsSection.OrderedEntries) {
+				string[] colorComponents = entry.Value.Split(',');
+				var h = new HsvColor(int.Parse(colorComponents[0]),
+					int.Parse(colorComponents[1]), int.Parse(colorComponents[2]));
+				namedColors[entry.Key] = h.ToRGB();
+			}
+		}
+
+		private void LoadHouses() {
+			IniSection housesSection = GetSection("Houses");
+			foreach (var v in housesSection.OrderedEntries) {
+				var houseSection = GetSection(v.Value);
+				string color;
+				if (v.Value == "Neutral" || v.Value == "Special")
+					color = "LightGrey"; // this is hardcoded in the game
+				else
+					color = houseSection.ReadString("Color"); ;
+				countryColors[v.Value] = namedColors[color];
+			}
+		}
+
+		private EngineType DetectMapType(IniFile rules) {
 			if (this.ReadBool("Basic", "RequiredAddon"))
 				return EngineType.YurisRevenge;
-				
+
 			string theater = this.ReadString("Map", "Theater").ToLower();
 			// decision based on theatre
-			if (theater == "lunar" || theater == "newurban" || theater == "desert") 
+			if (theater == "lunar" || theater == "newurban" || theater == "desert")
 				return EngineType.YurisRevenge;
 
 			// decision based on overlay/trees/structs
-			if (!AllObjectsFromRA2()) 
+			if (!AllObjectsFromRA2(rules))
 				return EngineType.YurisRevenge;
 
 			// decision based on max tile/threatre
 			int maxTileNum = int.MinValue;
 			for (int x = 0; x < tiles.GetLength(0); x++)
 				for (int y = 0; y < tiles.GetLength(1); y++)
-					maxTileNum	= Math.Max(tiles[x, y].TileNum, maxTileNum);
-			
+					maxTileNum = Math.Max(tiles[x, y].TileNum, maxTileNum);
+
 			if (theater == "temperate") {
 				if (maxTileNum > 838) return EngineType.YurisRevenge;
 				return EngineType.RedAlert2;
@@ -188,17 +264,56 @@ namespace CNCMaps.FileFormats {
 			}
 			// decision based on extension
 			else if (Path.GetExtension(this.FileName) == ".yrm") return EngineType.YurisRevenge;
-			else return EngineType.RedAlert2;			
+			else return EngineType.RedAlert2;
 		}
 
-		private bool AllObjectsFromRA2() {
-			return true; // todo
+		private bool AllObjectsFromRA2(IniFile rules) {
+			foreach (var obj in this.overlayObjects)
+				if (obj.OverlayID > 246) return false;
+			IniSection objSection = rules.GetSection("TerrainTypes");
+			foreach (var obj in this.terrainObjects) {
+				int idx = objSection.FindValueIndex(obj.Name);
+				if (idx == -1 || idx > 73) return false;
+			}
+
+			objSection = rules.GetSection("InfantryTypes");
+			foreach (var obj in this.infantryObjects) {
+				int idx = objSection.FindValueIndex(obj.Name);
+				if (idx == -1 || idx > 45) return false;
+			}
+
+			objSection = rules.GetSection("VehicleTypes");
+			foreach (var obj in this.unitObjects) {
+				int idx = objSection.FindValueIndex(obj.Name);
+				if (idx == -1 || idx > 57) return false;
+			}
+
+			objSection = rules.GetSection("AircraftTypes");
+			foreach (var obj in this.aircraftObjects) {
+				int idx = objSection.FindValueIndex(obj.Name);
+				if (idx == -1 || idx > 9) return false;
+			}
+
+			objSection = rules.GetSection("BuildingTypes");
+			IniSection objSectionAlt = rules.GetSection("OverlayTypes");
+			foreach (var obj in this.structureObjects) {
+				int idx1 = objSection.FindValueIndex(obj.Name);
+				int idx2 = objSectionAlt.FindValueIndex(obj.Name);
+				if (idx1 == -1 && idx2 == -1) return false;
+				else if (idx1 != -1 && idx1 > 303)
+					return false;
+				else if (idx2 != -1 && idx2 > 246)
+					return false;
+			}
+
+			// no need to test smudge types as no new ones were introduced with yr
+			return true;
 		}
 
 		private void ReadAllObjects() {
 			Console.WriteLine("Reading tiles");
-			ReadTiles();	
-	
+			ReadTiles();
+
 			Console.WriteLine("Reading map overlay");
 			ReadOverlay();
 
@@ -207,20 +322,20 @@ namespace CNCMaps.FileFormats {
 
 			Console.WriteLine("Reading map overlay objects");
 			ReadTerrain();
-	
+
 			Console.WriteLine("Reading map terrain object");
 			ReadSmudges();
-	
+
 			Console.WriteLine("Reading infantry on map");
 			ReadInfantry();
-	
+
 			Console.WriteLine("Reading vehicles on map");
 			ReadUnits();
-	
+
 			Console.WriteLine("Reading aircraft on map");
 			ReadAircraft();
 		}
-				
+
 		private void ReadTiles() {
 			var mapSection = GetSection("IsoMapPack5");
 			byte[] lzoData = Convert.FromBase64String(mapSection.ConcatenatedValues());
@@ -230,7 +345,7 @@ namespace CNCMaps.FileFormats {
 			byte[] isoMapPack = new byte[lzoPackSize];
 			uint total_decompress_size = Format5.DecodeInto(lzoData, isoMapPack);
 
-			tiles = new Tile[fullSize.Width * 2 - 1, fullSize.Height];
+			tiles = new MapTile[fullSize.Width * 2 - 1, fullSize.Height];
 			MemoryFile mf = new MemoryFile(isoMapPack);
 			int numtiles = 0;
 			for (int i = 0; i < cells; i++) {
@@ -241,11 +356,11 @@ namespace CNCMaps.FileFormats {
 				ushort subtile = mf.ReadByte();
 				ushort z = mf.ReadByte();
 				byte zero2 = mf.ReadByte();
-				
+
 				ushort dx = (ushort)(rx - ry + fullSize.Width - 1);
 				ushort dy = (ushort)(rx + ry - fullSize.Width - 1);
 				numtiles++;
-				this.tiles[dx, dy / 2] = new Tile(dx, dy, rx, ry, tilenum, subtile);
+				this.tiles[dx, dy / 2] = new MapTile(dx, dy, rx, ry, tilenum, subtile);
 			}
 		}
 		private void ReadTerrain() {
@@ -287,7 +402,7 @@ namespace CNCMaps.FileFormats {
 
 			for (int x = 0; x < tiles.GetLength(0); x++) {
 				for (int y = 0; y < tiles.GetLength(1); y++) {
-					Tile t = tiles[x, y];
+					MapTile t = tiles[x, y];
 					int idx = t.Rx + 512 * t.Ry;
 					byte overlay_id = overlayPack[idx];
 					if (overlay_id != 0xFF) {
@@ -364,11 +479,11 @@ namespace CNCMaps.FileFormats {
 			}
 		}
 
-		Tile GetTile(int dx, int dy) {
+		MapTile GetTile(int dx, int dy) {
 			return tiles[dx, dy + dx % 2];
 		}
 
-		Tile GetTileR(int rx, int ry) {
+		MapTile GetTileR(int rx, int ry) {
 			int dx = (rx - ry + fullSize.Width - 1);
 			int dy = (rx + ry - fullSize.Width - 1) / 2;
 			return tiles[dx, dy];

@@ -3,13 +3,23 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using CNCMaps.VirtualFileSystem;
+using System.IO;
 
 namespace CNCMaps.FileFormats {
 	class MissionsFile : IniFile {
 
 		public Dictionary<string, MissionEntry> MissionEntries { get; set; }
 
-		public MissionsFile(VirtualFile f) : base(f) {
+		public MissionsFile(Stream baseStream, bool isBuffered = true) 
+			: this(baseStream, 0, baseStream.Length, isBuffered) { }
+		
+		public MissionsFile(Stream baseStream, int offset, long length, bool isBuffered = true)
+			: base(baseStream, offset, length, isBuffered) {
+			Parse();
+		}
+
+
+		private void Parse() {
 			MissionEntries = new Dictionary<string, MissionEntry>();
 			foreach (IniSection s in Sections) {
 				MissionEntries.Add(s.Name.ToLower(), new MissionEntry(s));
