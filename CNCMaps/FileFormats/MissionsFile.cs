@@ -7,11 +7,11 @@ namespace CNCMaps.FileFormats {
 
 		public Dictionary<string, MissionEntry> MissionEntries { get; set; }
 
-		public MissionsFile(Stream baseStream, bool isBuffered = true)
-			: this(baseStream, 0, baseStream.Length, isBuffered) { }
+		public MissionsFile(Stream baseStream, string filename, bool isBuffered = true)
+			: this(baseStream, filename, 0, baseStream.Length, isBuffered) { }
 
-		public MissionsFile(Stream baseStream, int offset, long length, bool isBuffered = true)
-			: base(baseStream, offset, length, isBuffered) {
+		public MissionsFile(Stream baseStream, string filename, int offset, long length, bool isBuffered = true)
+			: base(baseStream, filename, offset, length, isBuffered) {
 			Parse();
 		}
 

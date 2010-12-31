@@ -18,18 +18,20 @@ namespace CNCMaps.VirtualFileSystem {
 		bool isBuffered;
 		bool IsBufferInitialized = false;
 
-		public VirtualFile(Stream BaseStream, int baseOffset, long fileSize, bool isBuffered = false) {
+		public VirtualFile(Stream BaseStream, string filename, int baseOffset, long fileSize, bool isBuffered = false) {
 			this.size = fileSize;
 			this.baseOffset = baseOffset;
 			this.baseStream = BaseStream;
 			this.isBuffered = isBuffered;
+			this.FileName = filename;
 		}
 
-		public VirtualFile(Stream BaseStream, bool isBuffered = false) {
+		public VirtualFile(Stream BaseStream, string filename = "", bool isBuffered = false) {
 			this.baseStream = BaseStream;
 			this.baseOffset = 0;
 			this.size = BaseStream.Length;
 			this.isBuffered = isBuffered;
+			this.FileName = filename;
 		}
 
 		public override bool CanRead {

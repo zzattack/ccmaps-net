@@ -6,8 +6,7 @@ namespace CNCMaps.Encodings {
 	public static class Format2 {
 
 		public static uint DecodeInto(byte[] src, byte[] dest) {
-			MemoryStream ms = new MemoryStream(src);
-			VirtualFile vfile = new VirtualFile(ms, 0, src.Length);
+			VirtualFile vfile = new MemoryFile(src);
 			uint i = 0;
 			while (vfile.CanRead) {
 				byte cmd = vfile.ReadByte();

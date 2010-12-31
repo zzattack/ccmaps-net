@@ -10,10 +10,10 @@ namespace CNCMaps.FileFormats {
 
 		public Dictionary<string, PktMapEntry> MapEntries { get; set; }
 
-		public PktFile(VirtualFile f, bool isBuffered = true) : this(f, 0, f.Length, isBuffered) { }
+		public PktFile(VirtualFile f, string filename = "", bool isBuffered = true) : this(f, filename, 0, f.Length, isBuffered) { }
 
-		public PktFile(Stream baseStream, int offset, long length, bool isBuffered = true)
-			: base(baseStream, offset, length, isBuffered) {
+		public PktFile(Stream baseStream, string filename, int offset, long length, bool isBuffered = true)
+			: base(baseStream, filename, offset, length, isBuffered) {
 			Parse();
 		}
 

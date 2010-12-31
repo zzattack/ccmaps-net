@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using CNCMaps.FileFormats;
 using CNCMaps.VirtualFileSystem;
+using CNCMaps.Utility;
 
 namespace CNCMaps.MapLogic {
 
@@ -10,9 +11,9 @@ namespace CNCMaps.MapLogic {
 		IniFile theaterIni;
 		string tileExtension;
 
-		List<int> TileNumToSet = new List<int>();
-		List<int> SetNumToFirstTile = new List<int>();
-		List<RandomizedTileSet> TileSets = new List<RandomizedTileSet>();
+		List<short> TileNumToSet = new List<short>();
+		List<short> SetNumToFirstTile = new List<short>();
+		List<RandomizedTileSet> Tiles = new List<RandomizedTileSet>();
 
 		class TileSet {
 
@@ -37,33 +38,34 @@ namespace CNCMaps.MapLogic {
 				tmpFiles.Add(tmpFile);
 			}
 
-			TmpFile GetTile() {
+			public TmpFile GetTile() {
+				if (tmpFiles.Count == 0) return null;
 				return tmpFiles[randomTileChooser.Next(tmpFiles.Count)];
 			}
 		}
 
-		int ACliffMMPieces; int ACliffPieces; int BlackTile;
-		int BridgeBottomLeft1; int BridgeBottomLeft2; int BridgeBottomRight1;
-		int BridgeBottomRight2; int BridgeMiddle1; int BridgeMiddle2;
-		int BridgeSet; int BridgeTopLeft1; int BridgeTopLeft2;
-		int BridgeTopRight1; int BridgeTopRight2; int ClearTile;
-		int ClearToGreenLat; int ClearToPaveLat; int ClearToRoughLat;
-		int ClearToSandLat; int CliffRamps; int CliffSet;
-		int DestroyableCliffs; int DirtRoadCurve; int DirtRoadJunction;
-		int DirtRoadSlopes; int DirtRoadStraight; int DirtTrackTunnels;
-		int DirtTunnels; int GreenTile; int HeightBase;
-		int Ice1Set; int Ice2Set; int Ice3Set;
-		int IceShoreSet; int MMRampBase; int MMWaterCliffAPieces;
-		int Medians; int MiscPaveTile; int MonorailSlopes;
-		int PaveTile; int PavedRoadEnds; int PavedRoadSlopes;
-		int PavedRoads; int RampBase; int RampSmooth;
-		int Rocks; int RoughGround; int RoughTile;
-		int SandTile; int ShorePieces; int SlopeSetPieces;
-		int SlopeSetPieces2; int TrackTunnels; int TrainBridgeSet;
-		int Tunnels; int WaterBridge; int WaterCaves;
-		int WaterCliffAPieces; int WaterCliffs; int WaterSet;
-		int WaterfallEast; int WaterfallNorth; int WaterfallSouth;
-		int WaterfallWest; int WoodBridgeSet;
+		int ACliffMMPieces; short ACliffPieces; short BlackTile;
+		short BridgeBottomLeft1; short BridgeBottomLeft2; short BridgeBottomRight1;
+		short BridgeBottomRight2; short BridgeMiddle1; short BridgeMiddle2;
+		short BridgeSet; short BridgeTopLeft1; short BridgeTopLeft2;
+		short BridgeTopRight1; short BridgeTopRight2; short ClearTile;
+		short ClearToGreenLat; short ClearToPaveLat; short ClearToRoughLat;
+		short ClearToSandLat; short CliffRamps; short CliffSet;
+		short DestroyableCliffs; short DirtRoadCurve; short DirtRoadJunction;
+		short DirtRoadSlopes; short DirtRoadStraight; short DirtTrackTunnels;
+		short DirtTunnels; short GreenTile; short HeightBase;
+		short Ice1Set; short Ice2Set; short Ice3Set;
+		short IceShoreSet; short MMRampBase; short MMWaterCliffAPieces;
+		short Medians; short MiscPaveTile; short MonorailSlopes;
+		short PaveTile; short PavedRoadEnds; short PavedRoadSlopes;
+		short PavedRoads; short RampBase; short RampSmooth;
+		short Rocks; short RoughGround; short RoughTile;
+		short SandTile; short ShorePieces; short SlopeSetPieces;
+		short SlopeSetPieces2; short TrackTunnels; short TrainBridgeSet;
+		short Tunnels; short WaterBridge; short WaterCaves;
+		short WaterCliffAPieces; short WaterCliffs; short WaterSet;
+		short WaterfallEast; short WaterfallNorth; short WaterfallSouth;
+		short WaterfallWest; short WoodBridgeSet;
 
 		public TileCollection(TheaterType theaterType) {
 			this.theaterType = theaterType;
@@ -73,71 +75,71 @@ namespace CNCMaps.MapLogic {
 			#region Set numbers
 
 			IniFile.IniSection General = theaterIni.GetSection("General");
-			ACliffMMPieces = General.ReadInt("ACliffMMPieces", -1);
-			ACliffPieces = General.ReadInt("ACliffPieces", -1);
-			BlackTile = General.ReadInt("BlackTile", -1);
-			BridgeBottomLeft1 = General.ReadInt("BridgeBottomLeft1", -1);
-			BridgeBottomLeft2 = General.ReadInt("BridgeBottomLeft2", -1);
-			BridgeBottomRight1 = General.ReadInt("BridgeBottomRight1", -1);
-			BridgeBottomRight2 = General.ReadInt("BridgeBottomRight2", -1);
-			BridgeMiddle1 = General.ReadInt("BridgeMiddle1", -1);
-			BridgeMiddle2 = General.ReadInt("BridgeMiddle2", -1);
-			BridgeSet = General.ReadInt("BridgeSet", -1);
-			BridgeTopLeft1 = General.ReadInt("BridgeTopLeft1", -1);
-			BridgeTopLeft2 = General.ReadInt("BridgeTopLeft2", -1);
-			BridgeTopRight1 = General.ReadInt("BridgeTopRight1", -1);
-			BridgeTopRight2 = General.ReadInt("BridgeTopRight2", -1);
-			ClearTile = General.ReadInt("ClearTile", -1);
-			ClearToGreenLat = General.ReadInt("ClearToGreenLat", -1);
-			ClearToPaveLat = General.ReadInt("ClearToPaveLat", -1);
-			ClearToRoughLat = General.ReadInt("ClearToRoughLat", -1);
-			ClearToSandLat = General.ReadInt("ClearToSandLat", -1);
-			CliffRamps = General.ReadInt("CliffRamps", -1);
-			CliffSet = General.ReadInt("CliffSet", -1);
-			DestroyableCliffs = General.ReadInt("DestroyableCliffs", -1);
-			DirtRoadCurve = General.ReadInt("DirtRoadCurve", -1);
-			DirtRoadJunction = General.ReadInt("DirtRoadJunction", -1);
-			DirtRoadSlopes = General.ReadInt("DirtRoadSlopes", -1);
-			DirtRoadStraight = General.ReadInt("DirtRoadStraight", -1);
-			DirtTrackTunnels = General.ReadInt("DirtTrackTunnels", -1);
-			DirtTunnels = General.ReadInt("DirtTunnels", -1);
-			GreenTile = General.ReadInt("GreenTile", -1);
-			HeightBase = General.ReadInt("HeightBase", -1);
-			Ice1Set = General.ReadInt("Ice1Set", -1);
-			Ice2Set = General.ReadInt("Ice2Set", -1);
-			Ice3Set = General.ReadInt("Ice3Set", -1);
-			IceShoreSet = General.ReadInt("IceShoreSet", -1);
-			MMRampBase = General.ReadInt("MMRampBase", -1);
-			MMWaterCliffAPieces = General.ReadInt("MMWaterCliffAPieces", -1);
-			Medians = General.ReadInt("Medians", -1);
-			MiscPaveTile = General.ReadInt("MiscPaveTile", -1);
-			MonorailSlopes = General.ReadInt("MonorailSlopes", -1);
-			PaveTile = General.ReadInt("PaveTile", -1);
-			PavedRoadEnds = General.ReadInt("PavedRoadEnds", -1);
-			PavedRoadSlopes = General.ReadInt("PavedRoadSlopes", -1);
-			PavedRoads = General.ReadInt("PavedRoads", -1);
-			RampBase = General.ReadInt("RampBase", -1);
-			RampSmooth = General.ReadInt("RampSmooth", -1);
-			Rocks = General.ReadInt("Rocks", -1);
-			RoughGround = General.ReadInt("RoughGround", -1);
-			RoughTile = General.ReadInt("RoughTile", -1);
-			SandTile = General.ReadInt("SandTile", -1);
-			ShorePieces = General.ReadInt("ShorePieces", -1);
-			SlopeSetPieces = General.ReadInt("SlopeSetPieces", -1);
-			SlopeSetPieces2 = General.ReadInt("SlopeSetPieces2", -1);
-			TrackTunnels = General.ReadInt("TrackTunnels", -1);
-			TrainBridgeSet = General.ReadInt("TrainBridgeSet", -1);
-			Tunnels = General.ReadInt("Tunnels", -1);
-			WaterBridge = General.ReadInt("WaterBridge", -1);
-			WaterCaves = General.ReadInt("WaterCaves", -1);
-			WaterCliffAPieces = General.ReadInt("WaterCliffAPieces", -1);
-			WaterCliffs = General.ReadInt("WaterCliffs", -1);
-			WaterSet = General.ReadInt("WaterSet", -1);
-			WaterfallEast = General.ReadInt("WaterfallEast", -1);
-			WaterfallNorth = General.ReadInt("WaterfallNorth", -1);
-			WaterfallSouth = General.ReadInt("WaterfallSouth", -1);
-			WaterfallWest = General.ReadInt("WaterfallWest", -1);
-			WoodBridgeSet = General.ReadInt("WoodBridgeSet", -1);
+			ACliffMMPieces = General.ReadShort("ACliffMMPieces", -1);
+			ACliffPieces = General.ReadShort("ACliffPieces", -1);
+			BlackTile = General.ReadShort("BlackTile", -1);
+			BridgeBottomLeft1 = General.ReadShort("BridgeBottomLeft1", -1);
+			BridgeBottomLeft2 = General.ReadShort("BridgeBottomLeft2", -1);
+			BridgeBottomRight1 = General.ReadShort("BridgeBottomRight1", -1);
+			BridgeBottomRight2 = General.ReadShort("BridgeBottomRight2", -1);
+			BridgeMiddle1 = General.ReadShort("BridgeMiddle1", -1);
+			BridgeMiddle2 = General.ReadShort("BridgeMiddle2", -1);
+			BridgeSet = General.ReadShort("BridgeSet", -1);
+			BridgeTopLeft1 = General.ReadShort("BridgeTopLeft1", -1);
+			BridgeTopLeft2 = General.ReadShort("BridgeTopLeft2", -1);
+			BridgeTopRight1 = General.ReadShort("BridgeTopRight1", -1);
+			BridgeTopRight2 = General.ReadShort("BridgeTopRight2", -1);
+			ClearTile = General.ReadShort("ClearTile", -1);
+			ClearToGreenLat = General.ReadShort("ClearToGreenLat", -1);
+			ClearToPaveLat = General.ReadShort("ClearToPaveLat", -1);
+			ClearToRoughLat = General.ReadShort("ClearToRoughLat", -1);
+			ClearToSandLat = General.ReadShort("ClearToSandLat", -1);
+			CliffRamps = General.ReadShort("CliffRamps", -1);
+			CliffSet = General.ReadShort("CliffSet", -1);
+			DestroyableCliffs = General.ReadShort("DestroyableCliffs", -1);
+			DirtRoadCurve = General.ReadShort("DirtRoadCurve", -1);
+			DirtRoadJunction = General.ReadShort("DirtRoadJunction", -1);
+			DirtRoadSlopes = General.ReadShort("DirtRoadSlopes", -1);
+			DirtRoadStraight = General.ReadShort("DirtRoadStraight", -1);
+			DirtTrackTunnels = General.ReadShort("DirtTrackTunnels", -1);
+			DirtTunnels = General.ReadShort("DirtTunnels", -1);
+			GreenTile = General.ReadShort("GreenTile", -1);
+			HeightBase = General.ReadShort("HeightBase", -1);
+			Ice1Set = General.ReadShort("Ice1Set", -1);
+			Ice2Set = General.ReadShort("Ice2Set", -1);
+			Ice3Set = General.ReadShort("Ice3Set", -1);
+			IceShoreSet = General.ReadShort("IceShoreSet", -1);
+			MMRampBase = General.ReadShort("MMRampBase", -1);
+			MMWaterCliffAPieces = General.ReadShort("MMWaterCliffAPieces", -1);
+			Medians = General.ReadShort("Medians", -1);
+			MiscPaveTile = General.ReadShort("MiscPaveTile", -1);
+			MonorailSlopes = General.ReadShort("MonorailSlopes", -1);
+			PaveTile = General.ReadShort("PaveTile", -1);
+			PavedRoadEnds = General.ReadShort("PavedRoadEnds", -1);
+			PavedRoadSlopes = General.ReadShort("PavedRoadSlopes", -1);
+			PavedRoads = General.ReadShort("PavedRoads", -1);
+			RampBase = General.ReadShort("RampBase", -1);
+			RampSmooth = General.ReadShort("RampSmooth", -1);
+			Rocks = General.ReadShort("Rocks", -1);
+			RoughGround = General.ReadShort("RoughGround", -1);
+			RoughTile = General.ReadShort("RoughTile", -1);
+			SandTile = General.ReadShort("SandTile", -1);
+			ShorePieces = General.ReadShort("ShorePieces", -1);
+			SlopeSetPieces = General.ReadShort("SlopeSetPieces", -1);
+			SlopeSetPieces2 = General.ReadShort("SlopeSetPieces2", -1);
+			TrackTunnels = General.ReadShort("TrackTunnels", -1);
+			TrainBridgeSet = General.ReadShort("TrainBridgeSet", -1);
+			Tunnels = General.ReadShort("Tunnels", -1);
+			WaterBridge = General.ReadShort("WaterBridge", -1);
+			WaterCaves = General.ReadShort("WaterCaves", -1);
+			WaterCliffAPieces = General.ReadShort("WaterCliffAPieces", -1);
+			WaterCliffs = General.ReadShort("WaterCliffs", -1);
+			WaterSet = General.ReadShort("WaterSet", -1);
+			WaterfallEast = General.ReadShort("WaterfallEast", -1);
+			WaterfallNorth = General.ReadShort("WaterfallNorth", -1);
+			WaterfallSouth = General.ReadShort("WaterfallSouth", -1);
+			WaterfallWest = General.ReadShort("WaterfallWest", -1);
+			WoodBridgeSet = General.ReadShort("WoodBridgeSet", -1);
 
 			#endregion
 
@@ -158,17 +160,17 @@ namespace CNCMaps.MapLogic {
 					break;
 
 				TileSet ts = new TileSet(sect.ReadString("FileName"), sect.ReadString("SetName"), sect.ReadInt("TilesInSet"));
-				SetNumToFirstTile.Add(TileSets.Count);
+				SetNumToFirstTile.Add((short)Tiles.Count);
 
 				for (int j = 1; j <= ts.TilesInSet; j++) {
-					TileNumToSet.Add(setNum);
+					TileNumToSet.Add((short)setNum);
 					RandomizedTileSet rs = new RandomizedTileSet();
 
 					for (char r = (char)('a' - 1); r <= 'z'; r++) {
 						if ((r >= 'a') && ts.SetName == "Bridges") continue;
 
 						// filename = set filename + dd + .tmp/.urb/.des etc
-						string filename = ts.FileName + i.ToString("00");
+						string filename = ts.FileName + j.ToString("00");
 						if (r >= 'a') filename += r;
 						filename += tileExtension;
 						var tmpFile = tilesVFS.OpenFile(filename, FileFormat.Tmp) as TmpFile;
@@ -176,17 +178,14 @@ namespace CNCMaps.MapLogic {
 						else break;
 					}
 
-					TileSets.Add(rs);
+					Tiles.Add(rs);
 				}
 
 				setNum++;
 			}
 		}
 
-		public bool ConnectTiles(int tileNum1, int tileNum2) {
-			int setNum1 = GetSetNum(tileNum1);
-			int setNum2 = GetSetNum(tileNum2);
-
+		public bool ConnectTiles(int setNum1, int setNum2) {
 			if (setNum1 == setNum2) return false;
 
 			// grass doesn't connect with shores
@@ -209,8 +208,7 @@ namespace CNCMaps.MapLogic {
 			return true;
 		}
 
-		public bool IsLAT(int tileNum) {
-			int setNum = GetSetNum(tileNum);
+		public bool IsLAT(short setNum) {
 			return
 				setNum == RoughTile ||
 				setNum == SandTile ||
@@ -218,8 +216,7 @@ namespace CNCMaps.MapLogic {
 				setNum == PaveTile;
 		}
 
-		public bool IsCLAT(int tileNum) {
-			int setNum = GetSetNum(tileNum);
+		public bool IsCLAT(short setNum) {
 			return
 				setNum == ClearToRoughLat ||
 				setNum == ClearToSandLat ||
@@ -227,8 +224,7 @@ namespace CNCMaps.MapLogic {
 				setNum == ClearToPaveLat;
 		}
 
-		public int GetLAT(int tileNum) {
-			int setNum = GetSetNum(tileNum);
+		public short GetLAT(short setNum) {
 			if (setNum == ClearToRoughLat)
 				return RoughTile;
 			else if (setNum == ClearToSandLat)
@@ -241,8 +237,7 @@ namespace CNCMaps.MapLogic {
 				return -1;
 		}
 
-		public int GetCLATSet(int tileNum) {
-			int setNum = GetSetNum(tileNum);
+		public short GetCLATSet(short setNum) {
 			if (setNum == RoughTile)
 				return ClearToRoughLat;
 			else if (setNum == SandTile)
@@ -255,73 +250,73 @@ namespace CNCMaps.MapLogic {
 				return -1;
 		}
 
-		public int GetSetNum(int tileNum) {
+		public short GetSetNum(short tileNum) {
 			if (tileNum < 0) return 0;
 			return TileNumToSet[tileNum];
 		}
 
-		public int GetTileNumFromSet(int setNum, byte tileNumWithinSet = 0) {
-			return SetNumToFirstTile[setNum] + tileNumWithinSet;
+		public short GetTileNumFromSet(short setNum, byte tileNumWithinSet = 0) {
+			return (short)(SetNumToFirstTile[setNum] + tileNumWithinSet);
 		}
 
 		/// <summary>Recalculates tile system. </summary>
-		public void RecalculateTileSystem(MapTile[,] tiles) {
-			for (int x = 0; x < tiles.GetLength(0); x++) {
-				for (int y = 0; y < tiles.GetLength(1); y++) {
-					MapTile t = tiles[x, y];
-					// If this tile comes from a CLAT (connecting lat) set,
-					// then replace it's set and tilenr by corresponding LAT sets'
-					if (IsCLAT(t.TileNum)) {
-						int latSetNum = GetLAT(t.TileNum);
-						t.TileNum = (short)GetTileNumFromSet(latSetNum);
-					}
+		public void RecalculateTileSystem(TileLayer tiles) {
+			Logger.WriteLine("Recalculating tile LAT system");
+
+			// change all CLAT tiles to their corresponding LAT tiles
+			foreach (MapTile t in tiles) {
+				// If this tile comes from a CLAT (connecting lat) set,
+				// then replace it's set and tilenr by corresponding LAT sets'
+				t.SetNum = GetSetNum(t.TileNum);
+				if (IsCLAT(t.SetNum)) {
+					short latSetNum = GetLAT(t.TileNum);
+					t.SetNum = GetLAT(t.SetNum);
+					t.TileNum = GetTileNumFromSet(t.SetNum);
 				}
 			}
 
-			// Recalculate LAT system (tile connecting)
-			for (int x = 0; x < tiles.GetLength(0); x++) {
-				for (int y = 0; y < tiles.GetLength(1); y++) {
-					MapTile t = tiles[x, y];
-					// If this tile is a LAT tile, we might have to connect it
-					if (IsLAT(t.TileNum)) {
+			foreach (MapTile t in tiles) {
+				// If this tile is a LAT tile, we might have to connect it
+				if (IsLAT(t.SetNum)) {
+					// Which tile to use from CLAT tileset
+					byte transitionTile = 0;
+
+					// Find out setnums of adjacent cells
+
+					MapTile tileTopRight = tiles.GetNeighbourTile(t, TileDirection.TopRight);
+					if (tileTopRight != null && ConnectTiles(t.SetNum, tileTopRight.SetNum))
+						transitionTile += 1;
+
+					MapTile tileBottomRight = tiles.GetNeighbourTile(t, TileDirection.BottomRight);
+					if (tileBottomRight != null && ConnectTiles(t.SetNum, tileBottomRight.SetNum))
+						transitionTile += 2;
+
+					MapTile tileBottomLeft = tiles.GetNeighbourTile(t, TileDirection.BottomLeft);
+					if (tileBottomLeft != null && ConnectTiles(t.SetNum, tileBottomLeft.SetNum))
+						transitionTile += 4;
+
+					MapTile tileTopLeft = tiles.GetNeighbourTile(t, TileDirection.TopLeft);
+					if (tileTopLeft != null && ConnectTiles(t.SetNum, tileTopLeft.SetNum))
+						transitionTile += 8;
+
+					if (transitionTile > 0) {
 						// Find Tileset that contains the connecting pieces
-						int clatSet = GetCLATSet(t.TileNum);
-						// Which tile to use from that tileset
-						byte transitionTile = 0;
-
-						// Find out setnums of adjacent cells
-						int top_right = t.TileNum, top_left = t.TileNum, bottom_right = t.TileNum, bottom_left = t.TileNum;
-
-						if (t.Dx < tiles.GetLength(0) - 1)
-							top_right = tiles[x + 1, y].TileNum;
-						if (x > 1)
-							top_left = tiles[x - 1, y].TileNum;
-						if (y < tiles.GetLength(1) - 1)
-							bottom_right = tiles[x, y + 1].TileNum;
-						if (y > 1)
-							bottom_left = tiles[x, y - 1].TileNum;
-
-						if (ConnectTiles(t.TileNum, top_right))
-							transitionTile += 1;
-
-						if (ConnectTiles(t.TileNum, bottom_right))
-							transitionTile += 2;
-
-						if (ConnectTiles(t.TileNum, bottom_left))
-							transitionTile += 4;
-
-						if (ConnectTiles(t.TileNum, top_left))
-							transitionTile += 8;
-
-						if (transitionTile > 0) {
-							// Do not change this setnum, as then we could recognize it as
-							// a different tileset for later tiles around this one.
-							// (T->SetNum = clatSet;)
-							t.TileNum = (short)GetTileNumFromSet(clatSet, transitionTile);
-						}
+						short clatSet = GetCLATSet(t.SetNum);
+						// Do not change this setnum, as then we could recognize it as
+						// a different tileset for later tiles around this one.
+						// (T->SetNum = clatSet;)
+						t.TileNum = (short)GetTileNumFromSet(clatSet, transitionTile);
 					}
 				}
+
 			}
+		}
+
+
+		public void DrawTile(MapTile t, DrawingSurface ds) {
+			var tmpFile = Tiles[Math.Max(t.TileNum, (short)0)].GetTile();
+			if (tmpFile != null)
+				tmpFile.Draw(t.SubTile, ds, t.Dx * 30, (t.Dy - t.Z) * 15, t.Z, t.Palette);
 		}
 	}
 }

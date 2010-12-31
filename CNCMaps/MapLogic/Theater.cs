@@ -80,6 +80,8 @@ namespace CNCMaps.MapLogic {
 		}
 
 		public void Initialize() {
+			CNCMaps.Utility.Logger.WriteLine("Initializing theater");
+
 			// load palettes and additional mix files for this theater
 			switch (theaterType) {
 				case TheaterType.Temperate:
@@ -175,6 +177,10 @@ namespace CNCMaps.MapLogic {
 
 		internal TileCollection GetTileCollection() {
 			return tileTypes;
+		}
+
+		internal PaletteCollection GetPalettes() {
+			return palettes;
 		}
 	}
 }

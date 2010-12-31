@@ -14,10 +14,10 @@ namespace CNCMaps.FileFormats {
 		bool isRmix, isEncrypted;
 		long dataStart;
 
-		public MixFile(Stream baseStream, bool isBuffered = false) : this(baseStream, 0, baseStream.Length, isBuffered) { }
+		public MixFile(Stream baseStream, string filename = "",  bool isBuffered = false) : this(baseStream, filename, 0, baseStream.Length, isBuffered) { }
 
-		public MixFile(Stream baseStream, int baseOffset, long fileSize, bool isBuffered = false)
-			: base(baseStream, baseOffset, fileSize, isBuffered) {
+		public MixFile(Stream baseStream, string filename, int baseOffset, long fileSize, bool isBuffered = false)
+			: base(baseStream, filename, baseOffset, fileSize, isBuffered) {
 			ParseHeader();
 		}
 

@@ -5,12 +5,12 @@ namespace CNCMaps.FileFormats {
 
 	class VxlFile : VirtualFile {
 
-		public VxlFile(Stream baseStream, int baseOffset, int fileSize, bool isBuffered = true)
-			: base(baseStream, baseOffset, fileSize, isBuffered) {
+		public VxlFile(Stream baseStream, string filename, int baseOffset, int fileSize, bool isBuffered = true)
+			: base(baseStream, filename, baseOffset, fileSize, isBuffered) {
 		}
 
-		public VxlFile(Stream baseStream, bool isBuffered = true)
-			: base(baseStream, isBuffered) {
+		public VxlFile(Stream baseStream, string filename = "", bool isBuffered = true)
+			: base(baseStream, filename, isBuffered) {
 		}
 	}
 }

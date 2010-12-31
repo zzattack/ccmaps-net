@@ -7,7 +7,7 @@ using CNCMaps.VirtualFileSystem;
 
 namespace CNCMaps.FileFormats {
 
-	class IniFile : VirtualTextFile {
+	public class IniFile : VirtualTextFile {
 
 		public List<IniSection> Sections { get; set; }
 
@@ -16,8 +16,8 @@ namespace CNCMaps.FileFormats {
 			set;
 		}
 
-		public IniFile(Stream baseStream, int baseOffset, long fileSize, bool isBuffered = true)
-			: base(baseStream, baseOffset, fileSize, isBuffered) {
+		public IniFile(Stream baseStream, string filename, int baseOffset, long fileSize, bool isBuffered = true)
+			: base(baseStream, filename, baseOffset, fileSize, isBuffered) {
 			Sections = new List<IniSection>();
 			Parse();
 		}
@@ -27,6 +27,7 @@ namespace CNCMaps.FileFormats {
 		}
 
 		void Parse() {
+			CNCMaps.Utility.Logger.WriteLine("Parsing {0}", Path.GetFileName(this.FileName));
 			while (CanRead) {
 				ProcessLine(ReadLine());
 			}
@@ -188,6 +189,14 @@ namespace CNCMaps.FileFormats {
 					return defaultValue;
 			}
 
+			public short ReadShort(string key, short defaultValue = 0) {
+				short ret;
+				if (short.TryParse(ReadString(key), out ret))
+					return ret;
+				else
+					return defaultValue;
+			}
+
 			public double ReadDouble(string key, double defaultValue = 0.0) {
 				double ret;
 				if (double.TryParse(ReadString(key), out ret))
@@ -214,6 +223,7 @@ namespace CNCMaps.FileFormats {
 						return i;
 				return -1;
 			}
+
 		}
 	}
 }

@@ -6,6 +6,6 @@ namespace CNCMaps.VirtualFileSystem {
 	class MemoryFile : VirtualFile {
 
 		public MemoryFile(byte[] buffer, bool isBuffered = true) :
-			base(new MemoryStream(buffer), 0, buffer.Length, isBuffered) { }
+			base(new MemoryStream(buffer), "Memory file", 0, buffer.Length, isBuffered) { }
 	}
 }

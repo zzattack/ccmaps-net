@@ -84,7 +84,7 @@ namespace CNCMaps.VirtualFileSystem {
 
 		public void ScanMixDir(string mixDir, bool YR) {
 			// see http://modenc.renegadeprojects.com/MIX for more info
-			Console.WriteLine("Initializing filesystem on {0}, {1} Yuri's Revenge support", mixDir, YR ? "with" : "without");
+			CNCMaps.Utility.Logger.WriteLine("Initializing filesystem on {0}, {1} Yuri's Revenge support", mixDir, YR ? "with" : "without");
 			AddFile(mixDir);
 
 			if (YR) AddFile(Path.Combine(mixDir, "langmd.mix"));

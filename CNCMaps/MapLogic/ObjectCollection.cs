@@ -5,6 +5,7 @@ using System.IO;
 using System.Text;
 using CNCMaps.FileFormats;
 using CNCMaps.VirtualFileSystem;
+using CNCMaps.Utility;
 
 namespace CNCMaps.MapLogic {
 	public enum CollectionType {
@@ -15,10 +16,6 @@ namespace CNCMaps.MapLogic {
 		Smudge,
 		Terrain,
 		Vehicle,
-	}
-
-	class DrawingSurface {
-		BitmapData bmd;
 	}
 
 	public class DrawProperties {

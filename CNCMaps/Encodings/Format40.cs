@@ -6,9 +6,7 @@ namespace CNCMaps.Encodings {
 	public static class Format40 {
 
 		public static int DecodeInto(byte[] src, byte[] dest) {
-			MemoryStream ms = new MemoryStream(src);
-			var ctx = new VirtualFile(ms, 0, src.Length);
-
+			var ctx = new MemoryFile(src);
 			int destIndex = 0;
 
 			while (true) {

@@ -21,8 +21,7 @@ namespace CNCMaps.Encodings {
 		}
 
 		public static int DecodeInto(byte[] src, byte[] dest) {
-			MemoryStream ms = new MemoryStream(src);
-			VirtualFile ctx = new VirtualFile(ms, 0, src.Length);
+			VirtualFile ctx = new MemoryFile(src);
 			int destIndex = 0;
 
 			while (true) {

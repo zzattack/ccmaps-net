@@ -10,10 +10,10 @@ namespace CNCMaps.FileFormats {
 
 	class CsfFile : VirtualFile {
 
-		public CsfFile(Stream baseStream, bool isBuffered = true) : this(baseStream, 0, baseStream.Length, isBuffered) { }
+		public CsfFile(Stream baseStream, string filename, bool isBuffered = true) : this(baseStream, filename, 0, baseStream.Length, isBuffered) { }
 
-		public CsfFile(Stream baseStream, int baseOffset, long fileSize, bool isBuffered = true)
-			: base(baseStream, baseOffset, fileSize, isBuffered) {
+		public CsfFile(Stream baseStream, string filename, int baseOffset, long fileSize, bool isBuffered = true)
+			: base(baseStream, filename, baseOffset, fileSize, isBuffered) {
 			Parse();
 		}
 
@@ -52,6 +52,7 @@ namespace CNCMaps.FileFormats {
 		static int csf_string_w_id = BitConverter.ToInt32(Encoding.ASCII.GetBytes("STRW").Reverse().ToArray(), 0);
 
 		int Parse() {
+			CNCMaps.Utility.Logger.WriteLine("Parsing {0}", this.FileName);
 			var header = CNCMaps.Utility.EzMarshal.ByteArrayToStructure<CsfHeader>(Read(Marshal.SizeOf(typeof(CsfHeader))));
 			for (int i = 0; i < header.numlabels; i++) {
 				ReadInt32();

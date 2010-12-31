@@ -2,17 +2,17 @@
 
 namespace CNCMaps.VirtualFileSystem {
 
-	class VirtualTextFile : VirtualFile {
+	public class VirtualTextFile : VirtualFile {
 		StreamReader sr;
 
-		public VirtualTextFile(Stream File)
-			: base(File, true) {
+		public VirtualTextFile(Stream File, string filename = "")
+			: base(File, filename, true) {
 			Position = 0;
 			sr = new StreamReader(this);
 		}
 
-		public VirtualTextFile(Stream File, int baseOffset, long length, bool isBuffered = true)
-			: base(File, baseOffset, length, isBuffered) {
+		public VirtualTextFile(Stream File, string filename, int baseOffset, long length, bool isBuffered = true)
+			: base(File, filename, baseOffset, length, isBuffered) {
 			Position = 0;
 			sr = new StreamReader(this);
 		}

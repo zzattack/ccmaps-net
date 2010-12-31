@@ -2,6 +2,7 @@
 using System.IO;
 using CNCMaps.FileFormats;
 using CNCMaps.VirtualFileSystem;
+using CNCMaps.Utility;
 
 namespace CNCMaps {
 	enum StartPositionMarking {
@@ -67,8 +68,6 @@ namespace CNCMaps {
 	class Program {
 
 		public static void Main(string[] args) {
-			int start_tick = Environment.TickCount;
-
 			RenderSettings rs = RenderSettings.CreateDefaults();
 			var options = new NDesk.Options.OptionSet() {
 				{ "i|infile=", "Input file", v => rs.InputFile = v },
@@ -89,50 +88,71 @@ namespace CNCMaps {
 			options.Parse(args);
 
 			if (rs.ShowHelp) {
-				Console.WriteLine("Usage: ");
-				Console.WriteLine("");
-				Console.WriteLine(" -i   --infile \"c:\\myMap.mpr\"   Input map file (.mpr, .map, .yrm)");
-				Console.WriteLine(" -o   --outfile myMap           Output base filename. Read from map if not specified.");
-				Console.WriteLine(" -d   --outdir \"c:\\\"            Output directory");
-				Console.WriteLine(" -Y   --force-yr                Force rendering using YR engine");
-				Console.WriteLine(" -y   --force-ra2               Force rendering using RA2 engine");
-				Console.WriteLine(" -j   --jpeg                    Produce JPEG file (myMap.jpg)");
-				Console.WriteLine(" -q   --jpeg-quality [0-100]     JPEG quality (0-100, default 90)");
-				Console.WriteLine(" -p   --png                     Produce PNG file (myMap.png)");
-				Console.WriteLine(" -c   --png-compression [0-9]    PNG compression level (0-9, default 6)");
-				Console.WriteLine(" -m   --mixdir \"c:\\westwood\\\"   Mix files location (registry if not specified)");
-				Console.WriteLine(" -s   --start-pos-tiled         Mark start positions as 4x4 tiled red spots");
-				Console.WriteLine(" -S   --start-pos-squared       Mark start positions as a large square");
-				Console.WriteLine(" -r   --mark-ore                Mark ore clearly");
-				Console.WriteLine(" -F   --force-fullmap           Ignore LocalSize definition");
-				Console.WriteLine(" -f   --force-localsize         Force usage of localsize");
-				Console.WriteLine(" -h   --help                    Show this short help text");
-				Console.WriteLine(" ");
+				Logger.WriteLine("Usage: ");
+				Logger.WriteLine("");
+				Logger.WriteLine(" -i   --infile \"c:\\myMap.mpr\"   Input map file (.mpr, .map, .yrm)");
+				Logger.WriteLine(" -o   --outfile myMap           Output base filename. Read from map if not specified.");
+				Logger.WriteLine(" -d   --outdir \"c:\\\"            Output directory");
+				Logger.WriteLine(" -Y   --force-yr                Force rendering using YR engine");
+				Logger.WriteLine(" -y   --force-ra2               Force rendering using RA2 engine");
+				Logger.WriteLine(" -j   --jpeg                    Produce JPEG file (myMap.jpg)");
+				Logger.WriteLine(" -q   --jpeg-quality [0-100]     JPEG quality (0-100, default 90)");
+				Logger.WriteLine(" -p   --png                     Produce PNG file (myMap.png)");
+				Logger.WriteLine(" -c   --png-compression [0-9]    PNG compression level (0-9, default 6)");
+				Logger.WriteLine(" -m   --mixdir \"c:\\westwood\\\"   Mix files location (registry if not specified)");
+				Logger.WriteLine(" -s   --start-pos-tiled         Mark start positions as 4x4 tiled red spots");
+				Logger.WriteLine(" -S   --start-pos-squared       Mark start positions as a large square");
+				Logger.WriteLine(" -r   --mark-ore                Mark ore clearly");
+				Logger.WriteLine(" -F   --force-fullmap           Ignore LocalSize definition");
+				Logger.WriteLine(" -f   --force-localsize         Force usage of localsize");
+				Logger.WriteLine(" -h   --help                    Show this short help text");
+				Logger.WriteLine(" ");
 				return;
 			}
 			else if (!System.IO.File.Exists(rs.InputFile)) {
-				Console.WriteLine("Error: specified input file does not exist");
+				Logger.WriteLine("Error: specified input file does not exist");
 				return;
 			}
 			else if (!rs.SaveJPEG && !rs.SavePNG) {
-				Console.WriteLine("Error: no output format selected. Either specify -j, -p or both");
+				Logger.WriteLine("Error: no output format selected. Either specify -j, -p or both");
 				return;
 			}
 			else if (rs.OutputDir != "" && !System.IO.Directory.Exists(rs.OutputDir)) {
-				Console.WriteLine("Error: specified output directory does not exist");
+				Logger.WriteLine("Error: specified output directory does not exist");
 			}
 
-			Console.WriteLine("{0:0000} - Initializing virtual filesystem", Environment.TickCount - start_tick);
+			Logger.WriteLine("Initializing virtual filesystem");
 			var vfs = VFS.GetInstance();
 			vfs.ScanMixDir(VFS.RA2InstallDir, false);
 
-			MapFile map = new MapFile(File.Open(rs.InputFile, FileMode.Open, FileAccess.Read, FileShare.Read));
+			MapFile map = new MapFile(File.Open(rs.InputFile, FileMode.Open, FileAccess.Read, FileShare.Read), Path.GetFileName(rs.InputFile));
 			map.FileName = rs.InputFile;
 
 			map.LoadMap(rs.Engine);
+			if (rs.StartPositionMarking == StartPositionMarking.Tiled)
+				map.DrawTiledStartPositions();
 
+			map.DrawMap();
+
+			if (rs.StartPositionMarking == StartPositionMarking.Squared)
+				map.DrawSquaredStartPositions();
+			
 			if (rs.OutputFile == "")
 				rs.OutputFile = map.DetermineMapName();
+
+			CNCMaps.Utility.DrawingSurface ds = map.GetDrawingSurface();
+
+			System.Drawing.Rectangle saveRect;
+			if (rs.IgnoreLocalSize)
+				saveRect = new System.Drawing.Rectangle(0, 0, ds.Width, ds.Height);
+			else
+				saveRect = map.GetLocalSizePixels();
+
+			if (rs.SaveJPEG)
+				ds.SaveJPEG(Path.Combine(rs.OutputDir, rs.OutputFile + ".jpg"), rs.JPEGCompression, saveRect);
+
+			if (rs.SavePNG)
+				ds.SavePNG(Path.Combine(rs.OutputDir, rs.OutputFile + ".jpg"), rs.PNGQuality, saveRect);
 		}
 	}
 }

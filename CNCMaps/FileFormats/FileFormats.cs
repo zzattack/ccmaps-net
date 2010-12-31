@@ -78,44 +78,43 @@ namespace CNCMaps {
 			VirtualFile ret;
 			switch (format) {
 				case FileFormat.Csf:
-					ret = new CsfFile(baseStream, offset, length, true);
+					ret = new CsfFile(baseStream, filename, offset, length, true);
 					break;
 				case FileFormat.Hva:
-					ret = new HvaFile(baseStream, offset, length, true);
+					ret = new HvaFile(baseStream, filename, offset, length, true);
 					break;
 				case FileFormat.Ini:
-					ret = new IniFile(baseStream, offset, length, true);
+					ret = new IniFile(baseStream, filename, offset, length, true);
 					break;
 				case FileFormat.Map:
-					ret = new MapFile(baseStream, offset, length, true);
+					ret = new MapFile(baseStream, filename, offset, length, true);
 					break;
 				case FileFormat.Missions:
-					ret = new MissionsFile(baseStream, offset, length, true);
+					ret = new MissionsFile(baseStream, filename, offset, length, true);
 					break;
 				case FileFormat.Mix:
-					ret = new MixFile(baseStream, offset, length, true);
+					ret = new MixFile(baseStream, filename, offset, length, true);
 					break;
 				case FileFormat.Pal:
-					ret = new PalFile(baseStream, offset, length, true);
+					ret = new PalFile(baseStream, filename, offset, length, true);
 					break;
 				case FileFormat.Pkt:
-					ret = new PktFile(baseStream, offset, length, true);
+					ret = new PktFile(baseStream, filename, offset, length, true);
 					break;
 				case FileFormat.Shp:
-					ret = new ShpFile(baseStream, offset, length, true);
+					ret = new ShpFile(baseStream, filename, offset, length, true);
 					break;
 				case FileFormat.Tmp:
-					ret = new TmpFile(baseStream, offset, length, true);
+					ret = new TmpFile(baseStream, filename, offset, length, true);
 					break;
 				case FileFormat.Vxl:
-					ret = new VxlFile(baseStream, offset, length, true);
+					ret = new VxlFile(baseStream, filename, offset, length, true);
 					break;
 				case FileFormat.Ukn:
 				default:
-					ret = new VirtualFile(baseStream, offset, length, true);
+					ret = new VirtualFile(baseStream, filename, offset, length, true);
 					break;
 			}
-			ret.FileName = filename;
 			return ret;
 		}
 	}

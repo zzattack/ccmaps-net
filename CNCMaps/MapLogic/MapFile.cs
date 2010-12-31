@@ -1,19 +1,23 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.IO;
-using CNCMaps.VirtualFileSystem;
-using System.Text.RegularExpressions;
 using System.Drawing;
-using CNCMaps.MapLogic;
+using System.IO;
+using System.Linq;
+using System.Text.RegularExpressions;
 using CNCMaps.Encodings;
+using CNCMaps.MapLogic;
 using CNCMaps.Utility;
+using CNCMaps.VirtualFileSystem;
 
 namespace CNCMaps.FileFormats {
+
+	/// <summary>Map file.</summary>
 	class MapFile : IniFile {
+		/// <summary>Values that represent MapType.</summary>
 		enum MapType {
+			/// <summary>A Red Alert 2 map</summary>
 			RedAlert2,
+			/// <summary>A Yuri's Revenge map</summary>
 			YurisRevenge
 		}
 		MapType mapType = MapType.RedAlert2;
@@ -24,7 +28,7 @@ namespace CNCMaps.FileFormats {
 		IniFile rules;
 		IniFile art;
 
-		MapTile[,] tiles;
+		TileLayer tiles;
 		List<OverlayObject> overlayObjects = new List<OverlayObject>();
 		List<SmudgeObject> smudgeObjects = new List<SmudgeObject>();
 		List<TerrainObject> terrainObjects = new List<TerrainObject>();
@@ -37,6 +41,15 @@ namespace CNCMaps.FileFormats {
 		Dictionary<string, Color> countryColors = new Dictionary<string, Color>();
 		Dictionary<string, Color> namedColors = new Dictionary<string, Color>();
 
+		Lighting lighting;
+		List<LightSource> lightSources = new List<LightSource>();
+		List<Palette> PalettePerLevel = new List<Palette>(15);
+		List<Palette> PalettesToBeRecalculated = new List<Palette>(15);
+
+		private DrawingSurface drawingSurface;
+
+		/// <summary>Gets all objects.</summary>
+		/// <value>All objects.</value>
 		List<RA2Object> allObjects {
 			get {
 				var ret = new List<RA2Object>();
@@ -50,10 +63,15 @@ namespace CNCMaps.FileFormats {
 			}
 		}
 
-		public MapFile(Stream baseStream) : this(baseStream, 0, baseStream.Length) { }
-		public MapFile(Stream baseStream, int offset, long length, bool isBuffered = true) :
-			base(baseStream, offset, length, isBuffered) { }
+		/// <summary>Constructor.</summary>
+		/// <param name="baseStream">The base stream.</param>
+		public MapFile(Stream baseStream, string filename = "") : this(baseStream, filename, 0, baseStream.Length) { }
 
+		public MapFile(Stream baseStream, string filename, int offset, long length, bool isBuffered = true) :
+			base(baseStream, filename, offset, length, isBuffered) { }
+
+		/// <summary>Gets the determine map name. </summary>
+		/// <returns>The filename to save the map as</returns>
 		internal string DetermineMapName() {
 			string infile_nopath = Path.GetFileNameWithoutExtension(this.FileName);
 
@@ -99,7 +117,7 @@ namespace CNCMaps.FileFormats {
 				if (custom_pkt)
 					pkt_mapname = pkt.MapEntries.First().Key;
 				else {
-					// fallback for multiplayer maps with, .map extension, 
+					// fallback for multiplayer maps with, .map extension,
 					// no YR objects so assumed to be ra2, but actually meant to be used on yr
 					if (!isyr && mapext == ".map" && !pkt.MapEntries.ContainsKey(infile_nopath) && Basic.ReadBool("MultiplayerOnly")) {
 						pktfile = "missionsmd.pkt";
@@ -122,7 +140,7 @@ namespace CNCMaps.FileFormats {
 				csfEntry = csfEntry.ToLower();
 
 				string csfFile = isyr ? "ra2md.csf" : "ra2.csf";
-				Console.WriteLine("Loading csf file {0}", csfFile);
+				Logger.WriteLine("Loading csf file {0}", csfFile);
 				CsfFile csf = VFS.Open(csfFile) as CsfFile;
 				mapName = csf.GetValue(csfEntry);
 
@@ -149,20 +167,23 @@ namespace CNCMaps.FileFormats {
 							mapName += " (Naval War)";
 					}
 				}
-
 			}
 			mapName = MakeValidFileName(mapName);
-			Console.WriteLine("Mapname found: {0}", mapName);
+			Logger.WriteLine("Mapname found: {0}", mapName);
 			return mapName;
 		}
 
+		/// <summary>Makes a valid file name.</summary>
+		/// <param name="name">The filename to be made valid.</param>
+		/// <returns>The valid file name.</returns>
 		private static string MakeValidFileName(string name) {
 			string invalidChars = Regex.Escape(new string(Path.GetInvalidFileNameChars()));
 			string invalidReStr = string.Format(@"[{0}]+", invalidChars);
 			return Regex.Replace(name, invalidReStr, "_");
 		}
 
-
+		/// <summary>Loads a map. </summary>
+		/// <param name="et">The engine type to be forced, or autodetect.</param>
 		internal void LoadMap(EngineType et = EngineType.AutoDetect) {
 			var map = GetSection("Map");
 			string[] size = map.ReadString("Size").Split(',');
@@ -172,7 +193,7 @@ namespace CNCMaps.FileFormats {
 
 			ReadAllObjects();
 
-			// if we have to autodetect, we need to load rules.ini, 
+			// if we have to autodetect, we need to load rules.ini,
 			// and we don't want to parse it again when constructing the theater
 			if (et == EngineType.AutoDetect) {
 				rules = VFS.Open("rules.ini") as IniFile;
@@ -198,9 +219,21 @@ namespace CNCMaps.FileFormats {
 			LoadColors();
 			LoadCountries();
 			LoadHouses();
+			theater.GetTileCollection().RecalculateTileSystem(this.tiles);
+			RecalculateOreSpread();
+			LoadLighting();
+			CreateLevelPalettes();
+			LoadLightSources();
+			ApplyLightSources();
+
+			// now everything is loaded and we can prepare the palettes before using them to draw
+			RecalculateAllPalettes();
 		}
 
+		/// <summary>Loads the countries. </summary>
 		private void LoadCountries() {
+			Logger.WriteLine("Loading countries");
+
 			var countriesSection = rules.GetSection("Countries");
 			foreach (var entry in countriesSection.OrderedEntries) {
 				IniSection countrySection = rules.GetSection(entry.Value);
@@ -208,6 +241,7 @@ namespace CNCMaps.FileFormats {
 			}
 		}
 
+		/// <summary>Loads the colors. </summary>
 		private void LoadColors() {
 			var colorsSection = rules.GetSection("Colors");
 			foreach (var entry in colorsSection.OrderedEntries) {
@@ -218,7 +252,9 @@ namespace CNCMaps.FileFormats {
 			}
 		}
 
+		/// <summary>Loads the houses. </summary>
 		private void LoadHouses() {
+			Logger.WriteLine("Loading houses");
 			IniSection housesSection = GetSection("Houses");
 			foreach (var v in housesSection.OrderedEntries) {
 				var houseSection = GetSection(v.Value);
@@ -231,7 +267,12 @@ namespace CNCMaps.FileFormats {
 			}
 		}
 
+		/// <summary>Detect map type.</summary>
+		/// <param name="rules">The rules.ini file to be used.</param>
+		/// <returns>The engine to be used to render this map.</returns>
 		private EngineType DetectMapType(IniFile rules) {
+			Logger.WriteLine("Determining map name");
+
 			if (this.ReadBool("Basic", "RequiredAddon"))
 				return EngineType.YurisRevenge;
 
@@ -246,9 +287,8 @@ namespace CNCMaps.FileFormats {
 
 			// decision based on max tile/threatre
 			int maxTileNum = int.MinValue;
-			for (int x = 0; x < tiles.GetLength(0); x++)
-				for (int y = 0; y < tiles.GetLength(1); y++)
-					maxTileNum = Math.Max(tiles[x, y].TileNum, maxTileNum);
+			foreach (MapTile t in tiles)
+				maxTileNum = Math.Max(t.TileNum, maxTileNum);
 
 			if (theater == "temperate") {
 				if (maxTileNum > 838) return EngineType.YurisRevenge;
@@ -267,6 +307,9 @@ namespace CNCMaps.FileFormats {
 			else return EngineType.RedAlert2;
 		}
 
+		/// <summary>Tests whether all objects on the map are present in RA2</summary>
+		/// <param name="rules">The rules.ini file from RA2.</param>
+		/// <returns>True if all objects are from RA2, else false.</returns>
 		private bool AllObjectsFromRA2(IniFile rules) {
 			foreach (var obj in this.overlayObjects)
 				if (obj.OverlayID > 246) return false;
@@ -310,32 +353,34 @@ namespace CNCMaps.FileFormats {
 			return true;
 		}
 
+		/// <summary>Reads all objects. </summary>
 		private void ReadAllObjects() {
-			Console.WriteLine("Reading tiles");
+			Logger.WriteLine("Reading tiles");
 			ReadTiles();
 
-			Console.WriteLine("Reading map overlay");
+			Logger.WriteLine("Reading map overlay");
 			ReadOverlay();
 
-			Console.WriteLine("Reading map structures");
+			Logger.WriteLine("Reading map structures");
 			ReadStructures();
 
-			Console.WriteLine("Reading map overlay objects");
+			Logger.WriteLine("Reading map overlay objects");
 			ReadTerrain();
 
-			Console.WriteLine("Reading map terrain object");
+			Logger.WriteLine("Reading map terrain object");
 			ReadSmudges();
 
-			Console.WriteLine("Reading infantry on map");
+			Logger.WriteLine("Reading infantry on map");
 			ReadInfantry();
 
-			Console.WriteLine("Reading vehicles on map");
+			Logger.WriteLine("Reading vehicles on map");
 			ReadUnits();
 
-			Console.WriteLine("Reading aircraft on map");
+			Logger.WriteLine("Reading aircraft on map");
 			ReadAircraft();
 		}
 
+		/// <summary>Reads the tiles. </summary>
 		private void ReadTiles() {
 			var mapSection = GetSection("IsoMapPack5");
 			byte[] lzoData = Convert.FromBase64String(mapSection.ConcatenatedValues());
@@ -345,7 +390,7 @@ namespace CNCMaps.FileFormats {
 			byte[] isoMapPack = new byte[lzoPackSize];
 			uint total_decompress_size = Format5.DecodeInto(lzoData, isoMapPack);
 
-			tiles = new MapTile[fullSize.Width * 2 - 1, fullSize.Height];
+			tiles = new TileLayer(fullSize.Size);
 			MemoryFile mf = new MemoryFile(isoMapPack);
 			int numtiles = 0;
 			for (int i = 0; i < cells; i++) {
@@ -354,15 +399,17 @@ namespace CNCMaps.FileFormats {
 				short tilenum = mf.ReadInt16();
 				short zero1 = mf.ReadInt16();
 				ushort subtile = mf.ReadByte();
-				ushort z = mf.ReadByte();
+				short z = mf.ReadByte();
 				byte zero2 = mf.ReadByte();
 
 				ushort dx = (ushort)(rx - ry + fullSize.Width - 1);
 				ushort dy = (ushort)(rx + ry - fullSize.Width - 1);
 				numtiles++;
-				this.tiles[dx, dy / 2] = new MapTile(dx, dy, rx, ry, tilenum, subtile);
+				this.tiles[dx, dy / 2] = new MapTile(dx, dy, rx, ry, z, tilenum, subtile);
 			}
 		}
+
+		/// <summary>Reads the terrain. </summary>
 		private void ReadTerrain() {
 			IniSection terrainSection = GetSection("Terrain");
 			if (terrainSection == null) return;
@@ -372,10 +419,12 @@ namespace CNCMaps.FileFormats {
 				int rx = pos % 1000;
 				int ry = pos / 1000;
 				TerrainObject t = new TerrainObject(name);
-				GetTileR(rx, ry).AddObject(t);
+				tiles.GetTileR(rx, ry).AddObject(t);
 				this.terrainObjects.Add(t);
 			}
 		}
+
+		/// <summary>Reads the smudges. </summary>
 		private void ReadSmudges() {
 			IniSection smudgesSection = GetSection("Smudge");
 			if (smudgesSection == null) return;
@@ -385,10 +434,12 @@ namespace CNCMaps.FileFormats {
 				int rx = int.Parse(entries[1]);
 				int ry = int.Parse(entries[2]);
 				SmudgeObject s = new SmudgeObject(name);
-				GetTileR(rx, ry).AddObject(s);
+				tiles.GetTileR(rx, ry).AddObject(s);
 				this.smudgeObjects.Add(s);
 			}
 		}
+
+		/// <summary>Reads the overlay.</summary>
 		private void ReadOverlay() {
 			IniSection overlaySection = GetSection("OverlayPack");
 			byte[] format80Data = Convert.FromBase64String(overlaySection.ConcatenatedValues());
@@ -400,20 +451,19 @@ namespace CNCMaps.FileFormats {
 			byte[] overlayDataPack = new byte[1 << 18];
 			Format5.DecodeInto(format80Data, overlayDataPack, 80);
 
-			for (int x = 0; x < tiles.GetLength(0); x++) {
-				for (int y = 0; y < tiles.GetLength(1); y++) {
-					MapTile t = tiles[x, y];
-					int idx = t.Rx + 512 * t.Ry;
-					byte overlay_id = overlayPack[idx];
-					if (overlay_id != 0xFF) {
-						byte overlay_value = overlayDataPack[idx];
-						OverlayObject ovl = new OverlayObject(overlay_id, overlay_value);
-						t.AddObject(ovl);
-						this.overlayObjects.Add(ovl);
-					}
+			foreach (MapTile t in tiles) {
+				int idx = t.Rx + 512 * t.Ry;
+				byte overlay_id = overlayPack[idx];
+				if (overlay_id != 0xFF) {
+					byte overlay_value = overlayDataPack[idx];
+					OverlayObject ovl = new OverlayObject(overlay_id, overlay_value);
+					t.AddObject(ovl);
+					this.overlayObjects.Add(ovl);
 				}
 			}
 		}
+
+		/// <summary>Reads the structures.</summary>
 		private void ReadStructures() {
 			IniSection structsSection = GetSection("Structures");
 			if (structsSection == null) return;
@@ -426,10 +476,12 @@ namespace CNCMaps.FileFormats {
 				int ry = int.Parse(entries[4]);
 				short direction = short.Parse(entries[5]);
 				StructureObject s = new StructureObject(owner, name, health, direction);
-				GetTileR(rx, ry).AddObject(s);
+				tiles.GetTileR(rx, ry).AddObject(s);
 				this.structureObjects.Add(s);
 			}
 		}
+
+		/// <summary>Reads the infantry. </summary>
 		private void ReadInfantry() {
 			IniSection infantrySection = GetSection("Infantry");
 			if (infantrySection == null) return;
@@ -442,10 +494,12 @@ namespace CNCMaps.FileFormats {
 				int ry = int.Parse(entries[4]);
 				short direction = short.Parse(entries[7]);
 				InfantryObject i = new InfantryObject(owner, name, health, direction);
-				GetTileR(rx, ry).AddObject(i);
+				tiles.GetTileR(rx, ry).AddObject(i);
 				this.infantryObjects.Add(i);
 			}
 		}
+
+		/// <summary>Reads the units.</summary>
 		private void ReadUnits() {
 			IniSection unitsSection = GetSection("Units");
 			if (unitsSection == null) return;
@@ -458,10 +512,12 @@ namespace CNCMaps.FileFormats {
 				int ry = int.Parse(entries[4]);
 				short direction = short.Parse(entries[5]);
 				UnitObject u = new UnitObject(owner, name, health, direction);
-				GetTileR(rx, ry).AddObject(u);
+				tiles.GetTileR(rx, ry).AddObject(u);
 				this.unitObjects.Add(u);
 			}
 		}
+
+		/// <summary>Reads the aircraft.</summary>
 		private void ReadAircraft() {
 			IniSection aircraftSection = GetSection("Aircraft");
 			if (aircraftSection == null) return;
@@ -474,19 +530,206 @@ namespace CNCMaps.FileFormats {
 				int ry = int.Parse(entries[4]);
 				short direction = short.Parse(entries[5]);
 				AircraftObject a = new AircraftObject(owner, name, health, direction);
-				GetTileR(rx, ry).AddObject(a);
+				tiles.GetTileR(rx, ry).AddObject(a);
 				this.aircraftObjects.Add(a);
 			}
 		}
 
-		MapTile GetTile(int dx, int dy) {
-			return tiles[dx, dy + dx % 2];
+		private void RecalculateOreSpread() {
+			Logger.WriteLine("Recalculating ore-spread");
+
+			foreach (OverlayObject o in this.overlayObjects) {
+				// The value consists of the sum of all x's with a little magic offsets
+				// plus the sum of all y's with also a little magic offset, and also
+				// everything is calculated modulo 12
+				int x = o.Tile.Dx;
+				int y = o.Tile.Dy;
+				double y_inc = ((((y - 9) / 2) % 12) * (((y - 8) / 2) % 12)) % 12;
+				double x_inc = ((((x - 13) / 2) % 12) * (((x - 12) / 2) % 12)) % 12;
+
+				// x_inc may be > y_inc so adding a big number outside of cell bounds
+				// will surely keep num positive
+				int num = (int)(y_inc - x_inc + 120000);
+				num %= 12;
+				if (o.IsOre()) {
+					// replace ore
+					o.OverlayID = (byte)(OverlayObject.MinOreID + num);
+				}
+
+				else if (o.IsGem()) {
+					// replace gems
+					o.OverlayID = (byte)(OverlayObject.MinGemsID + num);
+				}
+			}
 		}
 
-		MapTile GetTileR(int rx, int ry) {
-			int dx = (rx - ry + fullSize.Width - 1);
-			int dy = (rx + ry - fullSize.Width - 1) / 2;
-			return tiles[dx, dy];
+		private void LoadLighting() {
+			Logger.WriteLine("Loading lighting");
+			this.lighting = new Lighting(GetSection("Lighting"));
+		}
+
+		private void CreateLevelPalettes() {
+			Logger.WriteLine("Create per-height palettes");
+			PaletteCollection palettes = theater.GetPalettes();
+			for (int i = 0; i < 15; i++) {
+				Palette isoHeight = palettes.isoPalette.Clone();
+				isoHeight.ApplyLighting(this.lighting, i);
+				PalettePerLevel.Add(isoHeight);
+				PalettesToBeRecalculated.Add(isoHeight);
+			}
+
+			foreach (MapTile t in tiles) {
+				t.Palette = PalettePerLevel[t.Z];
+				t.PaletteIsOriginal = true;
+			}
+		}
+
+		static string[] lampNames = new string[] {
+			"REDLAMP", "BLUELAMP", "GRENLAMP", "YELWLAMP", "PURPLAMP", "INORANLAMP", "INGRNLMP", "INREDLMP", "INBLULMP", "INGALITE",
+			"INYELWLAMP", "INPURPLAMP", "NEGLAMP", "NERGRED", "TEMMORLAMP", "TEMPDAYLAMP", "TEMDAYLAMP", "TEMDUSLAMP", "TEMNITLAMP", "SNOMORLAMP",
+			"SNODAYLAMP", "SNODUSLAMP", "SNONITLAMP"
+		};
+		private void LoadLightSources() {
+			Logger.WriteLine("Loading light sources");
+			List<StructureObject> forDeletion = new List<StructureObject>();
+			foreach (StructureObject s in structureObjects) {
+				if (lampNames.Contains(s.Name)) {
+					LightSource ls = new LightSource(rules.GetSection(s.Name), this.lighting);
+					ls.Tile = s.Tile;
+					this.lightSources.Add(ls);
+					forDeletion.Add(s);
+				}
+			}
+			// make sure these don't get drawn
+			foreach (var s in forDeletion)
+				structureObjects.Remove(s);
+		}
+
+		private void ApplyLightSources() {
+			foreach (LightSource s in lightSources) {
+				foreach (MapTile t in this.tiles) {
+					// make sure this tile can only end up in the "to-be-recalculated list" once
+					bool wasOriginal = t.PaletteIsOriginal;
+					bool tileAffected = t.ApplyLamp(s);
+					if (wasOriginal && tileAffected) {
+						PalettesToBeRecalculated.Add(t.Palette);
+					}
+				}
+			}
+		}
+
+		private void RecalculateAllPalettes() {
+			Logger.WriteLine("Calculating palette-values for all objects");
+			foreach (Palette p in PalettesToBeRecalculated)
+				p.Recalculate();
+		}
+
+		public void DrawTiledStartPositions() {
+			Logger.WriteLine("Marking tiled startpositions");
+			IniSection basic = GetSection("Basic");
+			if (basic == null || !basic.ReadBool("MultiplayerOnly")) return;
+			IniSection waypoints = GetSection("Waypoints");
+			Palette red = Palette.MakePalette(Color.Red);
+
+			foreach (var entry in waypoints.OrderedEntries) {
+				if (int.Parse(entry.Key) >= 8)
+					continue;
+				int pos = int.Parse(entry.Value);
+				int wy = pos / 1000;
+				int wx = pos - wy * 1000;
+
+				// Draw 4x4 cell around start pos
+				for (int x = wx - 2; x < wx + 2; x++) {
+					for (int y = wy - 2; y < wy + 2; y++) {
+						MapTile t = tiles.GetTileR(x, y);
+						if (t != null) {
+							t.Palette = Palette.MergePalettes(t.Palette, red, 0.4);
+						}
+					}
+				}
+			}
+		}
+
+		public unsafe void DrawSquaredStartPositions() {
+			Logger.WriteLine("Marking squared startpositions");
+			IniSection basic = GetSection("Basic");
+			if (basic == null || !basic.ReadBool("MultiplayerOnly")) return;
+			IniSection waypoints = GetSection("Waypoints");
+
+			foreach (var entry in waypoints.OrderedEntries) {
+				if (int.Parse(entry.Key) >= 8)
+					continue;
+				int pos = int.Parse(entry.Value);
+				int wy = pos / 1000;
+				int wx = pos - wy * 1000;
+
+				MapTile t = tiles.GetTileR(wx, wy);
+				int dest_x = t.Dx * 30;
+				int dest_y = (t.Dy - t.Z) * 15;
+
+				bool vert = fullSize.Height * 2 > fullSize.Width;
+				int radius;
+				if (vert)
+					radius = 10 * fullSize.Height * 15 / 144;
+				else
+					radius = 10 * fullSize.Width * 30 / 133;
+
+				int h = radius, w = radius;
+				for (int draw_y = dest_y - h / 2; draw_y < dest_y + h; draw_y++) {
+					for (int draw_x = dest_x - w / 2; draw_x < dest_x + w; draw_x++) {
+						byte* p = (byte*)drawingSurface.bmd.Scan0 + draw_y * drawingSurface.bmd.Stride + 3 * draw_x;
+						*p++ = 0x00;
+						*p++ = 0x00;
+						*p++ = 0xFF;
+					}
+				}
+			}
+		}
+		
+		private int FindCutoffHeight() {			
+			int y = fullSize.Height - 1;
+			int highest_height = 0;
+			for (int x = 0; x < fullSize.Width; x++) {
+				MapTile t = tiles.GetTile(x, y);
+				if (t != null) 
+					highest_height = Math.Max(highest_height, t.Z);
+			}
+			return highest_height;
+		}
+
+		public Rectangle GetLocalSizePixels() {
+			int left = Math.Max(localSize.Left * 60, 0),
+			top = Math.Max(localSize.Top * 30 - 90, 0);
+			int width = localSize.Width * 60;
+			int height = localSize.Height * 30 + 135;
+			int height2 = (fullSize.Height - ((FindCutoffHeight() / 2 - 1) % 2)) * 30;
+			height = Math.Min(height, height2);
+			return new Rectangle(left, top, width, height);
+		}
+
+		public void MarkOreAndGems() {
+			Logger.WriteLine("Marking ore and gems");
+			Palette yellow = Palette.MakePalette(Color.Yellow);
+			Palette purple = Palette.MakePalette(Color.Purple);
+			foreach (var o in overlayObjects) {
+				if (o.IsOre())
+					o.Tile.Palette = Palette.MergePalettes(o.Tile.Palette, yellow, o.OverlayValue / 11.0 * 0.6 + 0.1);
+
+				else if (o.IsGem())
+					o.Tile.Palette = Palette.MergePalettes(o.Tile.Palette, purple, o.OverlayValue / 11.0 * 0.6 + 0.25);
+			}
+		}
+
+		internal void DrawMap() {
+			Logger.WriteLine("Drawing map");
+			drawingSurface = new DrawingSurface(fullSize.Width * 60, fullSize.Height * 30, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
+			var tileCollection = theater.GetTileCollection();
+			foreach (var t in tiles)
+				tileCollection.DrawTile(t, drawingSurface);
+		}
+
+		public DrawingSurface GetDrawingSurface() {
+			return drawingSurface;
 		}
 	}
 }

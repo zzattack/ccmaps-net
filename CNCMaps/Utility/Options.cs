@@ -88,7 +88,7 @@
 //  int verbose = 0;
 //  OptionSet p = new OptionSet ()
 //    .Add ("v", v => ++verbose)
-//    .Add ("name=|value=", v => Console.WriteLine (v));
+//    .Add ("name=|value=", v => Logger.WriteLine (v));
 //  p.Parse (new string[]{"-v", "--v", "/v", "-name=A", "/name", "B", "extra"});
 //
 // The above would parse the argument string array, and would invoke the
@@ -107,7 +107,7 @@
 // type:
 //
 //  var p = new OptionSet () {
-//    { "foo=", (Foo f) => Console.WriteLine (f.ToString ()) },
+//    { "foo=", (Foo f) => Logger.WriteLine (f.ToString ()) },
 //  };
 //
 // Random other tidbits:
