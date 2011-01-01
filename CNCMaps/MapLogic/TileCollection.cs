@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using CNCMaps.FileFormats;
 using CNCMaps.VirtualFileSystem;
 using CNCMaps.Utility;
+using System.Drawing;
 
 namespace CNCMaps.MapLogic {
 
@@ -187,7 +188,7 @@ namespace CNCMaps.MapLogic {
 
 		public bool ConnectTiles(int setNum1, int setNum2) {
 			if (setNum1 == setNum2) return false;
-
+			
 			// grass doesn't connect with shores
 			else if (setNum1 == GreenTile && setNum2 == ShorePieces ||
 				(setNum2 == GreenTile && setNum1 == ShorePieces)) return false;
@@ -224,14 +225,14 @@ namespace CNCMaps.MapLogic {
 				setNum == ClearToPaveLat;
 		}
 
-		public short GetLAT(short setNum) {
-			if (setNum == ClearToRoughLat)
+		public short GetLAT(short clatSetNum) {
+			if (clatSetNum == ClearToRoughLat)
 				return RoughTile;
-			else if (setNum == ClearToSandLat)
+			else if (clatSetNum == ClearToSandLat)
 				return SandTile;
-			else if (setNum == ClearToGreenLat)
+			else if (clatSetNum == ClearToGreenLat)
 				return GreenTile;
-			else if (setNum == ClearToPaveLat)
+			else if (clatSetNum == ClearToPaveLat)
 				return PaveTile;
 			else
 				return -1;
@@ -268,12 +269,11 @@ namespace CNCMaps.MapLogic {
 				// If this tile comes from a CLAT (connecting lat) set,
 				// then replace it's set and tilenr by corresponding LAT sets'
 				t.SetNum = GetSetNum(t.TileNum);
+
 				if (IsCLAT(t.SetNum)) {
-					short latSetNum = GetLAT(t.TileNum);
 					t.SetNum = GetLAT(t.SetNum);
 					t.TileNum = GetTileNumFromSet(t.SetNum);
-				}
-			}
+				}			}
 
 			foreach (MapTile t in tiles) {
 				// If this tile is a LAT tile, we might have to connect it
@@ -286,7 +286,7 @@ namespace CNCMaps.MapLogic {
 					MapTile tileTopRight = tiles.GetNeighbourTile(t, TileDirection.TopRight);
 					if (tileTopRight != null && ConnectTiles(t.SetNum, tileTopRight.SetNum))
 						transitionTile += 1;
-
+					
 					MapTile tileBottomRight = tiles.GetNeighbourTile(t, TileDirection.BottomRight);
 					if (tileBottomRight != null && ConnectTiles(t.SetNum, tileBottomRight.SetNum))
 						transitionTile += 2;

@@ -42,7 +42,7 @@ namespace CNCMaps.MapLogic {
 
 		public MapTile this[int x, int y] {
 			get {
-				if (x < fullSize.Width && y < fullSize.Height)
+				if (x < tiles.GetLength(0) && y < tiles.GetLength(1))
 					return tiles[x, y];
 				else
 					return null;
@@ -100,7 +100,7 @@ namespace CNCMaps.MapLogic {
 			switch (direction) {
 				// in non-diagonal direction we don't need to check odd/evenness of x
 				case TileDirection.Bottom:
-					if (y >= fullSize.Height - 1) return null;
+					if (y >= tiles.GetLength(1)) return null;
 					return this[x, y + 1];
 
 				case TileDirection.Top:
@@ -112,7 +112,7 @@ namespace CNCMaps.MapLogic {
 					return this[x - 2, y];
 
 				case TileDirection.Right:
-					if (x >= fullSize.Width - 1) return null;
+					if (x >= tiles.GetLength(0) - 1) return null;
 					return this[x + 2, y];
 			}
 
@@ -121,11 +121,11 @@ namespace CNCMaps.MapLogic {
 			y += x % 2;
 			switch (direction) {
 				case TileDirection.BottomLeft:
-					if (x < 1 || y >= fullSize.Height) return null;
+					if (x < 1 || y >= tiles.GetLength(1)) return null;
 					return this[x - 1, y];
 
 				case TileDirection.BottomRight:
-					if (x >= fullSize.Width - 1 || y >= fullSize.Height) return null;
+					if (x >= tiles.GetLength(0) || y >= tiles.GetLength(1)) return null;
 					return this[x + 1, y];
 
 				case TileDirection.TopLeft:
@@ -133,7 +133,7 @@ namespace CNCMaps.MapLogic {
 					return this[x - 1, y - 1];
 
 				case TileDirection.TopRight:
-					if (y < 1 || x >= fullSize.Width - 1) return null;
+					if (y < 1 || x >= tiles.GetLength(0) - 1) return null;
 					return this[x + 1, y - 1];
 			}
 			throw new InvalidOperationException();

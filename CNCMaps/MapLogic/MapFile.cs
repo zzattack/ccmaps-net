@@ -84,7 +84,7 @@ namespace CNCMaps.FileFormats {
 			string pktfile;
 			bool custom_pkt = false;
 			bool isyr = this.mapType == MapType.YurisRevenge;
-			string csfEntry;
+			string csfEntry = "";
 			string mapName = "";
 			PktFile.PktMapEntry mapEntry = null;
 			bool isMission;
@@ -133,7 +133,8 @@ namespace CNCMaps.FileFormats {
 					pkt_mapname = infile_nopath;
 
 				mapEntry = pkt.GetMapEntry(pkt_mapname);
-				csfEntry = mapEntry.Description;
+				if (mapEntry != null)
+					csfEntry = mapEntry.Description;
 			}
 
 			if (csfEntry != "") {
@@ -219,7 +220,6 @@ namespace CNCMaps.FileFormats {
 			LoadColors();
 			LoadCountries();
 			LoadHouses();
-			theater.GetTileCollection().RecalculateTileSystem(this.tiles);
 			RecalculateOreSpread();
 			LoadLighting();
 			CreateLevelPalettes();
@@ -228,6 +228,8 @@ namespace CNCMaps.FileFormats {
 
 			// now everything is loaded and we can prepare the palettes before using them to draw
 			RecalculateAllPalettes();
+
+			theater.GetTileCollection().RecalculateTileSystem(this.tiles);
 		}
 
 		/// <summary>Loads the countries. </summary>
@@ -256,8 +258,10 @@ namespace CNCMaps.FileFormats {
 		private void LoadHouses() {
 			Logger.WriteLine("Loading houses");
 			IniSection housesSection = GetSection("Houses");
+			if (housesSection == null) return;
 			foreach (var v in housesSection.OrderedEntries) {
 				var houseSection = GetSection(v.Value);
+				if (houseSection == null) continue;
 				string color;
 				if (v.Value == "Neutral" || v.Value == "Special")
 					color = "LightGrey"; // this is hardcoded in the game
