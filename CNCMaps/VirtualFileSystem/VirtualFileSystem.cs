@@ -7,7 +7,7 @@ using Microsoft.Win32;
 
 namespace CNCMaps.VirtualFileSystem {
 
-	class VFS {
+	public class VFS {
 		private static VFS instance = new VFS();
 
 		public VFS() { }
@@ -18,6 +18,29 @@ namespace CNCMaps.VirtualFileSystem {
 
 		public static VirtualFile Open(string filename) {
 			return instance.OpenFile(filename);
+		}
+
+		public static T Open<T>(string filename) where T : VirtualFile {
+			return Open(filename, GetFormatFromTypeclass(typeof(T))) as T;
+		}
+
+		public static T Open<T>(string filename, FileFormat f) where T : VirtualFile {
+			return Open(filename, f) as T;
+		}
+
+		static FileFormat GetFormatFromTypeclass(Type t) {
+			if (t == typeof(IniFile)) return FileFormat.Ini;
+			if (t == typeof(CsfFile)) return FileFormat.Csf;
+			if (t == typeof(HvaFile)) return FileFormat.Hva;
+			if (t == typeof(MapFile)) return FileFormat.Map;
+			if (t == typeof(MissionsFile)) return FileFormat.Missions;
+			if (t == typeof(MixFile)) return FileFormat.Mix;
+			if (t == typeof(PalFile)) return FileFormat.Pal;
+			if (t == typeof(PktFile)) return FileFormat.Pkt;
+			if (t == typeof(ShpFile)) return FileFormat.Shp;
+			if (t == typeof(TmpFile)) return FileFormat.Tmp;
+			if (t == typeof(VxlFile)) return FileFormat.Vxl;
+			return FileFormat.Ukn;
 		}
 
 		public static VirtualFile Open(string filename, FileFormat format = FileFormat.None) {
@@ -70,7 +93,7 @@ namespace CNCMaps.VirtualFileSystem {
 			}
 			// virtual mix file
 			else if (Exists(path)) {
-				MixFile mx = Open(path) as MixFile;
+				MixFile mx = Open<MixFile>(path);
 				AllArchives.Add(mx);
 				return true;
 			}
@@ -152,10 +175,20 @@ namespace CNCMaps.VirtualFileSystem {
 				return ReadRegistryString(Registry.LocalMachine, "SOFTWARE\\Westwood\\Red Alert 2", "InstallPath");
 			}
 		}
+		public static string TSInstallPath {
+			get {
+				return ReadRegistryString(Registry.LocalMachine, "SOFTWARE\\Westwood\\Tiberian Sun", "InstallPath");
+			}
+		}
 
 		public static string RA2InstallDir {
 			get {
 				return Path.GetDirectoryName(RA2InstallPath);
+			}
+		}
+		public static string TSInstallDir {
+			get {
+				return Path.GetDirectoryName(TSInstallPath);
 			}
 		}
 

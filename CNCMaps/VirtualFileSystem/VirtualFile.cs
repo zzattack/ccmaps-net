@@ -66,6 +66,27 @@ namespace CNCMaps.VirtualFileSystem {
 			return count;
 		}
 
+		public unsafe int Read(byte* buffer, int count) {
+			count = Math.Min(count, (int)(Length - Position));
+			if (isBuffered) {
+				if (!IsBufferInitialized)
+					InitBuffer();
+
+				for (int i = 0; i < count; i++)
+					*buffer++ = this.buff[pos + i];
+			}
+			else {
+				// ensure
+				baseStream.Position = baseOffset + pos;
+
+				byte[] rbuff = Read(count);
+				for (int i = 0; i < count; i++)
+					*buffer++ = rbuff[pos + i];
+			}
+			pos += count;
+			return count;
+		}
+
 		private void InitBuffer() {
 			// ensure
 			baseStream.Position = baseOffset + pos;
@@ -126,7 +147,7 @@ namespace CNCMaps.VirtualFileSystem {
 			}
 			set {
 				pos = value;
-				if (!isBuffered)
+				if (!isBuffered && pos + baseOffset != baseStream.Position)
 					baseStream.Seek(pos + baseOffset, SeekOrigin.Begin);
 			}
 		}

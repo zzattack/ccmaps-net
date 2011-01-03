@@ -77,31 +77,37 @@ namespace CNCMaps.MapLogic {
 
 	public class RA2Object {
 		public MapTile Tile { get; set; }
-
-		public Palette Palette { get; set; }
 	}
 
-	public class SmudgeObject : RA2Object {
+	public class NumberedObject : RA2Object {
+		public int Number { get; protected set; }
+	}
 
-		public string Name { get; private set; }
+	public interface DamageableObject {
+		short Health { get; set; }
+	}
+	public interface RemappableObject {
+		Palette Palette { get; set; }
+	}
 
+	public class NamedObject : RA2Object {
+		public string Name { get; protected set; }
+	}
+
+	public class SmudgeObject : NamedObject {
 		public SmudgeObject(string name) {
 			this.Name = name;
 		}
 	}
 
-	public class TerrainObject : RA2Object {
-
-		public string Name { get; private set; }
-
+	public class TerrainObject : NamedObject {
 		public TerrainObject(string name) {
 			this.Name = name;
 		}
 	}
 
-	public class OverlayObject : RA2Object {
-
-		public byte OverlayID { get; set; }
+	public class OverlayObject : NumberedObject {
+		public byte OverlayID { get { return (byte)Number; } set { Number = value; } }
 		public byte OverlayValue { get; set; }
 
 		public OverlayObject(byte overlayID, byte overlayValue) {
@@ -122,7 +128,7 @@ namespace CNCMaps.MapLogic {
 		}
 	}
 
-	public class StructureObject : RA2Object {
+	public class StructureObject : NamedObject, DamageableObject, RemappableObject {
 
 		public StructureObject(string owner, string name, short health, short direction) {
 			this.Owner = owner;
@@ -130,36 +136,34 @@ namespace CNCMaps.MapLogic {
 			this.Health = health;
 			this.Direction = direction;
 		}
-
-		public string Name { get; private set; }
-
-		public short Health { get; private set; }
+		public MapTile DrawTile { get; set; }
+		public short Health { get; set; }
 
 		public short Direction { get; private set; }
 
 		public string Owner { get; set; }
+
+		public Palette Palette { get; set; }
 	}
 
-	public class InfantryObject : RA2Object {
-
+	public class InfantryObject : NamedObject, DamageableObject, RemappableObject {
 		public InfantryObject(string owner, string name, short health, short direction) {
 			this.Owner = owner;
 			this.Name = name;
 			this.Health = health;
 			this.Direction = direction;
 		}
-
-		public string Name { get; private set; }
-
-		public short Health { get; private set; }
+		
+		public short Health { get; set; }
 
 		public short Direction { get; private set; }
 
 		public string Owner { get; set; }
+
+		public Palette Palette { get; set; }
 	}
 
-	public class AircraftObject : RA2Object {
-
+	public class AircraftObject : NamedObject, DamageableObject, RemappableObject {
 		public AircraftObject(string owner, string name, short health, short direction) {
 			this.Owner = owner;
 			this.Name = name;
@@ -167,16 +171,16 @@ namespace CNCMaps.MapLogic {
 			this.Direction = direction;
 		}
 
-		public string Name { get; private set; }
-
-		public short Health { get; private set; }
+		public short Health { get; set; }
 
 		public short Direction { get; private set; }
 
 		public string Owner { get; set; }
+
+		public Palette Palette { get; set; }
 	}
 
-	public class UnitObject : RA2Object {
+	public class UnitObject : NamedObject, DamageableObject, RemappableObject {
 
 		public UnitObject(string owner, string name, short health, short direction) {
 			this.Owner = owner;
@@ -184,13 +188,13 @@ namespace CNCMaps.MapLogic {
 			this.Health = health;
 			this.Direction = direction;
 		}
+		
+		public short Health { get; set; }
 
-		public string Name { get; private set; }
-
-		public short Health { get; private set; }
-
-		public short Direction { get; private set; }
+		public short Direction { get; set; }
 
 		public string Owner { get; set; }
+
+		public Palette Palette { get; set; }
 	}
 }

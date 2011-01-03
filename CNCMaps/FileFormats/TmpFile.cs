@@ -112,7 +112,6 @@ namespace CNCMaps.FileFormats {
 			if (subTileNum >= images.Count) return;
 			TmpImage img = images[subTileNum];
 			var zBuf = ds.GetZBuffer();
-			var colors = p.colors;
 
 			int stride = ds.bmd.Stride;
 
@@ -136,9 +135,9 @@ namespace CNCMaps.FileFormats {
 				for (ushort c = 0; c < cx; c++) {
 					byte paletteValue = img.tileData[rIdx++];
 					if (paletteValue != 0 && w_low <= w && w < w_high) {
-						*(w+0) = colors[paletteValue].B;
-						*(w+1) = colors[paletteValue].G;
-						*(w+2) = colors[paletteValue].R;
+						*(w + 0) = p.colors[paletteValue].B;
+						*(w + 1) = p.colors[paletteValue].G;
+						*(w + 2) = p.colors[paletteValue].R;
 						zBuf[zIdx] = Math.Max(zBuf[zIdx], height);
 					}
 					w += 3;
@@ -155,9 +154,9 @@ namespace CNCMaps.FileFormats {
 				for (ushort c = 0; c < cx; c++) {
 					byte paletteValue = img.tileData[rIdx++];
 					if (paletteValue != 0 && w_low <= w && w < w_high) {
-						*(w + 0) = colors[paletteValue].B;
-						*(w + 1) = colors[paletteValue].G;
-						*(w + 2) = colors[paletteValue].R;
+						*(w + 0) = p.colors[paletteValue].B;
+						*(w + 1) = p.colors[paletteValue].G;
+						*(w + 2) = p.colors[paletteValue].R;
 						zBuf[zIdx] = Math.Max(zBuf[zIdx], height);
 					}
 					w += 3; 
@@ -182,9 +181,9 @@ namespace CNCMaps.FileFormats {
 						byte paletteValue = img.extraData[rIdx++];
 
 						if (paletteValue != 0 && w_low <= w && w < w_high) {
-							*w++ = colors[paletteValue].B;
-							*w++ = colors[paletteValue].G;
-							*w++ = colors[paletteValue].R;
+							*w++ = p.colors[paletteValue].B;
+							*w++ = p.colors[paletteValue].G;
+							*w++ = p.colors[paletteValue].R;
 							zBuf[zIdx] = Math.Max(zBuf[zIdx++], height);
 						}
 						else { w += 3; zIdx++; }

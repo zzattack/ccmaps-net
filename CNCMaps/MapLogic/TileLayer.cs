@@ -67,7 +67,7 @@ namespace CNCMaps.MapLogic {
 		public MapTile GetTileR(int rx, int ry) {
 			int dx = (rx - ry + fullSize.Width - 1);
 			int dy = (rx + ry - fullSize.Width - 1) / 2;
-			return tiles[dx, dy];
+			return GetTile(dx, dy);
 		}
 
 		public void testNeighbours() {
@@ -163,7 +163,8 @@ namespace CNCMaps.MapLogic {
 				return curY < array.GetLength(1);
 			}
 			public void Reset() {
-				this.curX = this.curY = 0;
+				this.curX = -1;
+				this.curY = 0;
 			}
 			T IEnumerator<T>.Current {
 				get {

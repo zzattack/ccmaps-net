@@ -3,6 +3,8 @@ Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual Studio 2010
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CNCMaps", "CNCMaps\CNCMaps.csproj", "{BA2CD618-F414-4AD5-960F-2232221323F1}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VoxelRenderer", "VoxelRenderer\VoxelRenderer.csproj", "{8EF00B44-2422-48DC-BFE7-4A6003594201}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x86 = Debug|x86
@@ -13,6 +15,10 @@ Global
 		{BA2CD618-F414-4AD5-960F-2232221323F1}.Debug|x86.Build.0 = Debug|x86
 		{BA2CD618-F414-4AD5-960F-2232221323F1}.Release|x86.ActiveCfg = Release|x86
 		{BA2CD618-F414-4AD5-960F-2232221323F1}.Release|x86.Build.0 = Release|x86
+		{8EF00B44-2422-48DC-BFE7-4A6003594201}.Debug|x86.ActiveCfg = Debug|x86
+		{8EF00B44-2422-48DC-BFE7-4A6003594201}.Debug|x86.Build.0 = Debug|x86
+		{8EF00B44-2422-48DC-BFE7-4A6003594201}.Release|x86.ActiveCfg = Release|x86
+		{8EF00B44-2422-48DC-BFE7-4A6003594201}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

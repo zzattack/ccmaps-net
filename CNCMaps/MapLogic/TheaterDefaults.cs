@@ -10,17 +10,17 @@ namespace CNCMaps.FileFormats {
 			switch (T) {
 				case TheaterType.Temperate:
 				case TheaterType.TemperateYR:
-					return 't';
+					return 'T';
 				case TheaterType.Urban:
 				case TheaterType.UrbanYR:
-					return 'u';
+					return 'U';
 				case TheaterType.Snow:
 				case TheaterType.SnowYR:
-					return 'a';
-				case TheaterType.Lunar: return 'l';
-				case TheaterType.Desert: return 'd';
-				case TheaterType.NewUrban: return 'n';
-				default: return 'g'; // generic
+					return 'A';
+				case TheaterType.Lunar: return 'L';
+				case TheaterType.Desert: return 'D';
+				case TheaterType.NewUrban: return 'N';
+				default: return 'G'; // generic
 			}
 		}
 
@@ -76,19 +76,17 @@ namespace CNCMaps.FileFormats {
 		public static bool GetShadowAssumption(CollectionType t) {
 			switch (t) {
 				case CollectionType.Overlay:
-					return true;
+					return false; // todo check
 				case CollectionType.Smudge:
 					return false;
 				case CollectionType.Building:
 					return true;
-				//case CollectionType.ANIM:
-				//	return false;
 				case CollectionType.Aircraft:
 					return false;
 				case CollectionType.Infantry:
 					return true;
 				case CollectionType.Terrain:
-					return true;
+					return false; // todo check
 				case CollectionType.Vehicle:
 					return false;
 				default:

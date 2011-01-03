@@ -5,7 +5,7 @@ using System.Drawing.Imaging;
 using System.Drawing;
 
 namespace CNCMaps.Utility {
-	class DrawingSurface {
+	public class DrawingSurface {
 		public BitmapData bmd { get; private set; }
 		Bitmap bm;
 		short[] zBuffer;
@@ -13,9 +13,13 @@ namespace CNCMaps.Utility {
 
 		public DrawingSurface(int width, int height, PixelFormat pixelFormat) {
 			bm = new Bitmap(width, height, pixelFormat);
-			bmd = bm.LockBits(new Rectangle(0, 0, width, height), ImageLockMode.ReadWrite, pixelFormat);
+			Lock(width, height, pixelFormat);
 			zBuffer = new short[width * height];
 			shadowBuffer = new bool[width * height];
+		}
+
+		private void Lock(int width, int height, PixelFormat pixelFormat) {
+			bmd = bm.LockBits(new Rectangle(0, 0, width, height), ImageLockMode.ReadWrite, pixelFormat);
 		}
 
 		public bool IsShadow(int x, int y) {
@@ -70,8 +74,8 @@ namespace CNCMaps.Utility {
 		}
 
 
-		public int Width { get { return bm.Width; } }
-		public int Height { get { return bm.Height; } }
+		public int Width { get { return bmd.Width; } }
+		public int Height { get { return bmd.Height; } }
 
 	}
 }

@@ -150,7 +150,7 @@ namespace CNCMaps.MapLogic {
 			// searching through all archives for every tile
 			VFS tilesVFS = new VFS();
 			foreach (string s in TheaterDefaults.GetTheaterMixes(theaterType))
-				tilesVFS.AddMix(VFS.Open(s) as MixFile);
+				tilesVFS.AddMix(VFS.Open<MixFile>(s));
 
 			int setNum = 0;
 			while (true) {

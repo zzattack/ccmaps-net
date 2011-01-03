@@ -9,7 +9,7 @@ using CNCMaps.VirtualFileSystem;
 
 namespace CNCMaps.FileFormats {
 
-	class MixFile : VirtualFile, IArchive {
+	public class MixFile : VirtualFile, IArchive {
 		Dictionary<uint, MixEntry> index;
 		bool isRmix, isEncrypted;
 		long dataStart;

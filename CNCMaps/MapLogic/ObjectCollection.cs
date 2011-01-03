@@ -30,46 +30,145 @@ namespace CNCMaps.MapLogic {
 		}
 	}
 
+	class DrawableObject<T> : System.IComparable where T : VirtualFile {
+		public DrawProperties props;
+		public T file;
+		int index;
+		public DrawableObject(T file, DrawProperties drawProperties, int index) {
+			this.file = file;
+			this.props = drawProperties;
+			this.index = index;
+		}
+
+		public int CompareTo(object obj) {
+			DrawableObject<T> other = obj as DrawableObject<T>;
+			if (this.props.ySort != other.props.ySort)
+				return this.props.ySort - other.props.ySort;
+			else
+				return this.index - other.index;
+		}
+	}
+
 	class DrawableObject {
+		public DrawableObject(string name) {
+			this.Name = name;
+			this.Foundation = new Size(1, 1);
+		}
 
-		public virtual void Draw(RA2Object obj, int x, int y, DrawingSurface s) { }
+		bool sorted = false;
+		void Sort() {
+			fires.Sort();
+			shps.Sort();
+			damagedShps.Sort();
+			voxels.Sort();
+			sorted = true;
+		}
 
-		Palette palette;
+		public virtual void Draw(RA2Object obj, DrawingSurface ds) {
+			if (!sorted) Sort();
+
+			if (obj is DamageableObject && (obj as DamageableObject).Health < 128) {
+				foreach (var v in damagedShps)
+					DrawFile(obj, ds, v.file, v.props);
+
+				foreach (var v in fires)
+					DrawFile(obj, ds, v.file, v.props, palettes.animPalette);
+			}
+			else {
+				foreach (var v in shps)
+					DrawFile(obj, ds, v.file, v.props);
+			}
+			
+			if (alphaImage != null) {
+				int dx = obj.Tile.Dx * 30;
+				int dy = (obj.Tile.Dy - obj.Tile.Z) * 15;
+				dx += globalOffset.X;
+				dy += globalOffset.Y;
+				alphaImage.DrawAlpha(0, ds, dx, dy);
+			}
+
+			for (int i = 0; i < voxels.Count; i++) {
+				Palette p = null;
+				if (obj is RemappableObject) p = (obj as RemappableObject).Palette;
+				if (obj is UnitObject) direction = (obj as UnitObject).Direction;
+				DrawingSurface vxl_ds = voxelrenderer.Render(voxels[i].file, hvas[i], -(double)direction / 256.0 * 360 + 45, p ?? this.Palette);
+
+				// rows inverted!
+				int dx = obj.Tile.Dx * 30;
+				int dy = (obj.Tile.Dy - obj.Tile.Z) * 15;
+				dx += globalOffset.X;
+				dy += globalOffset.Y;
+				var props = this.voxels[i].props;
+				dx += props.offset.X;
+				dy += props.offset.Y;
+				dx -= vxl_ds.bmd.Width / 2;
+				dy -= vxl_ds.bmd.Height / 2;
+
+				// vxl_ds.SavePNG("C:\\soms.jpg", 100, 0, 0, 200, 200);
+
+				unsafe {
+					byte* w_low = (byte*)ds.bmd.Scan0;
+					byte* w_high = w_low + ds.bmd.Stride * ds.bmd.Height;
+
+					for (int y = 0; y < vxl_ds.Height; y++) {
+						byte* src_row = (byte*)vxl_ds.bmd.Scan0 + vxl_ds.bmd.Stride * (vxl_ds.Height - y - 1);
+						byte* dst_row = (byte*)(ds.bmd.Scan0 + (dy + y) * ds.bmd.Stride + dx * 3);
+						if (dst_row < w_low || dst_row >= w_high) continue;
+						
+						for (int x = 0; x < vxl_ds.Width; x++) {
+							// only non-transparent pixels
+							if (*(src_row + x * 4 + 3) > 0) {
+								*(dst_row + x * 3) = *(src_row + x * 4);
+								*(dst_row + x * 3 + 1) = *(src_row + x * 4 + 1);
+								*(dst_row + x * 3 + 2) = *(src_row + x * 4 + 2);							
+							}
+						}
+
+					}
+				}
+
+			}
+
+		}
+
+		static VoxelRenderer voxelrenderer = new VoxelRenderer();
+
+		private void DrawFile(RA2Object obj, DrawingSurface ds, ShpFile file, DrawProperties props, Palette p = null) {
+			int dx = obj.Tile.Dx * 30;
+			int dy = (obj.Tile.Dy - obj.Tile.Z) * 15;
+			dx += globalOffset.X;
+			dy += globalOffset.Y;
+			dx += props.offset.X;
+			dy += props.offset.Y;
+			if (p == null && obj is RemappableObject)
+				p = (obj as RemappableObject).Palette;
+
+			file.Draw(frame, ds, dx, dy, 0, p ?? this.Palette);
+			if (props.hasShadow)
+				file.DrawShadow(frame, ds, dx, dy);	
+		}
+
+		public static PaletteCollection palettes { get; set; }
+		public Palette Palette { get; set; }
 		ShpFile alphaImage = null;
 		Point globalOffset = new Point(0, 0);
-		Point shadowOffset = new Point(0, 0);
 
 		int heightOffset;
 		bool objectOverrides = false;
-		Size foundation = new Size(1, 1);
+		public Size Foundation { get; set; }
 		int direction; // for voxels
 		int frame; // for shps
-		bool hasShadow;
+		public string Name { get; private set; }
 
-		List<VxlFile> voxels = new List<VxlFile>();
-		List<DrawProperties> voxelProperties = new List<DrawProperties>();
-
+		List<DrawableObject<VxlFile>> voxels = new List<DrawableObject<VxlFile>>();
 		List<HvaFile> hvas = new List<HvaFile>();
-		List<ShpFile> shpFires = new List<ShpFile>();
-		List<DrawProperties> shpFireProperties = new List<DrawProperties>();
 
-		List<ShpFile> shpSections = new List<ShpFile>();
-		List<DrawProperties> shpProperties = new List<DrawProperties>();
-
-		List<ShpFile> shpDamagedSections = new List<ShpFile>();
-		List<DrawProperties> shpDamagedProperties = new List<DrawProperties>();
-
-		public void SetPalette(Palette p) {
-			this.palette = p;
-		}
+		List<DrawableObject<ShpFile>> shps = new List<DrawableObject<ShpFile>>();
+		List<DrawableObject<ShpFile>> fires = new List<DrawableObject<ShpFile>>();
+		List<DrawableObject<ShpFile>> damagedShps = new List<DrawableObject<ShpFile>>();
 
 		internal void SetAlphaImage(ShpFile shpFile) {
 			alphaImage = shpFile;
-		}
-
-		internal void SetOffsetShadow(int xOffset, int yOffset) {
-			this.shadowOffset.X = xOffset;
-			this.shadowOffset.Y = yOffset;
 		}
 
 		internal void SetOffset(int xOffset, int yOffset) {
@@ -86,12 +185,7 @@ namespace CNCMaps.MapLogic {
 		}
 
 		internal void SetFoundation(int w, int h) {
-			this.foundation.Width = w;
-			this.foundation.Height = h;
-		}
-
-		internal void SetShadow(bool hasShadow) {
-			this.hasShadow = hasShadow;
+			Foundation = new Size(w, h);
 		}
 
 		internal void AddOffset(int extraXOffset, int extraYOffset) {
@@ -100,24 +194,24 @@ namespace CNCMaps.MapLogic {
 		}
 
 		internal void AddVoxel(VxlFile vxlFile, HvaFile hvaFile, int xOffset = 0, int yOffset = 0, bool hasShadow = false, int ySort = 0) {
-			voxels.Add(vxlFile);
+			voxels.Add(new DrawableObject<VxlFile>(vxlFile, new DrawProperties(new Point(xOffset, yOffset), hasShadow, ySort), voxels.Count));
 			hvas.Add(hvaFile);
-			voxelProperties.Add(new DrawProperties(new Point(xOffset, yOffset), hasShadow, ySort));
 		}
 
 		internal void AddShp(ShpFile shpFile, int xOffset = 0, int yOffset = 0, bool hasShadow = false, int ySort = 0) {
-			shpSections.Add(shpFile);
-			shpProperties.Add(new DrawProperties(new Point(xOffset, yOffset), hasShadow, ySort));
+			shps.Add(new DrawableObject<ShpFile>(shpFile, new DrawProperties(new Point(xOffset, yOffset), hasShadow, ySort), shps.Count));
 		}
 
 		internal void AddDamagedShp(ShpFile shpFile, int xOffset = 0, int yOffset = 0, bool hasShadow = false, int ySort = 0) {
-			shpDamagedSections.Add(shpFile);
-			shpDamagedProperties.Add(new DrawProperties(new Point(xOffset, yOffset), hasShadow, ySort));
+			damagedShps.Add(new DrawableObject<ShpFile>(shpFile, new DrawProperties(new Point(xOffset, yOffset), hasShadow, ySort), damagedShps.Count));
 		}
 
 		internal void AddFire(ShpFile shpFile, int xOffset, int yOffset) {
-			shpFires.Add(shpFile);
-			shpFireProperties.Add(new DrawProperties(new Point(xOffset, yOffset), false, 0));
+			fires.Add(new DrawableObject<ShpFile>(shpFile, new DrawProperties(new Point(xOffset, yOffset), false, 0), fires.Count));
+		}
+
+		internal void SetFrame(int frameNum) {
+			this.frame = frameNum;
 		}
 	}
 
@@ -130,9 +224,18 @@ namespace CNCMaps.MapLogic {
 		private List<DrawableObject> objects = new List<DrawableObject>();
 
 		static readonly string[] ExtraBuildingImages = {
-			"ActiveAnim",	"ActiveAnimTwo",	"ActiveAnimThree",	"ActiveAnimFour",
-			"SpecialAnim",	"SpecialAnimTwo",	"SpecialAnimThree",	"SpecialAnimFour",
-			"BibShape", "Turret", "SuperAnim"
+			"ProductionAnim",
+			"SuperAnim",
+			"Turret",
+			"BibShape",
+			"SpecialAnimFour",
+			"SpecialAnimThree",
+			"SpecialAnimTwo",
+			"SpecialAnim",
+			"ActiveAnimFour",
+			"ActiveAnimThree",
+			"ActiveAnimTwo",
+			"ActiveAnim"
 		};
 
 		public ObjectCollection(IniFile.IniSection objectSection, CollectionType collectionType,
@@ -149,7 +252,7 @@ namespace CNCMaps.MapLogic {
 
 		private void LoadObject(string objName) {
 			IniFile.IniSection rulesSection = rules.GetSection(objName);
-			var drawableObject = new DrawableObject();
+			var drawableObject = new DrawableObject(objName);
 			this.objects.Add(drawableObject);
 
 			if (rulesSection == null || rulesSection.ReadBool("IsRubble"))
@@ -167,13 +270,13 @@ namespace CNCMaps.MapLogic {
 				imageFileName = artSectionName;
 
 			bool paletteChosen = false;
-			bool isVoxel = artSection.ReadBool("IsVoxel");
+			bool isVoxel = artSection.ReadBool("Voxel");
 			bool theaterExtension = artSection.ReadBool("Theater");
 			if (isVoxel) imageFileName += ".vxl";
 			else if (theaterExtension) {
 				imageFileName += TheaterDefaults.GetExtension(theaterType);
 				if (collectionType != CollectionType.Overlay) {
-					drawableObject.SetPalette(palettes.isoPalette);
+					drawableObject.Palette = palettes.isoPalette;
 					paletteChosen = true;
 				}
 			}
@@ -183,30 +286,30 @@ namespace CNCMaps.MapLogic {
 			bool NewTheater = artSection.ReadBool("NewTheater");
 			if (NewTheater) {
 				ApplyNewTheater(ref imageFileName);
-				drawableObject.SetPalette(palettes.unitPalette);
+				drawableObject.Palette = (palettes.unitPalette);
 				paletteChosen = true;
 			}
 
 			// Used palet can be overriden
 			bool noUseTileLandType = rulesSection.ReadString("NoUseTileLandType") != "";
 			if (noUseTileLandType) {
-				drawableObject.SetPalette(palettes.isoPalette);
+				drawableObject.Palette = palettes.isoPalette;
 				paletteChosen = true;
 			}
 			else if (rulesSection.ReadBool("TerrainPalette")) {
-				drawableObject.SetPalette(palettes.isoPalette);
+				drawableObject.Palette = palettes.isoPalette;
 				paletteChosen = true;
 			}
 			else if (rulesSection.ReadBool("AnimPalette")) {
-				drawableObject.SetPalette(palettes.animPalette);
+				drawableObject.Palette = palettes.animPalette;
 				paletteChosen = true;
 			}
 			else if (rulesSection.ReadBool("AltPalette")) {
-				drawableObject.SetPalette(palettes.unitPalette);
+				drawableObject.Palette = palettes.unitPalette;
 				paletteChosen = true;
 			}
 			else if (rulesSection.ReadString("Palette") == "lib") {
-				drawableObject.SetPalette(palettes.libPalette);
+				drawableObject.Palette = palettes.libPalette;
 				paletteChosen = true;
 			}
 
@@ -220,50 +323,46 @@ namespace CNCMaps.MapLogic {
 			if (!paletteChosen) {
 				// Set palette, determined by type of SHP collection
 				Palette p = palettes.GetPalette(TheaterDefaults.GetPaletteType(collectionType));
-				drawableObject.SetPalette(p);
+				drawableObject.Palette = p;
 			}
 
 			bool shadow = TheaterDefaults.GetShadowAssumption(collectionType);
-			if (rulesSection.ReadString("Shadow") != "")
-				drawableObject.SetShadow(rulesSection.ReadBool("Shadow"));
+			if (artSection.ReadString("Shadow") != "")
+				shadow = artSection.ReadBool("Shadow");
 
 			if (!rulesSection.ReadBool("DrawFlat", true))
-				drawableObject.SetShadow(true);
+				shadow = true;
 
+			int xOffset = 0, yOffset = 0;
 			if (rulesSection.ReadBool("Immune")) {
 				// For example on TIBTRE / Ore Poles
-				drawableObject.SetOffset(0, -15);
-				drawableObject.SetOffsetShadow(0, -15);
-				drawableObject.SetPalette(palettes.GetPalette(PaletteType.Unit));
+				yOffset = -1;
+				drawableObject.Palette = palettes.GetPalette(PaletteType.Unit);
 			}
-
 			if (rulesSection.ReadBool("BridgeRepairHut")) {
-				drawableObject.SetOffset(0, 0);
-				drawableObject.SetOffsetShadow(0, 0);
+				// xOffset = yOffset = 0;
 			}
 
 			if (rulesSection.ReadString("Land") == "Rock") {
-				drawableObject.SetOffset(0, 15);
-				drawableObject.SetOffsetShadow(0, 15);
+				yOffset = 15;
 			}
 
 			else if (rulesSection.ReadString("Land") == "Road") {
-				drawableObject.SetOffset(0, 15);
-				drawableObject.SetOffsetShadow(0, 15);
+				yOffset = 15;
 			}
-
+			
 			if (rulesSection.ReadBool("Overrides")) {
 				drawableObject.SetHeightOffset(4);
 				drawableObject.SetOverrides(true);
 			}
 
 			// Find out foundation
-			string foundation = rulesSection.ReadString("Foundation", "1x1");
+			string foundation = artSection.ReadString("Foundation", "1x1");
 			int fx = foundation[0] - '0';
 			int fy = foundation[2] - '0';
-			drawableObject.SetFoundation(fx, fy);
+			drawableObject.Foundation = new Size(fx, fy);
 
-			AddImageToObject(drawableObject, imageFileName);
+			AddImageToObject(drawableObject, imageFileName, xOffset, yOffset, shadow);
 
 			// Buildings often consist of multiple SHP files
 			if (collectionType == CollectionType.Building) {
@@ -339,6 +438,15 @@ namespace CNCMaps.MapLogic {
 					int y = int.Parse(df2.Substring(df2.IndexOf(',') + 1));
 					drawableObject.AddFire(VFS.Open("fire03.shp") as ShpFile, x, y);
 				}
+
+				// Add turrets
+				if (rulesSection.ReadBool("Turret")) {
+					string img = rulesSection.ReadString("TurretAnim");
+					img += rulesSection.ReadBool("TurretAnimIsVoxel") ? ".vxl" : ".shp";
+					int m_x = rulesSection.ReadInt("TurretAnimX"),
+						m_y = rulesSection.ReadInt("TurretAnimY");
+					AddImageToObject(drawableObject, img, m_x, m_y);
+				}
 			}
 
 			else if (collectionType == CollectionType.Vehicle) {
@@ -360,20 +468,25 @@ namespace CNCMaps.MapLogic {
 
 		private void AddImageToObject(DrawableObject drawableObject, string fileName, int xOffset = 0, int yOffset = 0, bool hasShadow = false, int ySort = 0) {
 			if (fileName.EndsWith(".vxl")) {
-				var vxl = VFS.Open(fileName) as VxlFile;
+				var vxl = VFS.Open<VxlFile>(fileName, FileFormat.Vxl);
 				if (vxl != null) {
 					string hvaFileName = Path.ChangeExtension(fileName, ".hva");
 					var hva = VFS.Open(hvaFileName) as HvaFile;
-					drawableObject.AddVoxel(vxl, hva, xOffset, yOffset, hasShadow, ySort);
 
-					if (collectionType == CollectionType.Building) // half tile to the left, center of 200x200px vxl render
-						drawableObject.AddOffset(-70, -100);
-					else if (collectionType == CollectionType.Vehicle) // also vertical tile center, plus center of 200x200px vxl render
-						drawableObject.AddOffset(-70, -85);
+					if (collectionType == CollectionType.Building) { 
+						// half tile to the left
+						xOffset += 30;
+					}
+					else if (collectionType == CollectionType.Vehicle) { 
+						// also vertical tile center
+						xOffset += 30;
+						yOffset += 15;
+					}					
+					drawableObject.AddVoxel(vxl, hva, xOffset, yOffset, hasShadow, ySort);					
 				}
 			}
 			else {
-				var shp = VFS.Open(fileName) as ShpFile;
+				var shp = VFS.Open<ShpFile>(fileName, FileFormat.Shp);
 				if (shp != null)
 					drawableObject.AddShp(shp, xOffset, yOffset, hasShadow, ySort);
 			}
@@ -382,10 +495,53 @@ namespace CNCMaps.MapLogic {
 		private void ApplyNewTheater(ref string imageFileName) {
 			StringBuilder sb = new StringBuilder(imageFileName);
 			sb[1] = TheaterDefaults.GetTheaterPrefix(theaterType);
-			if (VFS.Exists(imageFileName)) {
-				sb[1] = 'g';
+			if (!VFS.Exists(sb.ToString())) {
+				sb[1] = 'G'; // generic
 			}
 			imageFileName = sb.ToString();
+		}
+
+
+		private int GetObjectIndex(RA2Object o) {
+			int idx = -1;
+
+			if (o is NamedObject)
+				idx = FindObjectIndex((o as NamedObject).Name);
+			else if (o is NumberedObject)
+				idx = (o as NumberedObject).Number;
+			return idx;
+		}
+
+		internal void Draw(RA2Object o, DrawingSurface drawingSurface) {
+			int idx = GetObjectIndex(o);
+			if (idx == -1) return;
+
+			DrawableObject d = objects[idx];
+			if (o is OverlayObject)
+				d.SetFrame((o as OverlayObject).OverlayValue);
+
+			d.Draw(o, drawingSurface);
+		}
+
+		internal Palette GetPalette(RA2Object o) {
+			return objects[GetObjectIndex(o)].Palette;
+		}
+
+		private int FindObjectIndex(string p) {
+			for (int i = 0; i < objects.Count; i++) {
+				if (objects[i].Name == p)
+					return i;
+			}
+			return -1;
+		}
+
+
+		internal bool HasObject(RA2Object o) {
+			return GetObjectIndex(o) != -1;
+		}
+
+		internal Size GetFoundation(StructureObject v) {
+			return objects[GetObjectIndex(v)].Foundation;
 		}
 	}
 }
