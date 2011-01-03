@@ -108,6 +108,13 @@ namespace CNCMaps.FileFormats {
 			int rIdx = 0;
 
 			for (int y = 0; y < h.cy; y++) {
+				if (dy + y < 0) {
+					w += stride;
+					rIdx += h.cx;
+					zIdx += ds.Width;
+					continue;
+				}
+
 				for (int x = 0; x < h.cx; x++) {
 					byte paletteValue = image.imageData[rIdx];
 					if (paletteValue != 0 && w_low <= w && w < w_high) {
@@ -118,10 +125,11 @@ namespace CNCMaps.FileFormats {
 					}
 					// Up to the next pixel
 					rIdx++;
+					zIdx++;
 					w += 3;
 				}
-				w += stride - 3 * h.cx;	// ... and if we're no more on the same row,
-				// adjust the writing pointer accordingy
+				w += stride - 3 * h.cx;	
+				zIdx += ds.Width - h.cx;
 			}
 		}
 

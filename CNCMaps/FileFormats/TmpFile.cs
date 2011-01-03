@@ -113,6 +113,9 @@ namespace CNCMaps.FileFormats {
 			TmpImage img = images[subTileNum];
 			var zBuf = ds.GetZBuffer();
 
+			// calculate tile index -> pixel index
+			x_offset *= fileHeader.cx / 2;
+			y_offset *= fileHeader.cy / 2;
 			int stride = ds.bmd.Stride;
 
 			int half_cx = fileHeader.cx / 2,

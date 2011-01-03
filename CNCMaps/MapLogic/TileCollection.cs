@@ -316,7 +316,7 @@ namespace CNCMaps.MapLogic {
 		public void DrawTile(MapTile t, DrawingSurface ds) {
 			var tmpFile = Tiles[Math.Max(t.TileNum, (short)0)].GetTile();
 			if (tmpFile != null)
-				tmpFile.Draw(t.SubTile, ds, t.Dx * 30, (t.Dy - t.Z) * 15, t.Z, t.Palette);
+				tmpFile.Draw(t.SubTile, ds, t.Dx, (t.Dy - t.Z), t.Z, t.Palette);
 		}
 	}
 }

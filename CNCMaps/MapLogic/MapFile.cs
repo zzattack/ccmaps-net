@@ -177,6 +177,7 @@ namespace CNCMaps.FileFormats {
 			fullSize = new Rectangle(int.Parse(size[0]), int.Parse(size[1]), int.Parse(size[2]), int.Parse(size[3]));
 			size = map.ReadString("LocalSize").Split(',');
 			localSize = new Rectangle(int.Parse(size[0]), int.Parse(size[1]), int.Parse(size[2]), int.Parse(size[3]));
+			this.engineType = et;
 
 			ReadAllObjects();
 
@@ -192,7 +193,7 @@ namespace CNCMaps.FileFormats {
 				else art = VFS.Open<IniFile>("art.ini");
 			}
 			else {
-				if (this.engineType == EngineType.YurisRevenge) {
+				if (this.engineType == EngineType.YurisRevenge || this.engineType == EngineType.FireStorm) {
 					rules = VFS.Open<IniFile>("rulesmd.ini");
 					art = VFS.Open<IniFile>("artmd.ini");
 				}
@@ -201,6 +202,9 @@ namespace CNCMaps.FileFormats {
 					art = VFS.Open<IniFile>("art.ini");
 				}
 			}
+			DrawableObject.TileWidth = (ushort)this.TileWidth;
+			DrawableObject.TileHeight = (ushort)this.TileHeight;
+
 			theater = new Theater(ReadString("Map", "Theater"), this.engineType, rules, art);
 			theater.Initialize();
 
@@ -212,7 +216,7 @@ namespace CNCMaps.FileFormats {
 			PalettesToBeRecalculated.AddRange(theater.GetPalettes());
 
 			LoadColors();
-			LoadCountries();
+			//LoadCountries();
 			LoadHouses();
 			theater.GetTileCollection().RecalculateTileSystem(this.tiles);
 			RecalculateOreSpread();
@@ -713,15 +717,15 @@ namespace CNCMaps.FileFormats {
 				int wx = pos - wy * 1000;
 
 				MapTile t = tiles.GetTileR(wx, wy);
-				int dest_x = t.Dx * 30;
-				int dest_y = (t.Dy - t.Z) * 15;
+				int dest_x = t.Dx * TileWidth / 2;
+				int dest_y = (t.Dy - t.Z) * TileHeight / 2;
 
 				bool vert = fullSize.Height * 2 > fullSize.Width;
 				int radius;
 				if (vert)
-					radius = 10 * fullSize.Height * 15 / 144;
+					radius = 10 * fullSize.Height * TileHeight / 2 / 144;
 				else
-					radius = 10 * fullSize.Width * 30 / 133;
+					radius = 10 * fullSize.Width * TileWidth / 2 / 133;
 
 				int h = radius, w = radius;
 				for (int draw_y = dest_y - h / 2; draw_y < dest_y + h; draw_y++) {
@@ -747,11 +751,11 @@ namespace CNCMaps.FileFormats {
 		}
 
 		public Rectangle GetLocalSizePixels() {
-			int left = Math.Max(localSize.Left * 60, 0),
-			top = Math.Max(localSize.Top * 30 - 90, 0);
-			int width = localSize.Width * 60;
-			int height = localSize.Height * 30 + 135;
-			int height2 = (fullSize.Height - ((FindCutoffHeight() / 2 - 1) % 2)) * 30;
+			int left = Math.Max(localSize.Left * TileWidth, 0),
+			top = Math.Max(localSize.Top * TileHeight - 3 * TileHeight, 0);
+			int width = localSize.Width * TileWidth;
+			int height = localSize.Height * TileHeight + 5 * TileHeight;
+			int height2 = (fullSize.Height - ((FindCutoffHeight() / 2 - 1) % 2)) * TileHeight;
 			height = Math.Min(height, height2);
 			return new Rectangle(left, top, width, height);
 		}
@@ -777,7 +781,7 @@ namespace CNCMaps.FileFormats {
 
 		internal void DrawMap() {
 			Logger.WriteLine("Drawing map");
-			drawingSurface = new DrawingSurface(fullSize.Width * 60, fullSize.Height * 30, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
+			drawingSurface = new DrawingSurface(fullSize.Width * TileWidth, fullSize.Height * TileHeight, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
 			var tileCollection = theater.GetTileCollection();
 			for (int y = 0; y < fullSize.Height; y++) {
 				for (int x = fullSize.Width * 2 - 2; x >= 0; x -= 2) {
@@ -826,6 +830,18 @@ namespace CNCMaps.FileFormats {
 
 		public DrawingSurface GetDrawingSurface() {
 			return drawingSurface;
+		}
+
+		public int TileWidth {
+			get {
+				return engineType == EngineType.RedAlert2 || engineType == EngineType.YurisRevenge ? 60 : 48;
+			}
+		}
+
+		public int TileHeight {
+			get {
+				return engineType == EngineType.RedAlert2 || engineType == EngineType.YurisRevenge ? 30 : 24;
+			}
 		}
 	}
 }

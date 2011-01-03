@@ -11,7 +11,7 @@ namespace CNCMaps {
 		Squared
 	}
 
-	enum EngineType {
+	public enum EngineType {
 		AutoDetect,
 		RedAlert2,
 		YurisRevenge,
@@ -73,8 +73,10 @@ namespace CNCMaps {
 				{ "i|infile=", "Input file", v => rs.InputFile = v },
 				{ "o|outfile=", "Output file, without extension", v => rs.OutputFile = v },
 				{ "d|outdir=", "Output directiory", v => rs.OutputDir = v },
-				{ "Y|force-yr", "Force using the Yuri's Revenge engine for rendering", v => rs.Engine = EngineType.YurisRevenge },
 				{ "y|force-ra2", "Force using the Red Alert 2 engine for rendering", v => rs.Engine = EngineType.RedAlert2 },
+				{ "Y|force-yr", "Force using the Yuri's Revenge engine for rendering", v => rs.Engine = EngineType.YurisRevenge },
+				{ "t|force-ts", "Force using the Tiberian Sun engine for rendering", v => rs.Engine = EngineType.TiberianSun },
+				{ "T|force-fs", "Force using the FireStorm engine for rendering", v => rs.Engine = EngineType.FireStorm },
 				{ "j", "Output JPEG file", v => rs.SaveJPEG = true },
 				{ "q|jpeg-quality=", "Set JPEG quality level (0-100)", (int v) => rs.JPEGCompression = v },
 				{ "p", "Output PNG file", v => rs.SavePNG = true },
@@ -123,7 +125,7 @@ namespace CNCMaps {
 
 			Logger.WriteLine("Initializing virtual filesystem");
 			var vfs = VFS.GetInstance();
-			vfs.ScanMixDir(VFS.RA2InstallDir, false);
+			vfs.ScanMixDir(rs.Engine, rs.MixFilesDirectory);
 
 			MapFile map = new MapFile(File.Open(rs.InputFile, FileMode.Open, FileAccess.Read, FileShare.Read), Path.GetFileName(rs.InputFile));
 			map.FileName = rs.InputFile;

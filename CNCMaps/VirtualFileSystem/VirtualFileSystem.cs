@@ -105,13 +105,28 @@ namespace CNCMaps.VirtualFileSystem {
 			return true;
 		}
 
-		public void ScanMixDir(string mixDir, bool YR) {
+		public void ScanMixDir(EngineType engine, string installDir = "") {
+			bool useModFiles = engine == EngineType.FireStorm || engine == EngineType.YurisRevenge;
+			bool useRA2Engine = engine == EngineType.RedAlert2 || engine == EngineType.YurisRevenge || engine == EngineType.AutoDetect;
+			if (installDir == "") {
+				if (engine == EngineType.TiberianSun)
+					installDir = TSInstallDir;
+				else
+					installDir = RA2InstallDir;
+			}
+			ScanMixDir(installDir, useRA2Engine, useModFiles);
+		}
+
+		public void ScanMixDir(string mixDir, bool useRA2, bool isMod) {
+
 			// see http://modenc.renegadeprojects.com/MIX for more info
-			CNCMaps.Utility.Logger.WriteLine("Initializing filesystem on {0}, {1} Yuri's Revenge support", mixDir, YR ? "with" : "without");
+			CNCMaps.Utility.Logger.WriteLine("Initializing filesystem on {0}, {1} Yuri's Revenge support", mixDir, isMod ? "with" : "without");
 			AddFile(mixDir);
 
-			if (YR) AddFile(Path.Combine(mixDir, "langmd.mix"));
-			AddFile(Path.Combine(mixDir, "language.mix"));
+			if (useRA2) {
+				if (isMod) AddFile(Path.Combine(mixDir, "langmd.mix"));
+				AddFile(Path.Combine(mixDir, "language.mix"));
+			}
 
 			// try all expand\d{2}md?\.mix files
 			for (int i = 99; i >= 0; i--) {
@@ -119,7 +134,7 @@ namespace CNCMaps.VirtualFileSystem {
 				string path = Path.Combine(mixDir, file);
 				if (File.Exists(path))
 					AddFile(path);
-				if (YR) {
+				if (isMod) {
 					file = "expandmd" + i.ToString("00") + ".mix";
 					path = Path.Combine(mixDir, file);
 					if (File.Exists(path))
@@ -127,16 +142,22 @@ namespace CNCMaps.VirtualFileSystem {
 				}
 			}
 
-			if (YR) AddFile(Path.Combine(mixDir, "ra2md.mix"));
-			AddFile(Path.Combine(mixDir, "ra2.mix"));
+			if (useRA2) {
+				if (isMod) AddFile(Path.Combine(mixDir, "ra2md.mix"));
+				AddFile(Path.Combine(mixDir, "ra2.mix"));
+			}
+			else {
+				if (isMod) AddFile(Path.Combine(mixDir, "tibsunmd.mix"));
+				AddFile(Path.Combine(mixDir, "tibsun.mix"));
+			}
 
-			if (YR) AddFile("cachemd.mix");
+			if (isMod) AddFile("cachemd.mix");
 			AddFile("cache.mix");
 
-			if (YR) AddFile("localmd.mix");
+			if (isMod) AddFile("localmd.mix");
 			AddFile("local.mix");
 
-			if (YR) AddFile("audiomd.mix");
+			if (isMod && useRA2) AddFile("audiomd.mix");
 
 			foreach (string file in Directory.GetFiles(mixDir, "ecache*.mix")) {
 				AddFile(Path.Combine(mixDir, file));
@@ -146,27 +167,32 @@ namespace CNCMaps.VirtualFileSystem {
 				AddFile(Path.Combine(mixDir, file));
 			}
 
-			foreach (string file in Directory.GetFiles(mixDir, "*.mmx")) {
-				AddFile(Path.Combine(mixDir, file));
+			if (useRA2) {
+				foreach (string file in Directory.GetFiles(mixDir, "*.mmx")) {
+					AddFile(Path.Combine(mixDir, file));
+				}
+				if (isMod) {
+					foreach (string file in Directory.GetFiles(mixDir, "*.yro")) {
+						AddFile(Path.Combine(mixDir, file));
+					}
+				}
 			}
 
-			foreach (string file in Directory.GetFiles(mixDir, "*.yro")) {
-				AddFile(Path.Combine(mixDir, file));
-			}
-
-			if (YR) AddFile("conqmd.mix");
-			if (YR) AddFile("genermd.mix");
-			AddFile("generic.mix");
-			if (YR) AddFile("isogenmd.mix");
-			AddFile("isogen.mix");
-			AddFile("conquer.mix");
-			if (YR) AddFile("cameomd.mix");
-			AddFile("cameo.mix");
-			if (YR) {
-				AddFile(Path.Combine(mixDir, "mapsmd03.mix"));
-				AddFile(Path.Combine(mixDir, "multimd.mix"));
-				AddFile(Path.Combine(mixDir, "thememd.mix"));
-				AddFile(Path.Combine(mixDir, "movmd03.mix"));
+			if (useRA2) {
+				if (isMod) AddFile("conqmd.mix");
+				if (isMod) AddFile("genermd.mix");
+				AddFile("generic.mix");
+				if (isMod) AddFile("isogenmd.mix");
+				AddFile("isogen.mix");
+				AddFile("conquer.mix");
+				if (isMod) AddFile("cameomd.mix");
+				AddFile("cameo.mix");
+				if (isMod) {
+					AddFile(Path.Combine(mixDir, "mapsmd03.mix"));
+					AddFile(Path.Combine(mixDir, "multimd.mix"));
+					AddFile(Path.Combine(mixDir, "thememd.mix"));
+					AddFile(Path.Combine(mixDir, "movmd03.mix"));
+				}
 			}
 		}
 

@@ -80,8 +80,8 @@ namespace CNCMaps.MapLogic {
 			}
 			
 			if (alphaImage != null) {
-				int dx = obj.Tile.Dx * 30;
-				int dy = (obj.Tile.Dy - obj.Tile.Z) * 15;
+				int dx = obj.Tile.Dx * TileWidth / 2;
+				int dy = (obj.Tile.Dy - obj.Tile.Z) * TileHeight / 2;
 				dx += globalOffset.X;
 				dy += globalOffset.Y;
 				alphaImage.DrawAlpha(0, ds, dx, dy);
@@ -94,8 +94,8 @@ namespace CNCMaps.MapLogic {
 				DrawingSurface vxl_ds = voxelrenderer.Render(voxels[i].file, hvas[i], -(double)direction / 256.0 * 360 + 45, p ?? this.Palette);
 
 				// rows inverted!
-				int dx = obj.Tile.Dx * 30;
-				int dy = (obj.Tile.Dy - obj.Tile.Z) * 15;
+				int dx = obj.Tile.Dx * TileWidth / 2;
+				int dy = (obj.Tile.Dy - obj.Tile.Z) * TileHeight / 2;
 				dx += globalOffset.X;
 				dy += globalOffset.Y;
 				var props = this.voxels[i].props;
@@ -134,8 +134,8 @@ namespace CNCMaps.MapLogic {
 		static VoxelRenderer voxelrenderer = new VoxelRenderer();
 
 		private void DrawFile(RA2Object obj, DrawingSurface ds, ShpFile file, DrawProperties props, Palette p = null) {
-			int dx = obj.Tile.Dx * 30;
-			int dy = (obj.Tile.Dy - obj.Tile.Z) * 15;
+			int dx = obj.Tile.Dx * TileWidth / 2;
+			int dy = (obj.Tile.Dy - obj.Tile.Z) * TileHeight / 2;
 			dx += globalOffset.X;
 			dy += globalOffset.Y;
 			dx += props.offset.X;
@@ -213,6 +213,9 @@ namespace CNCMaps.MapLogic {
 		internal void SetFrame(int frameNum) {
 			this.frame = frameNum;
 		}
+
+		public static ushort TileWidth { get; set; }
+		public static ushort TileHeight { get; set; }
 	}
 
 	class ObjectCollection {

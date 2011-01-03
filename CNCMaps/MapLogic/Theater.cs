@@ -86,11 +86,11 @@ namespace CNCMaps.MapLogic {
 		public Theater(TheaterType theaterType, EngineType engine) {
 			this.theaterType = theaterType;
 			this.engine = engine;
-			if (engine == EngineType.RedAlert2) {
+			if (engine == EngineType.RedAlert2 || engine == EngineType.TiberianSun) {
 				rules = VFS.Open("rules.ini") as IniFile;
 				art = VFS.Open("art.ini") as IniFile;
 			}
-			else if (engine == EngineType.YurisRevenge) {
+			else if (engine == EngineType.YurisRevenge || engine == EngineType.FireStorm) {
 				rules = VFS.Open("rulesmd.ini") as IniFile;
 				art = VFS.Open("artmd.ini") as IniFile;
 			}
@@ -98,7 +98,7 @@ namespace CNCMaps.MapLogic {
 
 		public void Initialize() {
 			CNCMaps.Utility.Logger.WriteLine("Initializing theater");
-
+			bool ra2Engine = this.engine == EngineType.RedAlert2 || this.engine == EngineType.YurisRevenge;
 			// load palettes and additional mix files for this theater
 			switch (theaterType) {
 				case TheaterType.Temperate:
@@ -155,6 +155,7 @@ namespace CNCMaps.MapLogic {
 			tileTypes = new TileCollection(theaterType);
 
 			DrawableObject.palettes = palettes;
+
 			buildingTypes = new ObjectCollection(rules.GetSection("BuildingTypes"),
 				CollectionType.Building, theaterType, rules, art, palettes);
 			VFS.Open<VxlFile>("SHAD.VXL");

@@ -47,13 +47,16 @@ namespace CNCMaps.MapLogic {
 		bool originalColorsLoaded = false;
 
 		private void LoadOriginalColors() {
-			this.origColors = this.originalPalette.GetOriginalColors();
-			originalColorsLoaded = true;
+			if (this.originalPalette != null) {
+				this.origColors = this.originalPalette.GetOriginalColors();
+				originalColorsLoaded = true;
+			}
 		}
 
 		public void Recalculate() {
 			if (!originalColorsLoaded) 
 				LoadOriginalColors();
+			if (!originalColorsLoaded) return;
 
 			ambientMult = Math.Min(Math.Max(ambientMult, -1.3), 1.3);
 			redMult = Math.Min(Math.Max(redMult, -1.3), 1.3);
