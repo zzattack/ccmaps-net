@@ -106,7 +106,7 @@ namespace CNCMaps.MapLogic {
 		}
 	}
 
-	public class OverlayObject : NumberedObject {
+	public class OverlayObject : NumberedObject, RemappableObject {
 		public byte OverlayID { get { return (byte)Number; } set { Number = value; } }
 		public byte OverlayValue { get; set; }
 
@@ -126,6 +126,8 @@ namespace CNCMaps.MapLogic {
 		public bool IsGem() {
 			return OverlayID >= MinGemsID && OverlayID <= MaxGemsID;
 		}
+
+		public Palette Palette { get; set; }
 	}
 
 	public class StructureObject : NamedObject, DamageableObject, RemappableObject {

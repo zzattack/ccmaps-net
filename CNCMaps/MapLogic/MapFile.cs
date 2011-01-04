@@ -216,10 +216,14 @@ namespace CNCMaps.FileFormats {
 			PalettesToBeRecalculated.AddRange(theater.GetPalettes());
 
 			LoadColors();
-			//LoadCountries();
+			if (engineType == EngineType.RedAlert2 || engineType == EngineType.YurisRevenge)
+				LoadCountries();
 			LoadHouses();
 			theater.GetTileCollection().RecalculateTileSystem(this.tiles);
-			RecalculateOreSpread();
+
+			if (engineType == EngineType.RedAlert2 || engineType == EngineType.YurisRevenge)
+				RecalculateOreSpread();
+
 			LoadLighting();
 			CreateLevelPalettes();
 			LoadLightSources();
@@ -255,9 +259,15 @@ namespace CNCMaps.FileFormats {
 		private void LoadHouses() {
 			Logger.WriteLine("Loading houses");
 			IniSection housesSection = GetSection("Houses");
+			LoadHousesFromIniSection(housesSection, this);
+			housesSection = rules.GetSection("Houses");
+			LoadHousesFromIniSection(housesSection, rules);
+		}
+
+		private void LoadHousesFromIniSection(IniSection housesSection, IniFile ini) {
 			if (housesSection == null) return;
 			foreach (var v in housesSection.OrderedEntries) {
-				var houseSection = GetSection(v.Value);
+				var houseSection = ini.GetSection(v.Value);
 				if (houseSection == null) continue;
 				string color;
 				if (v.Value == "Neutral" || v.Value == "Special")
@@ -501,7 +511,7 @@ namespace CNCMaps.FileFormats {
 				s.DrawTile = tiles.GetTileR(rx + foundation.Width - 1, ry + foundation.Height - 1);
 				s.DrawTile.AddObject(s);
 				s.Tile = tiles.GetTileR(rx, ry);
-				this.structureObjects[s.Tile.Dx, s.Tile.Dy / 2] = s;
+				this.structureObjects[s.DrawTile.Dx, s.DrawTile.Dy / 2] = s;
 			}
 		}
 
@@ -669,6 +679,29 @@ namespace CNCMaps.FileFormats {
 				u.Palette.Remap(this.countryColors[u.Owner]);
 				PalettesToBeRecalculated.Add(u.Palette);
 			}
+
+			// TS needs tiberium remapped
+			if (engineType == EngineType.TiberianSun || engineType == EngineType.FireStorm) {
+				var collection = theater.GetCollection(CollectionType.Overlay);
+				var tiberiumsSections = rules.GetSection("Tiberiums");
+				List<string> tiberiumRemaps = new List<string>();
+				foreach (var v in tiberiumsSections.OrderedEntries) {
+					tiberiumRemaps.Add(rules.GetSection(v.Value).ReadString("Color"));
+				}
+
+				foreach (var v in overlayObjects) {
+					if (v == null) continue;
+					string name = collection.GetName(v.OverlayID);
+					if (name.StartsWith("TIB")) {
+						int tiberiumType;
+						if (name.Contains("_")) tiberiumType = name[3] - '0';
+						else tiberiumType = 1;
+						v.Palette = theater.GetPalette(v).Clone();
+						v.Palette.Remap(namedColors[tiberiumRemaps[tiberiumType - 1]]);
+						PalettesToBeRecalculated.Add(v.Palette);
+					}
+				}
+			}
 		}
 
 		private void RecalculateAllPalettes() {
@@ -796,6 +829,19 @@ namespace CNCMaps.FileFormats {
 					foreach (RA2Object o in objs)
 						theater.DrawObject(o, drawingSurface);
 				}
+			} 
+			
+			for (int y = 0; y < fullSize.Height; y++) {
+				for (int x = fullSize.Width * 2 - 2; x >= 0; x -= 2) {
+					List<RA2Object> objs = GetObjectsAt(x, y);
+					foreach (RA2Object o in objs)
+						theater.DrawObject(o, drawingSurface);
+				}
+				for (int x = fullSize.Width * 2 - 3; x >= 0; x -= 2) {
+					List<RA2Object> objs = GetObjectsAt(x, y);
+					foreach (RA2Object o in objs)
+						theater.DrawObject(o, drawingSurface);
+				}
 			}
 		}
 
@@ -821,9 +867,8 @@ namespace CNCMaps.FileFormats {
 			if (unitObjects[x, y] != null)
 				ret.Add(unitObjects[x, y]);
 
-			foreach (var s in structureObjects)
-				if (s != null && s.DrawTile == t)
-					ret.Add(s);
+			if (structureObjects[x, y] != null)
+				ret.Add(structureObjects[x, y]);
 
 			return ret;
 		}

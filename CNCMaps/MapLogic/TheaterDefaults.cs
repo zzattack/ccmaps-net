@@ -24,10 +24,13 @@ namespace CNCMaps.FileFormats {
 			}
 		}
 
-		public static PaletteType GetPaletteType(CollectionType t) {
+		public static PaletteType GetPaletteType(CollectionType t, EngineType engine) {
 			switch (t) {
-				case CollectionType.Aircraft:
 				case CollectionType.Building:
+					return engine == EngineType.TiberianSun || engine == EngineType.FireStorm ?
+						PaletteType.Iso : PaletteType.Unit;
+
+				case CollectionType.Aircraft:
 				case CollectionType.Infantry:
 				case CollectionType.Vehicle:
 					return PaletteType.Unit;

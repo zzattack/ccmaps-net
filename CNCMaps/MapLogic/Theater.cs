@@ -103,47 +103,47 @@ namespace CNCMaps.MapLogic {
 			switch (theaterType) {
 				case TheaterType.Temperate:
 				case TheaterType.TemperateYR:
-					palettes.isoPalette = new Palette(VFS.Open<PalFile>("isotem.pal") );
-					palettes.libPalette = new Palette(VFS.Open<PalFile>("libtem.pal") );
-					palettes.ovlPalette = new Palette(VFS.Open<PalFile>("temperat.pal") );
-					palettes.unitPalette = new Palette(VFS.Open<PalFile>("unittem.pal") );
+					palettes.isoPalette = new Palette(VFS.Open<PalFile>("isotem.pal"));
+					palettes.libPalette = new Palette(VFS.Open<PalFile>("libtem.pal"));
+					palettes.ovlPalette = new Palette(VFS.Open<PalFile>("temperat.pal"));
+					palettes.unitPalette = new Palette(VFS.Open<PalFile>("unittem.pal"));
 					break;
 
 				case TheaterType.Snow:
 				case TheaterType.SnowYR:
 					palettes.isoPalette = new Palette(VFS.Open<PalFile>("isosno.pal"));
 					palettes.libPalette = new Palette(VFS.Open<PalFile>("libsno.pal"));
-					palettes.ovlPalette = new Palette(VFS.Open<PalFile>("snow.pal") );
-					palettes.unitPalette = new Palette(VFS.Open<PalFile>("unitsno.pal") );
+					palettes.ovlPalette = new Palette(VFS.Open<PalFile>("snow.pal"));
+					palettes.unitPalette = new Palette(VFS.Open<PalFile>("unitsno.pal"));
 					break;
 
 				case TheaterType.Urban:
 				case TheaterType.UrbanYR:
-					palettes.isoPalette = new Palette(VFS.Open<PalFile>("isourb.pal") );
-					palettes.libPalette = new Palette(VFS.Open<PalFile>("liburb.pal") );
-					palettes.ovlPalette = new Palette(VFS.Open<PalFile>("urban.pal") );
-					palettes.unitPalette = new Palette(VFS.Open<PalFile>("uniturb.pal") );
+					palettes.isoPalette = new Palette(VFS.Open<PalFile>("isourb.pal"));
+					palettes.libPalette = new Palette(VFS.Open<PalFile>("liburb.pal"));
+					palettes.ovlPalette = new Palette(VFS.Open<PalFile>("urban.pal"));
+					palettes.unitPalette = new Palette(VFS.Open<PalFile>("uniturb.pal"));
 					break;
 
 				case TheaterType.Desert:
-					palettes.isoPalette = new Palette(VFS.Open<PalFile>("isodes.pal") );
-					palettes.libPalette = new Palette(VFS.Open<PalFile>("libdes.pal") );
-					palettes.ovlPalette = new Palette(VFS.Open<PalFile>("desert.pal") );
-					palettes.unitPalette = new Palette(VFS.Open<PalFile>("unitdes.pal") );
+					palettes.isoPalette = new Palette(VFS.Open<PalFile>("isodes.pal"));
+					palettes.libPalette = new Palette(VFS.Open<PalFile>("libdes.pal"));
+					palettes.ovlPalette = new Palette(VFS.Open<PalFile>("desert.pal"));
+					palettes.unitPalette = new Palette(VFS.Open<PalFile>("unitdes.pal"));
 					break;
 
 				case TheaterType.Lunar:
-					palettes.isoPalette = new Palette(VFS.Open<PalFile>("isolun.pal") );
-					palettes.libPalette = new Palette(VFS.Open<PalFile>("liblun.pal") );
-					palettes.ovlPalette = new Palette(VFS.Open<PalFile>("lunar.pal") );
-					palettes.unitPalette = new Palette(VFS.Open<PalFile>("unitlun.pal") );
+					palettes.isoPalette = new Palette(VFS.Open<PalFile>("isolun.pal"));
+					palettes.libPalette = new Palette(VFS.Open<PalFile>("liblun.pal"));
+					palettes.ovlPalette = new Palette(VFS.Open<PalFile>("lunar.pal"));
+					palettes.unitPalette = new Palette(VFS.Open<PalFile>("unitlun.pal"));
 					break;
 
 				case TheaterType.NewUrban:
-					palettes.isoPalette = new Palette(VFS.Open<PalFile>("isoubn.pal") );
-					palettes.libPalette = new Palette(VFS.Open<PalFile>("libubn.pal") );
-					palettes.ovlPalette = new Palette(VFS.Open<PalFile>("urbann.pal") );
-					palettes.unitPalette = new Palette(VFS.Open<PalFile>("unitubn.pal") );
+					palettes.isoPalette = new Palette(VFS.Open<PalFile>("isoubn.pal"));
+					palettes.libPalette = new Palette(VFS.Open<PalFile>("libubn.pal"));
+					palettes.ovlPalette = new Palette(VFS.Open<PalFile>("urbann.pal"));
+					palettes.unitPalette = new Palette(VFS.Open<PalFile>("unitubn.pal"));
 					break;
 			}
 
@@ -157,25 +157,25 @@ namespace CNCMaps.MapLogic {
 			DrawableObject.palettes = palettes;
 
 			buildingTypes = new ObjectCollection(rules.GetSection("BuildingTypes"),
-				CollectionType.Building, theaterType, rules, art, palettes);
+				CollectionType.Building, theaterType, engine, rules, art, palettes);
 			VFS.Open<VxlFile>("SHAD.VXL");
 			aircraftTypes = new ObjectCollection(rules.GetSection("AircraftTypes"),
-				CollectionType.Aircraft, theaterType, rules, art, palettes);
+				CollectionType.Aircraft, theaterType, engine, rules, art, palettes);
 
 			infantryTypes = new ObjectCollection(rules.GetSection("InfantryTypes"),
-				CollectionType.Infantry, theaterType, rules, art, palettes);
+				CollectionType.Infantry, theaterType, engine, rules, art, palettes);
 
 			overlayTypes = new ObjectCollection(rules.GetSection("OverlayTypes"),
-				CollectionType.Overlay, theaterType, rules, art, palettes);
+				CollectionType.Overlay, theaterType, engine, rules, art, palettes);
 
 			terrainTypes = new ObjectCollection(rules.GetSection("TerrainTypes"),
-				CollectionType.Terrain, theaterType, rules, art, palettes);
+				CollectionType.Terrain, theaterType, engine, rules, art, palettes);
 
 			smudgeTypes = new ObjectCollection(rules.GetSection("SmudgeTypes"),
-				CollectionType.Smudge, theaterType, rules, art, palettes);
+				CollectionType.Smudge, theaterType, engine, rules, art, palettes);
 
 			vehicleTypes = new ObjectCollection(rules.GetSection("VehicleTypes"),
-				CollectionType.Vehicle, theaterType, rules, art, palettes);
+				CollectionType.Vehicle, theaterType, engine, rules, art, palettes);
 		}
 
 		static TheaterType TheaterTypeFromString(string theater, bool yr = false) {
@@ -231,6 +231,12 @@ namespace CNCMaps.MapLogic {
 				return buildingTypes.GetFoundation(v);
 			else
 				return overlayTypes.GetFoundation(v);
+		}
+
+		internal ObjectCollection GetCollection(CollectionType t) {
+			if (t == CollectionType.Overlay)
+				return overlayTypes;
+			return null;
 		}
 	}
 }

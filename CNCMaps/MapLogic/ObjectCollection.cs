@@ -221,6 +221,7 @@ namespace CNCMaps.MapLogic {
 	class ObjectCollection {
 		private CollectionType collectionType;
 		private TheaterType theaterType;
+		private EngineType engineType;
 		IniFile rules, art;
 		PaletteCollection palettes;
 
@@ -242,8 +243,9 @@ namespace CNCMaps.MapLogic {
 		};
 
 		public ObjectCollection(IniFile.IniSection objectSection, CollectionType collectionType,
-			TheaterType theaterType, IniFile rules, IniFile art, PaletteCollection palettes) {
+			TheaterType theaterType, EngineType engineType, IniFile rules, IniFile art, PaletteCollection palettes) {
 			this.theaterType = theaterType;
+			this.engineType = engineType;
 			this.collectionType = collectionType;
 			this.rules = rules;
 			this.art = art;
@@ -289,8 +291,10 @@ namespace CNCMaps.MapLogic {
 			bool NewTheater = artSection.ReadBool("NewTheater");
 			if (NewTheater) {
 				ApplyNewTheater(ref imageFileName);
-				drawableObject.Palette = (palettes.unitPalette);
-				paletteChosen = true;
+				if (engineType == EngineType.RedAlert2 || engineType == EngineType.YurisRevenge) {
+					drawableObject.Palette = (palettes.unitPalette);
+					paletteChosen = true;
+				}
 			}
 
 			// Used palet can be overriden
@@ -325,7 +329,7 @@ namespace CNCMaps.MapLogic {
 
 			if (!paletteChosen) {
 				// Set palette, determined by type of SHP collection
-				Palette p = palettes.GetPalette(TheaterDefaults.GetPaletteType(collectionType));
+				Palette p = palettes.GetPalette(TheaterDefaults.GetPaletteType(collectionType, this.engineType));
 				drawableObject.Palette = p;
 			}
 
@@ -357,6 +361,10 @@ namespace CNCMaps.MapLogic {
 			if (rulesSection.ReadBool("Overrides")) {
 				drawableObject.SetHeightOffset(4);
 				drawableObject.SetOverrides(true);
+			}
+
+			if (rulesSection.ReadString("Color") != "") {
+				int i = 0;
 			}
 
 			// Find out foundation
@@ -545,6 +553,10 @@ namespace CNCMaps.MapLogic {
 
 		internal Size GetFoundation(StructureObject v) {
 			return objects[GetObjectIndex(v)].Foundation;
+		}
+
+		internal string GetName(byte p) {
+			return objects[p].Name;
 		}
 	}
 }
