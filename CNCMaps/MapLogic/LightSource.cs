@@ -24,9 +24,9 @@ namespace CNCMaps.MapLogic {
 			// Read and assume default values
 			LightVisibility = lamp.ReadDouble("LightVisibility", 5000.0);
 			LightIntensity = lamp.ReadDouble("LightIntensity", 0.0);
-			LightRedTint = lamp.ReadDouble("LightRedtint", 1.0);
-			LightGreenTint = lamp.ReadDouble("LightGreentint", 1.0);
-			LightBlueTint = lamp.ReadDouble("LightBluetint", 1.0);
+			LightRedTint = lamp.ReadDouble("LightRedTint", 1.0);
+			LightGreenTint = lamp.ReadDouble("LightGreenTint", 1.0);
+			LightBlueTint = lamp.ReadDouble("LightBlueTint", 1.0);
 			this.scenario = scenario;
 		}
 	}

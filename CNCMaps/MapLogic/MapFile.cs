@@ -208,6 +208,8 @@ namespace CNCMaps.FileFormats {
 			theater = new Theater(ReadString("Map", "Theater"), this.engineType, rules, art);
 			theater.Initialize();
 
+			OverrideRulesWithMap();
+
 			// we need foundations from the theater to plce the structures at the correct tile,
 			// so we load these last
 			Logger.WriteLine("Reading map structures");
@@ -219,7 +221,9 @@ namespace CNCMaps.FileFormats {
 			if (engineType == EngineType.RedAlert2 || engineType == EngineType.YurisRevenge)
 				LoadCountries();
 			LoadHouses();
-			theater.GetTileCollection().RecalculateTileSystem(this.tiles);
+
+			if (engineType == EngineType.RedAlert2 || engineType == EngineType.YurisRevenge)
+				theater.GetTileCollection().RecalculateTileSystem(this.tiles);
 
 			if (engineType == EngineType.RedAlert2 || engineType == EngineType.YurisRevenge)
 				RecalculateOreSpread();
@@ -231,6 +235,16 @@ namespace CNCMaps.FileFormats {
 			ApplyRemappables();
 			// now everything is loaded and we can prepare the palettes before using them to draw
 			RecalculateAllPalettes();
+		}
+
+		private void OverrideRulesWithMap() {
+			Logger.WriteLine("Overriding rules.ini with map INI entries");
+			foreach (var v in this.Sections) {
+				var rulesSection = rules.GetSection(v.Name);
+				if (rulesSection == null) continue;
+				foreach (var kvp in v.OrderedEntries)
+					rulesSection.SetValue(kvp.Key, kvp.Value);
+			}
 		}
 
 		/// <summary>Loads the countries. </summary>
@@ -323,11 +337,12 @@ namespace CNCMaps.FileFormats {
 		/// <returns>True if all objects are from RA2, else false.</returns>
 		private bool AllObjectsFromRA2(IniFile rules) {
 			foreach (var obj in this.overlayObjects)
-				if (obj.OverlayID > 246) return false;
+				if (obj != null && obj.OverlayID > 246) return false;
 			IniSection objSection = rules.GetSection("TerrainTypes");
 			for (int y = 0; y < fullSize.Height; y++) {
 				for (int x = 0; x < fullSize.Width * 2 - 1; x++) {
 					var obj = terrainObjects[x, y];
+					if (obj == null) continue;
 					int idx = objSection.FindValueIndex(obj.Name);
 					if (idx == -1 || idx > 73) return false;
 				}
@@ -337,6 +352,7 @@ namespace CNCMaps.FileFormats {
 			for (int y = 0; y < fullSize.Height; y++) {
 				for (int x = 0; x < fullSize.Width * 2 - 1; x++) {
 					var objList = infantryObjects[x, y];
+					if (objList == null) continue;
 					foreach (var obj in objList) {
 						int idx = objSection.FindValueIndex(obj.Name);
 						if (idx == -1 || idx > 45) return false;
@@ -348,6 +364,7 @@ namespace CNCMaps.FileFormats {
 			for (int y = 0; y < fullSize.Height; y++) {
 				for (int x = 0; x < fullSize.Width * 2 - 1; x++) {
 					var obj = unitObjects[x, y];
+					if (obj == null) continue;
 					int idx = objSection.FindValueIndex(obj.Name);
 					if (idx == -1 || idx > 57) return false;
 				}
@@ -357,16 +374,19 @@ namespace CNCMaps.FileFormats {
 			for (int y = 0; y < fullSize.Height; y++) {
 				for (int x = 0; x < fullSize.Width * 2 - 1; x++) {
 					var obj = aircraftObjects[x, y];
+					if (obj == null) continue;
 					int idx = objSection.FindValueIndex(obj.Name);
 					if (idx == -1 || idx > 9) return false;
 				}
 			}
 
+			/*
 			objSection = rules.GetSection("BuildingTypes");
 			IniSection objSectionAlt = rules.GetSection("OverlayTypes");
 			for (int y = 0; y < fullSize.Height; y++) {
 				for (int x = 0; x < fullSize.Width * 2 - 1; x++) {
 					var obj = structureObjects[x, y];
+					if (obj == null) continue;
 					int idx1 = objSection.FindValueIndex(obj.Name);
 					int idx2 = objSectionAlt.FindValueIndex(obj.Name);
 					if (idx1 == -1 && idx2 == -1) return false;
@@ -375,7 +395,7 @@ namespace CNCMaps.FileFormats {
 					else if (idx2 != -1 && idx2 > 246)
 						return false;
 				}
-			}
+			}*/
 
 			// no need to test smudge types as no new ones were introduced with yr
 			return true;
@@ -829,8 +849,8 @@ namespace CNCMaps.FileFormats {
 					foreach (RA2Object o in objs)
 						theater.DrawObject(o, drawingSurface);
 				}
-			} 
-			
+			}
+
 			for (int y = 0; y < fullSize.Height; y++) {
 				for (int x = fullSize.Width * 2 - 2; x >= 0; x -= 2) {
 					List<RA2Object> objs = GetObjectsAt(x, y);
@@ -859,7 +879,8 @@ namespace CNCMaps.FileFormats {
 				ret.Add(terrainObjects[x, y]);
 
 			if (infantryObjects[x, y] != null)
-				ret.AddRange(infantryObjects[x, y]);
+				foreach (var r in infantryObjects[x, y])
+					ret.Add(r);
 
 			if (aircraftObjects[x, y] != null)
 				ret.Add(aircraftObjects[x, y]);

@@ -112,7 +112,7 @@ namespace CNCMaps.MapLogic {
 
 					for (int y = 0; y < vxl_ds.Height; y++) {
 						byte* src_row = (byte*)vxl_ds.bmd.Scan0 + vxl_ds.bmd.Stride * (vxl_ds.Height - y - 1);
-						byte* dst_row = (byte*)(ds.bmd.Scan0 + (dy + y) * ds.bmd.Stride + dx * 3);
+						byte* dst_row = ((byte*)ds.bmd.Scan0 + (dy + y) * ds.bmd.Stride + dx * 3);
 						if (dst_row < w_low || dst_row >= w_high) continue;
 						
 						for (int x = 0; x < vxl_ds.Width; x++) {
@@ -142,6 +142,18 @@ namespace CNCMaps.MapLogic {
 			dy += props.offset.Y;
 			if (p == null && obj is RemappableObject)
 				p = (obj as RemappableObject).Palette;
+
+			if (objectOverrides && obj is OverlayObject) {
+				OverlayObject o = obj as OverlayObject;
+				if (TileWidth == 60) {
+					if (o.OverlayID == 24 || o.OverlayID == 25 || o.OverlayID == 238 || o.OverlayID == 237)
+						dy += o.OverlayValue > 8 ? 16 : 1;
+				}
+				else {
+					dx += o.OverlayValue > 8 ? -7 : -6;
+					dy += o.OverlayValue > 8 ? -13 : -1;
+				}
+			}
 
 			file.Draw(frame, ds, dx, dy, 0, p ?? this.Palette);
 			if (props.hasShadow)
@@ -361,10 +373,6 @@ namespace CNCMaps.MapLogic {
 			if (rulesSection.ReadBool("Overrides")) {
 				drawableObject.SetHeightOffset(4);
 				drawableObject.SetOverrides(true);
-			}
-
-			if (rulesSection.ReadString("Color") != "") {
-				int i = 0;
 			}
 
 			// Find out foundation

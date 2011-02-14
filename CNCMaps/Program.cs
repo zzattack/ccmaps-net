@@ -150,6 +150,9 @@ namespace CNCMaps {
 			else
 				saveRect = map.GetLocalSizePixels();
 
+			if (rs.OutputDir == "")
+				rs.OutputDir = Path.GetDirectoryName(rs.InputFile);
+
 			if (rs.SaveJPEG)
 				ds.SaveJPEG(Path.Combine(rs.OutputDir, rs.OutputFile + ".jpg"), rs.JPEGCompression, saveRect);
 

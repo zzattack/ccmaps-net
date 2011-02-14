@@ -76,6 +76,6 @@ namespace CNCMaps.Utility {
 
 		public int Width { get { return bmd.Width; } }
 		public int Height { get { return bmd.Height; } }
-
+		
 	}
 }
