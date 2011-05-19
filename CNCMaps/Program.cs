@@ -66,13 +66,13 @@ namespace CNCMaps {
 	}
 
 	class Program {
-
+		static NDesk.Options.OptionSet options;
 		public static void Main(string[] args) {
 			RenderSettings rs = RenderSettings.CreateDefaults();
-			var options = new NDesk.Options.OptionSet() {
-				{ "h|help", "Help", v => rs.ShowHelp = true },
+			options = new NDesk.Options.OptionSet() {
+				{ "h|help", "Show this short help text", v => rs.ShowHelp = true },
 				{ "i|infile=", "Input file", v => rs.InputFile = v },
-				{ "o|outfile=", "Output file, without extension", v => rs.OutputFile = v },
+				{ "o|outfile=", "Output file, without extension, read from map if not specified.", v => rs.OutputFile = v },
 				{ "d|outdir=", "Output directiory", v => rs.OutputDir = v },
 				{ "y|force-ra2", "Force using the Red Alert 2 engine for rendering", v => rs.Engine = EngineType.RedAlert2 },
 				{ "Y|force-yr", "Force using the Yuri's Revenge engine for rendering", v => rs.Engine = EngineType.YurisRevenge },
@@ -82,11 +82,12 @@ namespace CNCMaps {
 				{ "q|jpeg-quality=", "Set JPEG quality level (0-100)", (int v) => rs.JPEGCompression = v },
 				{ "p", "Output PNG file", v => rs.SavePNG = true },
 				{ "c|png-compression=", "Set PNG compression level (1-9)", (int v) => rs.PNGQuality = v },
-				{ "m|mixdir=", "Specify location of .mix files", v => rs.MixFilesDirectory = v },
+				{ "m|mixdir=", "Specify location of .mix files, read from registry if not specified (win only)", v => rs.MixFilesDirectory = v },
 				{ "s|start-pos-tiled", "Mark starting positions in a tiled manner", v => rs.StartPositionMarking = StartPositionMarking.Tiled },
 				{ "S|start-pos-squared", "Mark starting positions in a squared manner", v => rs.StartPositionMarking = StartPositionMarking.Squared },
-				{ "r|mark-pre", "Mark ore and gem fields more explicity, looks good when resizing to a preview", v => rs.MarkOreFields = true },
-				{ "F|force-fullmap", "Ignore LocalSize definition and just save the full map", v => rs.IgnoreLocalSize = true }
+				{ "r|mark-ore", "Mark ore and gem fields more explicity, looks good when resizing to a preview", v => rs.MarkOreFields = true },
+				{ "F|force-fullmap", "Ignore LocalSize definition and just save the full map", v => rs.IgnoreLocalSize = true },
+				{ "f|force-localsize", "Use localsize for map dimensions (default)", v => rs.IgnoreLocalSize = true }
 			};
 			options.Parse(args);
 
@@ -149,23 +150,10 @@ namespace CNCMaps {
 		private static void ShowHelp() {
 			Logger.WriteLine("Usage: ");
 			Logger.WriteLine("");
-			Logger.WriteLine(" -i   --infile \"c:\\myMap.mpr\"   Input map file (.mpr, .map, .yrm)");
-			Logger.WriteLine(" -o   --outfile myMap           Output base filename. Read from map if not specified.");
-			Logger.WriteLine(" -d   --outdir \"c:\\\"            Output directory");
-			Logger.WriteLine(" -Y   --force-yr                Force rendering using YR engine");
-			Logger.WriteLine(" -y   --force-ra2               Force rendering using RA2 engine");
-			Logger.WriteLine(" -j   --jpeg                    Produce JPEG file (myMap.jpg)");
-			Logger.WriteLine(" -q   --jpeg-quality [0-100]     JPEG quality (0-100, default 90)");
-			Logger.WriteLine(" -p   --png                     Produce PNG file (myMap.png)");
-			Logger.WriteLine(" -c   --png-compression [0-9]    PNG compression level (0-9, default 6)");
-			Logger.WriteLine(" -m   --mixdir \"c:\\westwood\\\"   Mix files location (registry if not specified)");
-			Logger.WriteLine(" -s   --start-pos-tiled         Mark start positions as 4x4 tiled red spots");
-			Logger.WriteLine(" -S   --start-pos-squared       Mark start positions as a large square");
-			Logger.WriteLine(" -r   --mark-ore                Mark ore clearly");
-			Logger.WriteLine(" -F   --force-fullmap           Ignore LocalSize definition");
-			Logger.WriteLine(" -f   --force-localsize         Force usage of localsize");
-			Logger.WriteLine(" -h   --help                    Show this short help text");
-			Logger.WriteLine(" ");
+			var sb = new System.Text.StringBuilder();
+			StringWriter sw = new StringWriter(sb);
+			options.WriteOptionDescriptions(sw);
+			Logger.WriteLine(sb.ToString());
 		}
 	}
 }
