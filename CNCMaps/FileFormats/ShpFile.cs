@@ -64,6 +64,8 @@ namespace CNCMaps.FileFormats {
 		}
 
 		private ShpImage GetImage(int imageIndex) {
+			if (imageIndex >= images.Count) return new ShpImage();
+
 			ShpImage img = images[imageIndex];
 			// make sure imageData is present/decoded if needed
 			if (img.imageData == null) {
@@ -155,7 +157,7 @@ namespace CNCMaps.FileFormats {
 
 			for (int y = 0; y < h.cy; y++) {
 				for (int x = 0; x < h.cx; x++) {
-					if (image.imageData[rIdx] != 0 && shadows[zIdx] == false && w_low <= w && w < w_high) {
+					if (w_low <= w && w < w_high && image.imageData[rIdx] != 0 && shadows[zIdx] == false) {
 						*(w + 0) /= 2;
 						*(w + 1) /= 2;
 						*(w + 2) /= 2;

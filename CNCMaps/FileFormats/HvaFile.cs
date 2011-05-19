@@ -1,15 +1,13 @@
-﻿using System.IO;
-using CNCMaps.VirtualFileSystem;
+﻿using System.Collections.Generic;
+using System.IO;
 using System.Runtime.InteropServices;
-using System.Collections.Generic;
 using CNCMaps.Utility;
-using OpenTK.Graphics;
+using CNCMaps.VirtualFileSystem;
 
 namespace CNCMaps.FileFormats {
 
 	/// <summary>Hva file.</summary>
 	public class HvaFile : VirtualFile {
-
 		[StructLayout(LayoutKind.Sequential, Pack = 1)]
 		struct HvaHeader {
 			[MarshalAs(UnmanagedType.ByValArray, SizeConst = 16)]
@@ -21,6 +19,7 @@ namespace CNCMaps.FileFormats {
 		public class Section {
 			public byte[] name;
 			public List<float[]> matrices;
+
 			public Section(int numMatrices) {
 				matrices = new List<float[]>(numMatrices);
 			}
@@ -34,6 +33,7 @@ namespace CNCMaps.FileFormats {
 		}
 
 		bool initialized = false;
+
 		public void Initialize() {
 			if (initialized) return;
 			this.fileHeader = EzMarshal.ByteArrayToStructure<HvaHeader>(Read(Marshal.SizeOf(typeof(HvaHeader))));
@@ -84,6 +84,7 @@ namespace CNCMaps.FileFormats {
 		}
 
 		int curSection = 0;
+
 		internal void SetSection(int section) {
 			this.curSection = section;
 		}

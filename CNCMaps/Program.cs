@@ -70,6 +70,7 @@ namespace CNCMaps {
 		public static void Main(string[] args) {
 			RenderSettings rs = RenderSettings.CreateDefaults();
 			var options = new NDesk.Options.OptionSet() {
+				{ "h|help", "Help", v => rs.ShowHelp = true },
 				{ "i|infile=", "Input file", v => rs.InputFile = v },
 				{ "o|outfile=", "Output file, without extension", v => rs.OutputFile = v },
 				{ "d|outdir=", "Output directiory", v => rs.OutputDir = v },
@@ -90,36 +91,21 @@ namespace CNCMaps {
 			options.Parse(args);
 
 			if (rs.ShowHelp) {
-				Logger.WriteLine("Usage: ");
-				Logger.WriteLine("");
-				Logger.WriteLine(" -i   --infile \"c:\\myMap.mpr\"   Input map file (.mpr, .map, .yrm)");
-				Logger.WriteLine(" -o   --outfile myMap           Output base filename. Read from map if not specified.");
-				Logger.WriteLine(" -d   --outdir \"c:\\\"            Output directory");
-				Logger.WriteLine(" -Y   --force-yr                Force rendering using YR engine");
-				Logger.WriteLine(" -y   --force-ra2               Force rendering using RA2 engine");
-				Logger.WriteLine(" -j   --jpeg                    Produce JPEG file (myMap.jpg)");
-				Logger.WriteLine(" -q   --jpeg-quality [0-100]     JPEG quality (0-100, default 90)");
-				Logger.WriteLine(" -p   --png                     Produce PNG file (myMap.png)");
-				Logger.WriteLine(" -c   --png-compression [0-9]    PNG compression level (0-9, default 6)");
-				Logger.WriteLine(" -m   --mixdir \"c:\\westwood\\\"   Mix files location (registry if not specified)");
-				Logger.WriteLine(" -s   --start-pos-tiled         Mark start positions as 4x4 tiled red spots");
-				Logger.WriteLine(" -S   --start-pos-squared       Mark start positions as a large square");
-				Logger.WriteLine(" -r   --mark-ore                Mark ore clearly");
-				Logger.WriteLine(" -F   --force-fullmap           Ignore LocalSize definition");
-				Logger.WriteLine(" -f   --force-localsize         Force usage of localsize");
-				Logger.WriteLine(" -h   --help                    Show this short help text");
-				Logger.WriteLine(" ");
+				ShowHelp();
 				return;
 			}
 			else if (!System.IO.File.Exists(rs.InputFile)) {
 				Logger.WriteLine("Error: specified input file does not exist");
+				ShowHelp(); 
 				return;
 			}
 			else if (!rs.SaveJPEG && !rs.SavePNG) {
 				Logger.WriteLine("Error: no output format selected. Either specify -j, -p or both");
+				ShowHelp(); 
 				return;
 			}
 			else if (rs.OutputDir != "" && !System.IO.Directory.Exists(rs.OutputDir)) {
+				ShowHelp(); 
 				Logger.WriteLine("Error: specified output directory does not exist");
 			}
 
@@ -157,7 +143,29 @@ namespace CNCMaps {
 				ds.SaveJPEG(Path.Combine(rs.OutputDir, rs.OutputFile + ".jpg"), rs.JPEGCompression, saveRect);
 
 			if (rs.SavePNG)
-				ds.SavePNG(Path.Combine(rs.OutputDir, rs.OutputFile + ".jpg"), rs.PNGQuality, saveRect);
+				ds.SavePNG(Path.Combine(rs.OutputDir, rs.OutputFile + ".png"), rs.PNGQuality, saveRect);
+		}
+
+		private static void ShowHelp() {
+			Logger.WriteLine("Usage: ");
+			Logger.WriteLine("");
+			Logger.WriteLine(" -i   --infile \"c:\\myMap.mpr\"   Input map file (.mpr, .map, .yrm)");
+			Logger.WriteLine(" -o   --outfile myMap           Output base filename. Read from map if not specified.");
+			Logger.WriteLine(" -d   --outdir \"c:\\\"            Output directory");
+			Logger.WriteLine(" -Y   --force-yr                Force rendering using YR engine");
+			Logger.WriteLine(" -y   --force-ra2               Force rendering using RA2 engine");
+			Logger.WriteLine(" -j   --jpeg                    Produce JPEG file (myMap.jpg)");
+			Logger.WriteLine(" -q   --jpeg-quality [0-100]     JPEG quality (0-100, default 90)");
+			Logger.WriteLine(" -p   --png                     Produce PNG file (myMap.png)");
+			Logger.WriteLine(" -c   --png-compression [0-9]    PNG compression level (0-9, default 6)");
+			Logger.WriteLine(" -m   --mixdir \"c:\\westwood\\\"   Mix files location (registry if not specified)");
+			Logger.WriteLine(" -s   --start-pos-tiled         Mark start positions as 4x4 tiled red spots");
+			Logger.WriteLine(" -S   --start-pos-squared       Mark start positions as a large square");
+			Logger.WriteLine(" -r   --mark-ore                Mark ore clearly");
+			Logger.WriteLine(" -F   --force-fullmap           Ignore LocalSize definition");
+			Logger.WriteLine(" -f   --force-localsize         Force usage of localsize");
+			Logger.WriteLine(" -h   --help                    Show this short help text");
+			Logger.WriteLine(" ");
 		}
 	}
 }

@@ -67,7 +67,10 @@ namespace CNCMaps.MapLogic {
 		public MapTile GetTileR(int rx, int ry) {
 			int dx = (rx - ry + fullSize.Width - 1);
 			int dy = (rx + ry - fullSize.Width - 1) / 2;
-			return GetTile(dx, dy);
+			if (dx < 0 || dy < 0 || dx >= tiles.GetLength(0) || dy >= tiles.GetLength(1))
+				return null;
+			else
+				return GetTile(dx, dy);
 		}
 
 		public void testNeighbours() {

@@ -46,7 +46,7 @@ namespace CNCMaps.FileFormats {
 			AirWar = 0x10,
 			Cooperative = 0x20,
 			Duel = 0x40,
-			Megawealth = 0x40
+			Megawealth = 0x80
 		}
 
 		public class PktMapEntry {

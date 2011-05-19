@@ -1,0 +1,43 @@
+<SmartAssemblyProject ProjectID="{ebc3b0c7-c8ba-45f4-b5df-4c29df2b2767}" Version="2.0">
+    <MainAssemblyFileName>.\obj\x86\Release\CNCMaps.exe</MainAssemblyFileName>
+    <FriendlyName>CNCMaps</FriendlyName>
+    <CompanyName>Frank Razenberg</CompanyName>
+    <Configuration Name="Release">
+        <ApplicationName>CNCMaps</ApplicationName>
+        <Destination DestinationFileName=".\bin\Release\CNCMaps_compressed.exe" />
+        <Assemblies>
+            <Assembly AssemblyName="OpenTK, Culture=neutral, PublicKeyToken=bad199fe84eb3df4" HintPath=".\OpenTK.dll">
+                <Merging Merge="1">
+                    <Pruning Prune="1">
+                        <Exclusion />
+                    </Pruning>
+                    <Obfuscation />
+                    <ControlFlow />
+                    <MemberRefsProxy />
+                    <ResourcesCompression />
+                    <ResourcesPruning />
+                </Merging>
+                <Embedding />
+            </Assembly>
+            <Assembly AssemblyName="CNCMaps, Culture=neutral, PublicKeyToken=null">
+                <Merging>
+                    <MemberRefsProxy />
+                    <Pruning Prune="0">
+                        <Exclusion />
+                    </Pruning>
+                    <Obfuscation />
+                    <ControlFlow />
+                </Merging>
+            </Assembly>
+        </Assemblies>
+        <Options>
+            <Obfuscation FieldsNameMangling="2" NameMangling="2" />
+            <ExceptionReporting ReportExceptions="0" />
+            <StrongNameSigning />
+            <OtherProtections />
+            <StringsEncoding />
+            <OtherOptimizations ManageMemory="0" SealClasses="0" />
+            <Debugging />
+        </Options>
+    </Configuration>
+</SmartAssemblyProject>

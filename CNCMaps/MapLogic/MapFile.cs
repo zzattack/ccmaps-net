@@ -108,7 +108,7 @@ namespace CNCMaps.FileFormats {
 					if (!isyr && mapext == ".map" && !pkt.MapEntries.ContainsKey(infile_nopath) && Basic.ReadBool("MultiplayerOnly")) {
 						pktfile = "missionsmd.pkt";
 						var pkt_yr = VFS.Open<PktFile>(pktfile);
-						if (pkt_yr.MapEntries.ContainsKey(infile_nopath)) {
+						if (pkt_yr != null && pkt_yr.MapEntries.ContainsKey(infile_nopath)) {
 							isyr = true;
 							pkt = pkt_yr;
 						}
@@ -156,6 +156,8 @@ namespace CNCMaps.FileFormats {
 				}
 			}
 			mapName = MakeValidFileName(mapName);
+			if (mapName == "")
+				mapName = "Unknown map";
 			Logger.WriteLine("Mapname found: {0}", mapName);
 			return mapName;
 		}
@@ -287,8 +289,9 @@ namespace CNCMaps.FileFormats {
 				if (v.Value == "Neutral" || v.Value == "Special")
 					color = "LightGrey"; // this is hardcoded in the game
 				else
-					color = houseSection.ReadString("Color"); ;
-				countryColors[v.Value] = namedColors[color];
+					color = houseSection.ReadString("Color");
+				if (!string.IsNullOrEmpty(color) && !string.IsNullOrEmpty(v.Value)) 
+					countryColors[v.Value] = namedColors[color];
 			}
 		}
 
@@ -313,7 +316,7 @@ namespace CNCMaps.FileFormats {
 			// decision based on max tile/threatre
 			int maxTileNum = int.MinValue;
 			foreach (MapTile t in tiles)
-				maxTileNum = Math.Max(t.TileNum, maxTileNum);
+				if (t != null) maxTileNum = Math.Max(t.TileNum, maxTileNum);
 
 			if (theater == "temperate") {
 				if (maxTileNum > 838) return EngineType.YurisRevenge;
@@ -447,10 +450,18 @@ namespace CNCMaps.FileFormats {
 				short z = mf.ReadByte();
 				byte zero2 = mf.ReadByte();
 
-				ushort dx = (ushort)(rx - ry + fullSize.Width - 1);
-				ushort dy = (ushort)(rx + ry - fullSize.Width - 1);
+				int dx = rx - ry + fullSize.Width - 1;
+				int dy = rx + ry - fullSize.Width - 1;
 				numtiles++;
-				this.tiles[dx, dy / 2] = new MapTile(dx, dy, rx, ry, z, tilenum, subtile);
+				if (dx >= 0 && dx < 2 * this.tiles.GetWidth() &&
+					dy >= 0 && dy < 2 * this.tiles.GetHeight()) {
+					this.tiles[(ushort)dx, (ushort)dy / 2] = new MapTile((ushort)dx, (ushort)dy, rx, ry, z, tilenum, subtile);
+				}
+
+				else {
+					int ihgh = 0;
+				}
+
 			}
 		}
 
@@ -465,8 +476,11 @@ namespace CNCMaps.FileFormats {
 				int rx = pos % 1000;
 				int ry = pos / 1000;
 				TerrainObject t = new TerrainObject(name);
-				tiles.GetTileR(rx, ry).AddObject(t);
-				this.terrainObjects[t.Tile.Dx, t.Tile.Dy / 2] = t;
+				var tile = tiles.GetTileR(rx, ry);
+				if (tile != null) {
+					tile.AddObject(t);
+					this.terrainObjects[t.Tile.Dx, t.Tile.Dy / 2] = t;
+				}
 			}
 		}
 
@@ -501,6 +515,7 @@ namespace CNCMaps.FileFormats {
 			overlayObjects = new OverlayObject[fullSize.Width * 2 - 1, fullSize.Height];
 
 			foreach (MapTile t in tiles) {
+				if (t == null) continue;
 				int idx = t.Rx + 512 * t.Ry;
 				byte overlay_id = overlayPack[idx];
 				if (overlay_id != 0xFF) {
@@ -518,20 +533,26 @@ namespace CNCMaps.FileFormats {
 			structureObjects = new StructureObject[fullSize.Width * 2 - 1, fullSize.Height];
 			if (structsSection == null) return;
 			foreach (var v in structsSection.OrderedEntries) {
-				string[] entries = v.Value.Split(',');
-				string owner = entries[0];
-				string name = entries[1];
-				short health = short.Parse(entries[2]);
-				int rx = int.Parse(entries[3]);
-				int ry = int.Parse(entries[4]);
-				short direction = short.Parse(entries[5]);
-				StructureObject s = new StructureObject(owner, name, health, direction);
+				try {
+					string[] entries = v.Value.Split(',');
+					string owner = entries[0];
+					string name = entries[1];
+					short health = short.Parse(entries[2]);
+					int rx = int.Parse(entries[3]);
+					int ry = int.Parse(entries[4]);
+					short direction = short.Parse(entries[5]);
+					StructureObject s = new StructureObject(owner, name, health, direction);
 
-				Size foundation = theater.GetFoundation(s);
-				s.DrawTile = tiles.GetTileR(rx + foundation.Width - 1, ry + foundation.Height - 1);
-				s.DrawTile.AddObject(s);
-				s.Tile = tiles.GetTileR(rx, ry);
-				this.structureObjects[s.DrawTile.Dx, s.DrawTile.Dy / 2] = s;
+					Size foundation = theater.GetFoundation(s);
+					s.DrawTile = tiles.GetTileR(rx + foundation.Width - 1, ry + foundation.Height - 1);
+					if (s.DrawTile != null) {
+						s.DrawTile.AddObject(s);
+						s.Tile = tiles.GetTileR(rx, ry);
+						this.structureObjects[s.DrawTile.Dx, s.DrawTile.Dy / 2] = s;
+					}
+				}
+				catch (IndexOutOfRangeException) { } // catch invalid entries
+				catch (FormatException) {}
 			}
 		}
 
@@ -571,8 +592,11 @@ namespace CNCMaps.FileFormats {
 				int ry = int.Parse(entries[4]);
 				short direction = short.Parse(entries[5]);
 				UnitObject u = new UnitObject(owner, name, health, direction);
-				tiles.GetTileR(rx, ry).AddObject(u);
-				this.unitObjects[u.Tile.Dx, u.Tile.Dy / 2] = u;
+				var tile = tiles.GetTileR(rx, ry);
+				if (tile != null) {
+					tile.AddObject(u);
+					this.unitObjects[u.Tile.Dx, u.Tile.Dy / 2] = u;
+				}
 			}
 		}
 
@@ -650,8 +674,10 @@ namespace CNCMaps.FileFormats {
 			}
 
 			foreach (MapTile t in tiles) {
-				t.Palette = PalettePerLevel[t.Z];
-				t.PaletteIsOriginal = true;
+				if (t != null) {
+					t.Palette = PalettePerLevel[t.Z];
+					t.PaletteIsOriginal = true;
+				}
 			}
 		}
 
@@ -699,7 +725,21 @@ namespace CNCMaps.FileFormats {
 				u.Palette.Remap(this.countryColors[u.Owner]);
 				PalettesToBeRecalculated.Add(u.Palette);
 			}
-
+			foreach (AircraftObject a in aircraftObjects) {
+				if (a == null) continue;
+				a.Palette = theater.GetPalette(a).Clone();
+				a.Palette.Remap(this.countryColors[a.Owner]);
+				PalettesToBeRecalculated.Add(a.Palette);
+			}
+			foreach (var il in infantryObjects) {
+				if (il == null) continue;
+				foreach (InfantryObject i in il) {
+					if (i == null) continue;
+					i.Palette = theater.GetPalette(i).Clone();
+					i.Palette.Remap(this.countryColors[i.Owner]);
+					PalettesToBeRecalculated.Add(i.Palette);
+				}
+			}
 			// TS needs tiberium remapped
 			if (engineType == EngineType.TiberianSun || engineType == EngineType.FireStorm) {
 				var collection = theater.GetCollection(CollectionType.Overlay);

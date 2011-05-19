@@ -134,6 +134,8 @@ namespace CNCMaps.MapLogic {
 		static VoxelRenderer voxelrenderer = new VoxelRenderer();
 
 		private void DrawFile(RA2Object obj, DrawingSurface ds, ShpFile file, DrawProperties props, Palette p = null) {
+			if (file == null || obj == null || obj.Tile == null) return;
+
 			int dx = obj.Tile.Dx * TileWidth / 2;
 			int dy = (obj.Tile.Dy - obj.Tile.Z) * TileHeight / 2;
 			dx += globalOffset.X;
@@ -147,14 +149,14 @@ namespace CNCMaps.MapLogic {
 				OverlayObject o = obj as OverlayObject;
 				if (TileWidth == 60) {
 					if (o.OverlayID == 24 || o.OverlayID == 25 || o.OverlayID == 238 || o.OverlayID == 237)
-						dy += o.OverlayValue > 8 ? 16 : 1;
+						dy += o.OverlayValue > 8 ? -16 : -1;
 				}
 				else {
+					// sun
 					dx += o.OverlayValue > 8 ? -7 : -6;
 					dy += o.OverlayValue > 8 ? -13 : -1;
 				}
 			}
-
 			file.Draw(frame, ds, dx, dy, 0, p ?? this.Palette);
 			if (props.hasShadow)
 				file.DrawShadow(frame, ds, dx, dy);	
@@ -327,7 +329,7 @@ namespace CNCMaps.MapLogic {
 				drawableObject.Palette = palettes.unitPalette;
 				paletteChosen = true;
 			}
-			else if (rulesSection.ReadString("Palette") == "lib") {
+			else if (artSection.ReadString("Palette") == "lib") {
 				drawableObject.Palette = palettes.libPalette;
 				paletteChosen = true;
 			}

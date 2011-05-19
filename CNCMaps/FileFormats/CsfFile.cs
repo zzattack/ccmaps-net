@@ -73,7 +73,7 @@ namespace CNCMaps.FileFormats {
 		}
 
 		private void SetValue(string name, string value, string extraValue) {
-			this.LabelMap[name] = new CsfEntry(value, extraValue);
+			this.LabelMap[name.ToLower()] = new CsfEntry(value, extraValue);
 		}
 
 		public string GetValue(string name) {

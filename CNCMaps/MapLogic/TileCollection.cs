@@ -266,6 +266,8 @@ namespace CNCMaps.MapLogic {
 
 			// change all CLAT tiles to their corresponding LAT tiles
 			foreach (MapTile t in tiles) {
+				if (t == null) continue;
+
 				// If this tile comes from a CLAT (connecting lat) set,
 				// then replace it's set and tilenr by corresponding LAT sets'
 				t.SetNum = GetSetNum(t.TileNum);
@@ -276,6 +278,8 @@ namespace CNCMaps.MapLogic {
 				}			}
 
 			foreach (MapTile t in tiles) {
+				if (t == null) continue;
+
 				// If this tile is a LAT tile, we might have to connect it
 				if (IsLAT(t.SetNum)) {
 					// Which tile to use from CLAT tileset
@@ -314,9 +318,11 @@ namespace CNCMaps.MapLogic {
 
 
 		public void DrawTile(MapTile t, DrawingSurface ds) {
-			var tmpFile = Tiles[Math.Max(t.TileNum, (short)0)].GetTile();
-			if (tmpFile != null)
-				tmpFile.Draw(t.SubTile, ds, t.Dx, (t.Dy - t.Z), t.Z, t.Palette);
+			if (t != null) {
+				var tmpFile = Tiles[Math.Max(t.TileNum, (short)0)].GetTile();
+				if (tmpFile != null)
+					tmpFile.Draw(t.SubTile, ds, t.Dx, (t.Dy - t.Z), t.Z, t.Palette);
+			}
 		}
 	}
 }
