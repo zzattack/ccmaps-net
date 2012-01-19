@@ -321,7 +321,7 @@ namespace CNCMaps.MapLogic {
 			if (t != null) {
 				var tmpFile = Tiles[Math.Max(t.TileNum, (short)0)].GetTile();
 				if (tmpFile != null)
-					tmpFile.Draw(t.SubTile, ds, t.Dx, (t.Dy - t.Z), t.Z, t.Palette);
+					tmpFile.Draw(t, ds);
 			}
 		}
 	}

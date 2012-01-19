@@ -290,7 +290,7 @@ namespace CNCMaps.FileFormats {
 					color = "LightGrey"; // this is hardcoded in the game
 				else
 					color = houseSection.ReadString("Color");
-				if (!string.IsNullOrEmpty(color) && !string.IsNullOrEmpty(v.Value)) 
+				if (!string.IsNullOrEmpty(color) && !string.IsNullOrEmpty(v.Value))
 					countryColors[v.Value] = namedColors[color];
 			}
 		}
@@ -552,7 +552,7 @@ namespace CNCMaps.FileFormats {
 					}
 				}
 				catch (IndexOutOfRangeException) { } // catch invalid entries
-				catch (FormatException) {}
+				catch (FormatException) { }
 			}
 		}
 
@@ -673,10 +673,24 @@ namespace CNCMaps.FileFormats {
 				PalettesToBeRecalculated.Add(isoHeight);
 			}
 
+			var overlayCollection = theater.GetCollection(CollectionType.Overlay);
+
 			foreach (MapTile t in tiles) {
 				if (t != null) {
 					t.Palette = PalettePerLevel[t.Z];
 					t.PaletteIsOriginal = true;
+
+					if (mapType == MapType.RedAlert2 || mapType == MapType.YurisRevenge) {
+						// some RA2 and YR object types inherit per-level iso palettes 
+						// (so that for example higher placed rocks look brighter)
+
+						var ovl = overlayObjects[t.Dx, t.Dy / 2];
+						if (ovl != null && ovl.IsBridge()) {
+							// bridge tiles get the same lighting as their corresponding tiles
+							ovl.Palette = t.Palette;
+						}
+
+					}
 				}
 			}
 		}
@@ -866,28 +880,19 @@ namespace CNCMaps.FileFormats {
 			}
 		}
 
-		//		}
-		//	}
-		//	for (int y = 0; y < fullSize.Height; y++) {
-		//		for (int x = 0; x < fullSize.Width * 2 - 1; x++) {
-
-
 		internal void DrawMap() {
 			Logger.WriteLine("Drawing map");
 			drawingSurface = new DrawingSurface(fullSize.Width * TileWidth, fullSize.Height * TileHeight, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
 			var tileCollection = theater.GetTileCollection();
+
+			// zig-zag drawing technique explanation: http://stackoverflow.com/questions/892811/drawing-isometric-game-worlds
+
 			for (int y = 0; y < fullSize.Height; y++) {
 				for (int x = fullSize.Width * 2 - 2; x >= 0; x -= 2) {
 					tileCollection.DrawTile(tiles.GetTile(x, y), drawingSurface);
-					List<RA2Object> objs = GetObjectsAt(x, y);
-					foreach (RA2Object o in objs)
-						theater.DrawObject(o, drawingSurface);
 				}
 				for (int x = fullSize.Width * 2 - 3; x >= 0; x -= 2) {
 					tileCollection.DrawTile(tiles.GetTile(x, y), drawingSurface);
-					List<RA2Object> objs = GetObjectsAt(x, y);
-					foreach (RA2Object o in objs)
-						theater.DrawObject(o, drawingSurface);
 				}
 			}
 
@@ -897,6 +902,7 @@ namespace CNCMaps.FileFormats {
 					foreach (RA2Object o in objs)
 						theater.DrawObject(o, drawingSurface);
 				}
+
 				for (int x = fullSize.Width * 2 - 3; x >= 0; x -= 2) {
 					List<RA2Object> objs = GetObjectsAt(x, y);
 					foreach (RA2Object o in objs)

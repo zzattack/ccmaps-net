@@ -78,7 +78,7 @@ namespace CNCMaps.MapLogic {
 				foreach (var v in shps)
 					DrawFile(obj, ds, v.file, v.props);
 			}
-			
+
 			if (alphaImage != null) {
 				int dx = obj.Tile.Dx * TileWidth / 2;
 				int dy = (obj.Tile.Dy - obj.Tile.Z) * TileHeight / 2;
@@ -89,6 +89,7 @@ namespace CNCMaps.MapLogic {
 
 			for (int i = 0; i < voxels.Count; i++) {
 				Palette p = null;
+
 				if (obj is RemappableObject) p = (obj as RemappableObject).Palette;
 				if (obj is UnitObject) direction = (obj as UnitObject).Direction;
 				DrawingSurface vxl_ds = voxelrenderer.Render(voxels[i].file, hvas[i], -(double)direction / 256.0 * 360 + 45, p ?? this.Palette);
@@ -114,13 +115,13 @@ namespace CNCMaps.MapLogic {
 						byte* src_row = (byte*)vxl_ds.bmd.Scan0 + vxl_ds.bmd.Stride * (vxl_ds.Height - y - 1);
 						byte* dst_row = ((byte*)ds.bmd.Scan0 + (dy + y) * ds.bmd.Stride + dx * 3);
 						if (dst_row < w_low || dst_row >= w_high) continue;
-						
+
 						for (int x = 0; x < vxl_ds.Width; x++) {
 							// only non-transparent pixels
 							if (*(src_row + x * 4 + 3) > 0) {
 								*(dst_row + x * 3) = *(src_row + x * 4);
 								*(dst_row + x * 3 + 1) = *(src_row + x * 4 + 1);
-								*(dst_row + x * 3 + 2) = *(src_row + x * 4 + 2);							
+								*(dst_row + x * 3 + 2) = *(src_row + x * 4 + 2);
 							}
 						}
 
@@ -142,24 +143,27 @@ namespace CNCMaps.MapLogic {
 			dy += globalOffset.Y;
 			dx += props.offset.X;
 			dy += props.offset.Y;
-			if (p == null && obj is RemappableObject)
+
+			if (UseTilePalette) p = obj.Tile.Palette;
+			else if (p == null && obj is RemappableObject)
 				p = (obj as RemappableObject).Palette;
 
 			if (objectOverrides && obj is OverlayObject) {
 				OverlayObject o = obj as OverlayObject;
 				if (TileWidth == 60) {
-					if (o.OverlayID == 24 || o.OverlayID == 25 || o.OverlayID == 238 || o.OverlayID == 237)
+					// bridge
+					if (o.IsBridge())
 						dy += o.OverlayValue > 8 ? -16 : -1;
 				}
 				else {
-					// sun
+					// tibsun
 					dx += o.OverlayValue > 8 ? -7 : -6;
 					dy += o.OverlayValue > 8 ? -13 : -1;
 				}
 			}
-			file.Draw(frame, ds, dx, dy, 0, p ?? this.Palette);
+			file.Draw(frame, ds, dx, dy, obj.Tile.Z, p ?? this.Palette);
 			if (props.hasShadow)
-				file.DrawShadow(frame, ds, dx, dy);	
+				file.DrawShadow(frame, ds, dx, dy, obj.Tile.Z, obj.Tile);
 		}
 
 		public static PaletteCollection palettes { get; set; }
@@ -230,6 +234,8 @@ namespace CNCMaps.MapLogic {
 
 		public static ushort TileWidth { get; set; }
 		public static ushort TileHeight { get; set; }
+
+		public bool UseTilePalette { get; set; }
 	}
 
 	class ObjectCollection {
@@ -355,23 +361,25 @@ namespace CNCMaps.MapLogic {
 				shadow = true;
 
 			int xOffset = 0, yOffset = 0;
-			if (rulesSection.ReadBool("Immune")) {
-				// For example on TIBTRE / Ore Poles
-				yOffset = -1;
-				drawableObject.Palette = palettes.GetPalette(PaletteType.Unit);
-			}
+
 			if (rulesSection.ReadBool("BridgeRepairHut")) {
 				// xOffset = yOffset = 0;
 			}
-
+			if (collectionType == CollectionType.Terrain) {
+				yOffset = DrawableObject.TileWidth / 2; // trees and such are placed in the middle of their tile
+			}
 			if (rulesSection.ReadString("Land") == "Rock") {
 				yOffset = 15;
+				drawableObject.UseTilePalette = true;
 			}
-
 			else if (rulesSection.ReadString("Land") == "Road") {
 				yOffset = 15;
 			}
-			
+			if (rulesSection.ReadBool("Immune")) {
+				// For example on TIBTRE / Ore Poles
+				yOffset = -16;
+				drawableObject.Palette = palettes.GetPalette(PaletteType.Unit);
+			}
 			if (rulesSection.ReadBool("Overrides")) {
 				drawableObject.SetHeightOffset(4);
 				drawableObject.SetOverrides(true);
@@ -494,16 +502,16 @@ namespace CNCMaps.MapLogic {
 					string hvaFileName = Path.ChangeExtension(fileName, ".hva");
 					var hva = VFS.Open(hvaFileName) as HvaFile;
 
-					if (collectionType == CollectionType.Building) { 
+					if (collectionType == CollectionType.Building) {
 						// half tile to the left
 						xOffset += 30;
 					}
-					else if (collectionType == CollectionType.Vehicle) { 
+					else if (collectionType == CollectionType.Vehicle) {
 						// also vertical tile center
 						xOffset += 30;
 						yOffset += 15;
-					}					
-					drawableObject.AddVoxel(vxl, hva, xOffset, yOffset, hasShadow, ySort);					
+					}
+					drawableObject.AddVoxel(vxl, hva, xOffset, yOffset, hasShadow, ySort);
 				}
 			}
 			else {

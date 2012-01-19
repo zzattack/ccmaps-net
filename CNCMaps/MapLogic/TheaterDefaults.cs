@@ -79,7 +79,7 @@ namespace CNCMaps.FileFormats {
 		public static bool GetShadowAssumption(CollectionType t) {
 			switch (t) {
 				case CollectionType.Overlay:
-					return false; // todo check
+					return true;
 				case CollectionType.Smudge:
 					return false;
 				case CollectionType.Building:
@@ -89,7 +89,7 @@ namespace CNCMaps.FileFormats {
 				case CollectionType.Infantry:
 					return true;
 				case CollectionType.Terrain:
-					return false; // todo check
+					return true; 
 				case CollectionType.Vehicle:
 					return false;
 				default:

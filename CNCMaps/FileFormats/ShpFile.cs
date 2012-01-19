@@ -95,7 +95,7 @@ namespace CNCMaps.FileFormats {
 			var h = image.header;
 			uint c_px = (uint)(h.cx * h.cy);
 			int stride = ds.bmd.Stride;
-			var zBuf = ds.GetZBuffer();
+			var zBuffer = ds.GetZBuffer();
 
 			if (c_px <= 0 || h.cx < 0 || h.cy < 0 || frameIndex > fileHeader.c_images)
 				return;
@@ -103,7 +103,7 @@ namespace CNCMaps.FileFormats {
 			byte* w_low = (byte*)ds.bmd.Scan0;
 			byte* w_high = (byte*)ds.bmd.Scan0 + stride * ds.bmd.Height;
 
-			int dx = x_offset + 30 - fileHeader.cx / 2 + h.x,
+			int dx = x_offset + DrawableObject.TileWidth / 2 - fileHeader.cx / 2 + h.x,
 				dy = y_offset - fileHeader.cy / 2 + h.y;
 			byte* w = (byte*)ds.bmd.Scan0 + dx * 3 + stride * dy;
 			int zIdx = dx + dy * ds.Width;
@@ -114,7 +114,7 @@ namespace CNCMaps.FileFormats {
 					w += stride;
 					rIdx += h.cx;
 					zIdx += ds.Width;
-					continue;
+					continue; // out of bounds
 				}
 
 				for (int x = 0; x < h.cx; x++) {
@@ -123,25 +123,27 @@ namespace CNCMaps.FileFormats {
 						*(w + 0) = p.colors[paletteValue].B;
 						*(w + 1) = p.colors[paletteValue].G;
 						*(w + 2) = p.colors[paletteValue].R;
-						zBuf[zIdx] = Math.Max(zBuf[zIdx], height);
+						zBuffer[zIdx] = Math.Max(zBuffer[zIdx], height);
 					}
 					// Up to the next pixel
 					rIdx++;
 					zIdx++;
 					w += 3;
 				}
-				w += stride - 3 * h.cx;	
+				w += stride - 3 * h.cx;
 				zIdx += ds.Width - h.cx;
 			}
 		}
 
-		unsafe public void DrawShadow(int frameIndex, DrawingSurface ds, int x_offset, int y_offset) {
+		unsafe public void DrawShadow(int frameIndex, DrawingSurface ds, int x_offset, int y_offset, short height, MapTile t) {
 			if (frameIndex >= images.Count / 2) return;
+
 			var image = GetImage(frameIndex + images.Count / 2);
 			var h = image.header;
 			uint c_px = (uint)(h.cx * h.cy);
 			int stride = ds.bmd.Stride;
 			var shadows = ds.GetShadows();
+			var zBuffer = ds.GetZBuffer();
 
 			if (c_px <= 0 || h.cx < 0 || h.cy < 0 || frameIndex > fileHeader.c_images)
 				return;
@@ -149,7 +151,7 @@ namespace CNCMaps.FileFormats {
 			byte* w_low = (byte*)ds.bmd.Scan0;
 			byte* w_high = (byte*)ds.bmd.Scan0 + stride * ds.bmd.Height;
 
-			int dx = x_offset + 30 - fileHeader.cx / 2 + h.x,
+			int dx = x_offset + DrawableObject.TileWidth / 2 - fileHeader.cx / 2 + h.x,
 				dy = y_offset - fileHeader.cy / 2 + h.y;
 			byte* w = (byte*)ds.bmd.Scan0 + dx * 3 + stride * dy;
 			int zIdx = dx + dy * ds.Width;
@@ -157,7 +159,7 @@ namespace CNCMaps.FileFormats {
 
 			for (int y = 0; y < h.cy; y++) {
 				for (int x = 0; x < h.cx; x++) {
-					if (w_low <= w && w < w_high && image.imageData[rIdx] != 0 && shadows[zIdx] == false) {
+					if (w_low <= w && w < w_high && image.imageData[rIdx] != 0 && shadows[zIdx] == false && zBuffer[zIdx] <= t.Z) {
 						*(w + 0) /= 2;
 						*(w + 1) /= 2;
 						*(w + 2) /= 2;
@@ -179,7 +181,7 @@ namespace CNCMaps.FileFormats {
 			var h = image.header;
 			uint c_px = (uint)(h.cx * h.cy);
 			int stride = ds.bmd.Stride;
-			
+
 			if (c_px <= 0 || h.cx < 0 || h.cy < 0 || frameIndex > fileHeader.c_images)
 				return;
 

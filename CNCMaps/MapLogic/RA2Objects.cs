@@ -126,8 +126,12 @@ namespace CNCMaps.MapLogic {
 		public bool IsGem() {
 			return OverlayID >= MinGemsID && OverlayID <= MaxGemsID;
 		}
+		internal bool IsBridge() {
+			return OverlayID == 24 || OverlayID == 25 || OverlayID == 238 || OverlayID == 237;
+		}
 
 		public Palette Palette { get; set; }
+
 	}
 
 	public class StructureObject : NamedObject, DamageableObject, RemappableObject {
@@ -155,7 +159,7 @@ namespace CNCMaps.MapLogic {
 			this.Health = health;
 			this.Direction = direction;
 		}
-		
+
 		public short Health { get; set; }
 
 		public short Direction { get; private set; }
@@ -190,7 +194,7 @@ namespace CNCMaps.MapLogic {
 			this.Health = health;
 			this.Direction = direction;
 		}
-		
+
 		public short Health { get; set; }
 
 		public short Direction { get; set; }

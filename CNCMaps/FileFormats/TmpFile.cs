@@ -106,16 +106,18 @@ namespace CNCMaps.FileFormats {
 		}
 
 
-		unsafe public void Draw(int subTileNum, DrawingSurface ds, int x_offset, int y_offset, short height, Palette p) {
+		unsafe public void Draw(MapTile t, DrawingSurface ds) {
 			if (!isInitialized) Initialize();
 
-			if (subTileNum >= images.Count) return;
-			TmpImage img = images[subTileNum];
+			if (t.SubTile >= images.Count) return;
+			TmpImage img = images[t.SubTile];
 			var zBuf = ds.GetZBuffer();
+			Palette p = t.Palette;
 
 			// calculate tile index -> pixel index
-			x_offset *= fileHeader.cx / 2;
-			y_offset *= fileHeader.cy / 2;
+			short height = t.Z;
+			int x_offset = t.Dx * fileHeader.cx / 2;
+			int y_offset = (t.Dy - height) * fileHeader.cy / 2;
 			int stride = ds.bmd.Stride;
 
 			int half_cx = fileHeader.cx / 2,
@@ -141,13 +143,13 @@ namespace CNCMaps.FileFormats {
 						*(w + 0) = p.colors[paletteValue].B;
 						*(w + 1) = p.colors[paletteValue].G;
 						*(w + 2) = p.colors[paletteValue].R;
-						zBuf[zIdx] = Math.Max(zBuf[zIdx], height);
+						zBuf[zIdx] = Math.Max(height, zBuf[zIdx]);
 					}
 					w += 3;
 					zIdx++;
 				}
 				w += stride - 3 * (cx + 2);
-				zIdx += ds.Width - cx - 2;
+				zIdx += ds.Width - (cx + 2);
 			}
 
 			w += 12;
@@ -160,22 +162,22 @@ namespace CNCMaps.FileFormats {
 						*(w + 0) = p.colors[paletteValue].B;
 						*(w + 1) = p.colors[paletteValue].G;
 						*(w + 2) = p.colors[paletteValue].R;
-						zBuf[zIdx] = Math.Max(zBuf[zIdx], height);
+						zBuf[zIdx] = Math.Max(height, zBuf[zIdx]);
 					}
-					w += 3; 
+					w += 3;
 					zIdx++;
 				}
 				w += stride - 3 * (cx - 2);
-				zIdx += ds.Width - cx + 2;
+				zIdx += ds.Width - (cx - 2);
 			}
 
 			if (img.header.HasExtraData) {
-				rIdx = 0;
-				w = w_low + 3 * (x_offset + img.header.x_extra - img.header.x) +
-					stride * (y_offset + img.header.y_extra - img.header.y);
 
-				zIdx = x_offset + img.header.x_extra - img.header.x +
-					ds.Width * (y_offset + img.header.y_extra - img.header.y);				
+				rIdx = 0;
+				int dx = x_offset + img.header.x_extra - img.header.x;
+				int dy = y_offset + img.header.y_extra - img.header.y;
+				w = w_low + stride * dy + 3 * dx;
+				zIdx = dx + dy * ds.Width;
 
 				// Extra graphics are just a square
 				for (y = 0; y < img.header.cy_extra; y++) {
@@ -187,7 +189,8 @@ namespace CNCMaps.FileFormats {
 							*w++ = p.colors[paletteValue].B;
 							*w++ = p.colors[paletteValue].G;
 							*w++ = p.colors[paletteValue].R;
-							zBuf[zIdx] = Math.Max(zBuf[zIdx++], height);
+
+							zBuf[zIdx++] = short.MaxValue;
 						}
 						else { w += 3; zIdx++; }
 					}
