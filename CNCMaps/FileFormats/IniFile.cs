@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using CNCMaps.VirtualFileSystem;
+using System.Globalization;
 
 namespace CNCMaps.FileFormats {
 
@@ -88,6 +89,8 @@ namespace CNCMaps.FileFormats {
 			public Dictionary<string, string> SortedEntries { get; set; }
 
 			public List<KeyValuePair<string, string>> OrderedEntries { get; set; }
+
+			static NumberFormatInfo culture = CultureInfo.InvariantCulture.NumberFormat;
 
 			public IniSection(string name) {
 				this.SortedEntries = new Dictionary<string, string>();
@@ -199,7 +202,7 @@ namespace CNCMaps.FileFormats {
 
 			public double ReadDouble(string key, double defaultValue = 0.0) {
 				double ret;
-				if (double.TryParse(ReadString(key), out ret))
+				if (double.TryParse(ReadString(key), NumberStyles.Any, culture, out ret))
 					return ret;
 				else
 					return defaultValue;
