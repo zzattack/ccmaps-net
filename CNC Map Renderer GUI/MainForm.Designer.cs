@@ -24,267 +24,267 @@
 		/// </summary>
 		private void InitializeComponent() {
 			System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
-			this.groupBox2 = new System.Windows.Forms.GroupBox();
-			this.panel2 = new System.Windows.Forms.Panel();
-			this.radioButton6 = new System.Windows.Forms.RadioButton();
-			this.radioButton8 = new System.Windows.Forms.RadioButton();
-			this.panel1 = new System.Windows.Forms.Panel();
-			this.rbForceFS = new System.Windows.Forms.RadioButton();
-			this.rbForceTS = new System.Windows.Forms.RadioButton();
-			this.radioButton4 = new System.Windows.Forms.RadioButton();
-			this.rbForceRA2 = new System.Windows.Forms.RadioButton();
-			this.radioButton3 = new System.Windows.Forms.RadioButton();
-			this.label7 = new System.Windows.Forms.Label();
-			this.label6 = new System.Windows.Forms.Label();
-			this.label5 = new System.Windows.Forms.Label();
-			this.checkBox4 = new System.Windows.Forms.CheckBox();
-			this.checkBox2 = new System.Windows.Forms.CheckBox();
-			this.checkBox3 = new System.Windows.Forms.CheckBox();
-			this.gbInput = new System.Windows.Forms.GroupBox();
+			this.gbMiscOptions = new System.Windows.Forms.GroupBox();
+			this.pnlMapSize = new System.Windows.Forms.Panel();
+			this.rbSizeLocal = new System.Windows.Forms.RadioButton();
+			this.rbSizeFullmap = new System.Windows.Forms.RadioButton();
+			this.pnlEngine = new System.Windows.Forms.Panel();
+			this.rbEngineFS = new System.Windows.Forms.RadioButton();
+			this.rbEngineTS = new System.Windows.Forms.RadioButton();
+			this.rbEngineAuto = new System.Windows.Forms.RadioButton();
+			this.rbEngineRA2 = new System.Windows.Forms.RadioButton();
+			this.rbEngineYR = new System.Windows.Forms.RadioButton();
+			this.lblTiledSquaredPosDescription = new System.Windows.Forms.Label();
+			this.lblSquaredStartPosDescription = new System.Windows.Forms.Label();
+			this.lblOreEmphasisDescription = new System.Windows.Forms.Label();
+			this.cbSquaredStartPositions = new System.Windows.Forms.CheckBox();
+			this.cbTiledStartPositions = new System.Windows.Forms.CheckBox();
+			this.cbEmphasizeOre = new System.Windows.Forms.CheckBox();
+			this.lblCompression = new System.Windows.Forms.GroupBox();
 			this.tbCustomOutput = new System.Windows.Forms.TextBox();
 			this.tbRenderProg = new System.Windows.Forms.TextBox();
-			this.label11 = new System.Windows.Forms.Label();
-			this.label10 = new System.Windows.Forms.Label();
-			this.radioButton2 = new System.Windows.Forms.RadioButton();
+			this.lblAutoFilenameDescription = new System.Windows.Forms.Label();
+			this.lblMapRenderer = new System.Windows.Forms.Label();
+			this.rbCustomFilename = new System.Windows.Forms.RadioButton();
 			this.btnBrowseRenderer = new System.Windows.Forms.Button();
-			this.radioButton1 = new System.Windows.Forms.RadioButton();
-			this.textBox2 = new System.Windows.Forms.TextBox();
-			this.label9 = new System.Windows.Forms.Label();
+			this.rbAutoFilename = new System.Windows.Forms.RadioButton();
+			this.tbMixDir = new System.Windows.Forms.TextBox();
+			this.lblMixFiles = new System.Windows.Forms.Label();
 			this.btnBrowseMixDir = new System.Windows.Forms.Button();
-			this.label2 = new System.Windows.Forms.Label();
-			this.textBox1 = new System.Windows.Forms.TextBox();
+			this.lblQuality = new System.Windows.Forms.Label();
+			this.tbInput = new System.Windows.Forms.TextBox();
 			this.label1 = new System.Windows.Forms.Label();
-			this.label8 = new System.Windows.Forms.Label();
-			this.numericUpDown2 = new System.Windows.Forms.NumericUpDown();
+			this.lblInputMap = new System.Windows.Forms.Label();
+			this.nudEncodingQuality = new System.Windows.Forms.NumericUpDown();
 			this.btnBrowseInput = new System.Windows.Forms.Button();
-			this.checkBox1 = new System.Windows.Forms.CheckBox();
-			this.PNG = new System.Windows.Forms.CheckBox();
+			this.cbOutputJPG = new System.Windows.Forms.CheckBox();
+			this.cbOutputPNG = new System.Windows.Forms.CheckBox();
 			this.nudCompression = new System.Windows.Forms.NumericUpDown();
-			this.button4 = new System.Windows.Forms.Button();
-			this.textBox5 = new System.Windows.Forms.TextBox();
-			this.label12 = new System.Windows.Forms.Label();
+			this.btnRenderExecute = new System.Windows.Forms.Button();
+			this.tbCommandPreview = new System.Windows.Forms.TextBox();
+			this.lblCommand = new System.Windows.Forms.Label();
 			this.openFileDialog1 = new System.Windows.Forms.OpenFileDialog();
-			this.groupBox4 = new System.Windows.Forms.GroupBox();
-			this.textBox6 = new System.Windows.Forms.TextBox();
+			this.cbLog = new System.Windows.Forms.GroupBox();
+			this.tbLog = new System.Windows.Forms.TextBox();
 			this.folderBrowserDialog1 = new System.Windows.Forms.FolderBrowserDialog();
 			this.cbSoftwareRendering = new System.Windows.Forms.CheckBox();
-			this.groupBox2.SuspendLayout();
-			this.panel2.SuspendLayout();
-			this.panel1.SuspendLayout();
-			this.gbInput.SuspendLayout();
-			((System.ComponentModel.ISupportInitialize)(this.numericUpDown2)).BeginInit();
+			this.gbMiscOptions.SuspendLayout();
+			this.pnlMapSize.SuspendLayout();
+			this.pnlEngine.SuspendLayout();
+			this.lblCompression.SuspendLayout();
+			((System.ComponentModel.ISupportInitialize)(this.nudEncodingQuality)).BeginInit();
 			((System.ComponentModel.ISupportInitialize)(this.nudCompression)).BeginInit();
-			this.groupBox4.SuspendLayout();
+			this.cbLog.SuspendLayout();
 			this.SuspendLayout();
 			// 
-			// groupBox2
+			// gbMiscOptions
 			// 
-			this.groupBox2.Controls.Add(this.cbSoftwareRendering);
-			this.groupBox2.Controls.Add(this.panel2);
-			this.groupBox2.Controls.Add(this.panel1);
-			this.groupBox2.Controls.Add(this.label7);
-			this.groupBox2.Controls.Add(this.label6);
-			this.groupBox2.Controls.Add(this.label5);
-			this.groupBox2.Controls.Add(this.checkBox4);
-			this.groupBox2.Controls.Add(this.checkBox2);
-			this.groupBox2.Controls.Add(this.checkBox3);
-			this.groupBox2.Location = new System.Drawing.Point(12, 209);
-			this.groupBox2.Name = "groupBox2";
-			this.groupBox2.Size = new System.Drawing.Size(541, 234);
-			this.groupBox2.TabIndex = 1;
-			this.groupBox2.TabStop = false;
-			this.groupBox2.Text = "Misc. Options";
-			this.groupBox2.DragDrop += new System.Windows.Forms.DragEventHandler(this.gbInput_DragDrop);
-			this.groupBox2.DragEnter += new System.Windows.Forms.DragEventHandler(this.gbInput_DragEnter);
+			this.gbMiscOptions.Controls.Add(this.cbSoftwareRendering);
+			this.gbMiscOptions.Controls.Add(this.pnlMapSize);
+			this.gbMiscOptions.Controls.Add(this.pnlEngine);
+			this.gbMiscOptions.Controls.Add(this.lblTiledSquaredPosDescription);
+			this.gbMiscOptions.Controls.Add(this.lblSquaredStartPosDescription);
+			this.gbMiscOptions.Controls.Add(this.lblOreEmphasisDescription);
+			this.gbMiscOptions.Controls.Add(this.cbSquaredStartPositions);
+			this.gbMiscOptions.Controls.Add(this.cbTiledStartPositions);
+			this.gbMiscOptions.Controls.Add(this.cbEmphasizeOre);
+			this.gbMiscOptions.Location = new System.Drawing.Point(12, 209);
+			this.gbMiscOptions.Name = "gbMiscOptions";
+			this.gbMiscOptions.Size = new System.Drawing.Size(541, 234);
+			this.gbMiscOptions.TabIndex = 1;
+			this.gbMiscOptions.TabStop = false;
+			this.gbMiscOptions.Text = "Misc. Options";
+			this.gbMiscOptions.DragDrop += new System.Windows.Forms.DragEventHandler(this.gbInput_DragDrop);
+			this.gbMiscOptions.DragEnter += new System.Windows.Forms.DragEventHandler(this.gbInput_DragEnter);
 			// 
-			// panel2
+			// pnlMapSize
 			// 
-			this.panel2.Controls.Add(this.radioButton6);
-			this.panel2.Controls.Add(this.radioButton8);
-			this.panel2.Location = new System.Drawing.Point(17, 177);
-			this.panel2.Name = "panel2";
-			this.panel2.Size = new System.Drawing.Size(461, 26);
-			this.panel2.TabIndex = 14;
+			this.pnlMapSize.Controls.Add(this.rbSizeLocal);
+			this.pnlMapSize.Controls.Add(this.rbSizeFullmap);
+			this.pnlMapSize.Location = new System.Drawing.Point(17, 177);
+			this.pnlMapSize.Name = "pnlMapSize";
+			this.pnlMapSize.Size = new System.Drawing.Size(461, 26);
+			this.pnlMapSize.TabIndex = 14;
 			// 
-			// radioButton6
+			// rbSizeLocal
 			// 
-			this.radioButton6.AutoSize = true;
-			this.radioButton6.Checked = true;
-			this.radioButton6.Location = new System.Drawing.Point(12, 4);
-			this.radioButton6.Name = "radioButton6";
-			this.radioButton6.Size = new System.Drawing.Size(110, 17);
-			this.radioButton6.TabIndex = 10;
-			this.radioButton6.TabStop = true;
-			this.radioButton6.Text = "Use map localsize";
-			this.radioButton6.UseVisualStyleBackColor = true;
-			this.radioButton6.CheckedChanged += new System.EventHandler(this.rbsEngine_CheckedChanged);
+			this.rbSizeLocal.AutoSize = true;
+			this.rbSizeLocal.Checked = true;
+			this.rbSizeLocal.Location = new System.Drawing.Point(12, 4);
+			this.rbSizeLocal.Name = "rbSizeLocal";
+			this.rbSizeLocal.Size = new System.Drawing.Size(110, 17);
+			this.rbSizeLocal.TabIndex = 10;
+			this.rbSizeLocal.TabStop = true;
+			this.rbSizeLocal.Text = "Use map localsize";
+			this.rbSizeLocal.UseVisualStyleBackColor = true;
+			this.rbSizeLocal.CheckedChanged += new System.EventHandler(this.rbsEngine_CheckedChanged);
 			// 
-			// radioButton8
+			// rbSizeFullmap
 			// 
-			this.radioButton8.AutoSize = true;
-			this.radioButton8.Location = new System.Drawing.Point(154, 4);
-			this.radioButton8.Name = "radioButton8";
-			this.radioButton8.Size = new System.Drawing.Size(175, 17);
-			this.radioButton8.TabIndex = 11;
-			this.radioButton8.Text = "Use full size (useful for missions)";
-			this.radioButton8.UseVisualStyleBackColor = true;
-			this.radioButton8.CheckedChanged += new System.EventHandler(this.rbsEngine_CheckedChanged);
+			this.rbSizeFullmap.AutoSize = true;
+			this.rbSizeFullmap.Location = new System.Drawing.Point(154, 4);
+			this.rbSizeFullmap.Name = "rbSizeFullmap";
+			this.rbSizeFullmap.Size = new System.Drawing.Size(175, 17);
+			this.rbSizeFullmap.TabIndex = 11;
+			this.rbSizeFullmap.Text = "Use full size (useful for missions)";
+			this.rbSizeFullmap.UseVisualStyleBackColor = true;
+			this.rbSizeFullmap.CheckedChanged += new System.EventHandler(this.rbsEngine_CheckedChanged);
 			// 
-			// panel1
+			// pnlEngine
 			// 
-			this.panel1.Controls.Add(this.rbForceFS);
-			this.panel1.Controls.Add(this.rbForceTS);
-			this.panel1.Controls.Add(this.radioButton4);
-			this.panel1.Controls.Add(this.rbForceRA2);
-			this.panel1.Controls.Add(this.radioButton3);
-			this.panel1.Location = new System.Drawing.Point(17, 145);
-			this.panel1.Name = "panel1";
-			this.panel1.Size = new System.Drawing.Size(461, 26);
-			this.panel1.TabIndex = 13;
+			this.pnlEngine.Controls.Add(this.rbEngineFS);
+			this.pnlEngine.Controls.Add(this.rbEngineTS);
+			this.pnlEngine.Controls.Add(this.rbEngineAuto);
+			this.pnlEngine.Controls.Add(this.rbEngineRA2);
+			this.pnlEngine.Controls.Add(this.rbEngineYR);
+			this.pnlEngine.Location = new System.Drawing.Point(17, 145);
+			this.pnlEngine.Name = "pnlEngine";
+			this.pnlEngine.Size = new System.Drawing.Size(461, 26);
+			this.pnlEngine.TabIndex = 13;
 			// 
-			// rbForceFS
+			// rbEngineFS
 			// 
-			this.rbForceFS.AutoSize = true;
-			this.rbForceFS.Location = new System.Drawing.Point(383, 4);
-			this.rbForceFS.Name = "rbForceFS";
-			this.rbForceFS.Size = new System.Drawing.Size(68, 17);
-			this.rbForceFS.TabIndex = 14;
-			this.rbForceFS.Text = "Force FS";
-			this.rbForceFS.UseVisualStyleBackColor = true;
+			this.rbEngineFS.AutoSize = true;
+			this.rbEngineFS.Location = new System.Drawing.Point(383, 4);
+			this.rbEngineFS.Name = "rbEngineFS";
+			this.rbEngineFS.Size = new System.Drawing.Size(68, 17);
+			this.rbEngineFS.TabIndex = 14;
+			this.rbEngineFS.Text = "Force FS";
+			this.rbEngineFS.UseVisualStyleBackColor = true;
 			// 
-			// rbForceTS
+			// rbEngineTS
 			// 
-			this.rbForceTS.AutoSize = true;
-			this.rbForceTS.Location = new System.Drawing.Point(308, 3);
-			this.rbForceTS.Name = "rbForceTS";
-			this.rbForceTS.Size = new System.Drawing.Size(69, 17);
-			this.rbForceTS.TabIndex = 13;
-			this.rbForceTS.Text = "Force TS";
-			this.rbForceTS.UseVisualStyleBackColor = true;
+			this.rbEngineTS.AutoSize = true;
+			this.rbEngineTS.Location = new System.Drawing.Point(308, 3);
+			this.rbEngineTS.Name = "rbEngineTS";
+			this.rbEngineTS.Size = new System.Drawing.Size(69, 17);
+			this.rbEngineTS.TabIndex = 13;
+			this.rbEngineTS.Text = "Force TS";
+			this.rbEngineTS.UseVisualStyleBackColor = true;
 			// 
-			// radioButton4
+			// rbEngineAuto
 			// 
-			this.radioButton4.AutoSize = true;
-			this.radioButton4.Checked = true;
-			this.radioButton4.Location = new System.Drawing.Point(12, 4);
-			this.radioButton4.Name = "radioButton4";
-			this.radioButton4.Size = new System.Drawing.Size(132, 17);
-			this.radioButton4.TabIndex = 10;
-			this.radioButton4.TabStop = true;
-			this.radioButton4.Text = "Automatic engine rules";
-			this.radioButton4.UseVisualStyleBackColor = true;
-			this.radioButton4.CheckedChanged += new System.EventHandler(this.rbsEngine_CheckedChanged);
+			this.rbEngineAuto.AutoSize = true;
+			this.rbEngineAuto.Checked = true;
+			this.rbEngineAuto.Location = new System.Drawing.Point(12, 4);
+			this.rbEngineAuto.Name = "rbEngineAuto";
+			this.rbEngineAuto.Size = new System.Drawing.Size(132, 17);
+			this.rbEngineAuto.TabIndex = 10;
+			this.rbEngineAuto.TabStop = true;
+			this.rbEngineAuto.Text = "Automatic engine rules";
+			this.rbEngineAuto.UseVisualStyleBackColor = true;
+			this.rbEngineAuto.CheckedChanged += new System.EventHandler(this.rbsEngine_CheckedChanged);
 			// 
-			// rbForceRA2
+			// rbEngineRA2
 			// 
-			this.rbForceRA2.AutoSize = true;
-			this.rbForceRA2.Location = new System.Drawing.Point(226, 4);
-			this.rbForceRA2.Name = "rbForceRA2";
-			this.rbForceRA2.Size = new System.Drawing.Size(76, 17);
-			this.rbForceRA2.TabIndex = 12;
-			this.rbForceRA2.Text = "Force RA2";
-			this.rbForceRA2.UseVisualStyleBackColor = true;
-			this.rbForceRA2.CheckedChanged += new System.EventHandler(this.rbsEngine_CheckedChanged);
+			this.rbEngineRA2.AutoSize = true;
+			this.rbEngineRA2.Location = new System.Drawing.Point(226, 4);
+			this.rbEngineRA2.Name = "rbEngineRA2";
+			this.rbEngineRA2.Size = new System.Drawing.Size(76, 17);
+			this.rbEngineRA2.TabIndex = 12;
+			this.rbEngineRA2.Text = "Force RA2";
+			this.rbEngineRA2.UseVisualStyleBackColor = true;
+			this.rbEngineRA2.CheckedChanged += new System.EventHandler(this.rbsEngine_CheckedChanged);
 			// 
-			// radioButton3
+			// rbEngineYR
 			// 
-			this.radioButton3.AutoSize = true;
-			this.radioButton3.Location = new System.Drawing.Point(150, 3);
-			this.radioButton3.Name = "radioButton3";
-			this.radioButton3.Size = new System.Drawing.Size(70, 17);
-			this.radioButton3.TabIndex = 11;
-			this.radioButton3.Text = "Force YR";
-			this.radioButton3.UseVisualStyleBackColor = true;
-			this.radioButton3.CheckedChanged += new System.EventHandler(this.rbsEngine_CheckedChanged);
+			this.rbEngineYR.AutoSize = true;
+			this.rbEngineYR.Location = new System.Drawing.Point(150, 3);
+			this.rbEngineYR.Name = "rbEngineYR";
+			this.rbEngineYR.Size = new System.Drawing.Size(70, 17);
+			this.rbEngineYR.TabIndex = 11;
+			this.rbEngineYR.Text = "Force YR";
+			this.rbEngineYR.UseVisualStyleBackColor = true;
+			this.rbEngineYR.CheckedChanged += new System.EventHandler(this.rbsEngine_CheckedChanged);
 			// 
-			// label7
+			// lblTiledSquaredPosDescription
 			// 
-			this.label7.Location = new System.Drawing.Point(12, 127);
-			this.label7.Name = "label7";
-			this.label7.Size = new System.Drawing.Size(515, 17);
-			this.label7.TabIndex = 5;
-			this.label7.Text = "Gives a slightly transparent red color to the 4x4 foundation of where MCVs as ini" +
+			this.lblTiledSquaredPosDescription.Location = new System.Drawing.Point(12, 127);
+			this.lblTiledSquaredPosDescription.Name = "lblTiledSquaredPosDescription";
+			this.lblTiledSquaredPosDescription.Size = new System.Drawing.Size(515, 17);
+			this.lblTiledSquaredPosDescription.TabIndex = 5;
+			this.lblTiledSquaredPosDescription.Text = "Gives a slightly transparent red color to the 4x4 foundation of where MCVs as ini" +
     "tially placed would deploy.";
 			// 
-			// label6
+			// lblSquaredStartPosDescription
 			// 
-			this.label6.Location = new System.Drawing.Point(12, 89);
-			this.label6.Name = "label6";
-			this.label6.Size = new System.Drawing.Size(498, 15);
-			this.label6.TabIndex = 3;
-			this.label6.Text = "Places a large red square at the starting positions. Looks good when scaling down" +
+			this.lblSquaredStartPosDescription.Location = new System.Drawing.Point(12, 89);
+			this.lblSquaredStartPosDescription.Name = "lblSquaredStartPosDescription";
+			this.lblSquaredStartPosDescription.Size = new System.Drawing.Size(498, 15);
+			this.lblSquaredStartPosDescription.TabIndex = 3;
+			this.lblSquaredStartPosDescription.Text = "Places a large red square at the starting positions. Looks good when scaling down" +
     " to preview images.";
 			// 
-			// label5
+			// lblOreEmphasisDescription
 			// 
-			this.label5.Location = new System.Drawing.Point(12, 37);
-			this.label5.Name = "label5";
-			this.label5.Size = new System.Drawing.Size(498, 32);
-			this.label5.TabIndex = 1;
-			this.label5.Text = resources.GetString("label5.Text");
+			this.lblOreEmphasisDescription.Location = new System.Drawing.Point(12, 37);
+			this.lblOreEmphasisDescription.Name = "lblOreEmphasisDescription";
+			this.lblOreEmphasisDescription.Size = new System.Drawing.Size(498, 32);
+			this.lblOreEmphasisDescription.TabIndex = 1;
+			this.lblOreEmphasisDescription.Text = resources.GetString("lblOreEmphasisDescription.Text");
 			// 
-			// checkBox4
+			// cbSquaredStartPositions
 			// 
-			this.checkBox4.AutoSize = true;
-			this.checkBox4.Location = new System.Drawing.Point(31, 69);
-			this.checkBox4.Name = "checkBox4";
-			this.checkBox4.Size = new System.Drawing.Size(133, 17);
-			this.checkBox4.TabIndex = 2;
-			this.checkBox4.Text = "Squared start positions";
-			this.checkBox4.UseVisualStyleBackColor = true;
-			this.checkBox4.CheckedChanged += new System.EventHandler(this.checkBox4_CheckedChanged_1);
+			this.cbSquaredStartPositions.AutoSize = true;
+			this.cbSquaredStartPositions.Location = new System.Drawing.Point(31, 69);
+			this.cbSquaredStartPositions.Name = "cbSquaredStartPositions";
+			this.cbSquaredStartPositions.Size = new System.Drawing.Size(133, 17);
+			this.cbSquaredStartPositions.TabIndex = 2;
+			this.cbSquaredStartPositions.Text = "Squared start positions";
+			this.cbSquaredStartPositions.UseVisualStyleBackColor = true;
+			this.cbSquaredStartPositions.CheckedChanged += new System.EventHandler(this.checkBox4_CheckedChanged_1);
 			// 
-			// checkBox2
+			// cbTiledStartPositions
 			// 
-			this.checkBox2.AutoSize = true;
-			this.checkBox2.Location = new System.Drawing.Point(31, 107);
-			this.checkBox2.Name = "checkBox2";
-			this.checkBox2.Size = new System.Drawing.Size(116, 17);
-			this.checkBox2.TabIndex = 4;
-			this.checkBox2.Text = "Tiled start positions";
-			this.checkBox2.UseVisualStyleBackColor = true;
-			this.checkBox2.CheckedChanged += new System.EventHandler(this.checkBox2_CheckedChanged);
+			this.cbTiledStartPositions.AutoSize = true;
+			this.cbTiledStartPositions.Location = new System.Drawing.Point(31, 107);
+			this.cbTiledStartPositions.Name = "cbTiledStartPositions";
+			this.cbTiledStartPositions.Size = new System.Drawing.Size(116, 17);
+			this.cbTiledStartPositions.TabIndex = 4;
+			this.cbTiledStartPositions.Text = "Tiled start positions";
+			this.cbTiledStartPositions.UseVisualStyleBackColor = true;
+			this.cbTiledStartPositions.CheckedChanged += new System.EventHandler(this.checkBox2_CheckedChanged);
 			// 
-			// checkBox3
+			// cbEmphasizeOre
 			// 
-			this.checkBox3.AutoSize = true;
-			this.checkBox3.Location = new System.Drawing.Point(31, 17);
-			this.checkBox3.Name = "checkBox3";
-			this.checkBox3.Size = new System.Drawing.Size(125, 17);
-			this.checkBox3.TabIndex = 0;
-			this.checkBox3.Text = "Emphasize ore/gems";
-			this.checkBox3.UseVisualStyleBackColor = true;
-			this.checkBox3.CheckedChanged += new System.EventHandler(this.checkBox3_CheckedChanged);
+			this.cbEmphasizeOre.AutoSize = true;
+			this.cbEmphasizeOre.Location = new System.Drawing.Point(31, 17);
+			this.cbEmphasizeOre.Name = "cbEmphasizeOre";
+			this.cbEmphasizeOre.Size = new System.Drawing.Size(125, 17);
+			this.cbEmphasizeOre.TabIndex = 0;
+			this.cbEmphasizeOre.Text = "Emphasize ore/gems";
+			this.cbEmphasizeOre.UseVisualStyleBackColor = true;
+			this.cbEmphasizeOre.CheckedChanged += new System.EventHandler(this.checkBox3_CheckedChanged);
 			// 
-			// gbInput
+			// lblCompression
 			// 
-			this.gbInput.Controls.Add(this.tbCustomOutput);
-			this.gbInput.Controls.Add(this.tbRenderProg);
-			this.gbInput.Controls.Add(this.label11);
-			this.gbInput.Controls.Add(this.label10);
-			this.gbInput.Controls.Add(this.radioButton2);
-			this.gbInput.Controls.Add(this.btnBrowseRenderer);
-			this.gbInput.Controls.Add(this.radioButton1);
-			this.gbInput.Controls.Add(this.textBox2);
-			this.gbInput.Controls.Add(this.label9);
-			this.gbInput.Controls.Add(this.btnBrowseMixDir);
-			this.gbInput.Controls.Add(this.label2);
-			this.gbInput.Controls.Add(this.textBox1);
-			this.gbInput.Controls.Add(this.label1);
-			this.gbInput.Controls.Add(this.label8);
-			this.gbInput.Controls.Add(this.numericUpDown2);
-			this.gbInput.Controls.Add(this.btnBrowseInput);
-			this.gbInput.Controls.Add(this.checkBox1);
-			this.gbInput.Controls.Add(this.PNG);
-			this.gbInput.Controls.Add(this.nudCompression);
-			this.gbInput.Location = new System.Drawing.Point(12, 9);
-			this.gbInput.Name = "gbInput";
-			this.gbInput.Size = new System.Drawing.Size(544, 194);
-			this.gbInput.TabIndex = 0;
-			this.gbInput.TabStop = false;
-			this.gbInput.Text = "Input";
-			this.gbInput.DragDrop += new System.Windows.Forms.DragEventHandler(this.gbInput_DragDrop);
-			this.gbInput.DragEnter += new System.Windows.Forms.DragEventHandler(this.gbInput_DragEnter);
+			this.lblCompression.Controls.Add(this.tbCustomOutput);
+			this.lblCompression.Controls.Add(this.tbRenderProg);
+			this.lblCompression.Controls.Add(this.lblAutoFilenameDescription);
+			this.lblCompression.Controls.Add(this.lblMapRenderer);
+			this.lblCompression.Controls.Add(this.rbCustomFilename);
+			this.lblCompression.Controls.Add(this.btnBrowseRenderer);
+			this.lblCompression.Controls.Add(this.rbAutoFilename);
+			this.lblCompression.Controls.Add(this.tbMixDir);
+			this.lblCompression.Controls.Add(this.lblMixFiles);
+			this.lblCompression.Controls.Add(this.btnBrowseMixDir);
+			this.lblCompression.Controls.Add(this.lblQuality);
+			this.lblCompression.Controls.Add(this.tbInput);
+			this.lblCompression.Controls.Add(this.label1);
+			this.lblCompression.Controls.Add(this.lblInputMap);
+			this.lblCompression.Controls.Add(this.nudEncodingQuality);
+			this.lblCompression.Controls.Add(this.btnBrowseInput);
+			this.lblCompression.Controls.Add(this.cbOutputJPG);
+			this.lblCompression.Controls.Add(this.cbOutputPNG);
+			this.lblCompression.Controls.Add(this.nudCompression);
+			this.lblCompression.Location = new System.Drawing.Point(12, 9);
+			this.lblCompression.Name = "lblCompression";
+			this.lblCompression.Size = new System.Drawing.Size(544, 194);
+			this.lblCompression.TabIndex = 0;
+			this.lblCompression.TabStop = false;
+			this.lblCompression.Text = "Input";
+			this.lblCompression.DragDrop += new System.Windows.Forms.DragEventHandler(this.gbInput_DragDrop);
+			this.lblCompression.DragEnter += new System.Windows.Forms.DragEventHandler(this.gbInput_DragEnter);
 			// 
 			// tbCustomOutput
 			// 
@@ -303,34 +303,34 @@
 			this.tbRenderProg.TabIndex = 7;
 			this.tbRenderProg.TextChanged += new System.EventHandler(this.textBox1_TextChanged);
 			// 
-			// label11
+			// lblAutoFilenameDescription
 			// 
-			this.label11.Location = new System.Drawing.Point(14, 165);
-			this.label11.Name = "label11";
-			this.label11.Size = new System.Drawing.Size(515, 17);
-			this.label11.TabIndex = 11;
-			this.label11.Text = "Automatic filename resolution uses CSF, missions.ini or [Basic]/Name if possible." +
+			this.lblAutoFilenameDescription.Location = new System.Drawing.Point(14, 165);
+			this.lblAutoFilenameDescription.Name = "lblAutoFilenameDescription";
+			this.lblAutoFilenameDescription.Size = new System.Drawing.Size(515, 17);
+			this.lblAutoFilenameDescription.TabIndex = 11;
+			this.lblAutoFilenameDescription.Text = "Automatic filename resolution uses CSF, missions.ini or [Basic]/Name if possible." +
     "\r\n";
 			// 
-			// label10
+			// lblMapRenderer
 			// 
-			this.label10.AutoSize = true;
-			this.label10.Location = new System.Drawing.Point(28, 68);
-			this.label10.Name = "label10";
-			this.label10.Size = new System.Drawing.Size(102, 13);
-			this.label10.TabIndex = 6;
-			this.label10.Text = "Map render program";
+			this.lblMapRenderer.AutoSize = true;
+			this.lblMapRenderer.Location = new System.Drawing.Point(28, 68);
+			this.lblMapRenderer.Name = "lblMapRenderer";
+			this.lblMapRenderer.Size = new System.Drawing.Size(102, 13);
+			this.lblMapRenderer.TabIndex = 6;
+			this.lblMapRenderer.Text = "Map render program";
 			// 
-			// radioButton2
+			// rbCustomFilename
 			// 
-			this.radioButton2.AutoSize = true;
-			this.radioButton2.Location = new System.Drawing.Point(173, 143);
-			this.radioButton2.Name = "radioButton2";
-			this.radioButton2.Size = new System.Drawing.Size(102, 17);
-			this.radioButton2.TabIndex = 9;
-			this.radioButton2.Text = "Custom filename";
-			this.radioButton2.UseVisualStyleBackColor = true;
-			this.radioButton2.CheckedChanged += new System.EventHandler(this.rbCustomOutput_CheckedChanged);
+			this.rbCustomFilename.AutoSize = true;
+			this.rbCustomFilename.Location = new System.Drawing.Point(173, 143);
+			this.rbCustomFilename.Name = "rbCustomFilename";
+			this.rbCustomFilename.Size = new System.Drawing.Size(102, 17);
+			this.rbCustomFilename.TabIndex = 9;
+			this.rbCustomFilename.Text = "Custom filename";
+			this.rbCustomFilename.UseVisualStyleBackColor = true;
+			this.rbCustomFilename.CheckedChanged += new System.EventHandler(this.rbCustomOutput_CheckedChanged);
 			// 
 			// btnBrowseRenderer
 			// 
@@ -342,35 +342,35 @@
 			this.btnBrowseRenderer.UseVisualStyleBackColor = true;
 			this.btnBrowseRenderer.Click += new System.EventHandler(this.btnBrowseRenderer_Click);
 			// 
-			// radioButton1
+			// rbAutoFilename
 			// 
-			this.radioButton1.AutoSize = true;
-			this.radioButton1.Checked = true;
-			this.radioButton1.Location = new System.Drawing.Point(31, 143);
-			this.radioButton1.Name = "radioButton1";
-			this.radioButton1.Size = new System.Drawing.Size(114, 17);
-			this.radioButton1.TabIndex = 8;
-			this.radioButton1.TabStop = true;
-			this.radioButton1.Text = "Automatic filename";
-			this.radioButton1.UseVisualStyleBackColor = true;
-			this.radioButton1.CheckedChanged += new System.EventHandler(this.radioButton1_CheckedChanged);
+			this.rbAutoFilename.AutoSize = true;
+			this.rbAutoFilename.Checked = true;
+			this.rbAutoFilename.Location = new System.Drawing.Point(31, 143);
+			this.rbAutoFilename.Name = "rbAutoFilename";
+			this.rbAutoFilename.Size = new System.Drawing.Size(114, 17);
+			this.rbAutoFilename.TabIndex = 8;
+			this.rbAutoFilename.TabStop = true;
+			this.rbAutoFilename.Text = "Automatic filename";
+			this.rbAutoFilename.UseVisualStyleBackColor = true;
+			this.rbAutoFilename.CheckedChanged += new System.EventHandler(this.radioButton1_CheckedChanged);
 			// 
-			// textBox2
+			// tbMixDir
 			// 
-			this.textBox2.Location = new System.Drawing.Point(131, 41);
-			this.textBox2.Name = "textBox2";
-			this.textBox2.Size = new System.Drawing.Size(298, 20);
-			this.textBox2.TabIndex = 4;
-			this.textBox2.TextChanged += new System.EventHandler(this.textBox1_TextChanged);
+			this.tbMixDir.Location = new System.Drawing.Point(131, 41);
+			this.tbMixDir.Name = "tbMixDir";
+			this.tbMixDir.Size = new System.Drawing.Size(298, 20);
+			this.tbMixDir.TabIndex = 4;
+			this.tbMixDir.TextChanged += new System.EventHandler(this.textBox1_TextChanged);
 			// 
-			// label9
+			// lblMixFiles
 			// 
-			this.label9.AutoSize = true;
-			this.label9.Location = new System.Drawing.Point(28, 42);
-			this.label9.Name = "label9";
-			this.label9.Size = new System.Drawing.Size(44, 13);
-			this.label9.TabIndex = 3;
-			this.label9.Text = "Mix files";
+			this.lblMixFiles.AutoSize = true;
+			this.lblMixFiles.Location = new System.Drawing.Point(28, 42);
+			this.lblMixFiles.Name = "lblMixFiles";
+			this.lblMixFiles.Size = new System.Drawing.Size(44, 13);
+			this.lblMixFiles.TabIndex = 3;
+			this.lblMixFiles.Text = "Mix files";
 			// 
 			// btnBrowseMixDir
 			// 
@@ -382,23 +382,23 @@
 			this.btnBrowseMixDir.UseVisualStyleBackColor = true;
 			this.btnBrowseMixDir.Click += new System.EventHandler(this.btnBrowseMixDir_Click);
 			// 
-			// label2
+			// lblQuality
 			// 
-			this.label2.AutoSize = true;
-			this.label2.Location = new System.Drawing.Point(132, 120);
-			this.label2.Name = "label2";
-			this.label2.Size = new System.Drawing.Size(85, 13);
-			this.label2.TabIndex = 5;
-			this.label2.Text = "Encoding quality";
-			this.label2.Visible = false;
+			this.lblQuality.AutoSize = true;
+			this.lblQuality.Location = new System.Drawing.Point(132, 120);
+			this.lblQuality.Name = "lblQuality";
+			this.lblQuality.Size = new System.Drawing.Size(85, 13);
+			this.lblQuality.TabIndex = 5;
+			this.lblQuality.Text = "Encoding quality";
+			this.lblQuality.Visible = false;
 			// 
-			// textBox1
+			// tbInput
 			// 
-			this.textBox1.Location = new System.Drawing.Point(131, 15);
-			this.textBox1.Name = "textBox1";
-			this.textBox1.Size = new System.Drawing.Size(298, 20);
-			this.textBox1.TabIndex = 1;
-			this.textBox1.TextChanged += new System.EventHandler(this.textBox1_TextChanged);
+			this.tbInput.Location = new System.Drawing.Point(131, 15);
+			this.tbInput.Name = "tbInput";
+			this.tbInput.Size = new System.Drawing.Size(298, 20);
+			this.tbInput.TabIndex = 1;
+			this.tbInput.TextChanged += new System.EventHandler(this.textBox1_TextChanged);
 			// 
 			// label1
 			// 
@@ -409,28 +409,28 @@
 			this.label1.TabIndex = 1;
 			this.label1.Text = "Compression level";
 			// 
-			// label8
+			// lblInputMap
 			// 
-			this.label8.AutoSize = true;
-			this.label8.Location = new System.Drawing.Point(28, 18);
-			this.label8.Name = "label8";
-			this.label8.Size = new System.Drawing.Size(54, 13);
-			this.label8.TabIndex = 0;
-			this.label8.Text = "Input map";
+			this.lblInputMap.AutoSize = true;
+			this.lblInputMap.Location = new System.Drawing.Point(28, 18);
+			this.lblInputMap.Name = "lblInputMap";
+			this.lblInputMap.Size = new System.Drawing.Size(54, 13);
+			this.lblInputMap.TabIndex = 0;
+			this.lblInputMap.Text = "Input map";
 			// 
-			// numericUpDown2
+			// nudEncodingQuality
 			// 
-			this.numericUpDown2.Location = new System.Drawing.Point(230, 119);
-			this.numericUpDown2.Name = "numericUpDown2";
-			this.numericUpDown2.Size = new System.Drawing.Size(43, 20);
-			this.numericUpDown2.TabIndex = 6;
-			this.numericUpDown2.Value = new decimal(new int[] {
+			this.nudEncodingQuality.Location = new System.Drawing.Point(230, 119);
+			this.nudEncodingQuality.Name = "nudEncodingQuality";
+			this.nudEncodingQuality.Size = new System.Drawing.Size(43, 20);
+			this.nudEncodingQuality.TabIndex = 6;
+			this.nudEncodingQuality.Value = new decimal(new int[] {
             90,
             0,
             0,
             0});
-			this.numericUpDown2.Visible = false;
-			this.numericUpDown2.ValueChanged += new System.EventHandler(this.numericUpDown1_ValueChanged);
+			this.nudEncodingQuality.Visible = false;
+			this.nudEncodingQuality.ValueChanged += new System.EventHandler(this.numericUpDown1_ValueChanged);
 			// 
 			// btnBrowseInput
 			// 
@@ -442,29 +442,29 @@
 			this.btnBrowseInput.UseVisualStyleBackColor = true;
 			this.btnBrowseInput.Click += new System.EventHandler(this.button1_Click);
 			// 
-			// checkBox1
+			// cbOutputJPG
 			// 
-			this.checkBox1.AutoSize = true;
-			this.checkBox1.Checked = true;
-			this.checkBox1.CheckState = System.Windows.Forms.CheckState.Checked;
-			this.checkBox1.Location = new System.Drawing.Point(42, 119);
-			this.checkBox1.Name = "checkBox1";
-			this.checkBox1.Size = new System.Drawing.Size(81, 17);
-			this.checkBox1.TabIndex = 4;
-			this.checkBox1.Text = "Output JPG";
-			this.checkBox1.UseVisualStyleBackColor = true;
-			this.checkBox1.CheckedChanged += new System.EventHandler(this.checkBox1_CheckedChanged);
+			this.cbOutputJPG.AutoSize = true;
+			this.cbOutputJPG.Checked = true;
+			this.cbOutputJPG.CheckState = System.Windows.Forms.CheckState.Checked;
+			this.cbOutputJPG.Location = new System.Drawing.Point(42, 119);
+			this.cbOutputJPG.Name = "cbOutputJPG";
+			this.cbOutputJPG.Size = new System.Drawing.Size(81, 17);
+			this.cbOutputJPG.TabIndex = 4;
+			this.cbOutputJPG.Text = "Output JPG";
+			this.cbOutputJPG.UseVisualStyleBackColor = true;
+			this.cbOutputJPG.CheckedChanged += new System.EventHandler(this.checkBox1_CheckedChanged);
 			// 
-			// PNG
+			// cbOutputPNG
 			// 
-			this.PNG.AutoSize = true;
-			this.PNG.Location = new System.Drawing.Point(42, 97);
-			this.PNG.Name = "PNG";
-			this.PNG.Size = new System.Drawing.Size(84, 17);
-			this.PNG.TabIndex = 0;
-			this.PNG.Text = "Output PNG";
-			this.PNG.UseVisualStyleBackColor = true;
-			this.PNG.CheckedChanged += new System.EventHandler(this.PNG_CheckedChanged);
+			this.cbOutputPNG.AutoSize = true;
+			this.cbOutputPNG.Location = new System.Drawing.Point(42, 97);
+			this.cbOutputPNG.Name = "cbOutputPNG";
+			this.cbOutputPNG.Size = new System.Drawing.Size(84, 17);
+			this.cbOutputPNG.TabIndex = 0;
+			this.cbOutputPNG.Text = "Output PNG";
+			this.cbOutputPNG.UseVisualStyleBackColor = true;
+			this.cbOutputPNG.CheckedChanged += new System.EventHandler(this.PNG_CheckedChanged);
 			// 
 			// nudCompression
 			// 
@@ -484,55 +484,55 @@
             0});
 			this.nudCompression.ValueChanged += new System.EventHandler(this.numericUpDown1_ValueChanged);
 			// 
-			// button4
+			// btnRenderExecute
 			// 
-			this.button4.Location = new System.Drawing.Point(458, 449);
-			this.button4.Name = "button4";
-			this.button4.Size = new System.Drawing.Size(75, 23);
-			this.button4.TabIndex = 5;
-			this.button4.Text = "Render map";
-			this.button4.UseVisualStyleBackColor = true;
-			this.button4.Click += new System.EventHandler(this.button4_Click);
+			this.btnRenderExecute.Location = new System.Drawing.Point(458, 449);
+			this.btnRenderExecute.Name = "btnRenderExecute";
+			this.btnRenderExecute.Size = new System.Drawing.Size(75, 23);
+			this.btnRenderExecute.TabIndex = 5;
+			this.btnRenderExecute.Text = "Render map";
+			this.btnRenderExecute.UseVisualStyleBackColor = true;
+			this.btnRenderExecute.Click += new System.EventHandler(this.button4_Click);
 			// 
-			// textBox5
+			// tbCommandPreview
 			// 
-			this.textBox5.Location = new System.Drawing.Point(80, 449);
-			this.textBox5.Name = "textBox5";
-			this.textBox5.Size = new System.Drawing.Size(361, 20);
-			this.textBox5.TabIndex = 4;
+			this.tbCommandPreview.Location = new System.Drawing.Point(80, 449);
+			this.tbCommandPreview.Name = "tbCommandPreview";
+			this.tbCommandPreview.Size = new System.Drawing.Size(361, 20);
+			this.tbCommandPreview.TabIndex = 4;
 			// 
-			// label12
+			// lblCommand
 			// 
-			this.label12.Location = new System.Drawing.Point(18, 452);
-			this.label12.Name = "label12";
-			this.label12.Size = new System.Drawing.Size(62, 17);
-			this.label12.TabIndex = 3;
-			this.label12.Text = "Command";
+			this.lblCommand.Location = new System.Drawing.Point(18, 452);
+			this.lblCommand.Name = "lblCommand";
+			this.lblCommand.Size = new System.Drawing.Size(62, 17);
+			this.lblCommand.TabIndex = 3;
+			this.lblCommand.Text = "Command";
 			// 
 			// openFileDialog1
 			// 
 			this.openFileDialog1.FileName = "openFileDialog1";
 			// 
-			// groupBox4
+			// cbLog
 			// 
-			this.groupBox4.Controls.Add(this.textBox6);
-			this.groupBox4.Location = new System.Drawing.Point(12, 480);
-			this.groupBox4.Name = "groupBox4";
-			this.groupBox4.Size = new System.Drawing.Size(532, 176);
-			this.groupBox4.TabIndex = 6;
-			this.groupBox4.TabStop = false;
-			this.groupBox4.Text = "Log";
-			this.groupBox4.Visible = false;
+			this.cbLog.Controls.Add(this.tbLog);
+			this.cbLog.Location = new System.Drawing.Point(12, 480);
+			this.cbLog.Name = "cbLog";
+			this.cbLog.Size = new System.Drawing.Size(532, 176);
+			this.cbLog.TabIndex = 6;
+			this.cbLog.TabStop = false;
+			this.cbLog.Text = "Log";
+			this.cbLog.Visible = false;
 			// 
-			// textBox6
+			// tbLog
 			// 
-			this.textBox6.Location = new System.Drawing.Point(9, 19);
-			this.textBox6.Multiline = true;
-			this.textBox6.Name = "textBox6";
-			this.textBox6.ReadOnly = true;
-			this.textBox6.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-			this.textBox6.Size = new System.Drawing.Size(518, 151);
-			this.textBox6.TabIndex = 0;
+			this.tbLog.Location = new System.Drawing.Point(9, 19);
+			this.tbLog.Multiline = true;
+			this.tbLog.Name = "tbLog";
+			this.tbLog.ReadOnly = true;
+			this.tbLog.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
+			this.tbLog.Size = new System.Drawing.Size(518, 151);
+			this.tbLog.TabIndex = 0;
 			// 
 			// cbSoftwareRendering
 			// 
@@ -551,29 +551,29 @@
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
 			this.ClientSize = new System.Drawing.Size(576, 657);
-			this.Controls.Add(this.groupBox4);
-			this.Controls.Add(this.label12);
-			this.Controls.Add(this.textBox5);
-			this.Controls.Add(this.button4);
-			this.Controls.Add(this.groupBox2);
-			this.Controls.Add(this.gbInput);
+			this.Controls.Add(this.cbLog);
+			this.Controls.Add(this.lblCommand);
+			this.Controls.Add(this.tbCommandPreview);
+			this.Controls.Add(this.btnRenderExecute);
+			this.Controls.Add(this.gbMiscOptions);
+			this.Controls.Add(this.lblCompression);
 			this.Name = "MainForm";
 			this.Text = "RA2/YR Map Renderer by Frank Razenberg";
 			this.Load += new System.EventHandler(this.MainForm_Load);
 			this.DragDrop += new System.Windows.Forms.DragEventHandler(this.gbInput_DragDrop);
 			this.DragEnter += new System.Windows.Forms.DragEventHandler(this.gbInput_DragEnter);
-			this.groupBox2.ResumeLayout(false);
-			this.groupBox2.PerformLayout();
-			this.panel2.ResumeLayout(false);
-			this.panel2.PerformLayout();
-			this.panel1.ResumeLayout(false);
-			this.panel1.PerformLayout();
-			this.gbInput.ResumeLayout(false);
-			this.gbInput.PerformLayout();
-			((System.ComponentModel.ISupportInitialize)(this.numericUpDown2)).EndInit();
+			this.gbMiscOptions.ResumeLayout(false);
+			this.gbMiscOptions.PerformLayout();
+			this.pnlMapSize.ResumeLayout(false);
+			this.pnlMapSize.PerformLayout();
+			this.pnlEngine.ResumeLayout(false);
+			this.pnlEngine.PerformLayout();
+			this.lblCompression.ResumeLayout(false);
+			this.lblCompression.PerformLayout();
+			((System.ComponentModel.ISupportInitialize)(this.nudEncodingQuality)).EndInit();
 			((System.ComponentModel.ISupportInitialize)(this.nudCompression)).EndInit();
-			this.groupBox4.ResumeLayout(false);
-			this.groupBox4.PerformLayout();
+			this.cbLog.ResumeLayout(false);
+			this.cbLog.PerformLayout();
 			this.ResumeLayout(false);
 			this.PerformLayout();
 
@@ -581,49 +581,49 @@
 
 		#endregion
 
-		private System.Windows.Forms.GroupBox groupBox2;
-		private System.Windows.Forms.CheckBox checkBox2;
-		private System.Windows.Forms.CheckBox checkBox3;
-		private System.Windows.Forms.CheckBox checkBox4;
-		private System.Windows.Forms.Label label5;
-		private System.Windows.Forms.Label label7;
-		private System.Windows.Forms.Label label6;
-		private System.Windows.Forms.GroupBox gbInput;
+		private System.Windows.Forms.GroupBox gbMiscOptions;
+		private System.Windows.Forms.CheckBox cbTiledStartPositions;
+		private System.Windows.Forms.CheckBox cbEmphasizeOre;
+		private System.Windows.Forms.CheckBox cbSquaredStartPositions;
+		private System.Windows.Forms.Label lblOreEmphasisDescription;
+		private System.Windows.Forms.Label lblTiledSquaredPosDescription;
+		private System.Windows.Forms.Label lblSquaredStartPosDescription;
+		private System.Windows.Forms.GroupBox lblCompression;
 		private System.Windows.Forms.Button btnBrowseInput;
 		private System.Windows.Forms.TextBox tbRenderProg;
-		private System.Windows.Forms.Label label10;
+		private System.Windows.Forms.Label lblMapRenderer;
 		private System.Windows.Forms.Button btnBrowseRenderer;
-		private System.Windows.Forms.TextBox textBox2;
-		private System.Windows.Forms.Label label9;
+		private System.Windows.Forms.TextBox tbMixDir;
+		private System.Windows.Forms.Label lblMixFiles;
 		private System.Windows.Forms.Button btnBrowseMixDir;
-		private System.Windows.Forms.TextBox textBox1;
-		private System.Windows.Forms.Label label8;
-		private System.Windows.Forms.Button button4;
-		private System.Windows.Forms.TextBox textBox5;
-		private System.Windows.Forms.Label label12;
+		private System.Windows.Forms.TextBox tbInput;
+		private System.Windows.Forms.Label lblInputMap;
+		private System.Windows.Forms.Button btnRenderExecute;
+		private System.Windows.Forms.TextBox tbCommandPreview;
+		private System.Windows.Forms.Label lblCommand;
 		private System.Windows.Forms.OpenFileDialog openFileDialog1;
-		private System.Windows.Forms.GroupBox groupBox4;
-		private System.Windows.Forms.TextBox textBox6;
+		private System.Windows.Forms.GroupBox cbLog;
+		private System.Windows.Forms.TextBox tbLog;
 		private System.Windows.Forms.FolderBrowserDialog folderBrowserDialog1;
 		private System.Windows.Forms.TextBox tbCustomOutput;
-		private System.Windows.Forms.Label label11;
-		private System.Windows.Forms.RadioButton radioButton2;
-		private System.Windows.Forms.RadioButton radioButton1;
-		private System.Windows.Forms.Label label2;
+		private System.Windows.Forms.Label lblAutoFilenameDescription;
+		private System.Windows.Forms.RadioButton rbCustomFilename;
+		private System.Windows.Forms.RadioButton rbAutoFilename;
+		private System.Windows.Forms.Label lblQuality;
 		private System.Windows.Forms.Label label1;
-		private System.Windows.Forms.NumericUpDown numericUpDown2;
-		private System.Windows.Forms.CheckBox checkBox1;
-		private System.Windows.Forms.CheckBox PNG;
+		private System.Windows.Forms.NumericUpDown nudEncodingQuality;
+		private System.Windows.Forms.CheckBox cbOutputJPG;
+		private System.Windows.Forms.CheckBox cbOutputPNG;
 		private System.Windows.Forms.NumericUpDown nudCompression;
-		private System.Windows.Forms.Panel panel2;
-		private System.Windows.Forms.RadioButton radioButton6;
-		private System.Windows.Forms.RadioButton radioButton8;
-		private System.Windows.Forms.Panel panel1;
-		private System.Windows.Forms.RadioButton radioButton4;
-		private System.Windows.Forms.RadioButton rbForceRA2;
-		private System.Windows.Forms.RadioButton radioButton3;
-		private System.Windows.Forms.RadioButton rbForceFS;
-		private System.Windows.Forms.RadioButton rbForceTS;
+		private System.Windows.Forms.Panel pnlMapSize;
+		private System.Windows.Forms.RadioButton rbSizeLocal;
+		private System.Windows.Forms.RadioButton rbSizeFullmap;
+		private System.Windows.Forms.Panel pnlEngine;
+		private System.Windows.Forms.RadioButton rbEngineAuto;
+		private System.Windows.Forms.RadioButton rbEngineRA2;
+		private System.Windows.Forms.RadioButton rbEngineYR;
+		private System.Windows.Forms.RadioButton rbEngineFS;
+		private System.Windows.Forms.RadioButton rbEngineTS;
 		private System.Windows.Forms.CheckBox cbSoftwareRendering;
 
 	}

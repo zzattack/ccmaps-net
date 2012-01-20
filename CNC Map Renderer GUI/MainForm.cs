@@ -14,7 +14,7 @@ namespace RA2Maps_GUI {
 
 		private void MainForm_Load(object sender, EventArgs e) {
 			tbRenderProg.Text = FindRenderProg();
-			textBox2.Text = GetMixDir();
+			tbMixDir.Text = GetMixDir();
 			UpdateCmd();
 			Height -= 180;
 		}
@@ -32,12 +32,12 @@ namespace RA2Maps_GUI {
 		}
 
 		private void radioButton1_CheckedChanged(object sender, EventArgs e) {
-			tbCustomOutput.Visible = radioButton2.Checked;
+			tbCustomOutput.Visible = rbCustomFilename.Checked;
 			UpdateCmd();
 		}
 
 		private void rbCustomOutput_CheckedChanged(object sender, EventArgs e) {
-			tbCustomOutput.Visible = radioButton2.Checked;
+			tbCustomOutput.Visible = rbCustomFilename.Checked;
 			UpdateCmd();
 		}
 
@@ -47,7 +47,7 @@ namespace RA2Maps_GUI {
 			folderBrowserDialog1.SelectedPath = GetMixDir();
 			folderBrowserDialog1.ShowNewFolderButton = false;
 			if (folderBrowserDialog1.ShowDialog() == DialogResult.OK)
-				textBox2.Text = folderBrowserDialog1.SelectedPath;
+				tbMixDir.Text = folderBrowserDialog1.SelectedPath;
 		}
 
 		private void btnBrowseRenderer_Click(object sender, EventArgs e) {
@@ -74,7 +74,7 @@ namespace RA2Maps_GUI {
 		private void gbInput_DragDrop(object sender, DragEventArgs e) {
 			try {
 				string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
-				textBox1.Text = files[0];
+				tbInput.Text = files[0];
 				UpdateCmd();
 			}
 			catch { }
@@ -85,34 +85,34 @@ namespace RA2Maps_GUI {
 			string file = tbRenderProg.Text;
 			if (file.Contains("\\"))
 				file = file.Substring(file.LastIndexOf('\\') + 1);
-			textBox5.Text = file + " " + cmd;
+			tbCommandPreview.Text = file + " " + cmd;
 		}
 
 		private string getcmd() {
 			string cmd = string.Empty;
 
-			cmd += "-i \"" + textBox1.Text + "\" ";
-			if (PNG.Checked) {
+			cmd += "-i \"" + tbInput.Text + "\" ";
+			if (cbOutputPNG.Checked) {
 				cmd += "-p ";
 				if (nudCompression.Value != 6)
 					cmd += "-c " + nudCompression.Value.ToString() + " ";
 			}
 
-			if (radioButton2.Checked) cmd += "-o \"" + tbCustomOutput.Text + "\" ";
-			if (checkBox1.Checked) {
+			if (rbCustomFilename.Checked) cmd += "-o \"" + tbCustomOutput.Text + "\" ";
+			if (cbOutputJPG.Checked) {
 				cmd += "-j ";
-				if (numericUpDown2.Value != 90)
-					cmd += "-q " + numericUpDown2.Value.ToString() + " ";
+				if (nudEncodingQuality.Value != 90)
+					cmd += "-q " + nudEncodingQuality.Value.ToString() + " ";
 			}
 
-			if (textBox2.Text != GetMixDir()) cmd += "-m " + "\"" + textBox2.Text + "\" ";
-			if (checkBox3.Checked) cmd += "-r ";
-			if (checkBox2.Checked) cmd += "-s ";
-			if (checkBox4.Checked) cmd += "-S ";
-			if (radioButton3.Checked) cmd += "-Y ";
-			else if (rbForceRA2.Checked) cmd += "-y ";
-			if (radioButton8.Checked) cmd += "-f ";
-			if (radioButton8.Checked) cmd += "-F ";
+			if (tbMixDir.Text != GetMixDir()) cmd += "-m " + "\"" + tbMixDir.Text + "\" ";
+			if (cbEmphasizeOre.Checked) cmd += "-r ";
+			if (cbTiledStartPositions.Checked) cmd += "-s ";
+			if (cbSquaredStartPositions.Checked) cmd += "-S ";
+			if (rbEngineYR.Checked) cmd += "-Y ";
+			else if (rbEngineRA2.Checked) cmd += "-y ";
+			if (rbSizeFullmap.Checked) cmd += "-f ";
+			if (rbSizeFullmap.Checked) cmd += "-F ";
 			if (cbSoftwareRendering.Checked) cmd += "-g ";
 
 			return cmd;
@@ -139,12 +139,12 @@ namespace RA2Maps_GUI {
 		}
 
 		private void PNG_CheckedChanged(object sender, EventArgs e) {
-			nudCompression.Visible = label1.Visible = PNG.Checked;
+			nudCompression.Visible = label1.Visible = cbOutputPNG.Checked;
 			UpdateCmd();
 		}
 
 		private void checkBox1_CheckedChanged(object sender, EventArgs e) {
-			label2.Visible = numericUpDown2.Visible = checkBox1.Checked;
+			lblQuality.Visible = nudEncodingQuality.Visible = cbOutputJPG.Checked;
 			UpdateCmd();
 		}
 
@@ -159,18 +159,18 @@ namespace RA2Maps_GUI {
 			openFileDialog1.InitialDirectory = GetMixDir();
 			openFileDialog1.FileName = "";
 			if (openFileDialog1.ShowDialog() == DialogResult.OK)
-				textBox1.Text = openFileDialog1.FileName;
+				tbInput.Text = openFileDialog1.FileName;
 		}
 
 		private void checkBox4_CheckedChanged_1(object sender, EventArgs e) {
-			if (checkBox4.Checked)
-				checkBox2.Checked = false;
+			if (cbSquaredStartPositions.Checked)
+				cbTiledStartPositions.Checked = false;
 			UpdateCmd();
 		}
 
 		private void checkBox2_CheckedChanged(object sender, EventArgs e) {
-			if (checkBox2.Checked)
-				checkBox4.Checked = false;
+			if (cbTiledStartPositions.Checked)
+				cbSquaredStartPositions.Checked = false;
 			UpdateCmd();
 		}
 
@@ -179,12 +179,12 @@ namespace RA2Maps_GUI {
 		}
 
 		private void button4_Click(object sender, EventArgs e) {
-			if (System.IO.File.Exists(textBox1.Text) == false) {
+			if (System.IO.File.Exists(tbInput.Text) == false) {
 				MessageBox.Show("Input file doesn't exist. Aborting.");
 				return;
 			}
 
-			if (System.IO.File.Exists(textBox2.Text + "\\ra2.mix") == false) {
+			if (System.IO.File.Exists(tbMixDir.Text + "\\ra2.mix") == false) {
 				MessageBox.Show("File ra2.mix not found. Aborting.");
 				return;
 			}
@@ -205,7 +205,7 @@ namespace RA2Maps_GUI {
 				}
 			}
 
-			if (!PNG.Checked && !checkBox1.Checked) {
+			if (!cbOutputPNG.Checked && !cbOutputJPG.Checked) {
 				MessageBox.Show("No output format chosen. Aborting.");
 				return;
 			}
@@ -220,7 +220,7 @@ namespace RA2Maps_GUI {
 				return;
 
 			this.Height += 180;
-			groupBox4.Visible = true;
+			cbLog.Visible = true;
 			showlog = true;
 		}
 
@@ -229,7 +229,7 @@ namespace RA2Maps_GUI {
 				return;
 
 			this.Height -= 200;
-			groupBox4.Visible = false;
+			cbLog.Visible = false;
 			showlog = false;
 		}
 
@@ -258,10 +258,10 @@ namespace RA2Maps_GUI {
 				Invoke(new logdelegate(log), s);
 				return;
 			}
-			textBox6.Text += s + "\r\n";
-			textBox6.SelectionStart = textBox6.TextLength - 1;
-			textBox6.SelectionLength = 1;
-			textBox6.ScrollToCaret();
+			tbLog.Text += s + "\r\n";
+			tbLog.SelectionStart = tbLog.TextLength - 1;
+			tbLog.SelectionLength = 1;
+			tbLog.ScrollToCaret();
 		}
 
 		#endregion logging
