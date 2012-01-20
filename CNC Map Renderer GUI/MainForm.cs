@@ -113,6 +113,7 @@ namespace RA2Maps_GUI {
 			else if (rbForceRA2.Checked) cmd += "-y ";
 			if (radioButton8.Checked) cmd += "-f ";
 			if (radioButton8.Checked) cmd += "-F ";
+			if (cbSoftwareRendering.Checked) cmd += "-g ";
 
 			return cmd;
 		}
@@ -275,6 +276,10 @@ namespace RA2Maps_GUI {
 		}
 
 		private void rbsEngine_CheckedChanged(object sender, EventArgs e) {
+			UpdateCmd();
+		}
+
+		private void cbSoftwareRendering_CheckedChanged(object sender, EventArgs e) {
 			UpdateCmd();
 		}
 	}

@@ -67,6 +67,7 @@
 			this.groupBox4 = new System.Windows.Forms.GroupBox();
 			this.textBox6 = new System.Windows.Forms.TextBox();
 			this.folderBrowserDialog1 = new System.Windows.Forms.FolderBrowserDialog();
+			this.cbSoftwareRendering = new System.Windows.Forms.CheckBox();
 			this.groupBox2.SuspendLayout();
 			this.panel2.SuspendLayout();
 			this.panel1.SuspendLayout();
@@ -78,6 +79,7 @@
 			// 
 			// groupBox2
 			// 
+			this.groupBox2.Controls.Add(this.cbSoftwareRendering);
 			this.groupBox2.Controls.Add(this.panel2);
 			this.groupBox2.Controls.Add(this.panel1);
 			this.groupBox2.Controls.Add(this.label7);
@@ -88,7 +90,7 @@
 			this.groupBox2.Controls.Add(this.checkBox3);
 			this.groupBox2.Location = new System.Drawing.Point(12, 209);
 			this.groupBox2.Name = "groupBox2";
-			this.groupBox2.Size = new System.Drawing.Size(541, 225);
+			this.groupBox2.Size = new System.Drawing.Size(541, 234);
 			this.groupBox2.TabIndex = 1;
 			this.groupBox2.TabStop = false;
 			this.groupBox2.Text = "Misc. Options";
@@ -99,7 +101,7 @@
 			// 
 			this.panel2.Controls.Add(this.radioButton6);
 			this.panel2.Controls.Add(this.radioButton8);
-			this.panel2.Location = new System.Drawing.Point(17, 199);
+			this.panel2.Location = new System.Drawing.Point(17, 177);
 			this.panel2.Name = "panel2";
 			this.panel2.Size = new System.Drawing.Size(461, 26);
 			this.panel2.TabIndex = 14;
@@ -135,7 +137,7 @@
 			this.panel1.Controls.Add(this.radioButton4);
 			this.panel1.Controls.Add(this.rbForceRA2);
 			this.panel1.Controls.Add(this.radioButton3);
-			this.panel1.Location = new System.Drawing.Point(17, 167);
+			this.panel1.Location = new System.Drawing.Point(17, 145);
 			this.panel1.Name = "panel1";
 			this.panel1.Size = new System.Drawing.Size(461, 26);
 			this.panel1.TabIndex = 13;
@@ -197,34 +199,34 @@
 			// 
 			// label7
 			// 
-			this.label7.Location = new System.Drawing.Point(12, 147);
+			this.label7.Location = new System.Drawing.Point(12, 127);
 			this.label7.Name = "label7";
 			this.label7.Size = new System.Drawing.Size(515, 17);
 			this.label7.TabIndex = 5;
 			this.label7.Text = "Gives a slightly transparent red color to the 4x4 foundation of where MCVs as ini" +
-	"tially placed would deploy.";
+    "tially placed would deploy.";
 			// 
 			// label6
 			// 
-			this.label6.Location = new System.Drawing.Point(12, 100);
+			this.label6.Location = new System.Drawing.Point(12, 89);
 			this.label6.Name = "label6";
 			this.label6.Size = new System.Drawing.Size(498, 15);
 			this.label6.TabIndex = 3;
 			this.label6.Text = "Places a large red square at the starting positions. Looks good when scaling down" +
-	" to preview images.";
+    " to preview images.";
 			// 
 			// label5
 			// 
-			this.label5.Location = new System.Drawing.Point(12, 39);
+			this.label5.Location = new System.Drawing.Point(12, 37);
 			this.label5.Name = "label5";
 			this.label5.Size = new System.Drawing.Size(498, 32);
 			this.label5.TabIndex = 1;
-			this.label5.Text = "Setting this will result in a yellow glow to be placed behind ore, and a purple glow behind gems. When scaling images down, for example to use them as small preview image of a map, this looks pretty good.";
+			this.label5.Text = resources.GetString("label5.Text");
 			// 
 			// checkBox4
 			// 
 			this.checkBox4.AutoSize = true;
-			this.checkBox4.Location = new System.Drawing.Point(31, 80);
+			this.checkBox4.Location = new System.Drawing.Point(31, 69);
 			this.checkBox4.Name = "checkBox4";
 			this.checkBox4.Size = new System.Drawing.Size(133, 17);
 			this.checkBox4.TabIndex = 2;
@@ -235,7 +237,7 @@
 			// checkBox2
 			// 
 			this.checkBox2.AutoSize = true;
-			this.checkBox2.Location = new System.Drawing.Point(31, 127);
+			this.checkBox2.Location = new System.Drawing.Point(31, 107);
 			this.checkBox2.Name = "checkBox2";
 			this.checkBox2.Size = new System.Drawing.Size(116, 17);
 			this.checkBox2.TabIndex = 4;
@@ -246,7 +248,7 @@
 			// checkBox3
 			// 
 			this.checkBox3.AutoSize = true;
-			this.checkBox3.Location = new System.Drawing.Point(31, 19);
+			this.checkBox3.Location = new System.Drawing.Point(31, 17);
 			this.checkBox3.Name = "checkBox3";
 			this.checkBox3.Size = new System.Drawing.Size(125, 17);
 			this.checkBox3.TabIndex = 0;
@@ -308,7 +310,7 @@
 			this.label11.Size = new System.Drawing.Size(515, 17);
 			this.label11.TabIndex = 11;
 			this.label11.Text = "Automatic filename resolution uses CSF, missions.ini or [Basic]/Name if possible." +
-	"\r\n";
+    "\r\n";
 			// 
 			// label10
 			// 
@@ -484,7 +486,7 @@
 			// 
 			// button4
 			// 
-			this.button4.Location = new System.Drawing.Point(458, 440);
+			this.button4.Location = new System.Drawing.Point(458, 449);
 			this.button4.Name = "button4";
 			this.button4.Size = new System.Drawing.Size(75, 23);
 			this.button4.TabIndex = 5;
@@ -494,14 +496,14 @@
 			// 
 			// textBox5
 			// 
-			this.textBox5.Location = new System.Drawing.Point(80, 440);
+			this.textBox5.Location = new System.Drawing.Point(80, 449);
 			this.textBox5.Name = "textBox5";
 			this.textBox5.Size = new System.Drawing.Size(361, 20);
 			this.textBox5.TabIndex = 4;
 			// 
 			// label12
 			// 
-			this.label12.Location = new System.Drawing.Point(18, 443);
+			this.label12.Location = new System.Drawing.Point(18, 452);
 			this.label12.Name = "label12";
 			this.label12.Size = new System.Drawing.Size(62, 17);
 			this.label12.TabIndex = 3;
@@ -531,6 +533,17 @@
 			this.textBox6.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
 			this.textBox6.Size = new System.Drawing.Size(518, 151);
 			this.textBox6.TabIndex = 0;
+			// 
+			// cbSoftwareRendering
+			// 
+			this.cbSoftwareRendering.AutoSize = true;
+			this.cbSoftwareRendering.Location = new System.Drawing.Point(29, 209);
+			this.cbSoftwareRendering.Name = "cbSoftwareRendering";
+			this.cbSoftwareRendering.Size = new System.Drawing.Size(259, 17);
+			this.cbSoftwareRendering.TabIndex = 15;
+			this.cbSoftwareRendering.Text = "Use software rendering (use with remote desktop)";
+			this.cbSoftwareRendering.UseVisualStyleBackColor = true;
+			this.cbSoftwareRendering.CheckedChanged += new System.EventHandler(this.cbSoftwareRendering_CheckedChanged);
 			// 
 			// MainForm
 			// 
@@ -611,6 +624,7 @@
 		private System.Windows.Forms.RadioButton radioButton3;
 		private System.Windows.Forms.RadioButton rbForceFS;
 		private System.Windows.Forms.RadioButton rbForceTS;
+		private System.Windows.Forms.CheckBox cbSoftwareRendering;
 
 	}
 }
