@@ -23,7 +23,9 @@ namespace CNCMaps {
 
 		public bool IgnoreLocalSize { get; set; }
 
-		public EngineType Engine;
+		public bool SoftwareRendering { get; set; }
+
+		public EngineType Engine { get; set; }
 
 		public StartPositionMarking StartPositionMarking;
 
@@ -43,5 +45,6 @@ namespace CNCMaps {
 			                            	MixFilesDirectory = ""
 			                            };
 		}
+
 	}
 }

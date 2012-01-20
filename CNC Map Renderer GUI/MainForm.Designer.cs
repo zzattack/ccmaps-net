@@ -1,33 +1,28 @@
-﻿namespace RA2Maps_GUI
-{
-    partial class MainForm
-    {
-        /// <summary>
-        /// Required designer variable.
-        /// </summary>
-        private System.ComponentModel.IContainer components = null;
+﻿namespace RA2Maps_GUI {
+	partial class MainForm {
+		/// <summary>
+		/// Required designer variable.
+		/// </summary>
+		private System.ComponentModel.IContainer components = null;
 
-        /// <summary>
-        /// Clean up any resources being used.
-        /// </summary>
-        /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing && (components != null))
-            {
-                components.Dispose();
-            }
-            base.Dispose(disposing);
-        }
+		/// <summary>
+		/// Clean up any resources being used.
+		/// </summary>
+		/// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
+		protected override void Dispose(bool disposing) {
+			if (disposing && (components != null)) {
+				components.Dispose();
+			}
+			base.Dispose(disposing);
+		}
 
-        #region Windows Form Designer generated code
+		#region Windows Form Designer generated code
 
-        /// <summary>
-        /// Required method for Designer support - do not modify
-        /// the contents of this method with the code editor.
-        /// </summary>
-        private void InitializeComponent()
-        {
+		/// <summary>
+		/// Required method for Designer support - do not modify
+		/// the contents of this method with the code editor.
+		/// </summary>
+		private void InitializeComponent() {
 			System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
 			this.groupBox2 = new System.Windows.Forms.GroupBox();
 			this.panel2 = new System.Windows.Forms.Panel();
@@ -207,7 +202,7 @@
 			this.label7.Size = new System.Drawing.Size(515, 17);
 			this.label7.TabIndex = 5;
 			this.label7.Text = "Gives a slightly transparent red color to the 4x4 foundation of where MCVs as ini" +
-				"tially placed would deploy.";
+	"tially placed would deploy.";
 			// 
 			// label6
 			// 
@@ -216,7 +211,7 @@
 			this.label6.Size = new System.Drawing.Size(498, 15);
 			this.label6.TabIndex = 3;
 			this.label6.Text = "Places a large red square at the starting positions. Looks good when scaling down" +
-				" to preview images.";
+	" to preview images.";
 			// 
 			// label5
 			// 
@@ -224,7 +219,7 @@
 			this.label5.Name = "label5";
 			this.label5.Size = new System.Drawing.Size(498, 32);
 			this.label5.TabIndex = 1;
-			this.label5.Text = resources.GetString("label5.Text");
+			this.label5.Text = "Setting this will result in a yellow glow to be placed behind ore, and a purple glow behind gems. When scaling images down, for example to use them as small preview image of a map, this looks pretty good.";
 			// 
 			// checkBox4
 			// 
@@ -313,7 +308,7 @@
 			this.label11.Size = new System.Drawing.Size(515, 17);
 			this.label11.TabIndex = 11;
 			this.label11.Text = "Automatic filename resolution uses CSF, missions.ini or [Basic]/Name if possible." +
-				"\r\n";
+	"\r\n";
 			// 
 			// label10
 			// 
@@ -569,34 +564,34 @@
 			this.ResumeLayout(false);
 			this.PerformLayout();
 
-        }
+		}
 
-        #endregion
+		#endregion
 
 		private System.Windows.Forms.GroupBox groupBox2;
-        private System.Windows.Forms.CheckBox checkBox2;
+		private System.Windows.Forms.CheckBox checkBox2;
 		private System.Windows.Forms.CheckBox checkBox3;
 		private System.Windows.Forms.CheckBox checkBox4;
-        private System.Windows.Forms.Label label5;
-        private System.Windows.Forms.Label label7;
-        private System.Windows.Forms.Label label6;
-        private System.Windows.Forms.GroupBox gbInput;
+		private System.Windows.Forms.Label label5;
+		private System.Windows.Forms.Label label7;
+		private System.Windows.Forms.Label label6;
+		private System.Windows.Forms.GroupBox gbInput;
 		private System.Windows.Forms.Button btnBrowseInput;
-        private System.Windows.Forms.TextBox tbRenderProg;
-        private System.Windows.Forms.Label label10;
-        private System.Windows.Forms.Button btnBrowseRenderer;
-        private System.Windows.Forms.TextBox textBox2;
-        private System.Windows.Forms.Label label9;
-        private System.Windows.Forms.Button btnBrowseMixDir;
-        private System.Windows.Forms.TextBox textBox1;
+		private System.Windows.Forms.TextBox tbRenderProg;
+		private System.Windows.Forms.Label label10;
+		private System.Windows.Forms.Button btnBrowseRenderer;
+		private System.Windows.Forms.TextBox textBox2;
+		private System.Windows.Forms.Label label9;
+		private System.Windows.Forms.Button btnBrowseMixDir;
+		private System.Windows.Forms.TextBox textBox1;
 		private System.Windows.Forms.Label label8;
 		private System.Windows.Forms.Button button4;
-        private System.Windows.Forms.TextBox textBox5;
-        private System.Windows.Forms.Label label12;
-        private System.Windows.Forms.OpenFileDialog openFileDialog1;
-        private System.Windows.Forms.GroupBox groupBox4;
-        private System.Windows.Forms.TextBox textBox6;
-        private System.Windows.Forms.FolderBrowserDialog folderBrowserDialog1;
+		private System.Windows.Forms.TextBox textBox5;
+		private System.Windows.Forms.Label label12;
+		private System.Windows.Forms.OpenFileDialog openFileDialog1;
+		private System.Windows.Forms.GroupBox groupBox4;
+		private System.Windows.Forms.TextBox textBox6;
+		private System.Windows.Forms.FolderBrowserDialog folderBrowserDialog1;
 		private System.Windows.Forms.TextBox tbCustomOutput;
 		private System.Windows.Forms.Label label11;
 		private System.Windows.Forms.RadioButton radioButton2;
@@ -617,6 +612,6 @@
 		private System.Windows.Forms.RadioButton rbForceFS;
 		private System.Windows.Forms.RadioButton rbForceTS;
 
-    }
+	}
 }
 

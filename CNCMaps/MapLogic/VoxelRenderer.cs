@@ -13,7 +13,9 @@ namespace CNCMaps.MapLogic {
 		float[] lightDiffuse = { 0.95f, 0.95f, 0.95f, 1f };
 		float[] lightAmb = { 0.6f, 0.6f, 0.6f, 1f };
 
-		public VoxelRenderer() : base(200, 200) {
+		public VoxelRenderer()
+			: base(200, 200) {
+
 			GL.Enable(EnableCap.DepthTest);
 			GL.Enable(EnableCap.Lighting);
 			GL.Enable(EnableCap.ColorMaterial);
@@ -27,6 +29,8 @@ namespace CNCMaps.MapLogic {
 			GL.Light(LightName.Light0, LightParameter.Diffuse, lightDiffuse);
 			GL.Enable(EnableCap.Light0);
 			GL.ClearColor(0.5f, 0.9f, 0.3f, 0.0f);
+
+			SetupFramebuffer();
 		}
 
 		DrawingSurface vxl_ds = new DrawingSurface(200, 200, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
@@ -49,7 +53,7 @@ namespace CNCMaps.MapLogic {
 			hvaFile.Initialize();
 			SetupFrameRender();
 			GL.Clear(ClearBufferMask.DepthBufferBit | ClearBufferMask.ColorBufferBit);
-			
+
 			// determine size
 			for (int i = 0; i != vxlFile.NumSections(); i++) {
 				vxlFile.SetSection(i);
@@ -61,20 +65,24 @@ namespace CNCMaps.MapLogic {
 			return vxl_ds;
 		}
 
-		private void SetupFrameRender() {
+		void SetupFramebuffer() {
 			int fbo;
-			GL.Ext.GenFramebuffers(1, out fbo);
-			GL.Ext.BindFramebuffer(FramebufferTarget.FramebufferExt, fbo);
-			GL.Ext.FramebufferDrawBuffer(fbo, DrawBufferMode.ColorAttachment0);
-			GL.DrawBuffer(DrawBufferMode.ColorAttachment0);
-			GL.ReadBuffer(ReadBufferMode.ColorAttachment0);
-					
+			try {
+				GL.Ext.GenFramebuffers(1, out fbo);
+				GL.Ext.BindFramebuffer(FramebufferTarget.FramebufferExt, fbo);
+				// GL.Ext.FramebufferDrawBuffer(fbo, DrawBufferMode.ColorAttachment0);
+				GL.DrawBuffer(DrawBufferMode.ColorAttachment0);
+				GL.ReadBuffer(ReadBufferMode.ColorAttachment0);
+			}
+			catch {
+				Logger.WriteLine("Error: failed to initialize framebuffers. If you are using remote desktop or some similar software, consider using software rendering (option -g).");
+			}
 			int depthbuffer;
 			GL.Ext.GenRenderbuffers(1, out depthbuffer);
 			GL.Ext.BindRenderbuffer(RenderbufferTarget.RenderbufferExt, depthbuffer);
 			GL.Ext.RenderbufferStorage(RenderbufferTarget.RenderbufferExt, RenderbufferStorage.DepthComponent32, vxl_ds.bmd.Width, vxl_ds.bmd.Height);
 			GL.Ext.FramebufferRenderbuffer(FramebufferTarget.FramebufferExt, FramebufferAttachment.DepthAttachmentExt, RenderbufferTarget.RenderbufferExt, depthbuffer);
-			
+
 			int rgb_rb;
 			GL.Ext.GenRenderbuffers(1, out rgb_rb);
 			GL.Ext.BindRenderbuffer(RenderbufferTarget.RenderbufferExt, rgb_rb);
@@ -82,7 +90,9 @@ namespace CNCMaps.MapLogic {
 			GL.Ext.FramebufferRenderbuffer(FramebufferTarget.FramebufferExt, FramebufferAttachment.ColorAttachment0Ext, RenderbufferTarget.RenderbufferExt, rgb_rb);
 
 			Debug.Assert(GL.CheckFramebufferStatus(FramebufferTarget.FramebufferExt) == FramebufferErrorCode.FramebufferCompleteExt);
-			
+		}
+
+		private void SetupFrameRender() {
 			GL.Viewport(0, 0, vxl_ds.bmd.Width, vxl_ds.bmd.Height);
 			GL.MatrixMode(MatrixMode.Projection);
 			var persp = Matrix4.CreatePerspectiveFieldOfView(45f / 180f * (float)Math.PI, vxl_ds.bmd.Width / (float)vxl_ds.bmd.Height, 2, vxl_ds.bmd.Height);
@@ -100,7 +110,7 @@ namespace CNCMaps.MapLogic {
 			GL.Scale(0.075, 0.075, 0.075);
 		}
 
-		 void renderSection() {
+		void renderSection() {
 			GL.PushMatrix();
 
 			byte xs, ys, zs;
@@ -131,27 +141,24 @@ namespace CNCMaps.MapLogic {
 
 			/* Translate to the bottom left of the section's bounding box */
 			GL.Translate(min[0], min[1], min[2]);
-	 
+
 			VxlFile.LimbBody.Span.Voxel vx;
-			
+
 			GL.Begin(BeginMode.Quads);
-			for(uint x = 0; x != xs; x++) {
-				for(uint y = 0; y != ys; y++) {
-					for(uint z = 0; z != zs; z++) {
+			for (uint x = 0; x != xs; x++) {
+				for (uint y = 0; y != ys; y++) {
+					for (uint z = 0; z != zs; z++) {
 						if (vxlFile.getVoxel(x, y, z, out vx)) {
 							GL.Color3(palette.colors[vx.colour]);
-				
 							var normal = new float[3];
 							vxlFile.getXYZNormal(vx.normal, out normal);
 							GL.Normal3(normal);
 							renderVoxel(x * sectionScale[0], y * sectionScale[1], z * sectionScale[2], (1.0f - pitch) / 2.0f);
-							GL.PopMatrix();
 						}
 					}
 				}
 			}
 			GL.End();
-			
 			GL.PopMatrix();
 		}
 		void renderVoxel(float cx, float cy, float cz, float r) {

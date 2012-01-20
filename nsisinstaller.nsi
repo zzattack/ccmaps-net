@@ -40,7 +40,8 @@ Section "RA2/YR Maps Renderer" Section1
 	SetOutPath "$INSTDIR\"
 	File "CNC Map Renderer GUI\bin\Release\CNCMaps_GUI.exe"
 	File "CNCMaps\bin\Release\CNCMaps.exe"
-	File "CNCMaps\bin\Release\OpenTK.dll"
+	File "CNCMaps\opengl32_mesa.dll"
+	File "CNCMaps\OpenTK.dll"
 	CreateShortCut "$DESKTOP\CNC Maps renderer.lnk" "$INSTDIR\CNCMaps_GUI.exe"
 	CreateDirectory "$SMPROGRAMS\CNC Maps renderer"
 	CreateShortCut "$SMPROGRAMS\CNC Maps renderer\CNC Maps renderer.lnk" "$INSTDIR\CNCMaps_GUI.exe"
@@ -79,6 +80,7 @@ Section Uninstall
 	; Clean up RA2/YR Maps renderer
 	Delete "$INSTDIR\CNCMaps.exe"
 	Delete "$INSTDIR\OpenTK.dll"
+	Delete "$INSTDIR\opengl32_mesa.dll"
 	Delete "$INSTDIR\CNCMaps_GUI.exe"
 
 	; Remove remaining directories
