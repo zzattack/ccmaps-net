@@ -702,14 +702,19 @@ namespace CNCMaps.MapLogic {
 		};
 		private void LoadLightSources() {
 			Logger.WriteLine("Loading light sources");
+			List<StructureObject> forDeletion = new List<StructureObject>();
 			foreach (StructureObject s in structureObjects) {
 				if (s == null) continue;
 				if (lampNames.Contains(s.Name)) {
 					var ls = new LightSource(rules.GetSection(s.Name), lighting);
 					ls.Tile = s.Tile;
 					lightSources.Add(ls);
-					// make sure these don't get drawn
+					forDeletion.Add(s);
 				}
+			}
+			// make sure these don't get drawn
+			foreach (var s in forDeletion) {
+				structureObjects[s.Tile.Dx, s.Tile.Dy / 2] = null;
 			}
 		}
 
