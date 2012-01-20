@@ -1,75 +1,15 @@
-﻿using System;
-using System.IO;
+﻿using System.IO;
 using CNCMaps.FileFormats;
-using CNCMaps.VirtualFileSystem;
+using CNCMaps.MapLogic;
 using CNCMaps.Utility;
+using CNCMaps.VirtualFileSystem;
 
 namespace CNCMaps {
-	enum StartPositionMarking {
-		None,
-		Tiled,
-		Squared
-	}
-
-	public enum EngineType {
-		AutoDetect,
-		RedAlert2,
-		YurisRevenge,
-		TiberianSun,
-		FireStorm
-	}
-
-	struct RenderSettings {
-
-		public string InputFile { get; set; }
-
-		public string OutputFile { get; set; }
-
-		public string OutputDir { get; set; }
-
-		public bool SavePNG { get; set; }
-
-		public bool SaveJPEG { get; set; }
-
-		public int PNGQuality { get; set; }
-
-		public int JPEGCompression { get; set; }
-
-		public string MixFilesDirectory { get; set; }
-
-		public bool ShowHelp { get; set; }
-
-		public bool MarkOreFields { get; set; }
-
-		public bool IgnoreLocalSize { get; set; }
-
-		public EngineType Engine;
-
-		public StartPositionMarking StartPositionMarking;
-
-		internal static RenderSettings CreateDefaults() {
-			return new RenderSettings() {
-				PNGQuality = 6,
-				SavePNG = false,
-				JPEGCompression = 95,
-				SaveJPEG = false,
-				ShowHelp = false,
-				MarkOreFields = false,
-				Engine = EngineType.AutoDetect,
-				StartPositionMarking = StartPositionMarking.None,
-				InputFile = "",
-				OutputDir = "",
-				OutputFile = "",
-				MixFilesDirectory = ""
-			};
-		}
-	}
-
 	class Program {
-		static NDesk.Options.OptionSet options;
+		static OptionSet options;
 		public static void Main(string[] args) {
 			RenderSettings rs = RenderSettings.CreateDefaults();
-			options = new NDesk.Options.OptionSet() {
+			options = new OptionSet {
 				{ "h|help", "Show this short help text", v => rs.ShowHelp = true },
 				{ "i|infile=", "Input file", v => rs.InputFile = v },
 				{ "o|outfile=", "Output file, without extension, read from map if not specified.", v => rs.OutputFile = v },
@@ -114,7 +54,7 @@ namespace CNCMaps {
 			var vfs = VFS.GetInstance();
 			vfs.ScanMixDir(rs.Engine, rs.MixFilesDirectory);
 
-			MapFile map = new MapFile(File.Open(rs.InputFile, FileMode.Open, FileAccess.Read, FileShare.Read), Path.GetFileName(rs.InputFile));
+			var map = new MapFile(File.Open(rs.InputFile, FileMode.Open, FileAccess.Read, FileShare.Read), Path.GetFileName(rs.InputFile));
 			map.FileName = rs.InputFile;
 
 			map.LoadMap(rs.Engine);
@@ -151,7 +91,7 @@ namespace CNCMaps {
 			Logger.WriteLine("Usage: ");
 			Logger.WriteLine("");
 			var sb = new System.Text.StringBuilder();
-			StringWriter sw = new StringWriter(sb);
+			var sw = new StringWriter(sb);
 			options.WriteOptionDescriptions(sw);
 			Logger.WriteLine(sb.ToString());
 		}

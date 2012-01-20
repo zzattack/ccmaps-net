@@ -32,15 +32,15 @@ namespace CNCMaps.FileFormats {
 			: base(baseStream, filename, baseOffset, fileSize, isBuffered) {
 		}
 
-		bool initialized = false;
+		bool initialized;
 
 		public void Initialize() {
 			if (initialized) return;
-			this.fileHeader = EzMarshal.ByteArrayToStructure<HvaHeader>(Read(Marshal.SizeOf(typeof(HvaHeader))));
+			fileHeader = EzMarshal.ByteArrayToStructure<HvaHeader>(Read(Marshal.SizeOf(typeof(HvaHeader))));
 			sections = new List<Section>((int)fileHeader.numSections);
 
 			for (int i = 0; i < fileHeader.numSections; i++) {
-				Section s = new Section((int)fileHeader.numFrames);
+				var s = new Section((int)fileHeader.numFrames);
 				s.name = Read(16);
 				sections.Add(s);
 			}
@@ -54,7 +54,7 @@ namespace CNCMaps.FileFormats {
 		}
 
 		private float[] ReadMatrix() {
-			float[] ret = new float[12];
+			var ret = new float[12];
 			for (int i = 0; i < 12; i++) {
 				ret[i] = ReadFloat();
 			}
@@ -83,10 +83,10 @@ namespace CNCMaps.FileFormats {
 			transform[15] = 1;
 		}
 
-		int curSection = 0;
+		int curSection;
 
 		internal void SetSection(int section) {
-			this.curSection = section;
+			curSection = section;
 		}
 	}
 }

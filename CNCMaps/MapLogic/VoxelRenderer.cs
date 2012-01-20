@@ -1,9 +1,9 @@
-﻿using CNCMaps.FileFormats;
-using CNCMaps.Utility;
+﻿using System;
 using System.Diagnostics;
-using OpenTK.Graphics.OpenGL;
+using CNCMaps.FileFormats;
+using CNCMaps.Utility;
 using OpenTK;
-using System;
+using OpenTK.Graphics.OpenGL;
 
 namespace CNCMaps.MapLogic {
 	public class VoxelRenderer : GameWindow {
@@ -35,8 +35,8 @@ namespace CNCMaps.MapLogic {
 		HvaFile hvaFile;
 		Palette palette;
 
-		int frame = 0;
-		int pitch = 0;
+		int frame;
+		int pitch;
 
 		double objectRotation;
 		public DrawingSurface Render(VxlFile vxlFile, HvaFile hvaFile, double objectRotation, Palette palette) {
@@ -85,7 +85,7 @@ namespace CNCMaps.MapLogic {
 			
 			GL.Viewport(0, 0, vxl_ds.bmd.Width, vxl_ds.bmd.Height);
 			GL.MatrixMode(MatrixMode.Projection);
-			var persp = Matrix4.CreatePerspectiveFieldOfView(45f / 180f * (float)Math.PI, (float)vxl_ds.bmd.Width / (float)vxl_ds.bmd.Height, 2, vxl_ds.bmd.Height);
+			var persp = Matrix4.CreatePerspectiveFieldOfView(45f / 180f * (float)Math.PI, vxl_ds.bmd.Width / (float)vxl_ds.bmd.Height, 2, vxl_ds.bmd.Height);
 			GL.LoadMatrix(ref persp);
 
 			GL.MatrixMode(MatrixMode.Modelview);
@@ -95,12 +95,12 @@ namespace CNCMaps.MapLogic {
 			GL.Translate(0, 0, 10);
 			GL.Rotate(60, 1, 0, 0);
 			GL.Rotate(180, 0, 1, 0);
-			GL.Rotate(this.objectRotation, 0, 0, 1);
+			GL.Rotate(objectRotation, 0, 0, 1);
 
 			GL.Scale(0.075, 0.075, 0.075);
 		}
-				
-		unsafe void renderSection() {
+
+		 void renderSection() {
 			GL.PushMatrix();
 
 			byte xs, ys, zs;
@@ -113,10 +113,10 @@ namespace CNCMaps.MapLogic {
 			max[0] -= min[0];
 			max[1] -= min[1];
 			max[2] -= min[2];
-			float[] sectionScale = new float[3];
-			sectionScale[0] = max[0] / (float)xs;
-			sectionScale[1] = max[1] / (float)ys;
-			sectionScale[2] = max[2] / (float)zs;
+			var sectionScale = new float[3];
+			sectionScale[0] = max[0] / xs;
+			sectionScale[1] = max[1] / ys;
+			sectionScale[2] = max[2] / zs;
 
 			// Load transformation matrix
 			float[] transform;
@@ -141,10 +141,10 @@ namespace CNCMaps.MapLogic {
 						if (vxlFile.getVoxel(x, y, z, out vx)) {
 							GL.Color3(palette.colors[vx.colour]);
 				
-							float[] normal = new float[3];
+							var normal = new float[3];
 							vxlFile.getXYZNormal(vx.normal, out normal);
 							GL.Normal3(normal);
-							renderVoxel((float)x * sectionScale[0], (float)y * sectionScale[1], (float)z * sectionScale[2], (1.0f - pitch) / 2.0f);
+							renderVoxel(x * sectionScale[0], y * sectionScale[1], z * sectionScale[2], (1.0f - pitch) / 2.0f);
 							GL.PopMatrix();
 						}
 					}

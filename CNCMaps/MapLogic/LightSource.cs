@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using CNCMaps.FileFormats;
+﻿using CNCMaps.FileFormats;
 
 namespace CNCMaps.MapLogic {
 	public class LightSource : RA2Object {

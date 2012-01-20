@@ -1,4 +1,4 @@
-namespace CNCMaps.Encodings.FileFormats {
+namespace CNCMaps.Encodings {
 
 	class Blowfish {
 
@@ -35,7 +35,7 @@ namespace CNCMaps.Encodings.FileFormats {
 		delegate void CipherFunc(ref uint a, ref uint b);
 
 		uint[] RunCipher(uint[] data, CipherFunc f) {
-			uint[] result = new uint[data.Length];
+			var result = new uint[data.Length];
 
 			int size = data.Length / 2;
 			int i = 0;

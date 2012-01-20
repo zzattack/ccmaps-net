@@ -36,8 +36,8 @@ namespace CNCMaps.FileFormats {
 			public string ExtraValue { get; set; }
 
 			public CsfEntry(string value, string extraValue) {
-				this.Value = value;
-				this.ExtraValue = extraValue;
+				Value = value;
+				ExtraValue = extraValue;
 			}
 		}
 
@@ -52,7 +52,7 @@ namespace CNCMaps.FileFormats {
 		static int csf_string_w_id = BitConverter.ToInt32(Encoding.ASCII.GetBytes("STRW").Reverse().ToArray(), 0);
 
 		int Parse() {
-			CNCMaps.Utility.Logger.WriteLine("Parsing {0}", this.FileName);
+			CNCMaps.Utility.Logger.WriteLine("Parsing {0}", FileName);
 			var header = CNCMaps.Utility.EzMarshal.ByteArrayToStructure<CsfHeader>(Read(Marshal.SizeOf(typeof(CsfHeader))));
 			for (int i = 0; i < header.numlabels; i++) {
 				ReadInt32();
@@ -73,18 +73,18 @@ namespace CNCMaps.FileFormats {
 		}
 
 		private void SetValue(string name, string value, string extraValue) {
-			this.LabelMap[name.ToLower()] = new CsfEntry(value, extraValue);
+			LabelMap[name.ToLower()] = new CsfEntry(value, extraValue);
 		}
 
 		public string GetValue(string name) {
 			CsfEntry csfEntry;
-			if (this.LabelMap.TryGetValue(name, out csfEntry))
+			if (LabelMap.TryGetValue(name, out csfEntry))
 				return csfEntry.Value;
 			return "";
 		}
 
 		string ConvertToString(string s) {
-			StringBuilder r = new StringBuilder();
+			var r = new StringBuilder();
 			for (int i = 0; i < s.Length; i++)
 				r.Append((char)~s[i]);
 			return r.ToString();

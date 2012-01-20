@@ -1,8 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Drawing;
 using System.Drawing.Imaging;
-using System.Drawing;
+using System.Linq;
 
 namespace CNCMaps.Utility {
 	public class DrawingSurface {
@@ -50,7 +48,7 @@ namespace CNCMaps.Utility {
 			if (bmd != null)
 				Unlock();
 			ImageCodecInfo encoder = ImageCodecInfo.GetImageEncoders().First(e => e.FormatID == ImageFormat.Png.Guid);
-			EncoderParameters encoderParams = new EncoderParameters(1);
+			var encoderParams = new EncoderParameters(1);
 			encoderParams.Param[0] = new EncoderParameter(Encoder.Quality, quality);
 			bm.Clone(saveRect, bm.PixelFormat).Save(path, encoder, encoderParams);
 		}
@@ -63,7 +61,7 @@ namespace CNCMaps.Utility {
 			if (bmd != null)
 				Unlock();
 			ImageCodecInfo encoder = ImageCodecInfo.GetImageEncoders().First(e => e.FormatID == ImageFormat.Jpeg.Guid);
-			EncoderParameters encoderParams = new EncoderParameters(1);
+			var encoderParams = new EncoderParameters(1);
 			encoderParams.Param[0] = new EncoderParameter(Encoder.Quality, compression);
 			bm.Clone(saveRect, bm.PixelFormat).Save(path, encoder, encoderParams);
 		}

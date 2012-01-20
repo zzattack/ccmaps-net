@@ -1,16 +1,16 @@
-﻿using System.IO;
-using CNCMaps.VirtualFileSystem;
-using System.Runtime.InteropServices;
-using CNCMaps.Utility;
-using CNCMaps.MapLogic;
+﻿using System;
 using System.Collections.Generic;
-using System;
+using System.IO;
+using System.Runtime.InteropServices;
+using CNCMaps.MapLogic;
+using CNCMaps.Utility;
+using CNCMaps.VirtualFileSystem;
 
 namespace CNCMaps.FileFormats {
 
 	class TmpFile : VirtualFile {
 
-		bool isInitialized = false;
+		bool isInitialized;
 		TmpFileHeader fileHeader;
 		List<TmpImage> images;
 
@@ -92,7 +92,7 @@ namespace CNCMaps.FileFormats {
 			for (int x = 0; x < fileHeader.cblocks_x * fileHeader.cblocks_y; x++) {
 				int imageData = BitConverter.ToInt32(index, x * 4);
 				Position = imageData;
-				TmpImage img = new TmpImage();
+				var img = new TmpImage();
 				img.header = EzMarshal.ByteArrayToStructure<TmpImageHeader>(Read(Marshal.SizeOf(typeof(TmpImageHeader))));
 				img.tileData = Read(fileHeader.cx * fileHeader.cy / 2);
 				if (img.header.HasZData) {
@@ -125,7 +125,7 @@ namespace CNCMaps.FileFormats {
 
 			height += (short)img.header.height;
 
-			byte* w_low = (byte*)ds.bmd.Scan0;
+			var w_low = (byte*)ds.bmd.Scan0;
 			byte* w_high = (byte*)ds.bmd.Scan0 + stride * ds.bmd.Height;
 
 			byte* w = (byte*)ds.bmd.Scan0 + stride * y_offset + (x_offset + half_cx - 2) * 3;

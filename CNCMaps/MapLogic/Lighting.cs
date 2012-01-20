@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using CNCMaps.FileFormats;
+﻿using CNCMaps.FileFormats;
 
 namespace CNCMaps.MapLogic {
 	public class Lighting {
@@ -15,12 +11,12 @@ namespace CNCMaps.MapLogic {
 
 		public Lighting(IniFile.IniSection iniSection) {
 			System.Diagnostics.Debug.Assert(iniSection.Name == "Lighting");
-			this.Level = iniSection.ReadDouble("Level", 0.032);
-			this.Ambient = iniSection.ReadDouble("Ambient", 1.0);
-			this.Red = iniSection.ReadDouble("Red", 1.0);
-			this.Green = iniSection.ReadDouble("Green", 1.0);
-			this.Blue = iniSection.ReadDouble("Blue", 1.0);
-			this.Ground = iniSection.ReadDouble("Ground", 0.0);
+			Level = iniSection.ReadDouble("Level", 0.032);
+			Ambient = iniSection.ReadDouble("Ambient", 1.0);
+			Red = iniSection.ReadDouble("Red", 1.0);
+			Green = iniSection.ReadDouble("Green", 1.0);
+			Blue = iniSection.ReadDouble("Blue", 1.0);
+			Ground = iniSection.ReadDouble("Ground", 0.0);
 		}
 
 	}

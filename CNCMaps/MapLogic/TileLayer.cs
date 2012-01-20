@@ -1,24 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Drawing;
-using System.Diagnostics;
 using System.Collections;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Drawing;
 
 namespace CNCMaps.MapLogic {
-
-	public enum TileDirection {
-		Top,
-		TopLeft,
-		TopRight,
-		Left,
-		Right,
-		BottomLeft,
-		Bottom,
-		BottomRight
-	}
-
 	class TileLayer : IEnumerable<MapTile> {
 		MapTile[,] tiles;
 		private Size fullSize;
@@ -166,8 +152,8 @@ namespace CNCMaps.MapLogic {
 				return curY < array.GetLength(1);
 			}
 			public void Reset() {
-				this.curX = -1;
-				this.curY = 0;
+				curX = -1;
+				curY = 0;
 			}
 			T IEnumerator<T>.Current {
 				get {

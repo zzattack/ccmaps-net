@@ -1,4 +1,3 @@
-using System.IO;
 using CNCMaps.VirtualFileSystem;
 
 namespace CNCMaps.Encodings {

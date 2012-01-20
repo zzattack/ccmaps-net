@@ -56,9 +56,9 @@ namespace CNCMaps.Encodings {
 
 			unsafe {
 				fixed (uint* _pn = &n[0]) {
-					byte* pn = (byte*)_pn;
+					var pn = (byte*)_pn;
 					uint i = blen * 4;
-					for (; i > klen; i--) pn[i - 1] = (byte)sign;
+					for (; i > klen; i--) pn[i - 1] = sign;
 					for (; i > 0; i--) pn[i - 1] = key[klen - i];
 				}
 			}
@@ -109,16 +109,16 @@ namespace CNCMaps.Encodings {
 		void init_pubkey() {
 			int i = 0;
 			uint i2, tmp;
-			byte[] keytmp = new byte[256];
+			var keytmp = new byte[256];
 
 			init_bignum(pubkey.key2, 0x10001, 64);
 
 			i2 = 0;
 			while (i < pubkeyStr.Length) {
 				tmp = (uint)char2num[pubkeyStr[i++]];
-				tmp <<= 6; tmp |= (uint)(byte)char2num[pubkeyStr[i++]];
-				tmp <<= 6; tmp |= (uint)(byte)char2num[pubkeyStr[i++]];
-				tmp <<= 6; tmp |= (uint)(byte)char2num[pubkeyStr[i++]];
+				tmp <<= 6; tmp |= (byte)char2num[pubkeyStr[i++]];
+				tmp <<= 6; tmp |= (byte)char2num[pubkeyStr[i++]];
+				tmp <<= 6; tmp |= (byte)char2num[pubkeyStr[i++]];
 				keytmp[i2++] = (byte)((tmp >> 16) & 0xff);
 				keytmp[i2++] = (byte)((tmp >> 8) & 0xff);
 				keytmp[i2++] = (byte)(tmp & 0xff);
@@ -183,9 +183,9 @@ namespace CNCMaps.Encodings {
 				fixed (uint* _ps1 = &src1[0])
 				fixed (uint* _ps2 = &src2[0])
 				fixed (uint* _pd = &dest[0]) {
-					ushort* ps1 = (ushort*)_ps1;
-					ushort* ps2 = (ushort*)_ps2;
-					ushort* pd = (ushort*)_pd;
+					var ps1 = (ushort*)_ps1;
+					var ps2 = (ushort*)_ps2;
+					var pd = (ushort*)_pd;
 
 					while (--len != -1) {
 						i1 = *ps1++;
@@ -203,9 +203,9 @@ namespace CNCMaps.Encodings {
 
 			len += len;
 
-			ushort* ps1 = (ushort*)src1;
-			ushort* ps2 = (ushort*)src2;
-			ushort* pd = (ushort*)dest;
+			var ps1 = (ushort*)src1;
+			var ps2 = (ushort*)src2;
+			var pd = (ushort*)dest;
 
 			while (--len != -1) {
 				i1 = *ps1++;
@@ -217,7 +217,7 @@ namespace CNCMaps.Encodings {
 		}
 
 		void inv_bignum(uint[] n1, uint[] n2, uint len) {
-			uint[] n_tmp = new uint[64];
+			var n_tmp = new uint[64];
 			uint n2_bytelen, bit;
 			int n2_bitlen;
 
@@ -273,20 +273,18 @@ namespace CNCMaps.Encodings {
 
 		unsafe void mul_bignum_word(ushort* pn1, uint[] n2, uint mul, uint len) {
 			uint i, tmp;
-			unsafe {
-				fixed (uint* _pn2 = &n2[0]) {
-					ushort* pn2 = (ushort*)_pn2;
+			fixed (uint* _pn2 = &n2[0]) {
+				var pn2 = (ushort*)_pn2;
 
-					tmp = 0;
-					for (i = 0; i < len; i++) {
-						tmp = mul * (*pn2) + (*pn1) + tmp;
-						*pn1 = (ushort)tmp;
-						pn1++;
-						pn2++;
-						tmp >>= 16;
-					}
-					*pn1 += (ushort)tmp;
+				tmp = 0;
+				for (i = 0; i < len; i++) {
+					tmp = mul * (*pn2) + (*pn1) + tmp;
+					*pn1 = (ushort)tmp;
+					pn1++;
+					pn2++;
+					tmp >>= 16;
 				}
+				*pn1 += (ushort)tmp;
 			}
 		}
 
@@ -296,8 +294,8 @@ namespace CNCMaps.Encodings {
 			unsafe {
 				fixed (uint* _psrc2 = &src2[0])
 				fixed (uint* _pdest = &dest[0]) {
-					ushort* psrc2 = (ushort*)_psrc2;
-					ushort* pdest = (ushort*)_pdest;
+					var psrc2 = (ushort*)_psrc2;
+					var pdest = (ushort*)_pdest;
 
 					init_bignum(dest, 0, len * 2);
 					for (i = 0; i < len * 2; i++)
@@ -317,8 +315,8 @@ namespace CNCMaps.Encodings {
 		}
 
 		unsafe uint get_mulword(uint* n) {
-			ushort* wn = (ushort*)n;
-			uint i = (uint)((((((((((*(wn - 1) ^ 0xffff) & 0xffff) * glob1_hi_inv_lo + 0x10000) >> 1)
+			var wn = (ushort*)n;
+			var i = (uint)((((((((((*(wn - 1) ^ 0xffff) & 0xffff) * glob1_hi_inv_lo + 0x10000) >> 1)
 				 + (((*(wn - 2) ^ 0xffff) * glob1_hi_inv_hi + glob1_hi_inv_hi) >> 1) + 1)
 				 >> 16) + ((((*(wn - 1) ^ 0xffff) & 0xffff) * glob1_hi_inv_hi) >> 1) +
 				 (((*wn ^ 0xffff) * glob1_hi_inv_lo) >> 1) + 1) >> 14) + glob1_hi_inv_hi
@@ -379,7 +377,7 @@ namespace CNCMaps.Encodings {
 		}
 
 		void calc_a_key(uint[] n1, uint[] n2, uint[] n3, uint[] n4, uint len) {
-			uint[] n_tmp = new uint[64];
+			var n_tmp = new uint[64];
 			uint n3_len, n4_len;
 			int n3_bitlen;
 			uint bit_mask;
@@ -420,8 +418,8 @@ namespace CNCMaps.Encodings {
 		}
 
 		unsafe void process_predata(byte* pre, uint pre_len, byte* buf) {
-			uint[] n2 = new uint[64];
-			uint[] n3 = new uint[64];
+			var n2 = new uint[64];
+			var n3 = new uint[64];
 
 			uint a = (pubkey.len - 1) / 8;
 			while (a + 1 <= pre_len) {
@@ -441,7 +439,7 @@ namespace CNCMaps.Encodings {
 
 		public byte[] DecryptKey(byte[] src) {
 			init_pubkey();
-			byte[] dest = new byte[256];
+			var dest = new byte[256];
 
 			unsafe {
 				fixed (byte* pdest = &dest[0])

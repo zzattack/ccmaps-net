@@ -45,10 +45,7 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
-    <Reference Include="System.Data" />
     <Reference Include="System.Drawing" />
-    <Reference Include="System.Windows.Forms" />
-    <Reference Include="System.XML" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Encodings\Blowfish.cs" />
@@ -60,23 +57,44 @@
     <Compile Include="Encodings\Format5.cs" />
     <Compile Include="Encodings\Format80.cs" />
     <Compile Include="Encodings\MiniLZO.cs" />
+    <Compile Include="EngineType.cs" />
     <Compile Include="FileFormats\CsfFile.cs" />
-    <Compile Include="FileFormats\FileFormats.cs" />
+    <Compile Include="FileFormats\FileFormat.cs" />
+    <Compile Include="FileFormats\FormatHelper.cs" />
     <Compile Include="FileFormats\HvaFile.cs" />
     <Compile Include="FileFormats\IniFile.cs" />
     <Compile Include="FileFormats\MissionsFile.cs" />
     <Compile Include="FileFormats\PalFile.cs" />
     <Compile Include="FileFormats\PktFile.cs" />
     <Compile Include="FileFormats\ShpFile.cs" />
+    <Compile Include="MapLogic\AircraftObject.cs" />
+    <Compile Include="MapLogic\CollectionType.cs" />
+    <Compile Include="MapLogic\DamageableObject.cs" />
+    <Compile Include="MapLogic\DrawableObject.cs" />
+    <Compile Include="MapLogic\DrawProperties.cs" />
+    <Compile Include="MapLogic\InfantryObject.cs" />
     <Compile Include="MapLogic\Lighting.cs" />
     <Compile Include="MapLogic\LightSource.cs" />
     <Compile Include="MapLogic\MapFile.cs" />
+    <Compile Include="MapLogic\NamedObject.cs" />
+    <Compile Include="MapLogic\NumberedObject.cs" />
+    <Compile Include="MapLogic\OverlayObject.cs" />
     <Compile Include="MapLogic\Palette.cs" />
+    <Compile Include="MapLogic\PaletteCollection.cs" />
+    <Compile Include="MapLogic\PaletteType.cs" />
+    <Compile Include="MapLogic\RA2Object.cs" />
+    <Compile Include="MapLogic\RemappableObject.cs" />
+    <Compile Include="MapLogic\SmudgeObject.cs" />
+    <Compile Include="MapLogic\StructureObject.cs" />
+    <Compile Include="MapLogic\TerrainObject.cs" />
     <Compile Include="MapLogic\TheaterDefaults.cs" />
     <Compile Include="FileFormats\TmpFile.cs" />
     <Compile Include="FileFormats\VxlFile.cs" />
-    <Compile Include="MapLogic\RA2Objects.cs" />
+    <Compile Include="MapLogic\MapTile.cs" />
+    <Compile Include="MapLogic\TheaterType.cs" />
+    <Compile Include="MapLogic\TileDirection.cs" />
     <Compile Include="MapLogic\TileLayer.cs" />
+    <Compile Include="MapLogic\UnitObject.cs" />
     <Compile Include="MapLogic\VoxelRenderer.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="MapLogic\ObjectCollection.cs" />
@@ -84,17 +102,25 @@
     <Compile Include="MapLogic\TileCollection.cs" />
     <Compile Include="AssemblyInfo.cs" />
     <Compile Include="FileFormats\MixFile.cs" />
+    <Compile Include="RenderSettings.cs" />
+    <Compile Include="StartPositionMarking.cs" />
     <Compile Include="Utility\DrawingSurface.cs" />
     <Compile Include="Utility\EzMarshal.cs" />
-    <Compile Include="Utility\HSV.cs" />
+    <Compile Include="Utility\HsvColor.cs" />
     <Compile Include="Utility\Logger.cs" />
-    <Compile Include="Utility\Options.cs" />
-    <Compile Include="VirtualFileSystem\Archive.cs" />
+    <Compile Include="Utility\Option.cs" />
+    <Compile Include="Utility\OptionAction.cs" />
+    <Compile Include="Utility\OptionContext.cs" />
+    <Compile Include="Utility\OptionException.cs" />
+    <Compile Include="Utility\OptionValueCollection.cs" />
+    <Compile Include="Utility\OptionSet.cs" />
+    <Compile Include="Utility\OptionValueType.cs" />
+    <Compile Include="VirtualFileSystem\IArchive.cs" />
     <Compile Include="VirtualFileSystem\DirArchive.cs" />
     <Compile Include="VirtualFileSystem\MemoryFile.cs" />
     <Compile Include="VirtualFileSystem\VirtualFile.cs" />
     <Compile Include="VirtualFileSystem\MixArchive.cs" />
-    <Compile Include="VirtualFileSystem\VirtualFileSystem.cs" />
+    <Compile Include="VirtualFileSystem\VFS.cs" />
     <Compile Include="VirtualFileSystem\VirtualTextFile.cs" />
   </ItemGroup>
   <ItemGroup>

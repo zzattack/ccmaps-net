@@ -19,7 +19,7 @@
 					if (format == 80)
 						Format80.DecodeInto(r, w);
 					else
-						ManagedLZO.MiniLZO.Decompress(r, w, size_in, size_out);
+						MiniLZO.Decompress(r, w, size_in, size_out);
 					r += size_in;
 					w += size_out;
 				}

@@ -10,28 +10,28 @@ namespace CNCMaps.VirtualFileSystem {
 		protected Stream baseStream;
 		protected int baseOffset;
 		protected long size;
-		protected long pos = 0;
+		protected long pos;
 
 		virtual public string FileName { get; set; }
 
 		byte[] buff;
 		bool isBuffered;
-		bool IsBufferInitialized = false;
+		bool IsBufferInitialized;
 
 		public VirtualFile(Stream BaseStream, string filename, int baseOffset, long fileSize, bool isBuffered = false) {
-			this.size = fileSize;
+			size = fileSize;
 			this.baseOffset = baseOffset;
-			this.baseStream = BaseStream;
+			baseStream = BaseStream;
 			this.isBuffered = isBuffered;
-			this.FileName = filename;
+			FileName = filename;
 		}
 
 		public VirtualFile(Stream BaseStream, string filename = "", bool isBuffered = false) {
-			this.baseStream = BaseStream;
-			this.baseOffset = 0;
-			this.size = BaseStream.Length;
+			baseStream = BaseStream;
+			baseOffset = 0;
+			size = BaseStream.Length;
 			this.isBuffered = isBuffered;
-			this.FileName = filename;
+			FileName = filename;
 		}
 
 		public override bool CanRead {
@@ -55,7 +55,7 @@ namespace CNCMaps.VirtualFileSystem {
 				if (!IsBufferInitialized)
 					InitBuffer();
 
-				Array.Copy(this.buff, pos, buffer, offset, count);
+				Array.Copy(buff, pos, buffer, offset, count);
 			}
 			else {
 				// ensure
@@ -73,7 +73,7 @@ namespace CNCMaps.VirtualFileSystem {
 					InitBuffer();
 
 				for (int i = 0; i < count; i++)
-					*buffer++ = this.buff[pos + i];
+					*buffer++ = buff[pos + i];
 			}
 			else {
 				// ensure
@@ -90,13 +90,13 @@ namespace CNCMaps.VirtualFileSystem {
 		private void InitBuffer() {
 			// ensure
 			baseStream.Position = baseOffset + pos;
-			this.buff = new byte[this.size];
-			baseStream.Read(this.buff, 0, (int)this.size);
+			buff = new byte[size];
+			baseStream.Read(buff, 0, (int)size);
 			IsBufferInitialized = true;
 		}
 
 		public byte[] Read(int numBytes) {
-			byte[] ret = new byte[numBytes];
+			var ret = new byte[numBytes];
 			Read(ret, 0, numBytes);
 			return ret;
 		}
@@ -138,7 +138,7 @@ namespace CNCMaps.VirtualFileSystem {
 		}
 
 		public override void SetLength(long value) {
-			this.size = value;
+			size = value;
 		}
 
 		public override long Position {

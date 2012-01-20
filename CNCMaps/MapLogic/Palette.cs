@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Drawing;
 using CNCMaps.FileFormats;
 
@@ -12,7 +9,7 @@ namespace CNCMaps.MapLogic {
 		PalFile originalPalette;
 		byte[] origColors;
 
-		bool hasLighting = false;
+		bool hasLighting;
 		double redMult = 1.0,
 			greenMult = 1.0,
 			blueMult = 1.0,
@@ -31,7 +28,7 @@ namespace CNCMaps.MapLogic {
 		}
 
 		internal Palette Clone() {
-			Palette p = (Palette)this.MemberwiseClone();
+			var p = (Palette)MemberwiseClone();
 			p.colors = new Color[256];
 			return p;
 		}
@@ -44,11 +41,11 @@ namespace CNCMaps.MapLogic {
 		}
 
 
-		bool originalColorsLoaded = false;
+		bool originalColorsLoaded;
 
 		private void LoadOriginalColors() {
-			if (this.originalPalette != null) {
-				this.origColors = this.originalPalette.GetOriginalColors();
+			if (originalPalette != null) {
+				origColors = originalPalette.GetOriginalColors();
 				originalColorsLoaded = true;
 			}
 		}
@@ -64,16 +61,16 @@ namespace CNCMaps.MapLogic {
 			blueMult = Math.Min(Math.Max(blueMult, -1.3), 1.3);
 
 			for (int i = 0; i < 256; i++) {
-				byte r = (byte)Math.Min(255, origColors[i * 3 + 0] * (ambientMult * redMult) / 63.0 * 255.0);
-				byte g = (byte)Math.Min(255, origColors[i * 3 + 1] * (ambientMult * greenMult) / 63.0 * 255.0);
-				byte b = (byte)Math.Min(255, origColors[i * 3 + 2] * (ambientMult * blueMult) / 63.0 * 255.0);
+				var r = (byte)Math.Min(255, origColors[i * 3 + 0] * (ambientMult * redMult) / 63.0 * 255.0);
+				var g = (byte)Math.Min(255, origColors[i * 3 + 1] * (ambientMult * greenMult) / 63.0 * 255.0);
+				var b = (byte)Math.Min(255, origColors[i * 3 + 2] * (ambientMult * blueMult) / 63.0 * 255.0);
 				colors[i] = Color.FromArgb(r, g, b);
 			}
 		}
 
 		public static Palette MakePalette(Color c) {
 			// be sure not to call recalculate on this
-			Palette p = new Palette(null);
+			var p = new Palette(null);
 			for (int i = 0; i < 256; i++)
 				p.colors[i] = c;
 			p.originalColorsLoaded = true;
@@ -83,7 +80,7 @@ namespace CNCMaps.MapLogic {
 		public static Palette MergePalettes(Palette A, Palette B, double opacity) {
 			// make sure recalculate has been called on A and B,
 			// and be sure not to call recalculate on this
-			Palette p = new Palette(null);
+			var p = new Palette(null);
 			for (int i = 0; i < 256; i++)
 				p.colors[i] = Color.FromArgb(
 					(int)(A.colors[i].R * opacity + B.colors[i].R * (1.0 - opacity)),

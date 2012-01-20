@@ -36,7 +36,7 @@ namespace CNCMaps.FileFormats {
 			return ret;
 		}
 
-		[Flags()]
+		[Flags]
 		public enum GameMode : byte {
 			None = 0x00,
 			Standard = 0x01,
@@ -60,10 +60,10 @@ namespace CNCMaps.FileFormats {
 			public GameMode GameModes { get; private set; }
 
 			public PktMapEntry(IniSection sect) {
-				this.Description = sect.ReadString("Description");
+				Description = sect.ReadString("Description");
 				MinPlayers = sect.ReadInt("MinPlayers");
 				MaxPlayer = sect.ReadInt("MaxPlayers");
-				string[] GameModes = sect.ReadString("GameMode").Split(new char[] { ',', ' ' }, StringSplitOptions.RemoveEmptyEntries);
+				string[] GameModes = sect.ReadString("GameMode").Split(new[] { ',', ' ' }, StringSplitOptions.RemoveEmptyEntries);
 				foreach (string g in GameModes)
 					this.GameModes |= (GameMode)Enum.Parse(typeof(GameMode), g, true);
 			}

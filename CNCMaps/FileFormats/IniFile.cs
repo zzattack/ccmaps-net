@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
 using CNCMaps.VirtualFileSystem;
-using System.Globalization;
 
 namespace CNCMaps.FileFormats {
 
@@ -28,7 +28,7 @@ namespace CNCMaps.FileFormats {
 		}
 
 		void Parse() {
-			CNCMaps.Utility.Logger.WriteLine("Parsing {0}", Path.GetFileName(this.FileName));
+			CNCMaps.Utility.Logger.WriteLine("Parsing {0}", Path.GetFileName(FileName));
 			while (CanRead) {
 				ProcessLine(ReadLine());
 			}
@@ -41,7 +41,7 @@ namespace CNCMaps.FileFormats {
 			// Test if this line contains start of new section i.e. matches [*]
 			if ((line[0] == '[') && (line[line.Length - 1] == ']')) {
 				string sectionName = line.Substring(1, line.Length - 2);
-				IniSection iniSection = new IniSection(sectionName);
+				var iniSection = new IniSection(sectionName);
 				Sections.Add(iniSection);
 				CurrentSection = iniSection;
 			}
@@ -56,8 +56,8 @@ namespace CNCMaps.FileFormats {
 		}
 
 		public void SetCurrentSection(IniSection section) {
-			if (this.Sections.Contains(section))
-				this.CurrentSection = section;
+			if (Sections.Contains(section))
+				CurrentSection = section;
 			else
 				throw new InvalidOperationException("Invalid section");
 		}
@@ -67,7 +67,7 @@ namespace CNCMaps.FileFormats {
 		}
 
 		public string ReadString(string section, string key) {
-			if (this.CurrentSection.Name != section)
+			if (CurrentSection.Name != section)
 				SetCurrentSection(section);
 			return ReadString(key);
 		}
@@ -77,7 +77,7 @@ namespace CNCMaps.FileFormats {
 		}
 
 		public bool ReadBool(string section, string key) {
-			if (this.CurrentSection.Name != section)
+			if (CurrentSection.Name != section)
 				SetCurrentSection(section);
 			return ReadBool(key);
 		}
@@ -93,13 +93,13 @@ namespace CNCMaps.FileFormats {
 			static NumberFormatInfo culture = CultureInfo.InvariantCulture.NumberFormat;
 
 			public IniSection(string name) {
-				this.SortedEntries = new Dictionary<string, string>();
-				this.OrderedEntries = new List<KeyValuePair<string, string>>();
-				this.Name = name;
+				SortedEntries = new Dictionary<string, string>();
+				OrderedEntries = new List<KeyValuePair<string, string>>();
+				Name = name;
 			}
 
 			public override string ToString() {
-				StringBuilder sb = new StringBuilder();
+				var sb = new StringBuilder();
 				sb.Append('[');
 				sb.Append(Name);
 				sb.AppendLine("]");
@@ -209,8 +209,8 @@ namespace CNCMaps.FileFormats {
 			}
 
 			public string ConcatenatedValues() {
-				StringBuilder sb = new StringBuilder();
-				foreach (var v in this.OrderedEntries)
+				var sb = new StringBuilder();
+				foreach (var v in OrderedEntries)
 					sb.Append(v.Value);
 				return sb.ToString();
 			}

@@ -1,59 +1,10 @@
 ﻿using System;
 using System.Drawing;
 using CNCMaps.FileFormats;
-using CNCMaps.VirtualFileSystem;
 using CNCMaps.Utility;
-using System.Collections.Generic;
-using System.Collections;
+using CNCMaps.VirtualFileSystem;
 
 namespace CNCMaps.MapLogic {
-	public enum TheaterType {
-		Temperate, TemperateYR,
-		Urban, UrbanYR,
-		Snow, SnowYR,
-		Lunar,
-		Desert,
-		NewUrban
-	}
-
-	public enum PaletteType {
-		Iso,
-		Lib,
-		Unit,
-		Overlay,
-		Anim
-	}
-
-	struct PaletteCollection : IEnumerable<Palette> {
-		public Palette isoPalette, libPalette, ovlPalette, unitPalette, animPalette;
-
-		internal Palette GetPalette(PaletteType paletteType) {
-			switch (paletteType) {
-				case PaletteType.Anim: return animPalette;
-				case PaletteType.Lib: return libPalette;
-				case PaletteType.Overlay: return ovlPalette;
-				case PaletteType.Unit: return unitPalette;
-				case PaletteType.Iso:
-				default:
-					return isoPalette;
-			}
-		}
-
-		public IEnumerator<Palette> GetEnumerator() {
-			List<Palette> p = new List<Palette>();
-			p.Add(isoPalette);
-			p.Add(libPalette);
-			p.Add(ovlPalette);
-			p.Add(unitPalette);
-			p.Add(animPalette);
-			return p.GetEnumerator();
-		}
-
-		IEnumerator System.Collections.IEnumerable.GetEnumerator() {
-			return GetEnumerator();
-		}
-	}
-
 	class Theater {
 		TheaterType theaterType;
 		EngineType engine;
@@ -98,7 +49,7 @@ namespace CNCMaps.MapLogic {
 
 		public void Initialize() {
 			CNCMaps.Utility.Logger.WriteLine("Initializing theater");
-			bool ra2Engine = this.engine == EngineType.RedAlert2 || this.engine == EngineType.YurisRevenge;
+			bool ra2Engine = engine == EngineType.RedAlert2 || engine == EngineType.YurisRevenge;
 			// load palettes and additional mix files for this theater
 			switch (theaterType) {
 				case TheaterType.Temperate:

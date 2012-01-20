@@ -4,7 +4,6 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using CNCMaps.Encodings;
-using CNCMaps.Encodings.FileFormats;
 using CNCMaps.VirtualFileSystem;
 
 namespace CNCMaps.FileFormats {
@@ -27,7 +26,7 @@ namespace CNCMaps.FileFormats {
 
 		private void ParseHeader() {
 			Position = 0;
-			BinaryReader reader = new BinaryReader(this);
+			var reader = new BinaryReader(this);
 			uint signature = reader.ReadUInt32();
 
 			isRmix = 0 == (signature & ~(uint)(MixFileFlags.Checksum | MixFileFlags.Encrypted));
@@ -55,9 +54,9 @@ namespace CNCMaps.FileFormats {
 
 			uint[] h = ReadUints(reader, 2);
 
-			Blowfish fish = new Blowfish(blowfishKey);
+			var fish = new Blowfish(blowfishKey);
 			MemoryStream ms = Decrypt(h, fish);
-			BinaryReader reader2 = new BinaryReader(ms);
+			var reader2 = new BinaryReader(ms);
 
 			ushort numFiles = reader2.ReadUInt16();
 			reader2.ReadUInt32(); /*datasize*/
@@ -78,8 +77,8 @@ namespace CNCMaps.FileFormats {
 		static MemoryStream Decrypt(uint[] h, Blowfish fish) {
 			uint[] decrypted = fish.Decrypt(h);
 
-			MemoryStream ms = new MemoryStream();
-			BinaryWriter writer = new BinaryWriter(ms);
+			var ms = new MemoryStream();
+			var writer = new BinaryWriter(ms);
 			foreach (uint t in decrypted)
 				writer.Write(t);
 			writer.Flush();
@@ -89,7 +88,7 @@ namespace CNCMaps.FileFormats {
 		}
 
 		uint[] ReadUints(VirtualFile r, int count) {
-			uint[] ret = new uint[count];
+			var ret = new uint[count];
 			for (int i = 0; i < ret.Length; i++)
 				ret[i] = r.ReadUInt32();
 
@@ -97,9 +96,9 @@ namespace CNCMaps.FileFormats {
 		}
 
 		List<MixEntry> ParseTdHeader(VirtualFile s, out long dataStart) {
-			List<MixEntry> items = new List<MixEntry>();
+			var items = new List<MixEntry>();
 
-			BinaryReader reader = new BinaryReader(s);
+			var reader = new BinaryReader(s);
 			ushort numFiles = reader.ReadUInt16();
 			/*uint dataSize = */
 			reader.ReadUInt32();

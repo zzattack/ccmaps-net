@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
-namespace CNCMaps.Encodings {
+﻿namespace CNCMaps.Encodings {
 	class Format3 {
 		public unsafe static uint DecodeInto(byte[] src, byte[] dst, int cx, int cy) {
 			fixed (byte* pSrc =  src, pDst = dst) {
@@ -15,7 +10,7 @@ namespace CNCMaps.Encodings {
 			byte* r = src;
 			byte* w = dst;
 			for (int y = 0; y < cy; y++) {
-				ushort count = (ushort)(*(ushort*)r - 2);
+				var count = (ushort)(*(ushort*)r - 2);
 				r += 2;
 				int x = 0;
 				while (count-- > 0) {

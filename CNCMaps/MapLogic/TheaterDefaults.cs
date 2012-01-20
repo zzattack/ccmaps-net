@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using CNCMaps.MapLogic;
 
-namespace CNCMaps.FileFormats {
+namespace CNCMaps.MapLogic {
 
 	public static class TheaterDefaults {
 
@@ -98,7 +97,7 @@ namespace CNCMaps.FileFormats {
 		}
 
 		public static IEnumerable<string> GetTheaterMixes(TheaterType theaterType) {
-			List<string> ret = new List<string>();
+			var ret = new List<string>();
 			switch (theaterType) {
 				case TheaterType.Desert:
 					ret.Add("isodesmd.mix");

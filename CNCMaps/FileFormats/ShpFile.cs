@@ -1,11 +1,11 @@
-﻿using System.IO;
-using CNCMaps.VirtualFileSystem;
-using System.Runtime.InteropServices;
+﻿using System;
 using System.Collections.Generic;
-using CNCMaps.Utility;
+using System.IO;
+using System.Runtime.InteropServices;
 using CNCMaps.Encodings;
-using System;
 using CNCMaps.MapLogic;
+using CNCMaps.Utility;
+using CNCMaps.VirtualFileSystem;
 
 namespace CNCMaps.FileFormats {
 
@@ -39,7 +39,7 @@ namespace CNCMaps.FileFormats {
 		ShpFileHeader fileHeader;
 		List<ShpImage> images;
 
-		bool initialized = false;
+		bool initialized;
 
 		public ShpFile(Stream baseStream, string filename, int baseOffset, int fileSize, bool isBuffered = true)
 			: base(baseStream, filename, baseOffset, fileSize, isBuffered) {
@@ -47,11 +47,11 @@ namespace CNCMaps.FileFormats {
 
 		public void Initialize() {
 			initialized = true;
-			this.fileHeader = EzMarshal.ByteArrayToStructure<ShpFileHeader>(Read(Marshal.SizeOf(typeof(ShpFileHeader))));
-			images = new List<ShpImage>(this.fileHeader.c_images);
+			fileHeader = EzMarshal.ByteArrayToStructure<ShpFileHeader>(Read(Marshal.SizeOf(typeof(ShpFileHeader))));
+			images = new List<ShpImage>(fileHeader.c_images);
 			int prevOffset = int.MinValue;
-			for (int i = 0; i < this.fileHeader.c_images; i++) {
-				ShpImage img = new ShpImage();
+			for (int i = 0; i < fileHeader.c_images; i++) {
+				var img = new ShpImage();
 				img.header = EzMarshal.ByteArrayToStructure<ShpImageHeader>(Read(Marshal.SizeOf(typeof(ShpImageHeader))));
 				images.Add(img);
 
@@ -74,11 +74,11 @@ namespace CNCMaps.FileFormats {
 
 				if ((img.header.compression & 2) == 2) {
 					img.imageData = new byte[c_px];
-					int compressedEnd = (int)this.Length;
+					var compressedEnd = (int)Length;
 					if (imageIndex < images.Count - 1)
 						compressedEnd = images[imageIndex + 1].header.offset;
 					if (compressedEnd < img.header.offset)
-						compressedEnd = (int)this.Length;
+						compressedEnd = (int)Length;
 					Format3.DecodeInto(Read(compressedEnd - img.header.offset), img.imageData, img.header.cx, img.header.cy);
 				}
 				else {
@@ -93,14 +93,14 @@ namespace CNCMaps.FileFormats {
 
 			var image = GetImage(frameIndex);
 			var h = image.header;
-			uint c_px = (uint)(h.cx * h.cy);
+			var c_px = (uint)(h.cx * h.cy);
 			int stride = ds.bmd.Stride;
 			var zBuffer = ds.GetZBuffer();
 
 			if (c_px <= 0 || h.cx < 0 || h.cy < 0 || frameIndex > fileHeader.c_images)
 				return;
 
-			byte* w_low = (byte*)ds.bmd.Scan0;
+			var w_low = (byte*)ds.bmd.Scan0;
 			byte* w_high = (byte*)ds.bmd.Scan0 + stride * ds.bmd.Height;
 
 			int dx = x_offset + DrawableObject.TileWidth / 2 - fileHeader.cx / 2 + h.x,
@@ -140,7 +140,7 @@ namespace CNCMaps.FileFormats {
 
 			var image = GetImage(frameIndex + images.Count / 2);
 			var h = image.header;
-			uint c_px = (uint)(h.cx * h.cy);
+			var c_px = (uint)(h.cx * h.cy);
 			int stride = ds.bmd.Stride;
 			var shadows = ds.GetShadows();
 			var zBuffer = ds.GetZBuffer();
@@ -148,7 +148,7 @@ namespace CNCMaps.FileFormats {
 			if (c_px <= 0 || h.cx < 0 || h.cy < 0 || frameIndex > fileHeader.c_images)
 				return;
 
-			byte* w_low = (byte*)ds.bmd.Scan0;
+			var w_low = (byte*)ds.bmd.Scan0;
 			byte* w_high = (byte*)ds.bmd.Scan0 + stride * ds.bmd.Height;
 
 			int dx = x_offset + DrawableObject.TileWidth / 2 - fileHeader.cx / 2 + h.x,
@@ -179,13 +179,13 @@ namespace CNCMaps.FileFormats {
 		public unsafe void DrawAlpha(int frameIndex, DrawingSurface ds, int xOffset, int yOffset) {
 			var image = GetImage(frameIndex + images.Count / 2);
 			var h = image.header;
-			uint c_px = (uint)(h.cx * h.cy);
+			var c_px = (uint)(h.cx * h.cy);
 			int stride = ds.bmd.Stride;
 
 			if (c_px <= 0 || h.cx < 0 || h.cy < 0 || frameIndex > fileHeader.c_images)
 				return;
 
-			byte* w_low = (byte*)ds.bmd.Scan0;
+			var w_low = (byte*)ds.bmd.Scan0;
 			byte* w_high = (byte*)ds.bmd.Scan0 + stride * ds.bmd.Height;
 
 			int dx = xOffset + 30 - fileHeader.cx / 2 + h.x,

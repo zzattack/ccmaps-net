@@ -1,61 +1,19 @@
 ﻿using System.Collections.Generic;
 using System.Drawing;
-using System.Drawing.Imaging;
 using System.IO;
 using System.Text;
 using CNCMaps.FileFormats;
-using CNCMaps.VirtualFileSystem;
 using CNCMaps.Utility;
+using CNCMaps.VirtualFileSystem;
 
 namespace CNCMaps.MapLogic {
-	public enum CollectionType {
-		Aircraft,
-		Building,
-		Infantry,
-		Overlay,
-		Smudge,
-		Terrain,
-		Vehicle,
-	}
-
-	public class DrawProperties {
-		public Point offset;
-		public bool hasShadow;
-		public int ySort;
-
-		public DrawProperties(Point offset, bool hasShadow, int ySort) {
-			this.offset = offset;
-			this.hasShadow = hasShadow;
-			this.ySort = ySort;
-		}
-	}
-
-	class DrawableObject<T> : System.IComparable where T : VirtualFile {
-		public DrawProperties props;
-		public T file;
-		int index;
-		public DrawableObject(T file, DrawProperties drawProperties, int index) {
-			this.file = file;
-			this.props = drawProperties;
-			this.index = index;
-		}
-
-		public int CompareTo(object obj) {
-			DrawableObject<T> other = obj as DrawableObject<T>;
-			if (this.props.ySort != other.props.ySort)
-				return this.props.ySort - other.props.ySort;
-			else
-				return this.index - other.index;
-		}
-	}
-
 	class DrawableObject {
 		public DrawableObject(string name) {
-			this.Name = name;
-			this.Foundation = new Size(1, 1);
+			Name = name;
+			Foundation = new Size(1, 1);
 		}
 
-		bool sorted = false;
+		bool sorted;
 		void Sort() {
 			fires.Sort();
 			shps.Sort();
@@ -92,14 +50,14 @@ namespace CNCMaps.MapLogic {
 
 				if (obj is RemappableObject) p = (obj as RemappableObject).Palette;
 				if (obj is UnitObject) direction = (obj as UnitObject).Direction;
-				DrawingSurface vxl_ds = voxelrenderer.Render(voxels[i].file, hvas[i], -(double)direction / 256.0 * 360 + 45, p ?? this.Palette);
+				DrawingSurface vxl_ds = voxelrenderer.Render(voxels[i].file, hvas[i], -(double)direction / 256.0 * 360 + 45, p ?? Palette);
 
 				// rows inverted!
 				int dx = obj.Tile.Dx * TileWidth / 2;
 				int dy = (obj.Tile.Dy - obj.Tile.Z) * TileHeight / 2;
 				dx += globalOffset.X;
 				dy += globalOffset.Y;
-				var props = this.voxels[i].props;
+				var props = voxels[i].props;
 				dx += props.offset.X;
 				dy += props.offset.Y;
 				dx -= vxl_ds.bmd.Width / 2;
@@ -108,7 +66,7 @@ namespace CNCMaps.MapLogic {
 				// vxl_ds.SavePNG("C:\\soms.jpg", 100, 0, 0, 200, 200);
 
 				unsafe {
-					byte* w_low = (byte*)ds.bmd.Scan0;
+					var w_low = (byte*)ds.bmd.Scan0;
 					byte* w_high = w_low + ds.bmd.Stride * ds.bmd.Height;
 
 					for (int y = 0; y < vxl_ds.Height; y++) {
@@ -149,7 +107,7 @@ namespace CNCMaps.MapLogic {
 				p = (obj as RemappableObject).Palette;
 
 			if (objectOverrides && obj is OverlayObject) {
-				OverlayObject o = obj as OverlayObject;
+				var o = obj as OverlayObject;
 				if (TileWidth == 60) {
 					// bridge
 					if (o.IsBridge())
@@ -161,18 +119,18 @@ namespace CNCMaps.MapLogic {
 					dy += o.OverlayValue > 8 ? -13 : -1;
 				}
 			}
-			file.Draw(frame, ds, dx, dy, obj.Tile.Z, p ?? this.Palette);
+			file.Draw(frame, ds, dx, dy, obj.Tile.Z, p ?? Palette);
 			if (props.hasShadow)
 				file.DrawShadow(frame, ds, dx, dy, obj.Tile.Z, obj.Tile);
 		}
 
 		public static PaletteCollection palettes { get; set; }
 		public Palette Palette { get; set; }
-		ShpFile alphaImage = null;
+		ShpFile alphaImage;
 		Point globalOffset = new Point(0, 0);
 
 		int heightOffset;
-		bool objectOverrides = false;
+		bool objectOverrides;
 		public Size Foundation { get; set; }
 		int direction; // for voxels
 		int frame; // for shps
@@ -190,8 +148,8 @@ namespace CNCMaps.MapLogic {
 		}
 
 		internal void SetOffset(int xOffset, int yOffset) {
-			this.globalOffset.X = xOffset;
-			this.globalOffset.Y = yOffset;
+			globalOffset.X = xOffset;
+			globalOffset.Y = yOffset;
 		}
 
 		internal void SetHeightOffset(int heightOffset) {
@@ -229,7 +187,7 @@ namespace CNCMaps.MapLogic {
 		}
 
 		internal void SetFrame(int frameNum) {
-			this.frame = frameNum;
+			frame = frameNum;
 		}
 
 		public static ushort TileWidth { get; set; }
@@ -278,7 +236,7 @@ namespace CNCMaps.MapLogic {
 		private void LoadObject(string objName) {
 			IniFile.IniSection rulesSection = rules.GetSection(objName);
 			var drawableObject = new DrawableObject(objName);
-			this.objects.Add(drawableObject);
+			objects.Add(drawableObject);
 
 			if (rulesSection == null || rulesSection.ReadBool("IsRubble"))
 				return;
@@ -289,7 +247,7 @@ namespace CNCMaps.MapLogic {
 				return;
 
 			string imageFileName;
-			if (this.collectionType == CollectionType.Building || this.collectionType == CollectionType.Overlay)
+			if (collectionType == CollectionType.Building || collectionType == CollectionType.Overlay)
 				imageFileName = artSection.ReadString("Image", artSectionName);
 			else
 				imageFileName = artSectionName;
@@ -349,7 +307,7 @@ namespace CNCMaps.MapLogic {
 
 			if (!paletteChosen) {
 				// Set palette, determined by type of SHP collection
-				Palette p = palettes.GetPalette(TheaterDefaults.GetPaletteType(collectionType, this.engineType));
+				Palette p = palettes.GetPalette(TheaterDefaults.GetPaletteType(collectionType, engineType));
 				drawableObject.Palette = p;
 			}
 
@@ -522,7 +480,7 @@ namespace CNCMaps.MapLogic {
 		}
 
 		private void ApplyNewTheater(ref string imageFileName) {
-			StringBuilder sb = new StringBuilder(imageFileName);
+			var sb = new StringBuilder(imageFileName);
 			sb[1] = TheaterDefaults.GetTheaterPrefix(theaterType);
 			if (!VFS.Exists(sb.ToString())) {
 				sb[1] = 'G'; // generic

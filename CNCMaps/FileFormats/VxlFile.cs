@@ -1,9 +1,8 @@
-﻿using System.IO;
-using CNCMaps.VirtualFileSystem;
+﻿using System.Collections.Generic;
+using System.IO;
 using System.Runtime.InteropServices;
 using CNCMaps.Utility;
-using System.Collections.Generic;
-using CNCMaps.MapLogic;
+using CNCMaps.VirtualFileSystem;
 
 namespace CNCMaps.FileFormats {
 
@@ -79,24 +78,24 @@ namespace CNCMaps.FileFormats {
 			}
 		}
 
-		bool initialized = false;
+		bool initialized;
 		VxlFileHeader fileHeader;
 		List<LimbHeader> limbHeaders;
 		List<LimbBody> limbBodies;
 		List<LimbTailer> limbTailers;
 
-		public unsafe void Initialize() {
+		public void Initialize() {
 			if (initialized) return;
-			this.fileHeader = EzMarshal.ByteArrayToStructure<VxlFileHeader>(Read(Marshal.SizeOf(typeof(VxlFileHeader))));
-			this.limbHeaders = new List<LimbHeader>((int)this.fileHeader.numLimbs);
-			this.limbBodies = new List<LimbBody>((int)this.fileHeader.numLimbs);
-			this.limbTailers = new List<LimbTailer>((int)this.fileHeader.numLimbs);
+			fileHeader = EzMarshal.ByteArrayToStructure<VxlFileHeader>(Read(Marshal.SizeOf(typeof(VxlFileHeader))));
+			limbHeaders = new List<LimbHeader>((int)fileHeader.numLimbs);
+			limbBodies = new List<LimbBody>((int)fileHeader.numLimbs);
+			limbTailers = new List<LimbTailer>((int)fileHeader.numLimbs);
 
 			for (int i = 0; i < fileHeader.numLimbs; i++)
 				limbHeaders.Add(EzMarshal.ByteArrayToStructure<LimbHeader>(Read(Marshal.SizeOf(typeof(LimbHeader)))));
 
 			// Save file position after all limb headers (start of limb bodies) */
-			long spansPos = this.Position;
+			long spansPos = Position;
 			// Skip the limb bodies for now (need the tailers first)
 			Position += fileHeader.bodySize;
 
@@ -116,13 +115,13 @@ namespace CNCMaps.FileFormats {
 			Position += limbTailers[n].spanStartOff;
 			// Calculate the number of spans in the body
 			int nSpans = limbTailers[n].xSize * limbTailers[n].ySize;
-			LimbBody b = new LimbBody(nSpans);
+			var b = new LimbBody(nSpans);
 			fixed (int* spans = b.spanStart) {
-				byte* bSpans = (byte*)spans;
+				var bSpans = (byte*)spans;
 				Read(bSpans, nSpans * sizeof(int));
 			}
 			fixed (int* spans = b.spanEnd) {
-				byte* bSpans = (byte*)spans;
+				var bSpans = (byte*)spans;
 				Read(bSpans, nSpans * sizeof(int));
 			}
 
@@ -139,7 +138,7 @@ namespace CNCMaps.FileFormats {
 			limbBodies.Add(b);
 		}
 
-		private unsafe void decompressVoxels(LimbBody.Span span, byte zSz) {
+		private void decompressVoxels(LimbBody.Span span, byte zSz) {
 			uint z = 0;
 			byte skip, nv, nv2, numZ = 0;
 
@@ -458,11 +457,11 @@ namespace CNCMaps.FileFormats {
 
 		int curSection;
 		internal void SetSection(int section) {
-			this.curSection = section;
+			curSection = section;
 		}
 
 		internal float getScale() {
-			return this.limbTailers[curSection].scale;
+			return limbTailers[curSection].scale;
 		}
 
 		internal bool getVoxel(uint x, uint y, uint z, out LimbBody.Span.Voxel vx) {

@@ -52,16 +52,16 @@ namespace CNCMaps.FileFormats {
 			public string LS800BkgdName { get; set; }
 
 			public MissionEntry(IniSection iniSection) {
-				this.Briefing = iniSection.ReadString("Briefing");
-				this.UIName = iniSection.ReadString("UIName");
-				this.LS640BriefLocX = iniSection.ReadInt("LS640BriefLocX");
-				this.LS640BriefLocY = iniSection.ReadInt("LS640BriefLocY");
-				this.LS800BriefLocX = iniSection.ReadInt("LS800BriefLocX");
-				this.LS800BriefLocY = iniSection.ReadInt("LS800BriefLocY");
-				this.LSLoadMessage = iniSection.ReadString("LSLoadMessage");
-				this.LSLoadBriefing = iniSection.ReadString("LSLoadBriefing");
-				this.LS640BkgdName = iniSection.ReadString("LS640BkgdName");
-				this.LS800BkgdName = iniSection.ReadString("LS800BkgdName");
+				Briefing = iniSection.ReadString("Briefing");
+				UIName = iniSection.ReadString("UIName");
+				LS640BriefLocX = iniSection.ReadInt("LS640BriefLocX");
+				LS640BriefLocY = iniSection.ReadInt("LS640BriefLocY");
+				LS800BriefLocX = iniSection.ReadInt("LS800BriefLocX");
+				LS800BriefLocY = iniSection.ReadInt("LS800BriefLocY");
+				LSLoadMessage = iniSection.ReadString("LSLoadMessage");
+				LSLoadBriefing = iniSection.ReadString("LSLoadBriefing");
+				LS640BkgdName = iniSection.ReadString("LS640BkgdName");
+				LS800BkgdName = iniSection.ReadString("LS800BkgdName");
 			}
 		}
 	}

@@ -1,9 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using CNCMaps.FileFormats;
-using CNCMaps.VirtualFileSystem;
 using CNCMaps.Utility;
-using System.Drawing;
+using CNCMaps.VirtualFileSystem;
 
 namespace CNCMaps.MapLogic {
 
@@ -25,9 +24,9 @@ namespace CNCMaps.MapLogic {
 			public int TilesInSet { get; private set; }
 
 			public TileSet(string fileName, string setName, int tilesInSet) {
-				this.FileName = fileName;
-				this.SetName = setName;
-				this.TilesInSet = tilesInSet;
+				FileName = fileName;
+				SetName = setName;
+				TilesInSet = tilesInSet;
 			}
 		}
 
@@ -70,8 +69,8 @@ namespace CNCMaps.MapLogic {
 
 		public TileCollection(TheaterType theaterType) {
 			this.theaterType = theaterType;
-			this.tileExtension = TheaterDefaults.GetTileExtension(theaterType);
-			this.theaterIni = VFS.Open(TheaterDefaults.GetTheaterIni(theaterType)) as IniFile;
+			tileExtension = TheaterDefaults.GetTileExtension(theaterType);
+			theaterIni = VFS.Open(TheaterDefaults.GetTheaterIni(theaterType)) as IniFile;
 
 			#region Set numbers
 
@@ -148,7 +147,7 @@ namespace CNCMaps.MapLogic {
 			// we initialize a theater-specific vfs containing only
 			// the mixes containing the stuff we need to prevent
 			// searching through all archives for every tile
-			VFS tilesVFS = new VFS();
+			var tilesVFS = new VFS();
 			foreach (string s in TheaterDefaults.GetTheaterMixes(theaterType))
 				tilesVFS.AddMix(VFS.Open<MixFile>(s));
 
@@ -160,14 +159,14 @@ namespace CNCMaps.MapLogic {
 				if (sect == null)
 					break;
 
-				TileSet ts = new TileSet(sect.ReadString("FileName"), sect.ReadString("SetName"), sect.ReadInt("TilesInSet"));
+				var ts = new TileSet(sect.ReadString("FileName"), sect.ReadString("SetName"), sect.ReadInt("TilesInSet"));
 				SetNumToFirstTile.Add((short)Tiles.Count);
 
 				for (int j = 1; j <= ts.TilesInSet; j++) {
 					TileNumToSet.Add((short)setNum);
-					RandomizedTileSet rs = new RandomizedTileSet();
+					var rs = new RandomizedTileSet();
 
-					for (char r = (char)('a' - 1); r <= 'z'; r++) {
+					for (var r = (char)('a' - 1); r <= 'z'; r++) {
 						if ((r >= 'a') && ts.SetName == "Bridges") continue;
 
 						// filename = set filename + dd + .tmp/.urb/.des etc
@@ -309,7 +308,7 @@ namespace CNCMaps.MapLogic {
 						// Do not change this setnum, as then we could recognize it as
 						// a different tileset for later tiles around this one.
 						// (T->SetNum = clatSet;)
-						t.TileNum = (short)GetTileNumFromSet(clatSet, transitionTile);
+						t.TileNum = GetTileNumFromSet(clatSet, transitionTile);
 					}
 				}
 

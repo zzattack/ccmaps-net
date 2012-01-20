@@ -56,7 +56,7 @@
 using System;
 using System.Diagnostics;
 
-namespace ManagedLZO {
+namespace CNCMaps.Encodings {
 
 	public static class MiniLZO {
 		private const uint M2_MAX_LEN = 8;
@@ -74,16 +74,16 @@ namespace ManagedLZO {
 
 		public unsafe static void Compress(byte[] src, out byte[] dst) {
 			uint tmp;
-			uint dstlen = (uint)(src.Length + (src.Length / 16) + 64 + 3);
+			var dstlen = (uint)(src.Length + (src.Length / 16) + 64 + 3);
 			dst = new byte[dstlen];
 			if (src.Length <= M2_MAX_LEN + 5) {
 				tmp = (uint)src.Length;
 				dstlen = 0;
 			}
 			else {
-				byte[] workmem = new byte[DICT_SIZE];
+				var workmem = new byte[DICT_SIZE];
 				fixed (byte* work = workmem, input = src, output = dst) {
-					byte** dict = (byte**)work;
+					var dict = (byte**)work;
 					byte* in_end = input + src.Length;
 					byte* ip_end = input + src.Length - M2_MAX_LEN - 5;
 					byte* ii = input;
@@ -131,7 +131,7 @@ namespace ManagedLZO {
 						match = false;
 						dict[index] = ip;
 						if (ip - ii > 0) {
-							uint t = (uint)(ip - ii);
+							var t = (uint)(ip - ii);
 							if (t <= 3) {
 								Debug.Assert(op - 2 > output);
 								op[-2] |= (byte)(t);
@@ -261,7 +261,7 @@ namespace ManagedLZO {
 			dst[dstlen++] = 0;
 
 			if (dst.Length != dstlen) {
-				byte[] final = new byte[dstlen];
+				var final = new byte[dstlen];
 				Buffer.BlockCopy(dst, 0, final, 0, (int)dstlen);
 				dst = final;
 			}
