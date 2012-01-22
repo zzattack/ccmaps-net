@@ -16,14 +16,13 @@ namespace CNCMaps.MapLogic {
 
 		public VoxelRenderer() {
 			vxl_ds = new DrawingSurface(200, 200, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
-
 			try {
 				var ctx = GraphicsContext.CreateMesaContext();
 				ctx.MakeCurrent(new  OpenTK.Platform.Mesa.BitmapWindowInfo(vxl_ds.bmd));
 				GL.LoadAll();
 			}
 			catch (Exception exc) {
-				Logger.WriteLine(exc.ToString());
+				Logger.Error(exc.ToString());
 			}
 
 			GL.Enable(EnableCap.DepthTest);
@@ -43,8 +42,8 @@ namespace CNCMaps.MapLogic {
 			SetupFramebuffer();
 		}
 
-		DrawingSurface vxl_ds = new DrawingSurface(200, 200, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
 
+		DrawingSurface vxl_ds;
 		VxlFile vxlFile;
 		HvaFile hvaFile;
 		Palette palette;
@@ -71,11 +70,12 @@ namespace CNCMaps.MapLogic {
 				renderSection();
 			}
 
-			GL.ReadPixels(0, 0, vxl_ds.bmd.Width, vxl_ds.bmd.Height, PixelFormat.Bgra, PixelType.UnsignedByte, vxl_ds.bmd.Scan0);
+			//GL.ReadPixels(0, 0, vxl_ds.bmd.Width, vxl_ds.bmd.Height, PixelFormat.Bgra, PixelType.UnsignedByte, vxl_ds.bmd.Scan0);
 			return vxl_ds;
 		}
 
 		void SetupFramebuffer() {
+			
 			int fbo;
 			try {
 				GL.Ext.GenFramebuffers(1, out fbo);
@@ -85,7 +85,7 @@ namespace CNCMaps.MapLogic {
 				GL.ReadBuffer(ReadBufferMode.ColorAttachment0);
 			}
 			catch {
-				Logger.WriteLine("Error: failed to initialize framebuffers. If you are using remote desktop or some similar software, consider using software rendering (option -g).");
+				Logger.Error("Failed to initialize framebuffers. If you are using remote desktop or some similar software, consider using software rendering (option -g).");
 			}
 			int depthbuffer;
 			GL.Ext.GenRenderbuffers(1, out depthbuffer);
