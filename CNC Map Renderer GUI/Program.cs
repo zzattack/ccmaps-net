@@ -1,8 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Windows.Forms;
 
-namespace RA2Maps_GUI {
+namespace CNCMaps.GUI {
     static class Program {
         /// <summary>
         /// The main entry point for the application.

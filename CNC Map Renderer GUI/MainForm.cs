@@ -1,47 +1,46 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Diagnostics;
+using System.Globalization;
+using System.IO;
 using System.Windows.Forms;
 using Microsoft.Win32;
 
-namespace RA2Maps_GUI {
+namespace CNCMaps.GUI {
 
 	public partial class MainForm : Form {
-		public const string exe = "CNCMaps.exe";
+		public const string RendererExe = "CNCMaps.exe";
 
 		public MainForm() {
 			InitializeComponent();
 		}
 
-		private void MainForm_Load(object sender, EventArgs e) {
+		private void MainFormLoad(object sender, EventArgs e) {
 			tbRenderProg.Text = FindRenderProg();
 			tbMixDir.Text = GetMixDir();
-			UpdateCmd();
+			UpdateCommandline();
 			Height -= 180;
 		}
 
 		private string FindRenderProg() {
 			try {
-				RegistryKey k = Microsoft.Win32.Registry.LocalMachine.OpenSubKey("SOFTWARE\\CNC Map Render");
-				string s = (string)k.GetValue("");
-				k.Close();
-				return s + "\\" + exe;
+				RegistryKey k = Registry.LocalMachine.OpenSubKey("SOFTWARE\\CNC Map Render");
+				if (k != null) {
+					var s = (string) k.GetValue("");
+					k.Close();
+					return s + "\\" + RendererExe;
+				}
 			}
-			catch {
-				return System.IO.File.Exists(exe) ? exe : "";
-			}
+			catch (NullReferenceException) { } 
+			return File.Exists(RendererExe) ? RendererExe : "";
 		}
 
-		private void radioButton1_CheckedChanged(object sender, EventArgs e) {
+		private void OutputNameCheckedChanged(object sender, EventArgs e) {
 			tbCustomOutput.Visible = rbCustomFilename.Checked;
-			UpdateCmd();
+			UpdateCommandline();
 		}
 
-		private void rbCustomOutput_CheckedChanged(object sender, EventArgs e) {
-			tbCustomOutput.Visible = rbCustomFilename.Checked;
-			UpdateCmd();
-		}
-
-		private void btnBrowseMixDir_Click(object sender, EventArgs e) {
+		private void BrowseMixDir(object sender, EventArgs e) {
 			folderBrowserDialog1.Description = "The directory that contains the mix files for RA2/YR.";
 			folderBrowserDialog1.RootFolder = Environment.SpecialFolder.MyComputer;
 			folderBrowserDialog1.SelectedPath = GetMixDir();
@@ -50,59 +49,55 @@ namespace RA2Maps_GUI {
 				tbMixDir.Text = folderBrowserDialog1.SelectedPath;
 		}
 
-		private void btnBrowseRenderer_Click(object sender, EventArgs e) {
-			openFileDialog1.CheckFileExists = true;
-			openFileDialog1.Multiselect = false;
-			openFileDialog1.Filter = "Executable (*.exe)|*.exe";
-			openFileDialog1.InitialDirectory = System.IO.Directory.GetCurrentDirectory();
-			openFileDialog1.FileName = "cncmaprender.exe";
-			if (openFileDialog1.ShowDialog() == DialogResult.OK) {
-				if (openFileDialog1.FileName.StartsWith(System.IO.Directory.GetCurrentDirectory())) {
-					tbRenderProg.Text = openFileDialog1.FileName.Substring(System.IO.Directory.GetCurrentDirectory().Length + 1);
-				}
-				else {
-					tbRenderProg.Text = openFileDialog1.FileName;
-				}
+		private void BrowseRenderer(object sender, EventArgs e) {
+			ofd.CheckFileExists = true;
+			ofd.Multiselect = false;
+			ofd.Filter = "Executable (*.exe)|*.exe";
+			ofd.InitialDirectory = Directory.GetCurrentDirectory();
+			ofd.FileName = "cncmaprender.exe";
+			if (ofd.ShowDialog() == DialogResult.OK) {
+				tbRenderProg.Text = ofd.FileName.StartsWith(Directory.GetCurrentDirectory()) ?
+					ofd.FileName.Substring(Directory.GetCurrentDirectory().Length + 1) :
+					ofd.FileName;
 			}
 		}
 
-		private void gbInput_DragEnter(object sender, DragEventArgs e) {
+		private void InputDragEnter(object sender, DragEventArgs e) {
 			if (e.Data.GetDataPresent(DataFormats.FileDrop))
 				e.Effect = DragDropEffects.Move;
 		}
 
-		private void gbInput_DragDrop(object sender, DragEventArgs e) {
-			try {
-				string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
+		private void InputDragDrop(object sender, DragEventArgs e) {
+			var files = (string[])e.Data.GetData(DataFormats.FileDrop);
+			if (files.Length > 0) {
 				tbInput.Text = files[0];
-				UpdateCmd();
+				UpdateCommandline();
 			}
-			catch { }
 		}
 
-		private void UpdateCmd() {
-			string cmd = getcmd();
+		private void UpdateCommandline() {
+			string cmd = GetCommandline();
 			string file = tbRenderProg.Text;
 			if (file.Contains("\\"))
 				file = file.Substring(file.LastIndexOf('\\') + 1);
 			tbCommandPreview.Text = file + " " + cmd;
 		}
 
-		private string getcmd() {
+		private string GetCommandline() {
 			string cmd = string.Empty;
 
 			cmd += "-i \"" + tbInput.Text + "\" ";
 			if (cbOutputPNG.Checked) {
 				cmd += "-p ";
 				if (nudCompression.Value != 6)
-					cmd += "-c " + nudCompression.Value.ToString() + " ";
+					cmd += "-c " + nudCompression.Value.ToString(CultureInfo.InvariantCulture) + " ";
 			}
 
 			if (rbCustomFilename.Checked) cmd += "-o \"" + tbCustomOutput.Text + "\" ";
 			if (cbOutputJPG.Checked) {
 				cmd += "-j ";
 				if (nudEncodingQuality.Value != 90)
-					cmd += "-q " + nudEncodingQuality.Value.ToString() + " ";
+					cmd += "-q " + nudEncodingQuality.Value.ToString(CultureInfo.InvariantCulture) + " ";
 			}
 
 			if (tbMixDir.Text != GetMixDir()) cmd += "-m " + "\"" + tbMixDir.Text + "\" ";
@@ -113,93 +108,76 @@ namespace RA2Maps_GUI {
 			else if (rbEngineRA2.Checked) cmd += "-y ";
 			if (rbSizeFullmap.Checked) cmd += "-f ";
 			if (rbSizeFullmap.Checked) cmd += "-F ";
-			if (cbSoftwareRendering.Checked) cmd += "-g ";
+			//if (cbSoftwareRendering.Checked) cmd += "-g ";
 
 			return cmd;
 		}
 
-		private string GetMixDir() {
+		private static string GetMixDir() {
 			try {
-				RegistryKey k = Microsoft.Win32.Registry.LocalMachine.OpenSubKey("SOFTWARE\\Westwood\\Red Alert 2");
-				string s = (string)k.GetValue("InstallPath");
-				k.Close();
-				return s.Substring(0, s.LastIndexOf('\\'));
+				RegistryKey k = Registry.LocalMachine.OpenSubKey("SOFTWARE\\Westwood\\Red Alert 2");
+				if (k != null) {
+					var s = (string) k.GetValue("InstallPath");
+					k.Close();
+					return s.Substring(0, s.LastIndexOf('\\'));
+				}
 			}
-			catch {
-				return "";
-			}
+			catch (NullReferenceException) {}
+			return "";
 		}
 
-		private void textBox1_TextChanged(object sender, EventArgs e) {
-			UpdateCmd();
-		}
+		private void UIChanged(object sender, EventArgs e) { UpdateCommandline(); }
 
-		private void checkBox3_CheckedChanged(object sender, EventArgs e) {
-			UpdateCmd();
-		}
-
-		private void PNG_CheckedChanged(object sender, EventArgs e) {
+		private void PngOutputCheckedChanged(object sender, EventArgs e) {
 			nudCompression.Visible = label1.Visible = cbOutputPNG.Checked;
-			UpdateCmd();
+			UpdateCommandline();
 		}
 
-		private void checkBox1_CheckedChanged(object sender, EventArgs e) {
+		private void JpegOutputCheckedChanged(object sender, EventArgs e) {
 			lblQuality.Visible = nudEncodingQuality.Visible = cbOutputJPG.Checked;
-			UpdateCmd();
+			UpdateCommandline();
 		}
 
-		private void textBox4_TextChanged(object sender, EventArgs e) {
-			UpdateCmd();
+		private void BrowseInput(object sender, EventArgs e) {
+			ofd.CheckFileExists = true;
+			ofd.Multiselect = false;
+			ofd.Filter = "RA2/YR map files (*.map, *.mpr, *.mmx, *.yrm, *.yro)|*.mpr;*.map;*.mmx;*.yrm;*.yro|All files (*.*)|*";
+			ofd.InitialDirectory = GetMixDir();
+			ofd.FileName = "";
+			if (ofd.ShowDialog() == DialogResult.OK)
+				tbInput.Text = ofd.FileName;
 		}
 
-		private void button1_Click(object sender, EventArgs e) {
-			openFileDialog1.CheckFileExists = true;
-			openFileDialog1.Multiselect = false;
-			openFileDialog1.Filter = "RA2/YR map files (*.map, *.mpr, *.mmx, *.yrm, *.yro)|*.mpr;*.map;*.mmx;*.yrm;*.yro|All files (*.*)|*";
-			openFileDialog1.InitialDirectory = GetMixDir();
-			openFileDialog1.FileName = "";
-			if (openFileDialog1.ShowDialog() == DialogResult.OK)
-				tbInput.Text = openFileDialog1.FileName;
-		}
-
-		private void checkBox4_CheckedChanged_1(object sender, EventArgs e) {
+		private void SquaredStartPosCheckedChanged(object sender, EventArgs e) {
 			if (cbSquaredStartPositions.Checked)
 				cbTiledStartPositions.Checked = false;
-			UpdateCmd();
+			UpdateCommandline();
 		}
 
-		private void checkBox2_CheckedChanged(object sender, EventArgs e) {
+		private void TiledStartPosCheckedChanged(object sender, EventArgs e) {
 			if (cbTiledStartPositions.Checked)
 				cbSquaredStartPositions.Checked = false;
-			UpdateCmd();
+			UpdateCommandline();
 		}
 
-		private void numericUpDown1_ValueChanged(object sender, EventArgs e) {
-			UpdateCmd();
-		}
-
-		private void button4_Click(object sender, EventArgs e) {
-			if (System.IO.File.Exists(tbInput.Text) == false) {
+		private void ExecuteCommand(object sender, EventArgs e) {
+			if (File.Exists(tbInput.Text) == false) {
 				MessageBox.Show("Input file doesn't exist. Aborting.");
 				return;
 			}
 
-			if (System.IO.File.Exists(tbMixDir.Text + "\\ra2.mix") == false) {
+			if (File.Exists(tbMixDir.Text + "\\ra2.mix") == false) {
 				MessageBox.Show("File ra2.mix not found. Aborting.");
 				return;
 			}
 
 			string exepath = tbRenderProg.Text;
-			if (System.IO.File.Exists(exepath) == false) {
-				try {
-					string oldpath = System.IO.Directory.GetCurrentDirectory();
-					exepath = Application.ExecutablePath;
-					if (exepath.Contains("\\"))
-						exepath = exepath.Substring(0, exepath.LastIndexOf('\\') + 1);
-					exepath += "cncmaprender.exe";
-				}
-				catch { }
-				if (System.IO.File.Exists(exepath) == false) {
+			if (File.Exists(exepath) == false) {
+				exepath = Application.ExecutablePath;
+				if (exepath.Contains("\\"))
+					exepath = exepath.Substring(0, exepath.LastIndexOf('\\') + 1);
+				exepath += "cncmaprender.exe";
+				if (File.Exists(exepath) == false) {
 					MessageBox.Show("File cncmaprender.exe not found. Aborting.");
 					return;
 				}
@@ -214,73 +192,59 @@ namespace RA2Maps_GUI {
 			ProcessCmd(exepath);
 		}
 
-		bool showlog = false;
-		private void MakeLog() {
-			if (showlog)
-				return;
-
-			this.Height += 180;
-			cbLog.Visible = true;
-			showlog = true;
-		}
-
-		private void RemoveLog() {
-			if (!showlog)
-				return;
-
-			this.Height -= 200;
-			cbLog.Visible = false;
-			showlog = false;
-		}
 
 		private void ProcessCmd(string exepath) {
 			try {
-				Process p = new Process();
-				p.StartInfo.FileName = exepath;
-				p.StartInfo.Arguments = getcmd();
-				p.OutputDataReceived += new DataReceivedEventHandler(p_OutputDataReceived);
+				var p = new Process { StartInfo = { FileName = exepath, Arguments = GetCommandline() } };
+
+				p.OutputDataReceived += ConsoleDataReceived;
 				p.StartInfo.CreateNoWindow = true;
 				p.StartInfo.RedirectStandardOutput = true;
 				p.StartInfo.UseShellExecute = false;
 				p.Start();
 				p.BeginOutputReadLine();
 			}
-			catch {
-			}
+			catch (InvalidOperationException) { }
+			catch (Win32Exception) { }
 		}
 
-		#region logging
+		#region Logging
 
-		private delegate void logdelegate(string s);
-
-		private void log(string s) {
-			if (InvokeRequired) {
-				Invoke(new logdelegate(log), s);
-				return;
-			}
-			tbLog.Text += s + "\r\n";
-			tbLog.SelectionStart = tbLog.TextLength - 1;
-			tbLog.SelectionLength = 1;
-			tbLog.ScrollToCaret();
-		}
-
-		#endregion logging
-
-		private void p_OutputDataReceived(object sender, DataReceivedEventArgs e) {
+		private void ConsoleDataReceived(object sender, DataReceivedEventArgs e) {
 			if (e.Data == null) {
-				MessageBox.Show("Your map has been rendered. If your image did not appear, something went wrong. Please sent an email to frank@zzattack.org with your map as an attachment.", "Finished");
+				// indicates EOF
+				Log("\r\nYour map has been rendered. If your image did not appear, something went wrong." +
+					" Please sent an email to frank@zzattack.org with your map as an attachment.");
 			}
 			else {
-				log(e.Data.ToString());
+				Log(e.Data);
 			}
 		}
 
-		private void rbsEngine_CheckedChanged(object sender, EventArgs e) {
-			UpdateCmd();
+		bool _showlog;
+		private void MakeLog() {
+			if (_showlog)
+				return;
+
+			Height += 180;
+			cbLog.Visible = true;
+			_showlog = true;
 		}
 
-		private void cbSoftwareRendering_CheckedChanged(object sender, EventArgs e) {
-			UpdateCmd();
+		private delegate void LogDelegate(string s);
+
+		private void Log(string s) {
+			if (InvokeRequired) {
+				Invoke(new LogDelegate(Log), s);
+				return;
+			}
+			rtbLog.Text += s + "\r\n";
+			rtbLog.SelectionStart = rtbLog.TextLength - 1;
+			rtbLog.SelectionLength = 1;
+			rtbLog.ScrollToCaret();
 		}
+
+		#endregion
+
 	}
 }

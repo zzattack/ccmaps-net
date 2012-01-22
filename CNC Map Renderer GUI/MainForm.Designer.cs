@@ -1,4 +1,4 @@
-﻿namespace RA2Maps_GUI {
+﻿namespace CNCMaps.GUI {
 	partial class MainForm {
 		/// <summary>
 		/// Required designer variable.
@@ -63,11 +63,10 @@
 			this.btnRenderExecute = new System.Windows.Forms.Button();
 			this.tbCommandPreview = new System.Windows.Forms.TextBox();
 			this.lblCommand = new System.Windows.Forms.Label();
-			this.openFileDialog1 = new System.Windows.Forms.OpenFileDialog();
+			this.ofd = new System.Windows.Forms.OpenFileDialog();
 			this.cbLog = new System.Windows.Forms.GroupBox();
-			this.tbLog = new System.Windows.Forms.TextBox();
+			this.rtbLog = new System.Windows.Forms.RichTextBox();
 			this.folderBrowserDialog1 = new System.Windows.Forms.FolderBrowserDialog();
-			this.cbSoftwareRendering = new System.Windows.Forms.CheckBox();
 			this.gbMiscOptions.SuspendLayout();
 			this.pnlMapSize.SuspendLayout();
 			this.pnlEngine.SuspendLayout();
@@ -79,7 +78,6 @@
 			// 
 			// gbMiscOptions
 			// 
-			this.gbMiscOptions.Controls.Add(this.cbSoftwareRendering);
 			this.gbMiscOptions.Controls.Add(this.pnlMapSize);
 			this.gbMiscOptions.Controls.Add(this.pnlEngine);
 			this.gbMiscOptions.Controls.Add(this.lblTiledSquaredPosDescription);
@@ -90,12 +88,12 @@
 			this.gbMiscOptions.Controls.Add(this.cbEmphasizeOre);
 			this.gbMiscOptions.Location = new System.Drawing.Point(12, 209);
 			this.gbMiscOptions.Name = "gbMiscOptions";
-			this.gbMiscOptions.Size = new System.Drawing.Size(541, 234);
+			this.gbMiscOptions.Size = new System.Drawing.Size(541, 212);
 			this.gbMiscOptions.TabIndex = 1;
 			this.gbMiscOptions.TabStop = false;
 			this.gbMiscOptions.Text = "Misc. Options";
-			this.gbMiscOptions.DragDrop += new System.Windows.Forms.DragEventHandler(this.gbInput_DragDrop);
-			this.gbMiscOptions.DragEnter += new System.Windows.Forms.DragEventHandler(this.gbInput_DragEnter);
+			this.gbMiscOptions.DragDrop += new System.Windows.Forms.DragEventHandler(this.InputDragDrop);
+			this.gbMiscOptions.DragEnter += new System.Windows.Forms.DragEventHandler(this.InputDragEnter);
 			// 
 			// pnlMapSize
 			// 
@@ -117,7 +115,7 @@
 			this.rbSizeLocal.TabStop = true;
 			this.rbSizeLocal.Text = "Use map localsize";
 			this.rbSizeLocal.UseVisualStyleBackColor = true;
-			this.rbSizeLocal.CheckedChanged += new System.EventHandler(this.rbsEngine_CheckedChanged);
+			this.rbSizeLocal.CheckedChanged += new System.EventHandler(this.UIChanged);
 			// 
 			// rbSizeFullmap
 			// 
@@ -128,7 +126,7 @@
 			this.rbSizeFullmap.TabIndex = 11;
 			this.rbSizeFullmap.Text = "Use full size (useful for missions)";
 			this.rbSizeFullmap.UseVisualStyleBackColor = true;
-			this.rbSizeFullmap.CheckedChanged += new System.EventHandler(this.rbsEngine_CheckedChanged);
+			this.rbSizeFullmap.CheckedChanged += new System.EventHandler(this.UIChanged);
 			// 
 			// pnlEngine
 			// 
@@ -151,6 +149,7 @@
 			this.rbEngineFS.TabIndex = 14;
 			this.rbEngineFS.Text = "Force FS";
 			this.rbEngineFS.UseVisualStyleBackColor = true;
+			this.rbEngineFS.CheckedChanged += new System.EventHandler(this.UIChanged);
 			// 
 			// rbEngineTS
 			// 
@@ -161,6 +160,7 @@
 			this.rbEngineTS.TabIndex = 13;
 			this.rbEngineTS.Text = "Force TS";
 			this.rbEngineTS.UseVisualStyleBackColor = true;
+			this.rbEngineTS.CheckedChanged += new System.EventHandler(this.UIChanged);
 			// 
 			// rbEngineAuto
 			// 
@@ -173,7 +173,7 @@
 			this.rbEngineAuto.TabStop = true;
 			this.rbEngineAuto.Text = "Automatic engine rules";
 			this.rbEngineAuto.UseVisualStyleBackColor = true;
-			this.rbEngineAuto.CheckedChanged += new System.EventHandler(this.rbsEngine_CheckedChanged);
+			this.rbEngineAuto.CheckedChanged += new System.EventHandler(this.UIChanged);
 			// 
 			// rbEngineRA2
 			// 
@@ -184,7 +184,7 @@
 			this.rbEngineRA2.TabIndex = 12;
 			this.rbEngineRA2.Text = "Force RA2";
 			this.rbEngineRA2.UseVisualStyleBackColor = true;
-			this.rbEngineRA2.CheckedChanged += new System.EventHandler(this.rbsEngine_CheckedChanged);
+			this.rbEngineRA2.CheckedChanged += new System.EventHandler(this.UIChanged);
 			// 
 			// rbEngineYR
 			// 
@@ -195,7 +195,7 @@
 			this.rbEngineYR.TabIndex = 11;
 			this.rbEngineYR.Text = "Force YR";
 			this.rbEngineYR.UseVisualStyleBackColor = true;
-			this.rbEngineYR.CheckedChanged += new System.EventHandler(this.rbsEngine_CheckedChanged);
+			this.rbEngineYR.CheckedChanged += new System.EventHandler(this.UIChanged);
 			// 
 			// lblTiledSquaredPosDescription
 			// 
@@ -232,7 +232,7 @@
 			this.cbSquaredStartPositions.TabIndex = 2;
 			this.cbSquaredStartPositions.Text = "Squared start positions";
 			this.cbSquaredStartPositions.UseVisualStyleBackColor = true;
-			this.cbSquaredStartPositions.CheckedChanged += new System.EventHandler(this.checkBox4_CheckedChanged_1);
+			this.cbSquaredStartPositions.CheckedChanged += new System.EventHandler(this.SquaredStartPosCheckedChanged);
 			// 
 			// cbTiledStartPositions
 			// 
@@ -243,7 +243,7 @@
 			this.cbTiledStartPositions.TabIndex = 4;
 			this.cbTiledStartPositions.Text = "Tiled start positions";
 			this.cbTiledStartPositions.UseVisualStyleBackColor = true;
-			this.cbTiledStartPositions.CheckedChanged += new System.EventHandler(this.checkBox2_CheckedChanged);
+			this.cbTiledStartPositions.CheckedChanged += new System.EventHandler(this.TiledStartPosCheckedChanged);
 			// 
 			// cbEmphasizeOre
 			// 
@@ -254,7 +254,7 @@
 			this.cbEmphasizeOre.TabIndex = 0;
 			this.cbEmphasizeOre.Text = "Emphasize ore/gems";
 			this.cbEmphasizeOre.UseVisualStyleBackColor = true;
-			this.cbEmphasizeOre.CheckedChanged += new System.EventHandler(this.checkBox3_CheckedChanged);
+			this.cbEmphasizeOre.CheckedChanged += new System.EventHandler(this.UIChanged);
 			// 
 			// lblCompression
 			// 
@@ -283,8 +283,8 @@
 			this.lblCompression.TabIndex = 0;
 			this.lblCompression.TabStop = false;
 			this.lblCompression.Text = "Input";
-			this.lblCompression.DragDrop += new System.Windows.Forms.DragEventHandler(this.gbInput_DragDrop);
-			this.lblCompression.DragEnter += new System.Windows.Forms.DragEventHandler(this.gbInput_DragEnter);
+			this.lblCompression.DragDrop += new System.Windows.Forms.DragEventHandler(this.InputDragDrop);
+			this.lblCompression.DragEnter += new System.Windows.Forms.DragEventHandler(this.InputDragEnter);
 			// 
 			// tbCustomOutput
 			// 
@@ -293,7 +293,7 @@
 			this.tbCustomOutput.Size = new System.Drawing.Size(219, 20);
 			this.tbCustomOutput.TabIndex = 10;
 			this.tbCustomOutput.Visible = false;
-			this.tbCustomOutput.TextChanged += new System.EventHandler(this.textBox4_TextChanged);
+			this.tbCustomOutput.TextChanged += new System.EventHandler(this.UIChanged);
 			// 
 			// tbRenderProg
 			// 
@@ -301,7 +301,7 @@
 			this.tbRenderProg.Name = "tbRenderProg";
 			this.tbRenderProg.Size = new System.Drawing.Size(298, 20);
 			this.tbRenderProg.TabIndex = 7;
-			this.tbRenderProg.TextChanged += new System.EventHandler(this.textBox1_TextChanged);
+			this.tbRenderProg.TextChanged += new System.EventHandler(this.UIChanged);
 			// 
 			// lblAutoFilenameDescription
 			// 
@@ -330,7 +330,7 @@
 			this.rbCustomFilename.TabIndex = 9;
 			this.rbCustomFilename.Text = "Custom filename";
 			this.rbCustomFilename.UseVisualStyleBackColor = true;
-			this.rbCustomFilename.CheckedChanged += new System.EventHandler(this.rbCustomOutput_CheckedChanged);
+			this.rbCustomFilename.CheckedChanged += new System.EventHandler(this.OutputNameCheckedChanged);
 			// 
 			// btnBrowseRenderer
 			// 
@@ -340,7 +340,7 @@
 			this.btnBrowseRenderer.TabIndex = 8;
 			this.btnBrowseRenderer.Text = "Browse";
 			this.btnBrowseRenderer.UseVisualStyleBackColor = true;
-			this.btnBrowseRenderer.Click += new System.EventHandler(this.btnBrowseRenderer_Click);
+			this.btnBrowseRenderer.Click += new System.EventHandler(this.BrowseRenderer);
 			// 
 			// rbAutoFilename
 			// 
@@ -353,7 +353,7 @@
 			this.rbAutoFilename.TabStop = true;
 			this.rbAutoFilename.Text = "Automatic filename";
 			this.rbAutoFilename.UseVisualStyleBackColor = true;
-			this.rbAutoFilename.CheckedChanged += new System.EventHandler(this.radioButton1_CheckedChanged);
+			this.rbAutoFilename.CheckedChanged += new System.EventHandler(this.OutputNameCheckedChanged);
 			// 
 			// tbMixDir
 			// 
@@ -361,7 +361,7 @@
 			this.tbMixDir.Name = "tbMixDir";
 			this.tbMixDir.Size = new System.Drawing.Size(298, 20);
 			this.tbMixDir.TabIndex = 4;
-			this.tbMixDir.TextChanged += new System.EventHandler(this.textBox1_TextChanged);
+			this.tbMixDir.TextChanged += new System.EventHandler(this.UIChanged);
 			// 
 			// lblMixFiles
 			// 
@@ -380,7 +380,7 @@
 			this.btnBrowseMixDir.TabIndex = 5;
 			this.btnBrowseMixDir.Text = "Browse";
 			this.btnBrowseMixDir.UseVisualStyleBackColor = true;
-			this.btnBrowseMixDir.Click += new System.EventHandler(this.btnBrowseMixDir_Click);
+			this.btnBrowseMixDir.Click += new System.EventHandler(this.BrowseMixDir);
 			// 
 			// lblQuality
 			// 
@@ -398,7 +398,7 @@
 			this.tbInput.Name = "tbInput";
 			this.tbInput.Size = new System.Drawing.Size(298, 20);
 			this.tbInput.TabIndex = 1;
-			this.tbInput.TextChanged += new System.EventHandler(this.textBox1_TextChanged);
+			this.tbInput.TextChanged += new System.EventHandler(this.UIChanged);
 			// 
 			// label1
 			// 
@@ -430,7 +430,7 @@
             0,
             0});
 			this.nudEncodingQuality.Visible = false;
-			this.nudEncodingQuality.ValueChanged += new System.EventHandler(this.numericUpDown1_ValueChanged);
+			this.nudEncodingQuality.ValueChanged += new System.EventHandler(this.UIChanged);
 			// 
 			// btnBrowseInput
 			// 
@@ -440,7 +440,7 @@
 			this.btnBrowseInput.TabIndex = 2;
 			this.btnBrowseInput.Text = "Browse";
 			this.btnBrowseInput.UseVisualStyleBackColor = true;
-			this.btnBrowseInput.Click += new System.EventHandler(this.button1_Click);
+			this.btnBrowseInput.Click += new System.EventHandler(this.BrowseInput);
 			// 
 			// cbOutputJPG
 			// 
@@ -453,7 +453,7 @@
 			this.cbOutputJPG.TabIndex = 4;
 			this.cbOutputJPG.Text = "Output JPG";
 			this.cbOutputJPG.UseVisualStyleBackColor = true;
-			this.cbOutputJPG.CheckedChanged += new System.EventHandler(this.checkBox1_CheckedChanged);
+			this.cbOutputJPG.CheckedChanged += new System.EventHandler(this.JpegOutputCheckedChanged);
 			// 
 			// cbOutputPNG
 			// 
@@ -464,7 +464,7 @@
 			this.cbOutputPNG.TabIndex = 0;
 			this.cbOutputPNG.Text = "Output PNG";
 			this.cbOutputPNG.UseVisualStyleBackColor = true;
-			this.cbOutputPNG.CheckedChanged += new System.EventHandler(this.PNG_CheckedChanged);
+			this.cbOutputPNG.CheckedChanged += new System.EventHandler(this.PngOutputCheckedChanged);
 			// 
 			// nudCompression
 			// 
@@ -482,75 +482,64 @@
             0,
             0,
             0});
-			this.nudCompression.ValueChanged += new System.EventHandler(this.numericUpDown1_ValueChanged);
+			this.nudCompression.ValueChanged += new System.EventHandler(this.UIChanged);
 			// 
 			// btnRenderExecute
 			// 
-			this.btnRenderExecute.Location = new System.Drawing.Point(458, 449);
+			this.btnRenderExecute.Location = new System.Drawing.Point(458, 427);
 			this.btnRenderExecute.Name = "btnRenderExecute";
 			this.btnRenderExecute.Size = new System.Drawing.Size(75, 23);
 			this.btnRenderExecute.TabIndex = 5;
 			this.btnRenderExecute.Text = "Render map";
 			this.btnRenderExecute.UseVisualStyleBackColor = true;
-			this.btnRenderExecute.Click += new System.EventHandler(this.button4_Click);
+			this.btnRenderExecute.Click += new System.EventHandler(this.ExecuteCommand);
 			// 
 			// tbCommandPreview
 			// 
-			this.tbCommandPreview.Location = new System.Drawing.Point(80, 449);
+			this.tbCommandPreview.Location = new System.Drawing.Point(80, 427);
 			this.tbCommandPreview.Name = "tbCommandPreview";
 			this.tbCommandPreview.Size = new System.Drawing.Size(361, 20);
 			this.tbCommandPreview.TabIndex = 4;
 			// 
 			// lblCommand
 			// 
-			this.lblCommand.Location = new System.Drawing.Point(18, 452);
+			this.lblCommand.Location = new System.Drawing.Point(18, 430);
 			this.lblCommand.Name = "lblCommand";
 			this.lblCommand.Size = new System.Drawing.Size(62, 17);
 			this.lblCommand.TabIndex = 3;
 			this.lblCommand.Text = "Command";
 			// 
-			// openFileDialog1
+			// ofd
 			// 
-			this.openFileDialog1.FileName = "openFileDialog1";
+			this.ofd.FileName = "ofd";
 			// 
 			// cbLog
 			// 
-			this.cbLog.Controls.Add(this.tbLog);
-			this.cbLog.Location = new System.Drawing.Point(12, 480);
+			this.cbLog.Controls.Add(this.rtbLog);
+			this.cbLog.Location = new System.Drawing.Point(12, 458);
 			this.cbLog.Name = "cbLog";
-			this.cbLog.Size = new System.Drawing.Size(532, 176);
+			this.cbLog.Size = new System.Drawing.Size(542, 176);
 			this.cbLog.TabIndex = 6;
 			this.cbLog.TabStop = false;
 			this.cbLog.Text = "Log";
 			this.cbLog.Visible = false;
 			// 
-			// tbLog
+			// rtbLog
 			// 
-			this.tbLog.Location = new System.Drawing.Point(9, 19);
-			this.tbLog.Multiline = true;
-			this.tbLog.Name = "tbLog";
-			this.tbLog.ReadOnly = true;
-			this.tbLog.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-			this.tbLog.Size = new System.Drawing.Size(518, 151);
-			this.tbLog.TabIndex = 0;
-			// 
-			// cbSoftwareRendering
-			// 
-			this.cbSoftwareRendering.AutoSize = true;
-			this.cbSoftwareRendering.Location = new System.Drawing.Point(29, 209);
-			this.cbSoftwareRendering.Name = "cbSoftwareRendering";
-			this.cbSoftwareRendering.Size = new System.Drawing.Size(259, 17);
-			this.cbSoftwareRendering.TabIndex = 15;
-			this.cbSoftwareRendering.Text = "Use software rendering (use with remote desktop)";
-			this.cbSoftwareRendering.UseVisualStyleBackColor = true;
-			this.cbSoftwareRendering.CheckedChanged += new System.EventHandler(this.cbSoftwareRendering_CheckedChanged);
+			this.rtbLog.Location = new System.Drawing.Point(9, 19);
+			this.rtbLog.Name = "rtbLog";
+			this.rtbLog.ReadOnly = true;
+			this.rtbLog.ScrollBars = System.Windows.Forms.RichTextBoxScrollBars.ForcedVertical;
+			this.rtbLog.Size = new System.Drawing.Size(527, 151);
+			this.rtbLog.TabIndex = 0;
+			this.rtbLog.Text = "";
 			// 
 			// MainForm
 			// 
 			this.AllowDrop = true;
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-			this.ClientSize = new System.Drawing.Size(576, 657);
+			this.ClientSize = new System.Drawing.Size(566, 635);
 			this.Controls.Add(this.cbLog);
 			this.Controls.Add(this.lblCommand);
 			this.Controls.Add(this.tbCommandPreview);
@@ -559,9 +548,9 @@
 			this.Controls.Add(this.lblCompression);
 			this.Name = "MainForm";
 			this.Text = "RA2/YR Map Renderer by Frank Razenberg";
-			this.Load += new System.EventHandler(this.MainForm_Load);
-			this.DragDrop += new System.Windows.Forms.DragEventHandler(this.gbInput_DragDrop);
-			this.DragEnter += new System.Windows.Forms.DragEventHandler(this.gbInput_DragEnter);
+			this.Load += new System.EventHandler(this.MainFormLoad);
+			this.DragDrop += new System.Windows.Forms.DragEventHandler(this.InputDragDrop);
+			this.DragEnter += new System.Windows.Forms.DragEventHandler(this.InputDragEnter);
 			this.gbMiscOptions.ResumeLayout(false);
 			this.gbMiscOptions.PerformLayout();
 			this.pnlMapSize.ResumeLayout(false);
@@ -573,7 +562,6 @@
 			((System.ComponentModel.ISupportInitialize)(this.nudEncodingQuality)).EndInit();
 			((System.ComponentModel.ISupportInitialize)(this.nudCompression)).EndInit();
 			this.cbLog.ResumeLayout(false);
-			this.cbLog.PerformLayout();
 			this.ResumeLayout(false);
 			this.PerformLayout();
 
@@ -601,9 +589,9 @@
 		private System.Windows.Forms.Button btnRenderExecute;
 		private System.Windows.Forms.TextBox tbCommandPreview;
 		private System.Windows.Forms.Label lblCommand;
-		private System.Windows.Forms.OpenFileDialog openFileDialog1;
+		private System.Windows.Forms.OpenFileDialog ofd;
 		private System.Windows.Forms.GroupBox cbLog;
-		private System.Windows.Forms.TextBox tbLog;
+		private System.Windows.Forms.RichTextBox rtbLog;
 		private System.Windows.Forms.FolderBrowserDialog folderBrowserDialog1;
 		private System.Windows.Forms.TextBox tbCustomOutput;
 		private System.Windows.Forms.Label lblAutoFilenameDescription;
@@ -624,7 +612,6 @@
 		private System.Windows.Forms.RadioButton rbEngineYR;
 		private System.Windows.Forms.RadioButton rbEngineFS;
 		private System.Windows.Forms.RadioButton rbEngineTS;
-		private System.Windows.Forms.CheckBox cbSoftwareRendering;
 
 	}
 }
