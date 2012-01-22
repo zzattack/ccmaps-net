@@ -1,1 +1,0 @@
-This project provides a tool to render maps just as the Command and Conquer games Red Alert 2 and Tiberian Sun, including their expansions Yuri's Revenge and FireStorm would. The project has reached maturity and will know no feature additions, but bugs might be fixed if reported.
