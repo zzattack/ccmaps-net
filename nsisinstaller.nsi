@@ -2,7 +2,7 @@
 
 ; Define your application name
 !define APPNAME "CNCMaps.NET"
-!define VERSION 1.92
+!define VERSION 1.93
 !define APPNAMEANDVERSION "CNC Maps renderer ${VERSION}"
 
 ; Main Install settings
@@ -38,10 +38,12 @@ Section "RA2/YR Maps Renderer" Section1
 
 	; Set Section Files and Shortcuts
 	SetOutPath "$INSTDIR\"
-	File "CNC Map Renderer GUI\bin\Release\CNCMaps_GUI.exe"
 	File "CNCMaps\bin\Release\CNCMaps.exe"
-	File "CNCMaps\opengl32_mesa.dll"
+	File "CNC Map Renderer GUI\bin\Release\CNCMaps_GUI.exe"
+	File "CNCMaps\opengl32.dll"
 	File "CNCMaps\OpenTK.dll"
+	File "CNCMaps\OpenTK.dll.config"
+	File "CNCMaps\osmesa.dll"
 	CreateShortCut "$DESKTOP\CNC Maps renderer.lnk" "$INSTDIR\CNCMaps_GUI.exe"
 	CreateDirectory "$SMPROGRAMS\CNC Maps renderer"
 	CreateShortCut "$SMPROGRAMS\CNC Maps renderer\CNC Maps renderer.lnk" "$INSTDIR\CNCMaps_GUI.exe"
@@ -79,9 +81,11 @@ Section Uninstall
 
 	; Clean up RA2/YR Maps renderer
 	Delete "$INSTDIR\CNCMaps.exe"
-	Delete "$INSTDIR\OpenTK.dll"
-	Delete "$INSTDIR\opengl32_mesa.dll"
 	Delete "$INSTDIR\CNCMaps_GUI.exe"
+	Delete "$INSTDIR\opengl32.dll"
+	Delete "$INSTDIR\OpenTK.dll"
+	Delete "$INSTDIR\OpenTK.dll.config"
+	Delete "$INSTDIR\osmesa.dll"
 
 	; Remove remaining directories
 	RMDir "$SMPROGRAMS\CNC Maps renderer"
