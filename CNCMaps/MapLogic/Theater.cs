@@ -105,7 +105,7 @@ namespace CNCMaps.MapLogic {
 
 			tileTypes = new TileCollection(theaterType);
 
-			DrawableObject.palettes = palettes;
+			Drawable.palettes = palettes;
 
 			buildingTypes = new ObjectCollection(rules.GetSection("BuildingTypes"),
 				CollectionType.Building, theaterType, engine, rules, art, palettes);

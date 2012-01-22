@@ -103,7 +103,7 @@ namespace CNCMaps.FileFormats {
 			var w_low = (byte*)ds.bmd.Scan0;
 			byte* w_high = (byte*)ds.bmd.Scan0 + stride * ds.bmd.Height;
 
-			int dx = x_offset + DrawableObject.TileWidth / 2 - fileHeader.cx / 2 + h.x,
+			int dx = x_offset + Drawable.TileWidth / 2 - fileHeader.cx / 2 + h.x,
 				dy = y_offset - fileHeader.cy / 2 + h.y;
 			byte* w = (byte*)ds.bmd.Scan0 + dx * 3 + stride * dy;
 			int zIdx = dx + dy * ds.Width;
@@ -151,7 +151,7 @@ namespace CNCMaps.FileFormats {
 			var w_low = (byte*)ds.bmd.Scan0;
 			byte* w_high = (byte*)ds.bmd.Scan0 + stride * ds.bmd.Height;
 
-			int dx = x_offset + DrawableObject.TileWidth / 2 - fileHeader.cx / 2 + h.x,
+			int dx = x_offset + Drawable.TileWidth / 2 - fileHeader.cx / 2 + h.x,
 				dy = y_offset - fileHeader.cy / 2 + h.y;
 			byte* w = (byte*)ds.bmd.Scan0 + dx * 3 + stride * dy;
 			int zIdx = dx + dy * ds.Width;

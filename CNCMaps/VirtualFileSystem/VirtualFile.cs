@@ -170,5 +170,9 @@ namespace CNCMaps.VirtualFileSystem {
 			}
 			return Position;
 		}
+
+		public override string ToString() {
+			return FileName;
+		}
 	}
 }

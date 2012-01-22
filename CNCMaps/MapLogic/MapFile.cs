@@ -204,8 +204,8 @@ namespace CNCMaps.MapLogic {
 					art = VFS.Open<IniFile>("art.ini");
 				}
 			}
-			DrawableObject.TileWidth = (ushort)TileWidth;
-			DrawableObject.TileHeight = (ushort)TileHeight;
+			Drawable.TileWidth = (ushort)TileWidth;
+			Drawable.TileHeight = (ushort)TileHeight;
 
 			theater = new Theater(ReadString("Map", "Theater"), engineType, rules, art);
 			theater.Initialize();
@@ -457,11 +457,6 @@ namespace CNCMaps.MapLogic {
 					dy >= 0 && dy < 2 * tiles.GetHeight()) {
 					tiles[(ushort)dx, (ushort)dy / 2] = new MapTile((ushort)dx, (ushort)dy, rx, ry, z, tilenum, subtile);
 				}
-
-				else {
-					int ihgh = 0;
-				}
-
 			}
 		}
 
@@ -479,7 +474,7 @@ namespace CNCMaps.MapLogic {
 				var tile = tiles.GetTileR(rx, ry);
 				if (tile != null) {
 					tile.AddObject(t);
-					terrainObjects[t.Tile.Dx, t.Tile.Dy / 2] = t;
+					terrainObjects[tile.Dx, tile.Dy / 2] = t;
 				}
 			}
 		}
@@ -495,8 +490,11 @@ namespace CNCMaps.MapLogic {
 				int rx = int.Parse(entries[1]);
 				int ry = int.Parse(entries[2]);
 				var s = new SmudgeObject(name);
-				tiles.GetTileR(rx, ry).AddObject(s);
-				smudgeObjects[s.Tile.Dx, s.Tile.Dy / 2] = s;
+				var tile = tiles.GetTileR(rx, ry);
+				if (tile != null) {
+					tile.AddObject(s);
+					smudgeObjects[tile.Dx, tile.Dy / 2] = s;
+				}
 			}
 		}
 
@@ -570,11 +568,14 @@ namespace CNCMaps.MapLogic {
 				int ry = int.Parse(entries[4]);
 				short direction = short.Parse(entries[7]);
 				var i = new InfantryObject(owner, name, health, direction);
-				tiles.GetTileR(rx, ry).AddObject(i);
-				var infantryList = infantryObjects[i.Tile.Dx, i.Tile.Dy / 2];
-				if (infantryList == null)
-					infantryObjects[i.Tile.Dx, i.Tile.Dy / 2] = infantryList = new List<InfantryObject>();
-				infantryList.Add(i);
+				var tile = tiles.GetTileR(rx, ry);
+				if (tile != null) {
+					tile.AddObject(i);
+					var infantryList = infantryObjects[i.Tile.Dx, i.Tile.Dy / 2];
+					if (infantryList == null)
+						infantryObjects[i.Tile.Dx, i.Tile.Dy / 2] = infantryList = new List<InfantryObject>();
+					infantryList.Add(i);
+				}
 			}
 		}
 
@@ -614,8 +615,11 @@ namespace CNCMaps.MapLogic {
 				int ry = int.Parse(entries[4]);
 				short direction = short.Parse(entries[5]);
 				var a = new AircraftObject(owner, name, health, direction);
-				tiles.GetTileR(rx, ry).AddObject(a);
-				aircraftObjects[a.Tile.Dx, a.Tile.Dy / 2] = a;
+				var tile = tiles.GetTileR(rx, ry);
+				if (tile != null) {
+					tile.AddObject(a);
+					aircraftObjects[tile.Dx, tile.Dy / 2] = a;
+				}
 			}
 		}
 
@@ -629,12 +633,12 @@ namespace CNCMaps.MapLogic {
 				if (o.IsOre()) {
 					int x = o.Tile.Dx;
 					int y = o.Tile.Dy;
-					double y_inc = ((((y - 9) / 2) % 12) * (((y - 8) / 2) % 12)) % 12;
-					double x_inc = ((((x - 13) / 2) % 12) * (((x - 12) / 2) % 12)) % 12;
+					double yInc = ((((y - 9) / 2) % 12) * (((y - 8) / 2) % 12)) % 12;
+					double xInc = ((((x - 13) / 2) % 12) * (((x - 12) / 2) % 12)) % 12;
 
 					// x_inc may be > y_inc so adding a big number outside of cell bounds
 					// will surely keep num positive
-					var num = (int)(y_inc - x_inc + 120000);
+					var num = (int)(yInc - xInc + 120000);
 					num %= 12;
 
 					// replace ore
@@ -644,12 +648,12 @@ namespace CNCMaps.MapLogic {
 				else if (o.IsGem()) {
 					int x = o.Tile.Dx;
 					int y = o.Tile.Dy;
-					double y_inc = ((((y - 9) / 2) % 12) * (((y - 8) / 2) % 12)) % 12;
-					double x_inc = ((((x - 13) / 2) % 12) * (((x - 12) / 2) % 12)) % 12;
+					double yInc = ((((y - 9) / 2) % 12) * (((y - 8) / 2) % 12)) % 12;
+					double xInc = ((((x - 13) / 2) % 12) * (((x - 12) / 2) % 12)) % 12;
 
 					// x_inc may be > y_inc so adding a big number outside of cell bounds
 					// will surely keep num positive
-					var num = (int)(y_inc - x_inc + 120000);
+					var num = (int)(yInc - xInc + 120000);
 					num %= 12;
 
 					// replace gems
@@ -672,9 +676,7 @@ namespace CNCMaps.MapLogic {
 				PalettePerLevel.Add(isoHeight);
 				PalettesToBeRecalculated.Add(isoHeight);
 			}
-
-			var overlayCollection = theater.GetCollection(CollectionType.Overlay);
-
+			
 			foreach (MapTile t in tiles) {
 				if (t != null) {
 					t.Palette = PalettePerLevel[t.Z];
@@ -702,7 +704,7 @@ namespace CNCMaps.MapLogic {
 		};
 		private void LoadLightSources() {
 			Logger.Info("Loading light sources");
-			List<StructureObject> forDeletion = new List<StructureObject>();
+			var forDeletion = new List<StructureObject>();
 			foreach (StructureObject s in structureObjects) {
 				if (s == null) continue;
 				if (lampNames.Contains(s.Name)) {
@@ -763,10 +765,7 @@ namespace CNCMaps.MapLogic {
 			if (engineType == EngineType.TiberianSun || engineType == EngineType.FireStorm) {
 				var collection = theater.GetCollection(CollectionType.Overlay);
 				var tiberiumsSections = rules.GetSection("Tiberiums");
-				var tiberiumRemaps = new List<string>();
-				foreach (var v in tiberiumsSections.OrderedEntries) {
-					tiberiumRemaps.Add(rules.GetSection(v.Value).ReadString("Color"));
-				}
+				var tiberiumRemaps = tiberiumsSections.OrderedEntries.Select(v => rules.GetSection(v.Value).ReadString("Color")).ToList();
 
 				foreach (var v in overlayObjects) {
 					if (v == null) continue;
@@ -829,8 +828,8 @@ namespace CNCMaps.MapLogic {
 				int wx = pos - wy * 1000;
 
 				MapTile t = tiles.GetTileR(wx, wy);
-				int dest_x = t.Dx * TileWidth / 2;
-				int dest_y = (t.Dy - t.Z) * TileHeight / 2;
+				int destX = t.Dx * TileWidth / 2;
+				int destY = (t.Dy - t.Z) * TileHeight / 2;
 
 				bool vert = fullSize.Height * 2 > fullSize.Width;
 				int radius;
@@ -840,9 +839,9 @@ namespace CNCMaps.MapLogic {
 					radius = 10 * fullSize.Width * TileWidth / 2 / 133;
 
 				int h = radius, w = radius;
-				for (int draw_y = dest_y - h / 2; draw_y < dest_y + h; draw_y++) {
-					for (int draw_x = dest_x - w / 2; draw_x < dest_x + w; draw_x++) {
-						byte* p = (byte*)drawingSurface.bmd.Scan0 + draw_y * drawingSurface.bmd.Stride + 3 * draw_x;
+				for (int drawY = destY - h / 2; drawY < destY + h; drawY++) {
+					for (int drawX = destX - w / 2; drawX < destX + w; drawX++) {
+						byte* p = (byte*)drawingSurface.bmd.Scan0 + drawY * drawingSurface.bmd.Stride + 3 * drawX;
 						*p++ = 0x00;
 						*p++ = 0x00;
 						*p++ = 0xFF;
@@ -853,13 +852,13 @@ namespace CNCMaps.MapLogic {
 
 		private int FindCutoffHeight() {
 			int y = fullSize.Height - 1;
-			int highest_height = 0;
+			int highestHeight = 0;
 			for (int x = 0; x < fullSize.Width; x++) {
 				MapTile t = tiles.GetTile(x, y);
 				if (t != null)
-					highest_height = Math.Max(highest_height, t.Z);
+					highestHeight = Math.Max(highestHeight, t.Z);
 			}
-			return highest_height;
+			return highestHeight;
 		}
 
 		public Rectangle GetLocalSizePixels() {

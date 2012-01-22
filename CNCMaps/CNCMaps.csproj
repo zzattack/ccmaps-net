@@ -71,7 +71,7 @@
     <Compile Include="MapLogic\AircraftObject.cs" />
     <Compile Include="MapLogic\CollectionType.cs" />
     <Compile Include="MapLogic\DamageableObject.cs" />
-    <Compile Include="MapLogic\DrawableObject.cs" />
+    <Compile Include="MapLogic\Drawable.cs" />
     <Compile Include="MapLogic\DrawProperties.cs" />
     <Compile Include="MapLogic\InfantryObject.cs" />
     <Compile Include="MapLogic\Lighting.cs" />

@@ -136,8 +136,8 @@ namespace CNCMaps.FileFormats {
 			}
 
 			public static uint HashFilename(string filename) {
-				if (filename.Length > 12)
-					filename = filename.Substring(0, 12);
+				//if (filename.Length > 12)
+				//	filename = filename.Substring(0, 12);
 				filename = filename.ToUpperInvariant();
 				int l = filename.Length;
 				int a = l >> 2;
