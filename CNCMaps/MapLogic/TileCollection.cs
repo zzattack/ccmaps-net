@@ -261,7 +261,7 @@ namespace CNCMaps.MapLogic {
 
 		/// <summary>Recalculates tile system. </summary>
 		public void RecalculateTileSystem(TileLayer tiles) {
-			Logger.WriteLine("Recalculating tile LAT system");
+			Logger.Info("Recalculating tile LAT system");
 
 			// change all CLAT tiles to their corresponding LAT tiles
 			foreach (MapTile t in tiles) {

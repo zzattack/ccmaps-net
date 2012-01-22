@@ -3,6 +3,7 @@ using CNCMaps.FileFormats;
 using CNCMaps.MapLogic;
 using CNCMaps.Utility;
 using CNCMaps.VirtualFileSystem;
+using System;
 
 namespace CNCMaps {
 	class Program {
@@ -28,49 +29,33 @@ namespace CNCMaps {
 			                        	{"S|start-pos-squared", "Mark starting positions in a squared manner", v => settings.StartPositionMarking = StartPositionMarking.Squared},
 			                        	{"r|mark-ore", "Mark ore and gem fields more explicity, looks good when resizing to a preview", v => settings.MarkOreFields = true},
 			                        	{"F|force-fullmap", "Ignore LocalSize definition and just save the full map", v => settings.IgnoreLocalSize = true},
-			                        	{"f|force-localsize", "Use localsize for map dimensions (default)", v => settings.IgnoreLocalSize = true},
-			                        	{"g|opengl-mesa", "Use software-only 3d rendering for voxels (useful for services)", v => settings.SoftwareRendering = true}
+			                        	{"f|force-localsize", "Use localsize for map dimensions (default)", v => settings.IgnoreLocalSize = true}
 			                        };
+
 			options.Parse(args);
 
 			if (settings.ShowHelp) {
 				ShowHelp();
 			}
 			else if (!File.Exists(settings.InputFile)) {
-				Logger.WriteLine("Error: specified input file does not exist");
+				Logger.Error("Specified input file does not exist");
 				ShowHelp();
 			}
 			else if (!settings.SaveJPEG && !settings.SavePNG) {
-				Logger.WriteLine("Error: no output format selected. Either specify -j, -p or both");
+				Logger.Error("No output format selected. Either specify -j, -p or both");
 				ShowHelp();
 			}
 			else if (settings.OutputDir != "" && !System.IO.Directory.Exists(settings.OutputDir)) {
-				Logger.WriteLine("Error: specified output directory does not exist");
+				Logger.Error("Specified output directory does not exist");
 				ShowHelp();
 			}
 			else {
-				Logger.WriteLine("Initializing virtual filesystem");
+				Logger.Info("Initializing virtual filesystem");
 				var vfs = VFS.GetInstance();
 				vfs.ScanMixDir(settings.Engine, settings.MixFilesDirectory);
 
 				var map = new MapFile(File.Open(settings.InputFile, FileMode.Open, FileAccess.Read, FileShare.Read), Path.GetFileName(settings.InputFile));
 				map.FileName = settings.InputFile;
-
-				if (settings.SoftwareRendering) {
-					if (File.Exists("opengl32.dll"))
-						Logger.WriteLine("Warning: opengl32.dll already exists. Did a previous render abort unexpectedly?");
-					else if (File.Exists("opengl32_mesa.dll")) {
-						try { File.Move("opengl32_mesa.dll", "opengl32.dll"); }
-						catch { Logger.WriteLine("Warning: could not move opengl32_mesa.dll to opengl32.dll"); }
-					}
-					else
-						Logger.WriteLine("Warning: cannot use software rendering for voxels, opengl32_mesa.dll missing");
-				}
-				else {
-					if (File.Exists("opengl32.dll")) {
-						Logger.WriteLine("Warning: opengl32.dll exists but software rendering was not specified. Rename manually to opengl32_mesa.dll to disable software rendering");
-					}
-				}
 
 				map.LoadMap(settings.Engine);
 				if (settings.StartPositionMarking == StartPositionMarking.Tiled)
@@ -100,19 +85,24 @@ namespace CNCMaps {
 
 				if (settings.SavePNG)
 					ds.SavePNG(Path.Combine(settings.OutputDir, settings.OutputFile + ".png"), settings.PNGQuality, saveRect);
-
-				if (settings.SoftwareRendering && File.Exists("opengl32.dll") && !File.Exists("opengl32_mesa.dll"))
-					File.Move("opengl32.dll", "opengl32_mesa.dll");
 			}
 		}
 
 		private static void ShowHelp() {
-			Logger.WriteLine("Usage: ");
-			Logger.WriteLine("");
+			Console.ForegroundColor = ConsoleColor.Gray;
+			Console.Write("Usage: ");
+			Console.WriteLine("");
 			var sb = new System.Text.StringBuilder();
 			var sw = new StringWriter(sb);
 			options.WriteOptionDescriptions(sw);
-			Logger.WriteLine(sb.ToString());
+			Console.WriteLine(sb.ToString());
+		}
+
+		public static bool IsLinux {
+			get {
+				int p = (int)System.Environment.OSVersion.Platform;
+				return (p == 4) || (p == 6) || (p == 128);
+			}
 		}
 	}
 }

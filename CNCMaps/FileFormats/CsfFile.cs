@@ -52,7 +52,7 @@ namespace CNCMaps.FileFormats {
 		static int csf_string_w_id = BitConverter.ToInt32(Encoding.ASCII.GetBytes("STRW").Reverse().ToArray(), 0);
 
 		int Parse() {
-			CNCMaps.Utility.Logger.WriteLine("Parsing {0}", FileName);
+			CNCMaps.Utility.Logger.Info("Parsing {0}", FileName);
 			var header = CNCMaps.Utility.EzMarshal.ByteArrayToStructure<CsfHeader>(Read(Marshal.SizeOf(typeof(CsfHeader))));
 			for (int i = 0; i < header.numlabels; i++) {
 				ReadInt32();

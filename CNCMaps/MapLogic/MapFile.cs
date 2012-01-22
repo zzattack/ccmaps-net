@@ -127,7 +127,7 @@ namespace CNCMaps.MapLogic {
 				csfEntry = csfEntry.ToLower();
 
 				string csfFile = isyr ? "ra2md.csf" : "ra2.csf";
-				Logger.WriteLine("Loading csf file {0}", csfFile);
+				Logger.Info("Loading csf file {0}", csfFile);
 				var csf = VFS.Open<CsfFile>(csfFile);
 				mapName = csf.GetValue(csfEntry);
 
@@ -158,7 +158,7 @@ namespace CNCMaps.MapLogic {
 			mapName = MakeValidFileName(mapName);
 			if (mapName == "")
 				mapName = "Unknown map";
-			Logger.WriteLine("Mapname found: {0}", mapName);
+			Logger.Info("Mapname found: {0}", mapName);
 			return mapName;
 		}
 
@@ -214,7 +214,7 @@ namespace CNCMaps.MapLogic {
 
 			// we need foundations from the theater to plce the structures at the correct tile,
 			// so we load these last
-			Logger.WriteLine("Reading map structures");
+			Logger.Info("Reading map structures");
 			ReadStructures();
 
 			PalettesToBeRecalculated.AddRange(theater.GetPalettes());
@@ -240,7 +240,7 @@ namespace CNCMaps.MapLogic {
 		}
 
 		private void OverrideRulesWithMap() {
-			Logger.WriteLine("Overriding rules.ini with map INI entries");
+			Logger.Info("Overriding rules.ini with map INI entries");
 			foreach (var v in Sections) {
 				var rulesSection = rules.GetSection(v.Name);
 				if (rulesSection == null) continue;
@@ -251,7 +251,7 @@ namespace CNCMaps.MapLogic {
 
 		/// <summary>Loads the countries. </summary>
 		private void LoadCountries() {
-			Logger.WriteLine("Loading countries");
+			Logger.Info("Loading countries");
 
 			var countriesSection = rules.GetSection("Countries");
 			foreach (var entry in countriesSection.OrderedEntries) {
@@ -273,7 +273,7 @@ namespace CNCMaps.MapLogic {
 
 		/// <summary>Loads the houses. </summary>
 		private void LoadHouses() {
-			Logger.WriteLine("Loading houses");
+			Logger.Info("Loading houses");
 			IniSection housesSection = GetSection("Houses");
 			LoadHousesFromIniSection(housesSection, this);
 			housesSection = rules.GetSection("Houses");
@@ -299,7 +299,7 @@ namespace CNCMaps.MapLogic {
 		/// <param name="rules">The rules.ini file to be used.</param>
 		/// <returns>The engine to be used to render this map.</returns>
 		private EngineType DetectMapType(IniFile rules) {
-			Logger.WriteLine("Determining map name");
+			Logger.Info("Determining map name");
 
 			if (ReadBool("Basic", "RequiredAddon"))
 				return EngineType.YurisRevenge;
@@ -406,25 +406,25 @@ namespace CNCMaps.MapLogic {
 
 		/// <summary>Reads all objects. </summary>
 		private void ReadAllObjects() {
-			Logger.WriteLine("Reading tiles");
+			Logger.Info("Reading tiles");
 			ReadTiles();
 
-			Logger.WriteLine("Reading map overlay");
+			Logger.Info("Reading map overlay");
 			ReadOverlay();
 
-			Logger.WriteLine("Reading map overlay objects");
+			Logger.Info("Reading map overlay objects");
 			ReadTerrain();
 
-			Logger.WriteLine("Reading map terrain object");
+			Logger.Info("Reading map terrain object");
 			ReadSmudges();
 
-			Logger.WriteLine("Reading infantry on map");
+			Logger.Info("Reading infantry on map");
 			ReadInfantry();
 
-			Logger.WriteLine("Reading vehicles on map");
+			Logger.Info("Reading vehicles on map");
 			ReadUnits();
 
-			Logger.WriteLine("Reading aircraft on map");
+			Logger.Info("Reading aircraft on map");
 			ReadAircraft();
 		}
 
@@ -620,7 +620,7 @@ namespace CNCMaps.MapLogic {
 		}
 
 		private void RecalculateOreSpread() {
-			Logger.WriteLine("Recalculating ore-spread");
+			Logger.Info("Recalculating ore-spread");
 			foreach (OverlayObject o in overlayObjects) {
 				if (o == null) continue;
 				// The value consists of the sum of all x's with a little magic offsets
@@ -659,12 +659,12 @@ namespace CNCMaps.MapLogic {
 		}
 
 		private void LoadLighting() {
-			Logger.WriteLine("Loading lighting");
+			Logger.Info("Loading lighting");
 			lighting = new Lighting(GetSection("Lighting"));
 		}
 
 		private void CreateLevelPalettes() {
-			Logger.WriteLine("Create per-height palettes");
+			Logger.Info("Create per-height palettes");
 			PaletteCollection palettes = theater.GetPalettes();
 			for (int i = 0; i < 15; i++) {
 				Palette isoHeight = palettes.isoPalette.Clone();
@@ -701,7 +701,7 @@ namespace CNCMaps.MapLogic {
 			"SNODAYLAMP", "SNODUSLAMP", "SNONITLAMP"
 		};
 		private void LoadLightSources() {
-			Logger.WriteLine("Loading light sources");
+			Logger.Info("Loading light sources");
 			List<StructureObject> forDeletion = new List<StructureObject>();
 			foreach (StructureObject s in structureObjects) {
 				if (s == null) continue;
@@ -784,13 +784,13 @@ namespace CNCMaps.MapLogic {
 		}
 
 		private void RecalculateAllPalettes() {
-			Logger.WriteLine("Calculating palette-values for all objects");
+			Logger.Info("Calculating palette-values for all objects");
 			foreach (Palette p in PalettesToBeRecalculated)
 				p.Recalculate();
 		}
 
 		public void DrawTiledStartPositions() {
-			Logger.WriteLine("Marking tiled startpositions");
+			Logger.Info("Marking tiled startpositions");
 			IniSection basic = GetSection("Basic");
 			if (basic == null || !basic.ReadBool("MultiplayerOnly")) return;
 			IniSection waypoints = GetSection("Waypoints");
@@ -816,7 +816,7 @@ namespace CNCMaps.MapLogic {
 		}
 
 		public unsafe void DrawSquaredStartPositions() {
-			Logger.WriteLine("Marking squared startpositions");
+			Logger.Info("Marking squared startpositions");
 			IniSection basic = GetSection("Basic");
 			if (basic == null || !basic.ReadBool("MultiplayerOnly")) return;
 			IniSection waypoints = GetSection("Waypoints");
@@ -873,7 +873,7 @@ namespace CNCMaps.MapLogic {
 		}
 
 		public void MarkOreAndGems() {
-			Logger.WriteLine("Marking ore and gems");
+			Logger.Info("Marking ore and gems");
 			Palette yellow = Palette.MakePalette(Color.Yellow);
 			Palette purple = Palette.MakePalette(Color.Purple);
 			foreach (var o in overlayObjects) {
@@ -886,7 +886,7 @@ namespace CNCMaps.MapLogic {
 		}
 
 		internal void DrawMap() {
-			Logger.WriteLine("Drawing map");
+			Logger.Info("Drawing map");
 			drawingSurface = new DrawingSurface(fullSize.Width * TileWidth, fullSize.Height * TileHeight, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
 			var tileCollection = theater.GetTileCollection();
 

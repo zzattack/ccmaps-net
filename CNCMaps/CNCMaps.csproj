@@ -127,7 +127,12 @@
     <Folder Include="VirtualFileSystem\Mix Decryption\" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="OpenGL32_mesa.dll" />
+    <Content Include="OpenGL32.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="osmesa.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

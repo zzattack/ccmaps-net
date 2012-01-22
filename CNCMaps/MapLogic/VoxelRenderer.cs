@@ -4,18 +4,25 @@ using CNCMaps.FileFormats;
 using CNCMaps.Utility;
 using OpenTK;
 using OpenTK.Graphics.OpenGL;
+using System.Runtime.InteropServices;
+using OpenTK.Graphics;
 
 namespace CNCMaps.MapLogic {
-	public class VoxelRenderer : GameWindow {
+	public class VoxelRenderer {
 
 		float[] lightPos = { 5f, 5f, 10f, 0f };
 		float[] lightSpec = { 1f, 0.5f, 0f, 0f };
 		float[] lightDiffuse = { 0.95f, 0.95f, 0.95f, 1f };
 		float[] lightAmb = { 0.6f, 0.6f, 0.6f, 1f };
 
-		public VoxelRenderer()
-			: base(200, 200) {
-
+		public VoxelRenderer() {
+			vxl_ds = new DrawingSurface(200, 200, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
+			try {
+				var ctx = OSMesaCreateContext(PixelFormat.Rgba, IntPtr.Zero);
+				OSMesaMakeCurrent(ctx, vxl_ds.bmd.Scan0, PixelType.UnsignedByte, 200, 200);
+				var wi = OpenTK.Platform.Utilities.CreateWindowsWindowInfo(IntPtr.Zero);
+			}
+			catch { }
 			GL.Enable(EnableCap.DepthTest);
 			GL.Enable(EnableCap.Lighting);
 			GL.Enable(EnableCap.ColorMaterial);
@@ -33,8 +40,8 @@ namespace CNCMaps.MapLogic {
 			SetupFramebuffer();
 		}
 
-		DrawingSurface vxl_ds = new DrawingSurface(200, 200, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
 
+		DrawingSurface vxl_ds;
 		VxlFile vxlFile;
 		HvaFile hvaFile;
 		Palette palette;
@@ -66,6 +73,7 @@ namespace CNCMaps.MapLogic {
 		}
 
 		void SetupFramebuffer() {
+			
 			int fbo;
 			try {
 				GL.Ext.GenFramebuffers(1, out fbo);
@@ -75,7 +83,7 @@ namespace CNCMaps.MapLogic {
 				GL.ReadBuffer(ReadBufferMode.ColorAttachment0);
 			}
 			catch {
-				Logger.WriteLine("Error: failed to initialize framebuffers. If you are using remote desktop or some similar software, consider using software rendering (option -g).");
+				Logger.Error("Failed to initialize framebuffers. If you are using remote desktop or some similar software, consider using software rendering (option -g).");
 			}
 			int depthbuffer;
 			GL.Ext.GenRenderbuffers(1, out depthbuffer);
@@ -204,5 +212,16 @@ namespace CNCMaps.MapLogic {
 			GL.Vertex3(left, top, back);
 			GL.Vertex3(left, top, front);
 		}
+
+
+		[DllImport("osmesa.dll")]
+		extern static ContextHandle OSMesaCreateContext(PixelFormat p, IntPtr shareCtx);
+		
+		[DllImport("osmesa.dll")]
+		extern static bool OSMesaMakeCurrent(ContextHandle ctx, IntPtr buffer, PixelType type, int width, int height);
+		
+		[DllImport("osmesa.dll")]
+		extern static IntPtr OSMesaGetCurrentContext();
+		
 	}
 }
