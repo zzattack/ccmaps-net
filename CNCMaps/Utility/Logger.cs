@@ -3,7 +3,7 @@ using System.Diagnostics;
 using System.Drawing;
 
 namespace CNCMaps.Utility {
-
+	/*
 	public enum LogLevel : int {
 		Debug = 3,
 		Info = 2,
@@ -16,9 +16,9 @@ namespace CNCMaps.Utility {
 		public static LogLevel LogLevel { get; set; }
 
 		static ConsoleColor ErrorColor = ConsoleColor.Red;
-		static ConsoleColor WarnColor = ConsoleColor.Magenta;
+		static ConsoleColor WarnColor = ConsoleColor.DarkYellow;
 		static ConsoleColor InfoColor = ConsoleColor.Gray;
-		static ConsoleColor DebugColor = ConsoleColor.DarkBlue;
+		static ConsoleColor DebugColor = ConsoleColor.White;
 
 		static Logger() {
 			sw = new Stopwatch();
@@ -26,7 +26,7 @@ namespace CNCMaps.Utility {
 #if DEBUG
 			LogLevel = LogLevel.Debug;
 #else
-			LogLevel = LogLevel.Info;
+			LogLevel = LogLevel.Info;	
 #endif
 		}
 
@@ -60,4 +60,5 @@ namespace CNCMaps.Utility {
 		}
 
 	}
+	 */
 }

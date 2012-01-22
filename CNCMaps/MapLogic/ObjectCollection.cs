@@ -13,7 +13,6 @@ namespace CNCMaps.MapLogic {
 		private EngineType engineType;
 		IniFile rules, art;
 		PaletteCollection palettes;
-
 		private List<Drawable> objects = new List<Drawable>();
 
 		static readonly string[] ExtraBuildingImages = {
@@ -31,6 +30,8 @@ namespace CNCMaps.MapLogic {
 			"ActiveAnim"
 		};
 
+		static NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
+
 		public ObjectCollection(IniFile.IniSection objectSection, CollectionType collectionType,
 			TheaterType theaterType, EngineType engineType, IniFile rules, IniFile art, PaletteCollection palettes) {
 			this.theaterType = theaterType;
@@ -40,6 +41,7 @@ namespace CNCMaps.MapLogic {
 			this.art = art;
 			this.palettes = palettes;
 			foreach (var entry in objectSection.OrderedEntries) {
+				logger.Trace("Loading object {0}.{0}", objectSection.Name, entry.Value);
 				LoadObject(entry.Value);
 			}
 		}
@@ -135,7 +137,7 @@ namespace CNCMaps.MapLogic {
 				// xOffset = yOffset = 0;
 			}
 			if (collectionType == CollectionType.Terrain) {
-				yOffset = Drawable.TileWidth / 2; // trees and such are placed in the middle of their tile
+				yOffset = Drawable.TileHeight / 2; // trees and such are placed in the middle of their tile
 			}
 			if (rulesSection.ReadString("Land") == "Rock") {
 				yOffset = 15;

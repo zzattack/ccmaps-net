@@ -10,6 +10,8 @@ namespace CNCMaps.FileFormats {
 
 	class TmpFile : VirtualFile {
 
+		static NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
+
 		bool isInitialized;
 		TmpFileHeader fileHeader;
 		List<TmpImage> images;
@@ -82,6 +84,8 @@ namespace CNCMaps.FileFormats {
 		}
 
 		public void Initialize() {
+			logger.Debug("Initializing TMP data for file {0}", FileName);
+
 			isInitialized = true;
 			Position = 0;
 			byte[] header = Read(Marshal.SizeOf(typeof(TmpFileHeader)));
@@ -109,6 +113,8 @@ namespace CNCMaps.FileFormats {
 		unsafe public void Draw(MapTile t, DrawingSurface ds) {
 			if (!isInitialized) Initialize();
 
+			logger.Trace("Initializing TMP data for file {0}", FileName);
+			
 			if (t.SubTile >= images.Count) return;
 			TmpImage img = images[t.SubTile];
 			var zBuf = ds.GetZBuffer();
@@ -118,6 +124,8 @@ namespace CNCMaps.FileFormats {
 			short height = t.Z;
 			int x_offset = t.Dx * fileHeader.cx / 2;
 			int y_offset = (t.Dy - height) * fileHeader.cy / 2;
+			logger.Trace("Drawing TMP file {0} (subtile {1}) at ({2},{3})", FileName, t.SubTile, x_offset, y_offset);
+
 			int stride = ds.bmd.Stride;
 
 			int half_cx = fileHeader.cx / 2,

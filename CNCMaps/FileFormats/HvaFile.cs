@@ -28,6 +28,8 @@ namespace CNCMaps.FileFormats {
 		HvaHeader fileHeader;
 		List<Section> sections;
 
+		static NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
+
 		public HvaFile(Stream baseStream, string filename, int baseOffset, int fileSize, bool isBuffered = true)
 			: base(baseStream, filename, baseOffset, fileSize, isBuffered) {
 		}
@@ -36,6 +38,9 @@ namespace CNCMaps.FileFormats {
 
 		public void Initialize() {
 			if (initialized) return;
+
+			logger.Debug("Loading HVA file {0}", FileName);
+
 			fileHeader = EzMarshal.ByteArrayToStructure<HvaHeader>(Read(Marshal.SizeOf(typeof(HvaHeader))));
 			sections = new List<Section>((int)fileHeader.numSections);
 
@@ -50,6 +55,9 @@ namespace CNCMaps.FileFormats {
 					sections[section].matrices.Add(ReadMatrix());
 				}
 			}
+
+			logger.Trace("Loaded HVA file {0} with {1} sections", FileName, sections.Count);
+
 			initialized = true;
 		}
 

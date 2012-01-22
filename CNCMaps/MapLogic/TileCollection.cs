@@ -7,6 +7,8 @@ using CNCMaps.VirtualFileSystem;
 namespace CNCMaps.MapLogic {
 
 	class TileCollection {
+		static NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
+
 		TheaterType theaterType;
 		IniFile theaterIni;
 		string tileExtension;
@@ -155,10 +157,10 @@ namespace CNCMaps.MapLogic {
 			while (true) {
 				string sectionName = "TileSet" + i++.ToString("0000");
 				var sect = theaterIni.GetSection(sectionName);
-
 				if (sect == null)
 					break;
 
+				logger.Trace("Loading tileset {0}", sectionName);
 				var ts = new TileSet(sect.ReadString("FileName"), sect.ReadString("SetName"), sect.ReadInt("TilesInSet"));
 				SetNumToFirstTile.Add((short)Tiles.Count);
 
@@ -261,7 +263,7 @@ namespace CNCMaps.MapLogic {
 
 		/// <summary>Recalculates tile system. </summary>
 		public void RecalculateTileSystem(TileLayer tiles) {
-			Logger.Info("Recalculating tile LAT system");
+			logger.Info("Recalculating tile LAT system");
 
 			// change all CLAT tiles to their corresponding LAT tiles
 			foreach (MapTile t in tiles) {

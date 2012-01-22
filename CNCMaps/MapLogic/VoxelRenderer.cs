@@ -8,6 +8,7 @@ using OpenTK.Graphics;
 
 namespace CNCMaps.MapLogic {
 	public class VoxelRenderer {
+		static NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
 		float[] lightPos = { 5f, 5f, 10f, 0f };
 		float[] lightSpec = { 1f, 0.5f, 0f, 0f };
@@ -22,7 +23,7 @@ namespace CNCMaps.MapLogic {
 				GL.LoadAll();
 			}
 			catch (Exception exc) {
-				Logger.Error(exc.ToString());
+				logger.Error(exc.ToString());
 			}
 
 			GL.Enable(EnableCap.DepthTest);
@@ -39,7 +40,7 @@ namespace CNCMaps.MapLogic {
 			GL.Enable(EnableCap.Light0);
 			GL.ClearColor(0.5f, 0.9f, 0.3f, 0.0f);
 
-			SetupFramebuffer();
+			canRender = SetupFramebuffer();
 		}
 
 
@@ -50,13 +51,20 @@ namespace CNCMaps.MapLogic {
 
 		int frame;
 		int pitch;
+		bool canRender;
 
 		double objectRotation;
 		public DrawingSurface Render(VxlFile vxlFile, HvaFile hvaFile, double objectRotation, Palette palette) {
+			if (!canRender) {
+				logger.Warn("Not rendering {0} because no OpenGL context could be obtained", vxlFile.FileName);
+				return null;
+			}
 			this.vxlFile = vxlFile;
 			this.hvaFile = hvaFile;
 			this.palette = palette;
 			this.objectRotation = objectRotation;
+
+			logger.Debug("Rendering voxel {0}", vxlFile.FileName);
 
 			vxlFile.Initialize();
 			hvaFile.Initialize();
@@ -74,18 +82,17 @@ namespace CNCMaps.MapLogic {
 			return vxl_ds;
 		}
 
-		void SetupFramebuffer() {
-			
+		bool SetupFramebuffer() {
 			int fbo;
 			try {
 				GL.Ext.GenFramebuffers(1, out fbo);
 				GL.Ext.BindFramebuffer(FramebufferTarget.FramebufferExt, fbo);
-				// GL.Ext.FramebufferDrawBuffer(fbo, DrawBufferMode.ColorAttachment0);
 				GL.DrawBuffer(DrawBufferMode.ColorAttachment0);
 				GL.ReadBuffer(ReadBufferMode.ColorAttachment0);
 			}
 			catch {
-				Logger.Error("Failed to initialize framebuffers. If you are using remote desktop or some similar software, consider using software rendering (option -g).");
+				logger.Error("Failed to initialize framebuffers. Voxels will not be rendered.");
+				return false;
 			}
 			int depthbuffer;
 			GL.Ext.GenRenderbuffers(1, out depthbuffer);
@@ -99,7 +106,7 @@ namespace CNCMaps.MapLogic {
 			GL.Ext.RenderbufferStorage(RenderbufferTarget.RenderbufferExt, RenderbufferStorage.Rgba8, vxl_ds.bmd.Width, vxl_ds.bmd.Height);
 			GL.Ext.FramebufferRenderbuffer(FramebufferTarget.FramebufferExt, FramebufferAttachment.ColorAttachment0Ext, RenderbufferTarget.RenderbufferExt, rgb_rb);
 
-			Debug.Assert(GL.CheckFramebufferStatus(FramebufferTarget.FramebufferExt) == FramebufferErrorCode.FramebufferCompleteExt);
+			return GL.CheckFramebufferStatus(FramebufferTarget.FramebufferExt) == FramebufferErrorCode.FramebufferCompleteExt;
 		}
 
 		private void SetupFrameRender() {

@@ -4,12 +4,24 @@ using CNCMaps.MapLogic;
 using CNCMaps.Utility;
 using CNCMaps.VirtualFileSystem;
 using System;
+using NLog;
+using NLog.Config;
 
 namespace CNCMaps {
 	class Program {
 		static OptionSet options;
 		public static RenderSettings settings;
+		static NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
+
 		public static void Main(string[] args) {
+#if DEBUG
+			   LogManager.Configuration = new XmlLoggingConfiguration("NLog.Debug.config");
+#else
+			LogManager.Configuration = new XmlLoggingConfiguration("NLog.config");
+#endif
+
+
+
 			settings = RenderSettings.CreateDefaults();
 			options = new OptionSet {
 			                        	{"h|help", "Show this short help text", v => settings.ShowHelp = true},
@@ -38,19 +50,19 @@ namespace CNCMaps {
 				ShowHelp();
 			}
 			else if (!File.Exists(settings.InputFile)) {
-				Logger.Error("Specified input file does not exist");
+				logger.Error("Specified input file does not exist");
 				ShowHelp();
 			}
 			else if (!settings.SaveJPEG && !settings.SavePNG) {
-				Logger.Error("No output format selected. Either specify -j, -p or both");
+				logger.Error("No output format selected. Either specify -j, -p or both");
 				ShowHelp();
 			}
 			else if (settings.OutputDir != "" && !System.IO.Directory.Exists(settings.OutputDir)) {
-				Logger.Error("Specified output directory does not exist");
+				logger.Error("Specified output directory does not exist");
 				ShowHelp();
 			}
 			else {
-				Logger.Info("Initializing virtual filesystem");
+				logger.Info("Initializing virtual filesystem");
 				var vfs = VFS.GetInstance();
 				vfs.ScanMixDir(settings.Engine, settings.MixFilesDirectory);
 
@@ -86,6 +98,8 @@ namespace CNCMaps {
 				if (settings.SavePNG)
 					ds.SavePNG(Path.Combine(settings.OutputDir, settings.OutputFile + ".png"), settings.PNGQuality, saveRect);
 			}
+
+			LogManager.Configuration = null; // required for mono release to flush possible targets
 		}
 
 		private static void ShowHelp() {

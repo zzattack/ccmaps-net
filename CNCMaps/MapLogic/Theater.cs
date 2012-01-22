@@ -21,6 +21,8 @@ namespace CNCMaps.MapLogic {
 		TileCollection tileTypes;
 		PaletteCollection palettes;
 
+		static NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
+
 		public Theater(string theaterName, EngineType engine) :
 			this(TheaterTypeFromString(theaterName), engine) { }
 
@@ -48,7 +50,7 @@ namespace CNCMaps.MapLogic {
 		}
 
 		public void Initialize() {
-			CNCMaps.Utility.Logger.Info("Initializing theater");
+			logger.Info("Initializing theater");
 			bool ra2Engine = engine == EngineType.RedAlert2 || engine == EngineType.YurisRevenge;
 			// load palettes and additional mix files for this theater
 			switch (theaterType) {

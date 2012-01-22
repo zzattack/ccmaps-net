@@ -6,6 +6,8 @@ using CNCMaps.VirtualFileSystem;
 
 namespace CNCMaps.MapLogic {
 	class Drawable {
+		static NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
+
 		public Drawable(string name) {
 			Name = name;
 			Foundation = new Size(1, 1);
@@ -21,6 +23,8 @@ namespace CNCMaps.MapLogic {
 		}
 
 		public virtual void Draw(RA2Object obj, DrawingSurface ds) {
+			logger.Trace("Drawing object {0} (type {1})", obj, obj.GetType());
+
 			if (!sorted) Sort();
 
 			if (obj is DamageableObject && (obj as DamageableObject).Health < 128) {
@@ -49,6 +53,8 @@ namespace CNCMaps.MapLogic {
 				if (obj is RemappableObject) p = (obj as RemappableObject).Palette;
 				if (obj is UnitObject) direction = (obj as UnitObject).Direction;
 				DrawingSurface vxl_ds = voxelrenderer.Render(voxels[i].file, hvas[i], -(double)direction / 256.0 * 360 + 45, p ?? Palette);
+				if (vxl_ds == null)
+					continue;
 
 				// rows inverted!
 				int dx = obj.Tile.Dx * TileWidth / 2;

@@ -9,7 +9,8 @@ using Microsoft.Win32;
 namespace CNCMaps.VirtualFileSystem {
 
 	public class VFS {
-		private static VFS instance = new VFS();
+		static VFS instance = new VFS();
+		static NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
 		public static VFS GetInstance() {
 			return instance;
@@ -119,7 +120,7 @@ namespace CNCMaps.VirtualFileSystem {
 		public void ScanMixDir(string mixDir, bool useRA2, bool isMod) {
 
 			// see http://modenc.renegadeprojects.com/MIX for more info
-			CNCMaps.Utility.Logger.Info("Initializing filesystem on {0}, {1} Yuri's Revenge support", mixDir, isMod ? "with" : "without");
+			logger.Info("Initializing filesystem on {0}, {1} Yuri's Revenge support", mixDir, isMod ? "with" : "without");
 			AddFile(mixDir);
 
 			if (useRA2) {

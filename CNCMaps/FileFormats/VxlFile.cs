@@ -8,6 +8,8 @@ namespace CNCMaps.FileFormats {
 
 	public class VxlFile : VirtualFile {
 
+		static NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
+
 		public VxlFile(Stream baseStream, string filename, int baseOffset, int fileSize, bool isBuffered = true)
 			: base(baseStream, filename, baseOffset, fileSize, isBuffered) {
 		}
@@ -86,6 +88,9 @@ namespace CNCMaps.FileFormats {
 
 		public void Initialize() {
 			if (initialized) return;
+
+			logger.Debug("Initializing Voxel data for file {0}", FileName);
+			
 			fileHeader = EzMarshal.ByteArrayToStructure<VxlFileHeader>(Read(Marshal.SizeOf(typeof(VxlFileHeader))));
 			limbHeaders = new List<LimbHeader>((int)fileHeader.numLimbs);
 			limbBodies = new List<LimbBody>((int)fileHeader.numLimbs);
@@ -108,6 +113,9 @@ namespace CNCMaps.FileFormats {
 				ReadLimbBody(i);
 			}
 
+			logger.Trace("Loaded voxel {0}; header: {1}, bodies: {2}, tailers: {3}",
+				FileName, limbHeaders.Count, limbBodies.Count, limbTailers.Count);
+			
 			initialized = true;
 		}
 

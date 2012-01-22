@@ -9,7 +9,10 @@ namespace CNCMaps.Utility {
 		short[] zBuffer;
 		bool[] shadowBuffer;
 
+		static NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
+
 		public DrawingSurface(int width, int height, PixelFormat pixelFormat) {
+			logger.Debug("Initializing DrawingSurface with dimensions ({0},{1}), pixel format {2}", width, height, pixelFormat.ToString());
 			bm = new Bitmap(width, height, pixelFormat);
 			Lock(width, height, pixelFormat);
 			zBuffer = new short[width * height];
@@ -31,7 +34,7 @@ namespace CNCMaps.Utility {
 		public bool[] GetShadows() {
 			return shadowBuffer;
 		}
-		
+
 		public void SetZ(int x, int y, short z) {
 			zBuffer[x + y * Width] = z;
 		}
@@ -45,6 +48,8 @@ namespace CNCMaps.Utility {
 		}
 
 		public void SavePNG(string path, int quality, Rectangle saveRect) {
+			logger.Info("Saving PNG to {0}, quality {1}, clip (@{2},{3}-{4}x{5})",
+				path, quality, saveRect.Left, saveRect.Top, saveRect.Width, saveRect.Height);
 			if (bmd != null)
 				Unlock();
 			ImageCodecInfo encoder = ImageCodecInfo.GetImageEncoders().First(e => e.FormatID == ImageFormat.Png.Guid);
@@ -60,6 +65,8 @@ namespace CNCMaps.Utility {
 		public void SaveJPEG(string path, int compression, Rectangle saveRect) {
 			if (bmd != null)
 				Unlock();
+			logger.Info("Saving JPEG to {0}, compression level {1}, clip (@{2},{3}-{4}x{5})",
+				path, compression, saveRect.Left, saveRect.Top, saveRect.Width, saveRect.Height);
 			ImageCodecInfo encoder = ImageCodecInfo.GetImageEncoders().First(e => e.FormatID == ImageFormat.Jpeg.Guid);
 			var encoderParams = new EncoderParameters(1);
 			encoderParams.Param[0] = new EncoderParameter(Encoder.Quality, compression);
@@ -71,9 +78,7 @@ namespace CNCMaps.Utility {
 			bmd = null;
 		}
 
-
 		public int Width { get { return bmd.Width; } }
 		public int Height { get { return bmd.Height; } }
-		
 	}
 }

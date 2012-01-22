@@ -11,6 +11,8 @@ namespace CNCMaps.FileFormats {
 
 	class ShpFile : VirtualFile {
 
+		static NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
+
 		[StructLayout(LayoutKind.Sequential, Pack = 1)]
 		public struct ShpFileHeader {
 			private short zero;
@@ -47,6 +49,7 @@ namespace CNCMaps.FileFormats {
 
 		public void Initialize() {
 			initialized = true;
+			logger.Debug("Initializing SHP data for file {0}", FileName);
 			fileHeader = EzMarshal.ByteArrayToStructure<ShpFileHeader>(Read(Marshal.SizeOf(typeof(ShpFileHeader))));
 			images = new List<ShpImage>(fileHeader.c_images);
 			int prevOffset = int.MinValue;
@@ -90,6 +93,8 @@ namespace CNCMaps.FileFormats {
 
 		unsafe public void Draw(int frameIndex, DrawingSurface ds, int x_offset, int y_offset, short height, Palette p) {
 			if (!initialized) Initialize();
+			
+			logger.Trace("Drawing SHP file {0} (frame {1}) at ({2},{3})", FileName, frameIndex, x_offset, y_offset);
 
 			var image = GetImage(frameIndex);
 			var h = image.header;
@@ -138,6 +143,8 @@ namespace CNCMaps.FileFormats {
 		unsafe public void DrawShadow(int frameIndex, DrawingSurface ds, int x_offset, int y_offset, short height, MapTile t) {
 			if (frameIndex >= images.Count / 2) return;
 
+			logger.Trace("Drawing SHP shadow {0} (frame {1}) at ({2},{3})", FileName, frameIndex, x_offset, y_offset);
+
 			var image = GetImage(frameIndex + images.Count / 2);
 			var h = image.header;
 			var c_px = (uint)(h.cx * h.cy);
@@ -177,6 +184,8 @@ namespace CNCMaps.FileFormats {
 		}
 
 		public unsafe void DrawAlpha(int frameIndex, DrawingSurface ds, int xOffset, int yOffset) {
+			logger.Trace("Drawing AlphaImage SHP file {0} (frame {1}) at ({2},{3})", FileName, frameIndex, xOffset, yOffset);
+			
 			var image = GetImage(frameIndex + images.Count / 2);
 			var h = image.header;
 			var c_px = (uint)(h.cx * h.cy);

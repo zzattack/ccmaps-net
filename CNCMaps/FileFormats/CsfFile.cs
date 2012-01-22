@@ -4,11 +4,16 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
+using CNCMaps.Utility;
 using CNCMaps.VirtualFileSystem;
 
 namespace CNCMaps.FileFormats {
 
 	class CsfFile : VirtualFile {
+
+		Dictionary<string, CsfEntry> LabelMap = new Dictionary<string, CsfEntry>();
+
+		static NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
 		public CsfFile(Stream baseStream, string filename, bool isBuffered = true) : this(baseStream, filename, 0, baseStream.Length, isBuffered) { }
 
@@ -16,9 +21,7 @@ namespace CNCMaps.FileFormats {
 			: base(baseStream, filename, baseOffset, fileSize, isBuffered) {
 			Parse();
 		}
-
-		Dictionary<string, CsfEntry> LabelMap = new Dictionary<string, CsfEntry>();
-
+		
 		[StructLayout(LayoutKind.Sequential, Size = 24, Pack = 1)]
 		struct CsfHeader {
 			public int id;
@@ -30,7 +33,6 @@ namespace CNCMaps.FileFormats {
 		}
 
 		class CsfEntry {
-
 			public string Value { get; set; }
 
 			public string ExtraValue { get; set; }
@@ -52,8 +54,8 @@ namespace CNCMaps.FileFormats {
 		static int csf_string_w_id = BitConverter.ToInt32(Encoding.ASCII.GetBytes("STRW").Reverse().ToArray(), 0);
 
 		int Parse() {
-			CNCMaps.Utility.Logger.Info("Parsing {0}", FileName);
-			var header = CNCMaps.Utility.EzMarshal.ByteArrayToStructure<CsfHeader>(Read(Marshal.SizeOf(typeof(CsfHeader))));
+			logger.Info("Parsing {0}", FileName);
+			var header = EzMarshal.ByteArrayToStructure<CsfHeader>(Read(Marshal.SizeOf(typeof(CsfHeader))));
 			for (int i = 0; i < header.numlabels; i++) {
 				ReadInt32();
 				int flags = ReadInt32();
@@ -69,6 +71,7 @@ namespace CNCMaps.FileFormats {
 				else
 					SetValue(name, "", "");
 			}
+			logger.Debug("Loaded {0} csf entries", LabelMap.Count());
 			return 0;
 		}
 

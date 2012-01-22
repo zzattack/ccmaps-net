@@ -4,6 +4,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
+using CNCMaps.Utility;
 using CNCMaps.VirtualFileSystem;
 
 namespace CNCMaps.FileFormats {
@@ -11,6 +12,8 @@ namespace CNCMaps.FileFormats {
 	public class IniFile : VirtualTextFile {
 
 		public List<IniSection> Sections { get; set; }
+
+		static NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
 		public IniSection CurrentSection {
 			get;
@@ -28,7 +31,7 @@ namespace CNCMaps.FileFormats {
 		}
 
 		void Parse() {
-			CNCMaps.Utility.Logger.Info("Parsing {0}", Path.GetFileName(FileName));
+			logger.Info("Parsing {0}", Path.GetFileName(FileName));
 			while (CanRead) {
 				ProcessLine(ReadLine());
 			}
@@ -42,6 +45,7 @@ namespace CNCMaps.FileFormats {
 			if ((line[0] == '[') && (line[line.Length - 1] == ']')) {
 				string sectionName = line.Substring(1, line.Length - 2);
 				var iniSection = new IniSection(sectionName);
+				logger.Trace("Loading ini section {0}", sectionName);
 				Sections.Add(iniSection);
 				CurrentSection = iniSection;
 			}
@@ -52,6 +56,7 @@ namespace CNCMaps.FileFormats {
 		}
 
 		void SetCurrentSection(string sectionName) {
+			logger.Trace("Changing current section to {0}", sectionName);
 			CurrentSection = Sections.Find(x => x.Name == sectionName);
 		}
 
@@ -123,11 +128,11 @@ namespace CNCMaps.FileFormats {
 			public int ParseLine(string line) {
 				// ignore comments
 				if (line[0] == ';') return 0;
-				string key, value;
-				int pos = line.IndexOf("=");
+				string key;
+				int pos = line.IndexOf("=", StringComparison.Ordinal);
 				if (pos != -1) {
 					key = line.Substring(0, pos);
-					value = line.Substring(pos + 1);
+					string value = line.Substring(pos + 1);
 					FixLine(ref key);
 					FixLine(ref value);
 					SetValue(key, value);
@@ -164,8 +169,8 @@ namespace CNCMaps.FileFormats {
 				return copy;
 			}
 
-			static string[] TrueValues = { "yes", "1", "true", "on" };
-			static string[] FalseValues = { "no", "0", "false", "off" };
+			static readonly string[] TrueValues = { "yes", "1", "true", "on" };
+			static readonly string[] FalseValues = { "no", "0", "false", "off" };
 
 			public bool ReadBool(string key, bool defaultValue = false) {
 				string entry = ReadString(key);

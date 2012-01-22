@@ -1,11 +1,14 @@
 ﻿using System.IO;
 using System.Linq;
 using CNCMaps.MapLogic;
+using CNCMaps.Utility;
 using CNCMaps.VirtualFileSystem;
 
 namespace CNCMaps.FileFormats {
 	/// <summary>Format helper functions.</summary>
 	public static class FormatHelper {
+
+		static NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
 		static FormatHelper() {
 			MixArchiveExtensions = new[] { ".mix", ".yro", ".mmx" };
@@ -44,7 +47,10 @@ namespace CNCMaps.FileFormats {
 
 		public static VirtualFile OpenAsFormat(Stream baseStream, string filename, int offset = 0, int length = -1, FileFormat format = FileFormat.None) {
 			if (length == -1) length = (int)baseStream.Length;
-			if (format == FileFormat.None) format = GuessFormat(filename);
+			if (format == FileFormat.None) {
+				format = GuessFormat(filename);
+				logger.Debug("Guessed format: {0}", format);
+			}
 			VirtualFile ret;
 			switch (format) {
 				case FileFormat.Csf:

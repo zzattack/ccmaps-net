@@ -3,9 +3,12 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
+using CNCMaps.Utility;
 
 namespace CNCMaps.MapLogic {
 	class TileLayer : IEnumerable<MapTile> {
+		static NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
+
 		MapTile[,] tiles;
 		private Size fullSize;
 
@@ -53,8 +56,10 @@ namespace CNCMaps.MapLogic {
 		public MapTile GetTileR(int rx, int ry) {
 			int dx = (rx - ry + fullSize.Width - 1);
 			int dy = (rx + ry - fullSize.Width - 1) / 2;
-			if (dx < 0 || dy < 0 || dx >= tiles.GetLength(0) || dy >= tiles.GetLength(1))
+			if (dx < 0 || dy < 0 || dx >= tiles.GetLength(0) || dy >= tiles.GetLength(1)) {
+				logger.Warn("Referencing empty tile at (rx,ry)= ({0},{1}); (dx,dy)=({2},{3})", rx, ry, dx, dy);
 				return null;
+			}
 			else
 				return GetTile(dx, dy);
 		}
