@@ -2,7 +2,7 @@
 
 ; Define your application name
 !define APPNAME "CNCMaps.NET"
-!define VERSION 1.93
+!define VERSION 1.94
 !define APPNAMEANDVERSION "CNC Maps renderer ${VERSION}"
 
 ; Main Install settings
@@ -12,7 +12,7 @@ InstallDirRegKey HKLM "Software\${APPNAME}" ""
 OutFile "CNCMaps_setup_${VERSION}.exe"
 
 ; Use compression
-SetCompressor LZMA
+; SetCompressor LZMA
 
 ; Modern interface settings
 !include "MUI.nsh"
@@ -40,6 +40,8 @@ Section "RA2/YR Maps Renderer" Section1
 	SetOutPath "$INSTDIR\"
 	File "CNCMaps\bin\Release\CNCMaps.exe"
 	File "CNCMaps GUI\bin\Release\CNCMaps_GUI.exe"
+	File "CNCMaps\NLog.dll"
+	File "CNCMaps\NLog.config"
 	File "CNCMaps\opengl32.dll"
 	File "CNCMaps\OpenTK.dll"
 	File "CNCMaps\OpenTK.dll.config"
@@ -82,6 +84,8 @@ Section Uninstall
 	; Clean up RA2/YR Maps renderer
 	Delete "$INSTDIR\CNCMaps.exe"
 	Delete "$INSTDIR\CNCMaps_GUI.exe"
+	Delete "$INSTDIR\NLog.dll"
+	Delete "$INSTDIR\NLog.config"
 	Delete "$INSTDIR\opengl32.dll"
 	Delete "$INSTDIR\OpenTK.dll"
 	Delete "$INSTDIR\OpenTK.dll.config"
