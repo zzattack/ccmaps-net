@@ -119,7 +119,7 @@ namespace CNCMaps.VirtualFileSystem {
 		public void ScanMixDir(string mixDir, bool useRA2, bool isMod) {
 
 			// see http://modenc.renegadeprojects.com/MIX for more info
-			CNCMaps.Utility.Logger.WriteLine("Initializing filesystem on {0}, {1} Yuri's Revenge support", mixDir, isMod ? "with" : "without");
+			CNCMaps.Utility.Logger.Info("Initializing filesystem on {0}, {1} Yuri's Revenge support", mixDir, isMod ? "with" : "without");
 			AddFile(mixDir);
 
 			if (useRA2) {

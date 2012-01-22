@@ -28,7 +28,7 @@ namespace CNCMaps.FileFormats {
 		}
 
 		void Parse() {
-			CNCMaps.Utility.Logger.WriteLine("Parsing {0}", Path.GetFileName(FileName));
+			CNCMaps.Utility.Logger.Info("Parsing {0}", Path.GetFileName(FileName));
 			while (CanRead) {
 				ProcessLine(ReadLine());
 			}

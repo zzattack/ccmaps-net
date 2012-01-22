@@ -22,9 +22,7 @@ namespace CNCMaps {
 		public bool MarkOreFields { get; set; }
 
 		public bool IgnoreLocalSize { get; set; }
-
-		public bool SoftwareRendering { get; set; }
-
+		
 		public EngineType Engine { get; set; }
 
 		public StartPositionMarking StartPositionMarking;

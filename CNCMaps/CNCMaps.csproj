@@ -40,6 +40,10 @@
     <StartupObject />
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="OpenTK, Version=1.0.0.0, Culture=neutral, PublicKeyToken=bad199fe84eb3df4, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>.\OpenTK.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Drawing" />
@@ -124,13 +128,17 @@
     <Folder Include="VirtualFileSystem\Mix Decryption\" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="OpenGL32_mesa.dll" />
+    <Content Include="OpenGL32.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="osmesa.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\OpenTK\OpenTK.csproj">
-      <Project>{A37A7E14-0000-0000-0000-000000000000}</Project>
-      <Name>OpenTK</Name>
-    </ProjectReference>
+    <None Include="OpenTK.dll.config">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
