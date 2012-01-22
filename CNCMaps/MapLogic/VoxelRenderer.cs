@@ -4,17 +4,27 @@ using CNCMaps.FileFormats;
 using CNCMaps.Utility;
 using OpenTK;
 using OpenTK.Graphics.OpenGL;
+using OpenTK.Graphics;
 
 namespace CNCMaps.MapLogic {
-	public class VoxelRenderer : GameWindow {
+	public class VoxelRenderer {
 
 		float[] lightPos = { 5f, 5f, 10f, 0f };
 		float[] lightSpec = { 1f, 0.5f, 0f, 0f };
 		float[] lightDiffuse = { 0.95f, 0.95f, 0.95f, 1f };
 		float[] lightAmb = { 0.6f, 0.6f, 0.6f, 1f };
 
-		public VoxelRenderer()
-			: base(200, 200) {
+		public VoxelRenderer() {
+			vxl_ds = new DrawingSurface(200, 200, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
+
+			try {
+				var ctx = GraphicsContext.CreateMesaContext();
+				ctx.MakeCurrent(new  OpenTK.Platform.Mesa.BitmapWindowInfo(vxl_ds.bmd));
+				GL.LoadAll();
+			}
+			catch (Exception exc) {
+				Logger.WriteLine(exc.ToString());
+			}
 
 			GL.Enable(EnableCap.DepthTest);
 			GL.Enable(EnableCap.Lighting);
@@ -204,5 +214,6 @@ namespace CNCMaps.MapLogic {
 			GL.Vertex3(left, top, back);
 			GL.Vertex3(left, top, front);
 		}
+
 	}
 }
