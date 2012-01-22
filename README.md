@@ -49,7 +49,7 @@ Special thanks go out to authors of several modding tools that have greatly bene
 * Olaf van der Spek for XCC and XWIS
 * Matthian Wagner for FinalAlert
 * All contributors to [ModEnc](http://modenc.renegadeprojects.com), especially the people from \#renproj@FreeNode
-* Strike-Team [http://strike-team.net/](community) for testing and support
+* [Strike-Team community](http://strike-team.net/) for testing and support
 
 License
 -------
