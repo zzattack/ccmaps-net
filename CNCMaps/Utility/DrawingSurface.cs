@@ -48,7 +48,7 @@ namespace CNCMaps.Utility {
 		}
 
 		public void SavePNG(string path, int quality, Rectangle saveRect) {
-			logger.Info("Saving PNG to {0}, quality {1}, clip (@{2},{3}-{4}x{5})",
+			logger.Info("Saving PNG to {0}, quality {1}, clip @({2},{3});{4}x{5})",
 				path, quality, saveRect.Left, saveRect.Top, saveRect.Width, saveRect.Height);
 			if (bmd != null)
 				Unlock();
@@ -65,7 +65,7 @@ namespace CNCMaps.Utility {
 		public void SaveJPEG(string path, int compression, Rectangle saveRect) {
 			if (bmd != null)
 				Unlock();
-			logger.Info("Saving JPEG to {0}, compression level {1}, clip (@{2},{3}-{4}x{5})",
+			logger.Info("Saving JPEG to {0}, compression level {1}, clip @({2},{3});{4}x{5})",
 				path, compression, saveRect.Left, saveRect.Top, saveRect.Width, saveRect.Height);
 			ImageCodecInfo encoder = ImageCodecInfo.GetImageEncoders().First(e => e.FormatID == ImageFormat.Jpeg.Guid);
 			var encoderParams = new EncoderParameters(1);

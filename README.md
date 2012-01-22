@@ -1,40 +1,56 @@
-= CNCMaps Renderer
+CNCMaps Renderer
+================
+Project page:
 
 * http://github.com/zzattack/ccmaps-net
 
 This project provides a tool to render battle maps of the most popular Westwood RTS games Red Alert 2 
 and Tiberian Sun, including their expansions Yuri's Revenge and FireStorm.
 
-== Status
+Status
+------
 The project has reached maturity and will know no big feature additions, but bugs might be fixed if reported.
 I am toying with the idea of building a webservice out of the tool, though, but that would probably
 appear under a different project
 
-== Installation
+Installation
+------------
 Installation should be as simple as running the installer or extracting the latest zip release.
-The NSIS installer cannot be used on non-Windows OS but the files inside the zip-archive run fine
-under Mono.
+The NSIS installer cannot be used on non-Windows OS but the files inside the zip-archive run fine under Mono.
 The program requires several .mix files from the original games. These include:
+
 * ra2.mix
 * language.mix
 * theme.mix
 
+If the original game is installed under Windows the file location will be found in the registry but under Mono you have to specify their location on the command-line.
 
-== Development
+Further instructions on the command-line application can be found by invoking:
+
+`ccmaps.exe -h`
+
+Alternatively the CNCMaps GUI program can be used which contains descriptions of every option available.
+
+Development
+-----------
 Working on CNCMaps should be as easy as checking out the source. All dependencies, on Windows, are provided
 within the source tree. On linux you need the libmesaos package which may be available by your package manager.
 Alternatively you can built it from http://www.mesa3d.org/download.html
 
 Previous code repositories can be found at 
+
 * http://code.google.com/p/ccmaps (old)
 * http://sf.net/projects/ccmaps (even older)
+
 which include a fully functional but not bug-free C++ version of this program.
 These locations are no longer maintained.
 
-== Contact
+Contact
+-------
 I am the main and only contributor to this project. You can contact me at frank@zzattack.org.
 
-== License
+License
+-------
 (The MIT License)
 
 Copyright (c) 2007-2012 Frank Razenberg
