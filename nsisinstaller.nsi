@@ -39,7 +39,7 @@ Section "RA2/YR Maps Renderer" Section1
 	; Set Section Files and Shortcuts
 	SetOutPath "$INSTDIR\"
 	File "CNCMaps\bin\Release\CNCMaps.exe"
-	File "CNC Map Renderer GUI\bin\Release\CNCMaps_GUI.exe"
+	File "CNCMaps GUI\bin\Release\CNCMaps_GUI.exe"
 	File "CNCMaps\opengl32.dll"
 	File "CNCMaps\OpenTK.dll"
 	File "CNCMaps\OpenTK.dll.config"
