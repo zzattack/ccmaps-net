@@ -4,50 +4,52 @@ Project page:
 
 * http://github.com/zzattack/ccmaps-net
 
-This project provides a tool to render battle maps of the most popular Westwood RTS games Red Alert 2 
-and Tiberian Sun, including their expansions Yuri's Revenge and FireStorm.
+This project provides a tool to render battle maps of the most popular Westwood RTS games Red Alert 2 and Tiberian Sun, including their expansions Yuri's Revenge and FireStorm.
 
 Status
 ------
-The project has reached maturity and will know no big feature additions, but bugs might be fixed if reported.
-I am toying with the idea of building a webservice out of the tool, though, but that would probably
-appear under a different project
+The project has reached maturity and will know no big feature additions, but bugs might be fixed if reported. I am toying with the idea of building a webservice out of the tool, though, but that would probably appear under a different project
 
 Installation
 ------------
-Installation should be as simple as running the installer or extracting the latest zip release.
-The NSIS installer cannot be used on non-Windows OS but the files inside the zip-archive run fine under Mono.
+Installation should be as simple as running the installer or extracting the latest zip release. The NSIS installer cannot be used on non-Windows OS but the files inside the zip-archive run fine under Mono.
 The program requires several .mix files from the original games. These include:
 
 * ra2.mix
 * language.mix
 * theme.mix
 
-If the original game is installed under Windows the file location will be found in the registry but under Mono you have to specify their location on the command-line.
+If the original game is installed under Microsoft Windows the file location will be found in the registry, but under Mono you have to specify their location on the command-line.
 
-Further instructions on the command-line application can be found by invoking:
+The program depends on a software-only OpenGL renderer named Mesa. This approach was chosen to maximize compatibility on systems that have no Window manager, such as on remote desktop sessions or on headless servers. This dependency is fulfilled on Windows by shipping the OpenGL32.dll and osmesa.dll files. On *nix systems the package _libosmesa-7.11.2_ or newer needs to be installed.
 
-`ccmaps.exe -h`
-
-Alternatively the CNCMaps GUI program can be used which contains descriptions of every option available.
+Usage
+-----
+Instructions on the command-line application can be found by invoking `ccmaps.exe -h`. Alternatively the CNCMaps GUI program can be used which contains descriptions of every option available and interactively updates the corresponding command-line.
 
 Development
 -----------
-Working on CNCMaps should be as easy as checking out the source. All dependencies, on Windows, are provided
-within the source tree. On linux you need the libmesaos package which may be available by your package manager.
-Alternatively you can built it from http://www.mesa3d.org/download.html
+Working on CNCMaps should be as easy as checking out the source. All dependencies, on Windows, are provided within the source tree. On linux you need the libmesaos package which may be available by your package manager. Alternatively you can built it from http://www.mesa3d.org/download.html.
 
-Previous code repositories can be found at 
+Older code repositories which contain a fully functional but not bug-free C++ version of this program can be found at 
 
 * http://code.google.com/p/ccmaps (old)
 * http://sf.net/projects/ccmaps (even older)
 
-which include a fully functional but not bug-free C++ version of this program.
-These locations are no longer maintained.
+The project is no longer maintained at either of these locations.
 
 Contact
 -------
 I am the main and only contributor to this project. You can contact me at frank@zzattack.org.
+
+Acknowledgments
+---------------
+Special thanks go out to authors of several modding tools that have greatly benefited the community as well as development of this program:
+
+* Olaf van der Spek for XCC and XWIS
+* Matthian Wagner for FinalAlert
+* All contributors to [ModEnc](http://modenc.renegadeprojects.com), especially the people from \#renproj@FreeNode
+* Strike-Team [http://strike-team.net/](community) for testing and support
 
 License
 -------
