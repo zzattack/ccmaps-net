@@ -33,7 +33,7 @@ namespace CNCMaps.MapLogic {
 		}
 
 		class RandomizedTileSet {
-			static Random randomTileChooser = new Random();
+			static Random randomTileChooser = new Random(1234);
 			public List<TmpFile> tmpFiles = new List<TmpFile>();
 
 			internal void AddTile(TmpFile tmpFile) {

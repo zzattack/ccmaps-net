@@ -9,22 +9,48 @@ using CNCMaps.VirtualFileSystem;
 using System;
 using NLog;
 using NLog.Config;
+using NLog.Targets;
 
 namespace CNCMaps {
 	class Program {
 		static OptionSet options;
 		public static RenderSettings settings;
-		static NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
+		static NLog.Logger logger;
 
 		public static void Main(string[] args) {
 #if DEBUG
-			   LogManager.Configuration = new XmlLoggingConfiguration("NLog.Debug.config");
-#else
-			LogManager.Configuration = new XmlLoggingConfiguration("NLog.config");
+			try { LogManager.Configuration = new XmlLoggingConfiguration("NLog.Debug.config"); }
+			catch { }
 #endif
-
-
-
+			if (LogManager.Configuration == null) {
+				// init default config
+				ColoredConsoleTarget target = new ColoredConsoleTarget();
+				target.Name="console";
+				target.Layout = "${processtime:format=ss.fff} [${level}] ${message}";
+				target.RowHighlightingRules.Add(new ConsoleRowHighlightingRule() {
+					ForegroundColor = ConsoleOutputColor.Magenta, Condition = "level = LogLevel.Fatal"
+				});
+				target.RowHighlightingRules.Add(new ConsoleRowHighlightingRule() {
+					ForegroundColor = ConsoleOutputColor.Red, Condition = "level = LogLevel.Error"
+				});
+				target.RowHighlightingRules.Add(new ConsoleRowHighlightingRule() {
+					ForegroundColor = ConsoleOutputColor.Yellow, Condition = "level = LogLevel.Warn"
+				});
+				target.RowHighlightingRules.Add(new ConsoleRowHighlightingRule() {
+					ForegroundColor = ConsoleOutputColor.Gray, Condition = "level = LogLevel.Info"
+				});
+				target.RowHighlightingRules.Add(new ConsoleRowHighlightingRule() {
+					ForegroundColor = ConsoleOutputColor.DarkGray, Condition = "level = LogLevel.Debug"
+				});
+				target.RowHighlightingRules.Add(new ConsoleRowHighlightingRule() {
+					ForegroundColor = ConsoleOutputColor.White, Condition = "level = LogLevel.Trace"
+				});
+				LogManager.Configuration = new LoggingConfiguration();
+				LogManager.Configuration.AddTarget("console", target);
+				LogManager.Configuration.LoggingRules.Add(new LoggingRule("*", LogLevel.Info, target));
+				LogManager.ReconfigExistingLoggers();
+			}
+			logger = NLog.LogManager.GetCurrentClassLogger();
 			settings = RenderSettings.CreateDefaults();
 			options = new OptionSet {
 			                        	{"h|help", "Show this short help text", v => settings.ShowHelp = true},
@@ -141,7 +167,7 @@ namespace CNCMaps {
 
 					logger.Info("Injecting thumbnail into map");
 					ThumbInjector.InjectThumb(preview, map);
-					
+
 					logger.Info("Saving map");
 					map.Save(map.FileName);
 				}

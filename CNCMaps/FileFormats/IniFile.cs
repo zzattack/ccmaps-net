@@ -279,7 +279,8 @@ namespace CNCMaps.FileFormats {
 			StreamWriter sw = new StreamWriter(filename, false, Encoding.Default, 64 * 1024);
 			foreach (var section in Sections) {
 				section.WriteTo(sw);
-				sw.WriteLine();
+				if (section != Sections.Last())
+					sw.WriteLine();
 			}
 			sw.Flush();
 		}

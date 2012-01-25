@@ -52,6 +52,7 @@ namespace CNCMaps.MapLogic {
 
 				if (obj is RemappableObject) p = (obj as RemappableObject).Palette;
 				if (obj is UnitObject) direction = (obj as UnitObject).Direction;
+				else if (obj is StructureObject) direction = (obj as StructureObject).Direction;
 				DrawingSurface vxl_ds = voxelrenderer.Render(voxels[i].file, hvas[i], -(double)direction / 256.0 * 360 + 45, p ?? Palette);
 				if (vxl_ds == null)
 					continue;

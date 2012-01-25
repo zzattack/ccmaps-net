@@ -9,7 +9,9 @@ using OpenTK.Graphics;
 namespace CNCMaps.MapLogic {
 	public class VoxelRenderer {
 		static NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
-
+		GraphicsContext ctx;
+		GameWindow gw;
+			
 		float[] lightPos = { 5f, 5f, 10f, 0f };
 		float[] lightSpec = { 1f, 0.5f, 0f, 0f };
 		float[] lightDiffuse = { 0.95f, 0.95f, 0.95f, 1f };
@@ -18,29 +20,51 @@ namespace CNCMaps.MapLogic {
 		public VoxelRenderer() {
 			vxl_ds = new DrawingSurface(200, 200, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
 			try {
-				var ctx = GraphicsContext.CreateMesaContext();
-				ctx.MakeCurrent(new  OpenTK.Platform.Mesa.BitmapWindowInfo(vxl_ds.bmd));
+				ctx = GraphicsContext.CreateMesaContext();
+				int ctx_ptr = int.Parse(ctx.ToString()); // cannot access private .Context
+				if (ctx_ptr != 0) {
+					ctx.MakeCurrent(new OpenTK.Platform.Mesa.BitmapWindowInfo(vxl_ds.bmd));
+					if (!ctx.IsCurrent) {
+						logger.Debug("Could not make context current");
+						throw new InvalidOperationException("Mesa context could not be made current");
+					}
+				}
+				else throw new InvalidOperationException("Mesa context could not be created");
+			}
+			catch {
+				logger.Warn("Could not create OSMesa Context, attempting Window manager context");
+				try { gw = new GameWindow(200, 200); }
+				catch {
+					logger.Error("Fallback context could not be created either. Voxel rendering will be unavailable");
+					return;
+				}
+			}
+			logger.Debug("GL context created");
+			try {
 				GL.LoadAll();
+				logger.Debug("GL functions loaded");
+
+				GL.Enable(EnableCap.DepthTest);
+				GL.Enable(EnableCap.Lighting);
+				GL.Enable(EnableCap.ColorMaterial);
+				GL.Enable(EnableCap.Normalize);
+				GL.Enable(EnableCap.Blend);
+				GL.ShadeModel(ShadingModel.Smooth);
+
+				GL.Light(LightName.Light0, LightParameter.Position, lightPos);
+				GL.Light(LightName.Light0, LightParameter.Specular, lightSpec);
+				GL.Light(LightName.Light0, LightParameter.Ambient, lightAmb);
+				GL.Light(LightName.Light0, LightParameter.Diffuse, lightDiffuse);
+				GL.Enable(EnableCap.Light0);
+				GL.ClearColor(0.5f, 0.9f, 0.3f, 0.0f);
+
+				canRender = SetupFramebuffer();
 			}
+
 			catch (Exception exc) {
-				logger.Error(exc.ToString());
+				logger.Error("Voxel rendering will not be available because an exception occurred while initializing OpenGL: {0}", exc.ToString());
+				return;
 			}
-
-			GL.Enable(EnableCap.DepthTest);
-			GL.Enable(EnableCap.Lighting);
-			GL.Enable(EnableCap.ColorMaterial);
-			GL.Enable(EnableCap.Normalize);
-			GL.Enable(EnableCap.Blend);
-			GL.ShadeModel(ShadingModel.Smooth);
-
-			GL.Light(LightName.Light0, LightParameter.Position, lightPos);
-			GL.Light(LightName.Light0, LightParameter.Specular, lightSpec);
-			GL.Light(LightName.Light0, LightParameter.Ambient, lightAmb);
-			GL.Light(LightName.Light0, LightParameter.Diffuse, lightDiffuse);
-			GL.Enable(EnableCap.Light0);
-			GL.ClearColor(0.5f, 0.9f, 0.3f, 0.0f);
-
-			canRender = SetupFramebuffer();
 		}
 
 

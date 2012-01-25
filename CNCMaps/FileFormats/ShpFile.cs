@@ -124,11 +124,10 @@ namespace CNCMaps.FileFormats {
 
 				for (int x = 0; x < h.cx; x++) {
 					byte paletteValue = image.imageData[rIdx];
-					if (paletteValue != 0 && w_low <= w && w < w_high) {
+					if (paletteValue != 0 && w_low <= w && w < w_high && height >= zBuffer[zIdx]) {
 						*(w + 0) = p.colors[paletteValue].B;
 						*(w + 1) = p.colors[paletteValue].G;
 						*(w + 2) = p.colors[paletteValue].R;
-						zBuffer[zIdx] = Math.Max(zBuffer[zIdx], height);
 					}
 					// Up to the next pixel
 					rIdx++;

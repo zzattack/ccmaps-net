@@ -929,15 +929,26 @@ namespace CNCMaps.MapLogic {
 		}
 
 		private int FindCutoffHeight() {
-			int y = fullSize.Height - 1;
-			int highestHeight = 0;
-			for (int x = 0; x < fullSize.Width; x++) {
-				MapTile t = tiles.GetTile(x, y);
-				if (t != null)
-					highestHeight = Math.Max(highestHeight, t.Z);
+			int y = fullSize.Height;
+			bool[,] rowFilled = new bool[fullSize.Width * 2 - 1, fullSize.Height];
+			while (--y >= 0) {
+				// mark tiles on this row as filled
+				for (int x = 0; x < fullSize.Width; x++) {
+					var tile = tiles.GetTile(x, y / 2);
+					rowFilled[x, y - tile.Z] = true;
+				}
+				bool isRowFilled = true;
+				for (int x = 0; x < fullSize.Width; x++) {
+					if (!rowFilled[x, y]) {
+						isRowFilled = false;
+						break;
+					}
+				}
+				if (isRowFilled)
+					break;
 			}
-			logger.Debug("Cutoff-height determined at {0}, cutting off {1} rows", highestHeight, fullSize.Height - 1 - highestHeight);
-			return highestHeight;
+			logger.Debug("Cutoff-height determined at {0}, cutting off {1} rows", y, fullSize.Height - y);
+			return y;
 		}
 
 		public Rectangle GetLocalSizePixels() {
@@ -945,7 +956,8 @@ namespace CNCMaps.MapLogic {
 			top = Math.Max(localSize.Top * TileHeight - 3 * TileHeight, 0);
 			int width = localSize.Width * TileWidth;
 			int height = localSize.Height * TileHeight + 5 * TileHeight;
-			int height2 = (fullSize.Height - ((FindCutoffHeight() / 2 - 1) % 2)) * TileHeight;
+			int cutoff = FindCutoffHeight();
+			int height2 = top + cutoff * TileHeight + (cutoff % 2 == 0 ? 0 : 15);
 			height = Math.Min(height, height2);
 			return new Rectangle(left, top, width, height);
 		}

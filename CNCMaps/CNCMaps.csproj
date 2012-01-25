@@ -142,6 +142,7 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="NLog.config">
+      <SubType>Designer</SubType>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="NLog.Debug.config">
