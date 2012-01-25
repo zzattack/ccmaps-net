@@ -45,7 +45,7 @@ namespace CNCMaps {
 			                        	{"r|mark-ore", "Mark ore and gem fields more explicity, looks good when resizing to a preview", v => settings.MarkOreFields = true},
 			                        	{"F|force-fullmap", "Ignore LocalSize definition and just save the full map", v => settings.IgnoreLocalSize = true},
 			                        	{"f|force-localsize", "Use localsize for map dimensions (default)", v => settings.IgnoreLocalSize = true},
-			                        	{"k|preview", "Update the maps [PreviewPack] data with the rendered image", v => settings.GeneratePreviewPack = true}
+			                        	{"k|replace-preview", "Update the maps [PreviewPack] data with the rendered image", v => settings.GeneratePreviewPack = true}
 			                        };
 
 			options.Parse(args);

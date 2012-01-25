@@ -67,6 +67,7 @@
 			this.cbLog = new System.Windows.Forms.GroupBox();
 			this.rtbLog = new System.Windows.Forms.RichTextBox();
 			this.folderBrowserDialog1 = new System.Windows.Forms.FolderBrowserDialog();
+			this.cbReplacePreview = new System.Windows.Forms.CheckBox();
 			this.gbMiscOptions.SuspendLayout();
 			this.pnlMapSize.SuspendLayout();
 			this.pnlEngine.SuspendLayout();
@@ -78,6 +79,7 @@
 			// 
 			// gbMiscOptions
 			// 
+			this.gbMiscOptions.Controls.Add(this.cbReplacePreview);
 			this.gbMiscOptions.Controls.Add(this.pnlMapSize);
 			this.gbMiscOptions.Controls.Add(this.pnlEngine);
 			this.gbMiscOptions.Controls.Add(this.lblTiledSquaredPosDescription);
@@ -88,7 +90,7 @@
 			this.gbMiscOptions.Controls.Add(this.cbEmphasizeOre);
 			this.gbMiscOptions.Location = new System.Drawing.Point(12, 209);
 			this.gbMiscOptions.Name = "gbMiscOptions";
-			this.gbMiscOptions.Size = new System.Drawing.Size(541, 212);
+			this.gbMiscOptions.Size = new System.Drawing.Size(541, 231);
 			this.gbMiscOptions.TabIndex = 1;
 			this.gbMiscOptions.TabStop = false;
 			this.gbMiscOptions.Text = "Misc. Options";
@@ -486,7 +488,7 @@
 			// 
 			// btnRenderExecute
 			// 
-			this.btnRenderExecute.Location = new System.Drawing.Point(458, 427);
+			this.btnRenderExecute.Location = new System.Drawing.Point(462, 446);
 			this.btnRenderExecute.Name = "btnRenderExecute";
 			this.btnRenderExecute.Size = new System.Drawing.Size(75, 23);
 			this.btnRenderExecute.TabIndex = 5;
@@ -496,14 +498,14 @@
 			// 
 			// tbCommandPreview
 			// 
-			this.tbCommandPreview.Location = new System.Drawing.Point(80, 427);
+			this.tbCommandPreview.Location = new System.Drawing.Point(84, 446);
 			this.tbCommandPreview.Name = "tbCommandPreview";
 			this.tbCommandPreview.Size = new System.Drawing.Size(361, 20);
 			this.tbCommandPreview.TabIndex = 4;
 			// 
 			// lblCommand
 			// 
-			this.lblCommand.Location = new System.Drawing.Point(18, 430);
+			this.lblCommand.Location = new System.Drawing.Point(22, 449);
 			this.lblCommand.Name = "lblCommand";
 			this.lblCommand.Size = new System.Drawing.Size(62, 17);
 			this.lblCommand.TabIndex = 3;
@@ -516,7 +518,7 @@
 			// cbLog
 			// 
 			this.cbLog.Controls.Add(this.rtbLog);
-			this.cbLog.Location = new System.Drawing.Point(12, 458);
+			this.cbLog.Location = new System.Drawing.Point(16, 470);
 			this.cbLog.Name = "cbLog";
 			this.cbLog.Size = new System.Drawing.Size(542, 176);
 			this.cbLog.TabIndex = 6;
@@ -534,12 +536,23 @@
 			this.rtbLog.TabIndex = 0;
 			this.rtbLog.Text = "";
 			// 
+			// cbReplacePreview
+			// 
+			this.cbReplacePreview.AutoSize = true;
+			this.cbReplacePreview.Location = new System.Drawing.Point(29, 209);
+			this.cbReplacePreview.Name = "cbReplacePreview";
+			this.cbReplacePreview.Size = new System.Drawing.Size(284, 17);
+			this.cbReplacePreview.TabIndex = 15;
+			this.cbReplacePreview.Text = "Replace map preview with thumbnail of resulting image";
+			this.cbReplacePreview.UseVisualStyleBackColor = true;
+			this.cbReplacePreview.CheckedChanged += new System.EventHandler(this.UIChanged);
+			// 
 			// MainForm
 			// 
 			this.AllowDrop = true;
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-			this.ClientSize = new System.Drawing.Size(566, 635);
+			this.ClientSize = new System.Drawing.Size(566, 651);
 			this.Controls.Add(this.cbLog);
 			this.Controls.Add(this.lblCommand);
 			this.Controls.Add(this.tbCommandPreview);
@@ -612,6 +625,7 @@
 		private System.Windows.Forms.RadioButton rbEngineYR;
 		private System.Windows.Forms.RadioButton rbEngineFS;
 		private System.Windows.Forms.RadioButton rbEngineTS;
+		private System.Windows.Forms.CheckBox cbReplacePreview;
 
 	}
 }
