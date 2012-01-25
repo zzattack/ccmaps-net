@@ -109,7 +109,7 @@ namespace CNCMaps.GUI {
 			if (rbSizeFullmap.Checked) cmd += "-f ";
 			if (rbSizeFullmap.Checked) cmd += "-F ";
 			//if (cbSoftwareRendering.Checked) cmd += "-g ";
-			if (cbReplacePreview) cmd += "-k "
+			if (cbReplacePreview.Checked) cmd += "-k ";
 
 			return cmd;
 		}

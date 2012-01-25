@@ -90,9 +90,9 @@ namespace CNCMaps {
 
 				DrawingSurface ds = map.GetDrawingSurface();
 
-				System.Drawing.Rectangle saveRect;
+				Rectangle saveRect;
 				if (settings.IgnoreLocalSize)
-					saveRect = new System.Drawing.Rectangle(0, 0, ds.Width, ds.Height);
+					saveRect = new Rectangle(0, 0, ds.Width, ds.Height);
 				else
 					saveRect = map.GetLocalSizePixels();
 
@@ -106,11 +106,13 @@ namespace CNCMaps {
 					ds.SavePNG(Path.Combine(settings.OutputDir, settings.OutputFile + ".png"), settings.PNGQuality, saveRect);
 
 				if (settings.GeneratePreviewPack) {
+					logger.Info("Generating PreviewPack data");
 					// we will have to re-lock the bmd
 					ds.Lock(ds.bm.PixelFormat);
 
 					if (settings.MarkOreFields == false) {
 						map.MarkOreAndGems();
+						logger.Debug("Redrawing ore and gems areas");
 						map.RedrawOreAndGems();
 					}
 					if (settings.StartPositionMarking != StartPositionMarking.Squared) {
@@ -137,8 +139,10 @@ namespace CNCMaps {
 						gfx.DrawImage(ds.bm, new Rectangle(0, 0, preview.Width, preview.Height), saveRect, GraphicsUnit.Pixel);
 					}
 
+					logger.Info("Injecting thumbnail into map");
 					ThumbInjector.InjectThumb(preview, map);
-
+					
+					logger.Info("Saving map");
 					map.Save(map.FileName);
 				}
 			}

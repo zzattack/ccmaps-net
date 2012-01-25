@@ -893,7 +893,7 @@ namespace CNCMaps.MapLogic {
 		}
 
 		public unsafe void DrawSquaredStartPositions() {
-			logger.Info("Marking squared startpositions");
+			logger.Info("Marking squared start positions");
 			IniSection basic = GetSection("Basic");
 			if (basic == null || !basic.ReadBool("MultiplayerOnly")) return;
 			IniSection waypoints = GetSection("Waypoints");
