@@ -26,8 +26,17 @@ namespace CNCMaps.FileFormats {
 			Parse();
 		}
 
-		public IniSection GetSection(string SectionName) {
-			return Sections.Find(x => x.Name == SectionName);
+		public IniSection GetSection(string sectionName) {
+			return Sections.Find(x => x.Name == sectionName);
+		}
+
+		public IniSection GetOrCreateSection(string sectionName) {
+			var ret = Sections.Find(x => x.Name == sectionName);
+			if (ret == null) {
+				ret = new IniSection(sectionName);
+				Sections.Add(ret);
+			}
+			return ret;
 		}
 
 		void Parse() {
@@ -88,18 +97,36 @@ namespace CNCMaps.FileFormats {
 		}
 
 		public class IniSection {
+			public class IniValue {
+				private string value;
+				public IniValue(string value) {
+					this.value = value;
+				}
+
+				public override string ToString() {
+					return value;
+				}
+				public static implicit operator IniValue(string value) {
+					return new IniValue(value);
+				}
+				public static implicit operator string(IniValue val) {
+					return val.value;
+				}
+				public void Set(string value) {
+					this.value = value;
+				}
+			}
 
 			public string Name { get; set; }
 
-			public Dictionary<string, string> SortedEntries { get; set; }
-
-			public List<KeyValuePair<string, string>> OrderedEntries { get; set; }
+			public Dictionary<string, IniValue> SortedEntries { get; set; }
+			public List<KeyValuePair<string, IniValue>> OrderedEntries { get; set; }
 
 			static NumberFormatInfo culture = CultureInfo.InvariantCulture.NumberFormat;
 
 			public IniSection(string name) {
-				SortedEntries = new Dictionary<string, string>();
-				OrderedEntries = new List<KeyValuePair<string, string>>();
+				SortedEntries = new Dictionary<string, IniValue>();
+				OrderedEntries = new List<KeyValuePair<string, IniValue>>();
 				Name = name;
 			}
 
@@ -143,9 +170,12 @@ namespace CNCMaps.FileFormats {
 
 			public void SetValue(string key, string value) {
 				if (!SortedEntries.ContainsKey(key)) {
-					OrderedEntries.Add(new KeyValuePair<string, string>(key, value));
+					IniValue val = value;
+					OrderedEntries.Add(new KeyValuePair<string, IniValue>(key, val));
+					SortedEntries[key] = val;
 				}
-				SortedEntries[key] = value;
+				else
+					SortedEntries[key].Set(value);
 			}
 
 			public static void FixLine(ref string line) {
@@ -182,7 +212,7 @@ namespace CNCMaps.FileFormats {
 			}
 
 			public string ReadString(string key, string defaultValue = "") {
-				string ret;
+				IniValue ret;
 				if (SortedEntries.TryGetValue(key, out ret))
 					return ret;
 				else
@@ -232,6 +262,26 @@ namespace CNCMaps.FileFormats {
 				return -1;
 			}
 
+
+			public void WriteTo(StreamWriter sw) {
+				sw.Write('[');
+				sw.Write(Name);
+				sw.WriteLine(']');
+				foreach (var kvp in OrderedEntries) {
+					sw.Write(kvp.Key);
+					sw.Write('=');
+					sw.WriteLine(kvp.Value);
+				}
+			}
+		}
+
+		public void Save(string filename) {
+			StreamWriter sw = new StreamWriter(filename, false, Encoding.Default, 64 * 1024);
+			foreach (var section in Sections) {
+				section.WriteTo(sw);
+				sw.WriteLine();
+			}
+			sw.Flush();
 		}
 	}
 }

@@ -148,7 +148,7 @@ namespace CNCMaps.MapLogic {
 			}
 			if (rulesSection.ReadBool("Immune")) {
 				// For example on TIBTRE / Ore Poles
-				yOffset = -16;
+				yOffset = -1;
 				drawableObject.Palette = palettes.GetPalette(PaletteType.Unit);
 			}
 			if (rulesSection.ReadBool("Overrides")) {
