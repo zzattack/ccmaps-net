@@ -1,42 +1,39 @@
 ﻿using System.IO;
+using System.Text;
 
 namespace CNCMaps.VirtualFileSystem {
 
 	public class VirtualTextFile : VirtualFile {
-		StreamReader sr;
-
-		public VirtualTextFile(Stream File, string filename = "")
-			: base(File, filename, true) {
+		public VirtualTextFile(Stream file, string filename = "")
+			: base(file, filename, true) {
 			Position = 0;
-			sr = new StreamReader(this);
 		}
 
-		public VirtualTextFile(Stream File, string filename, int baseOffset, long length, bool isBuffered = true)
-			: base(File, filename, baseOffset, length, isBuffered) {
+		public VirtualTextFile(Stream file, string filename, int baseOffset, long length, bool isBuffered = true)
+			: base(file, filename, baseOffset, length, isBuffered) {
 			Position = 0;
-			sr = new StreamReader(this);
 		}
 
 		public override bool CanRead {
 			get {
-				return pos < size || !sr.EndOfStream;
+				return !Eof;
 			}
 		}
 
 		public string ReadLine() {
-			return sr.ReadLine();
+			// works for ascii only!
+			if (Eof) return null;
+
+			StringBuilder builder = new StringBuilder(80);
+			while (!Eof) {
+				char c =(char)ReadByte();
+				if (c == '\n')
+					break;
+				else if (c != '\r')
+					builder.Append(c);
+			}
+			return builder.ToString();
 		}
 
-		public string ReadToEnd() {
-			return sr.ReadToEnd();
-		}
-
-		public int Peek() {
-			return sr.Peek();
-		}
-
-		public int ReadBlock(char[] buffer, int index, int count) {
-			return sr.ReadBlock(buffer, index, count);
-		}
 	}
 }

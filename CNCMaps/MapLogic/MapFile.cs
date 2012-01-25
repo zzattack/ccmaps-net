@@ -55,7 +55,10 @@ namespace CNCMaps.MapLogic {
 		public MapFile(Stream baseStream, string filename = "") : this(baseStream, filename, 0, baseStream.Length) { }
 
 		public MapFile(Stream baseStream, string filename, int offset, long length, bool isBuffered = true) :
-			base(baseStream, filename, offset, length, isBuffered) { }
+			base(baseStream, filename, offset, length, isBuffered) { 
+			if (isBuffered)
+				Close(); // we no longer need the file handle anyway
+		}
 
 		/// <summary>Gets the determine map name. </summary>
 		/// <returns>The filename to save the map as</returns>
@@ -268,7 +271,7 @@ namespace CNCMaps.MapLogic {
 		private void LoadColors() {
 			var colorsSection = rules.GetSection("Colors");
 			foreach (var entry in colorsSection.OrderedEntries) {
-				string[] colorComponents = entry.Value.Split(',');
+				string[] colorComponents = ((string)entry.Value).Split(',');
 				var h = new HsvColor(int.Parse(colorComponents[0]),
 					int.Parse(colorComponents[1]), int.Parse(colorComponents[2]));
 				namedColors[entry.Key] = h.ToRGB();
@@ -489,7 +492,7 @@ namespace CNCMaps.MapLogic {
 			smudgeObjects = new SmudgeObject[fullSize.Width * 2 - 1, fullSize.Height];
 			if (smudgesSection == null) return;
 			foreach (var v in smudgesSection.OrderedEntries) {
-				string[] entries = v.Value.Split(',');
+				string[] entries = ((string)v.Value).Split(',');
 				string name = entries[0];
 				int rx = int.Parse(entries[1]);
 				int ry = int.Parse(entries[2]);
@@ -548,7 +551,7 @@ namespace CNCMaps.MapLogic {
 			}
 			foreach (var v in structsSection.OrderedEntries) {
 				try {
-					string[] entries = v.Value.Split(',');
+					string[] entries = ((string)v.Value).Split(',');
 					string owner = entries[0];
 					string name = entries[1];
 					short health = short.Parse(entries[2]);
@@ -581,7 +584,7 @@ namespace CNCMaps.MapLogic {
 			}
 			int count = 0;
 			foreach (var v in infantrySection.OrderedEntries) {
-				string[] entries = v.Value.Split(',');
+				string[] entries = ((string)v.Value).Split(',');
 				string owner = entries[0];
 				string name = entries[1];
 				short health = short.Parse(entries[2]);
@@ -612,7 +615,7 @@ namespace CNCMaps.MapLogic {
 			}
 			int count = 0;
 			foreach (var v in unitsSection.OrderedEntries) {
-				string[] entries = v.Value.Split(',');
+				string[] entries = ((string)v.Value).Split(',');
 				string owner = entries[0];
 				string name = entries[1];
 				short health = short.Parse(entries[2]);
@@ -638,7 +641,7 @@ namespace CNCMaps.MapLogic {
 				return;
 			}
 			foreach (var v in aircraftSection.OrderedEntries) {
-				string[] entries = v.Value.Split(',');
+				string[] entries = ((string)v.Value).Split(',');
 				string owner = entries[0];
 				string name = entries[1];
 				short health = short.Parse(entries[2]);
@@ -796,7 +799,7 @@ namespace CNCMaps.MapLogic {
 					PalettesToBeRecalculated.Add(i.Palette);
 				}
 			}
-			
+
 			// TS needs tiberium remapped
 			if (engineType == EngineType.TiberianSun || engineType == EngineType.FireStorm) {
 				var collection = theater.GetCollection(CollectionType.Overlay);
@@ -826,7 +829,7 @@ namespace CNCMaps.MapLogic {
 		}
 
 		public void DrawTiledStartPositions() {
-			logger.Info("Marking tiled startpositions");
+			logger.Info("Marking tiled start positions");
 			IniSection basic = GetSection("Basic");
 			if (basic == null || !basic.ReadBool("MultiplayerOnly")) return;
 			IniSection waypoints = GetSection("Waypoints");
@@ -846,6 +849,44 @@ namespace CNCMaps.MapLogic {
 						if (t != null) {
 							t.Palette = Palette.MergePalettes(t.Palette, red, 0.4);
 						}
+					}
+				}
+			}
+		}
+
+		public void UndrawTiledStartPositions() {
+			logger.Info("Undoing tiled marking of start positions");
+			IniSection basic = GetSection("Basic");
+			if (basic == null || !basic.ReadBool("MultiplayerOnly")) return;
+			IniSection waypoints = GetSection("Waypoints");
+			Palette red = Palette.MakePalette(Color.Red);
+
+			foreach (var entry in waypoints.OrderedEntries) {
+				if (int.Parse(entry.Key) >= 8)
+					continue;
+
+				int pos = int.Parse(entry.Value);
+				int wy = pos / 1000;
+				int wx = pos - wy * 1000;
+
+				// Redraw the 4x4 cell around start pos with original palette;
+				// first the tiles, then the objects
+				for (int x = wx - 2; x < wx + 2; x++) {
+					for (int y = wy - 2; y < wy + 2; y++) {
+						MapTile t = tiles.GetTileR(x, y);
+						if (t != null)
+							t.Palette = PalettePerLevel[t.Z];
+
+						// redraw tile
+						theater.GetTileCollection().DrawTile(t, drawingSurface);
+					}
+				}
+				for (int x = wx - 2; x < wx + 2; x++) {
+					for (int y = wy - 2; y < wy + 2; y++) {
+						// redraw objects on here
+						List<RA2Object> objs = GetObjectsAt(x, y / 2);
+						foreach (RA2Object o in objs)
+							theater.DrawObject(o, drawingSurface);
 					}
 				}
 			}
@@ -914,6 +955,7 @@ namespace CNCMaps.MapLogic {
 			Palette yellow = Palette.MakePalette(Color.Yellow);
 			Palette purple = Palette.MakePalette(Color.Purple);
 			foreach (var o in overlayObjects) {
+				if (o == null) continue;
 				if (o.IsOre())
 					o.Tile.Palette = Palette.MergePalettes(o.Tile.Palette, yellow, o.OverlayValue / 11.0 * 0.6 + 0.1);
 
@@ -922,7 +964,39 @@ namespace CNCMaps.MapLogic {
 			}
 		}
 
-		internal void DrawMap() {
+		public void RedrawOreAndGems() {
+			var tileCollection = theater.GetTileCollection();
+
+			// first redraw all required tiles (zigzag method)
+			for (int y = 0; y < fullSize.Height; y++) {
+				for (int x = fullSize.Width * 2 - 2; x >= 0; x -= 2) {
+					if (overlayObjects[x, y] == null || !overlayObjects[x, y].IsOreOrGem()) continue;
+					tileCollection.DrawTile(tiles.GetTile(x, y), drawingSurface);
+				}
+				for (int x = fullSize.Width * 2 - 3; x >= 0; x -= 2) {
+					if (overlayObjects[x, y] == null || !overlayObjects[x, y].IsOreOrGem()) continue;
+					tileCollection.DrawTile(tiles.GetTile(x, y), drawingSurface);
+				}
+			}
+
+			// then the objects on these ore positions
+			for (int y = 0; y < fullSize.Height; y++) {
+				for (int x = fullSize.Width * 2 - 2; x >= 0; x -= 2) {
+					if (overlayObjects[x, y] == null || !overlayObjects[x, y].IsOreOrGem()) continue;
+					List<RA2Object> objs = GetObjectsAt(x, y);
+					foreach (RA2Object o in objs)
+						theater.DrawObject(o, drawingSurface);
+				}
+				for (int x = fullSize.Width * 2 - 3; x >= 0; x -= 2) {
+					if (overlayObjects[x, y] == null || !overlayObjects[x, y].IsOreOrGem()) continue;
+					List<RA2Object> objs = GetObjectsAt(x, y);
+					foreach (RA2Object o in objs)
+						theater.DrawObject(o, drawingSurface);
+				}
+			}
+		}
+
+		public void DrawMap() {
 			logger.Info("Drawing map");
 			drawingSurface = new DrawingSurface(fullSize.Width * TileWidth, fullSize.Height * TileHeight, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
 			var tileCollection = theater.GetTileCollection();
@@ -957,7 +1031,6 @@ namespace CNCMaps.MapLogic {
 
 		private List<RA2Object> GetObjectsAt(int x, int y) {
 			var ret = new List<RA2Object>();
-			MapTile t = tiles.GetTile(x, y);
 
 			if (smudgeObjects[x, y] != null)
 				ret.Add(smudgeObjects[x, y]);

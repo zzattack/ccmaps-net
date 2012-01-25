@@ -1,8 +1,10 @@
 using System;
+using System.IO;
 using CNCMaps.VirtualFileSystem;
 
 namespace CNCMaps.Encodings {
 
+	// taken from OpenRA
 	public static class Format80 {
 
 		static void ReplicatePrevious(byte[] dest, int destIndex, int srcIndex, int count) {
@@ -142,6 +144,25 @@ namespace CNCMaps.Encodings {
 			}
 
 			return (uint)(dest - pdest);
+		}
+
+		public static byte[] Encode(byte[] src) {
+			/* quick & dirty format80 encoder -- only uses raw copy operator, terminated with a zero-run. */
+			/* this does not produce good compression, but it's valid format80 */
+			var ctx = new MemoryFile(src);
+			var ms = new MemoryStream();
+
+			do {
+				var len = Math.Min(ctx.Position, 0x3F);
+				ms.WriteByte((byte)(0x80 | len));
+				while (len-- > 0)
+					ms.WriteByte(ctx.ReadByte());
+			}
+			while (!ctx.Eof);
+
+			ms.WriteByte(0x80);	// terminator -- 0-length run.
+
+			return ms.ToArray();
 		}
 	}
 }

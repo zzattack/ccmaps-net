@@ -137,6 +137,11 @@ namespace CNCMaps.VirtualFileSystem {
 			throw new NotSupportedException();
 		}
 
+		public override void Close() {
+			base.Close();
+			baseStream.Close();
+		}
+
 		public override void SetLength(long value) {
 			size = value;
 		}
@@ -149,6 +154,18 @@ namespace CNCMaps.VirtualFileSystem {
 				pos = value;
 				if (!isBuffered && pos + baseOffset != baseStream.Position)
 					baseStream.Seek(pos + baseOffset, SeekOrigin.Begin);
+			}
+		}
+
+		public long Remaining {
+			get {
+				return Length - pos;
+			}
+		}
+
+		public bool Eof {
+			get {
+				return Remaining <= 0;
 			}
 		}
 

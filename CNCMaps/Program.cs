@@ -1,4 +1,7 @@
-﻿using System.IO;
+﻿using System.Drawing;
+using System.Drawing.Drawing2D;
+using System.Drawing.Imaging;
+using System.IO;
 using CNCMaps.FileFormats;
 using CNCMaps.MapLogic;
 using CNCMaps.Utility;
@@ -41,7 +44,8 @@ namespace CNCMaps {
 			                        	{"S|start-pos-squared", "Mark starting positions in a squared manner", v => settings.StartPositionMarking = StartPositionMarking.Squared},
 			                        	{"r|mark-ore", "Mark ore and gem fields more explicity, looks good when resizing to a preview", v => settings.MarkOreFields = true},
 			                        	{"F|force-fullmap", "Ignore LocalSize definition and just save the full map", v => settings.IgnoreLocalSize = true},
-			                        	{"f|force-localsize", "Use localsize for map dimensions (default)", v => settings.IgnoreLocalSize = true}
+			                        	{"f|force-localsize", "Use localsize for map dimensions (default)", v => settings.IgnoreLocalSize = true},
+			                        	{"k|preview", "Update the maps [PreviewPack] data with the rendered image", v => settings.GeneratePreviewPack = true}
 			                        };
 
 			options.Parse(args);
@@ -53,8 +57,8 @@ namespace CNCMaps {
 				logger.Error("Specified input file does not exist");
 				ShowHelp();
 			}
-			else if (!settings.SaveJPEG && !settings.SavePNG) {
-				logger.Error("No output format selected. Either specify -j, -p or both");
+			else if (!settings.SaveJPEG && !settings.SavePNG && !settings.GeneratePreviewPack) {
+				logger.Error("No output format selected. Either specify -j, -p, -k or a combination");
 				ShowHelp();
 			}
 			else if (settings.OutputDir != "" && !System.IO.Directory.Exists(settings.OutputDir)) {
@@ -66,12 +70,15 @@ namespace CNCMaps {
 				var vfs = VFS.GetInstance();
 				vfs.ScanMixDir(settings.Engine, settings.MixFilesDirectory);
 
-				var map = new MapFile(File.Open(settings.InputFile, FileMode.Open, FileAccess.Read, FileShare.Read), Path.GetFileName(settings.InputFile));
+				var map = new MapFile(File.Open(settings.InputFile, FileMode.Open, FileAccess.Read, FileShare.ReadWrite), Path.GetFileName(settings.InputFile));
 				map.FileName = settings.InputFile;
 
 				map.LoadMap(settings.Engine);
 				if (settings.StartPositionMarking == StartPositionMarking.Tiled)
 					map.DrawTiledStartPositions();
+
+				if (settings.MarkOreFields)
+					map.MarkOreAndGems();
 
 				map.DrawMap();
 
@@ -97,6 +104,43 @@ namespace CNCMaps {
 
 				if (settings.SavePNG)
 					ds.SavePNG(Path.Combine(settings.OutputDir, settings.OutputFile + ".png"), settings.PNGQuality, saveRect);
+
+				if (settings.GeneratePreviewPack) {
+					// we will have to re-lock the bmd
+					ds.Lock(ds.bm.PixelFormat);
+
+					if (settings.MarkOreFields == false) {
+						map.MarkOreAndGems();
+						map.RedrawOreAndGems();
+					}
+					if (settings.StartPositionMarking != StartPositionMarking.Squared) {
+						// undo tiled, if needed
+						if (settings.StartPositionMarking == StartPositionMarking.Tiled)
+							map.UndrawTiledStartPositions();
+						map.DrawSquaredStartPositions();
+					}
+
+					double ratioX = (double)144 / (double)ds.Width;
+					double ratioY = (double)133 / (double)ds.Height;
+					double ratio = ratioX < ratioY ? ratioX : ratioY; // use whichever multiplier is smaller
+
+					ds.Unlock();
+
+					Bitmap preview = new Bitmap((int)Math.Round(ds.Width * ratio, 0), (int)Math.Round(ds.Height * ratio, 0));
+					using (Graphics gfx = Graphics.FromImage(preview)) {
+						// use high-quality scaling
+						gfx.InterpolationMode = InterpolationMode.HighQualityBicubic;
+						gfx.SmoothingMode = SmoothingMode.HighQuality;
+						gfx.PixelOffsetMode = PixelOffsetMode.HighQuality;
+						gfx.CompositingQuality = CompositingQuality.HighQuality;
+
+						gfx.DrawImage(ds.bm, new Rectangle(0, 0, preview.Width, preview.Height), saveRect, GraphicsUnit.Pixel);
+					}
+
+					ThumbInjector.InjectThumb(preview, map);
+
+					map.Save(map.FileName);
+				}
 			}
 
 			LogManager.Configuration = null; // required for mono release to flush possible targets

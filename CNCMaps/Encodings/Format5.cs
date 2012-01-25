@@ -1,4 +1,8 @@
-﻿namespace CNCMaps.Encodings {
+﻿using System;
+using System.IO;
+using CNCMaps.VirtualFileSystem;
+
+namespace CNCMaps.Encodings {
 
 	class Format5 {
 
@@ -25,6 +29,34 @@
 				}
 				return (uint)(w - pw);
 			}
+		}
+
+		public unsafe static byte[] EncodeSection(byte[] s) {
+			byte[] compressed; // 128kb
+			MiniLZO.Compress(s, out compressed);
+			return compressed;
+		}
+
+		public unsafe static byte[] Encode(byte[] source, int format) {
+			byte[] dest = new byte[source.Length*2];
+			MemoryFile src = new MemoryFile(source);
+
+			int w = 0;
+			while (!src.Eof) {
+				short cb_in = (short)Math.Min(src.Remaining, 8192);
+				var chunk_in = src.Read((int)cb_in);
+				var chunk_out = format == 80 ? Format80.Encode(chunk_in) : Format5.EncodeSection(chunk_in);
+				uint cb_out = (ushort)chunk_out.Length;
+
+				Array.Copy(BitConverter.GetBytes(cb_out), 0, dest, w, 2);
+				w += 2;
+				Array.Copy(BitConverter.GetBytes(cb_in), 0, dest, w, 2);
+				w += 2;
+				Array.Copy(chunk_out, 0, dest, w, chunk_out.Length);
+				w += chunk_out.Length;
+			}
+			Array.Resize(ref dest, w);
+			return dest;
 		}
 	}
 }

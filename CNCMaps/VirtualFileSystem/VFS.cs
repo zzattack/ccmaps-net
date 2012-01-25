@@ -118,6 +118,8 @@ namespace CNCMaps.VirtualFileSystem {
 		}
 
 		public void ScanMixDir(string mixDir, bool useRA2, bool isMod) {
+			if (string.IsNullOrEmpty(mixDir))
+				logger.Fatal("No mix directory detected!");
 
 			// see http://modenc.renegadeprojects.com/MIX for more info
 			logger.Info("Initializing filesystem on {0}, {1} Yuri's Revenge support", mixDir, isMod ? "with" : "without");
@@ -223,7 +225,9 @@ namespace CNCMaps.VirtualFileSystem {
 			try {
 				ret = rkey.OpenSubKey(regpath).GetValue(keyname, "").ToString();
 			}
-			catch { }
+			catch {
+				logger.Error("Could not read registry key {0} at {1}", keyname, regpath);
+			}
 			return ret;
 		}
 	}

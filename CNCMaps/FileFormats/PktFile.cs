@@ -23,7 +23,7 @@ namespace CNCMaps.FileFormats {
 			foreach (var v in maplist.OrderedEntries) {
 				IniSection mapsection = GetSection(v.Value);
 				if (mapsection != null)
-					MapEntries.Add(v.Value.ToLower(), new PktMapEntry(mapsection));
+					MapEntries.Add(((string)v.Value).ToLower(), new PktMapEntry(mapsection));
 			}
 		}
 

@@ -120,6 +120,7 @@
     <Compile Include="Utility\OptionValueCollection.cs" />
     <Compile Include="Utility\OptionSet.cs" />
     <Compile Include="Utility\OptionValueType.cs" />
+    <Compile Include="Utility\ThumbInjector.cs" />
     <Compile Include="VirtualFileSystem\IArchive.cs" />
     <Compile Include="VirtualFileSystem\DirArchive.cs" />
     <Compile Include="VirtualFileSystem\MemoryFile.cs" />

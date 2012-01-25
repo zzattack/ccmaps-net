@@ -44,5 +44,7 @@ namespace CNCMaps {
 			                            };
 		}
 
+
+		public bool GeneratePreviewPack { get; set; }
 	}
 }

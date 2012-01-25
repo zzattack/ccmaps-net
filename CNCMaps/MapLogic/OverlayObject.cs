@@ -19,11 +19,15 @@ namespace CNCMaps.MapLogic {
 		public bool IsGem() {
 			return OverlayID >= MinGemsID && OverlayID <= MaxGemsID;
 		}
-		internal bool IsBridge() {
+		public bool IsOreOrGem() {
+			return IsOre() || IsGem();
+		}
+		public bool IsBridge() {
 			return OverlayID == 24 || OverlayID == 25 || OverlayID == 238 || OverlayID == 237;
 		}
 
 		public Palette Palette { get; set; }
+
 
 	}
 }
