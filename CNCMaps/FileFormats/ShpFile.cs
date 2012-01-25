@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.IO;
 using System.Runtime.InteropServices;
 using CNCMaps.Encodings;
@@ -91,10 +92,10 @@ namespace CNCMaps.FileFormats {
 			return img;
 		}
 
-		unsafe public void Draw(int frameIndex, DrawingSurface ds, int x_offset, int y_offset, short height, Palette p) {
+		unsafe public void Draw(int frameIndex, DrawingSurface ds, Point offset, MapTile tile, Palette p) {
 			if (!initialized) Initialize();
-			
-			logger.Trace("Drawing SHP file {0} (frame {1}) at ({2},{3})", FileName, frameIndex, x_offset, y_offset);
+
+			logger.Trace("Drawing SHP file {0} (frame {1}) at ({2},{3})", FileName, frameIndex, offset.X, offset.Y);
 
 			var image = GetImage(frameIndex);
 			var h = image.header;
@@ -105,11 +106,13 @@ namespace CNCMaps.FileFormats {
 			if (c_px <= 0 || h.cx < 0 || h.cy < 0 || frameIndex > fileHeader.c_images)
 				return;
 
+			short zBufVal = (short)(tile.Rx + tile.Ry + tile.Z);
+
 			var w_low = (byte*)ds.bmd.Scan0;
 			byte* w_high = (byte*)ds.bmd.Scan0 + stride * ds.bmd.Height;
 
-			int dx = x_offset + Drawable.TileWidth / 2 - fileHeader.cx / 2 + h.x,
-				dy = y_offset - fileHeader.cy / 2 + h.y;
+			int dx = offset.X + tile.Dx * Drawable.TileWidth / 2 + Drawable.TileWidth / 2 - fileHeader.cx / 2 + h.x,
+				dy = offset.Y + (tile.Dy - tile.Z) * Drawable.TileHeight / 2 - fileHeader.cy / 2 + h.y;
 			byte* w = (byte*)ds.bmd.Scan0 + dx * 3 + stride * dy;
 			int zIdx = dx + dy * ds.Width;
 			int rIdx = 0;
@@ -124,10 +127,11 @@ namespace CNCMaps.FileFormats {
 
 				for (int x = 0; x < h.cx; x++) {
 					byte paletteValue = image.imageData[rIdx];
-					if (paletteValue != 0 && w_low <= w && w < w_high && height >= zBuffer[zIdx]) {
+					if (paletteValue != 0 && w_low <= w && w < w_high && zBufVal >= zBuffer[zIdx]) {
 						*(w + 0) = p.colors[paletteValue].B;
 						*(w + 1) = p.colors[paletteValue].G;
 						*(w + 2) = p.colors[paletteValue].R;
+						zBuffer[zIdx] = zBufVal;
 					}
 					// Up to the next pixel
 					rIdx++;
@@ -139,10 +143,10 @@ namespace CNCMaps.FileFormats {
 			}
 		}
 
-		unsafe public void DrawShadow(int frameIndex, DrawingSurface ds, int x_offset, int y_offset, short height, MapTile t) {
+		unsafe public void DrawShadow(int frameIndex, DrawingSurface ds, Point offset, MapTile tile) {
 			if (frameIndex >= images.Count / 2) return;
 
-			logger.Trace("Drawing SHP shadow {0} (frame {1}) at ({2},{3})", FileName, frameIndex, x_offset, y_offset);
+			logger.Trace("Drawing SHP shadow {0} (frame {1}) at ({2},{3})", FileName, frameIndex, offset.X, offset.Y);
 
 			var image = GetImage(frameIndex + images.Count / 2);
 			var h = image.header;
@@ -154,18 +158,20 @@ namespace CNCMaps.FileFormats {
 			if (c_px <= 0 || h.cx < 0 || h.cy < 0 || frameIndex > fileHeader.c_images)
 				return;
 
+			short zBufVal = (short)(tile.Rx + tile.Ry + tile.Z);
+
 			var w_low = (byte*)ds.bmd.Scan0;
 			byte* w_high = (byte*)ds.bmd.Scan0 + stride * ds.bmd.Height;
 
-			int dx = x_offset + Drawable.TileWidth / 2 - fileHeader.cx / 2 + h.x,
-				dy = y_offset - fileHeader.cy / 2 + h.y;
+			int dx = offset.X + tile.Dx * Drawable.TileWidth / 2 + Drawable.TileWidth / 2 - fileHeader.cx / 2 + h.x,
+				dy = offset.Y + tile.Dy * Drawable.TileHeight / 2 - fileHeader.cy / 2 + h.y;
 			byte* w = (byte*)ds.bmd.Scan0 + dx * 3 + stride * dy;
 			int zIdx = dx + dy * ds.Width;
 			int rIdx = 0;
 
 			for (int y = 0; y < h.cy; y++) {
 				for (int x = 0; x < h.cx; x++) {
-					if (w_low <= w && w < w_high && image.imageData[rIdx] != 0 && shadows[zIdx] == false && zBuffer[zIdx] <= t.Z) {
+					if (w_low <= w && w < w_high && image.imageData[rIdx] != 0 && !shadows[zIdx] && zBufVal >= zBuffer[zIdx]) {
 						*(w + 0) /= 2;
 						*(w + 1) /= 2;
 						*(w + 2) /= 2;
@@ -184,7 +190,7 @@ namespace CNCMaps.FileFormats {
 
 		public unsafe void DrawAlpha(int frameIndex, DrawingSurface ds, int xOffset, int yOffset) {
 			logger.Trace("Drawing AlphaImage SHP file {0} (frame {1}) at ({2},{3})", FileName, frameIndex, xOffset, yOffset);
-			
+
 			var image = GetImage(frameIndex + images.Count / 2);
 			var h = image.header;
 			var c_px = (uint)(h.cx * h.cy);

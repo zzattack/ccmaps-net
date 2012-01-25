@@ -98,12 +98,8 @@ namespace CNCMaps.MapLogic {
 		private void DrawFile(RA2Object obj, DrawingSurface ds, ShpFile file, DrawProperties props, Palette p = null) {
 			if (file == null || obj == null || obj.Tile == null) return;
 
-			int dx = obj.Tile.Dx * TileWidth / 2;
-			int dy = (obj.Tile.Dy - obj.Tile.Z) * TileHeight / 2;
-			dx += globalOffset.X;
-			dy += globalOffset.Y;
-			dx += props.offset.X;
-			dy += props.offset.Y;
+			Point offset = globalOffset;
+			offset.Offset(props.offset);
 
 			if (UseTilePalette) p = obj.Tile.Palette;
 			else if (p == null && obj is RemappableObject)
@@ -114,17 +110,17 @@ namespace CNCMaps.MapLogic {
 				if (TileWidth == 60) {
 					// bridge
 					if (o.IsBridge())
-						dy += o.OverlayValue > 8 ? -16 : -1;
+						offset.Y += o.OverlayValue > 8 ? -16 : -1;
 				}
 				else {
 					// tibsun
-					dx += o.OverlayValue > 8 ? -7 : -6;
-					dy += o.OverlayValue > 8 ? -13 : -1;
+					offset.X += o.OverlayValue > 8 ? -7 : -6;
+					offset.Y += o.OverlayValue > 8 ? -13 : -1;
 				}
 			}
-			file.Draw(frame, ds, dx, dy, obj.Tile.Z, p ?? Palette);
+			file.Draw(frame, ds, offset, obj.Tile, p ?? Palette);
 			if (props.hasShadow)
-				file.DrawShadow(frame, ds, dx, dy, obj.Tile.Z, obj.Tile);
+				file.DrawShadow(frame, ds, offset, obj.Tile);
 		}
 
 		public static PaletteCollection palettes { get; set; }

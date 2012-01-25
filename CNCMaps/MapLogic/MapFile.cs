@@ -55,7 +55,7 @@ namespace CNCMaps.MapLogic {
 		public MapFile(Stream baseStream, string filename = "") : this(baseStream, filename, 0, baseStream.Length) { }
 
 		public MapFile(Stream baseStream, string filename, int offset, long length, bool isBuffered = true) :
-			base(baseStream, filename, offset, length, isBuffered) { 
+			base(baseStream, filename, offset, length, isBuffered) {
 			if (isBuffered)
 				Close(); // we no longer need the file handle anyway
 		}
@@ -180,7 +180,7 @@ namespace CNCMaps.MapLogic {
 
 		/// <summary>Loads a map. </summary>
 		/// <param name="et">The engine type to be forced, or autodetect.</param>
-		internal void LoadMap(EngineType et = EngineType.AutoDetect) {
+		public bool LoadMap(EngineType et = EngineType.AutoDetect) {
 			var map = GetSection("Map");
 			string[] size = map.ReadString("Size").Split(',');
 			fullSize = new Rectangle(int.Parse(size[0]), int.Parse(size[1]), int.Parse(size[2]), int.Parse(size[3]));
@@ -196,10 +196,22 @@ namespace CNCMaps.MapLogic {
 				rules = VFS.Open<IniFile>("rules.ini");
 				engineType = DetectMapType(rules);
 				if (engineType == EngineType.YurisRevenge) {
-					rules = VFS.Open<IniFile>("rulesmd.ini");
-					art = VFS.Open<IniFile>("artmd.ini");
+					var rulesmd = VFS.Open<IniFile>("rulesmd.ini");
+					var artmd = VFS.Open<IniFile>("artmd.ini");
+
+					if (rulesmd == null) {
+						logger.Error("rulesmd.ini or artmd.ini could not be loaded! You cannot render a YR/FS map " +
+							"without the expansion installed. Unavailable objects will not be rendered, reverting to rules.ini.");
+						RemoveUnknownObjects();
+
+						art = VFS.Open<IniFile>("art.ini");
+					}
+					else {
+						rules = rulesmd;
+						art = artmd;
+					}
 				}
-				else art = VFS.Open<IniFile>("art.ini");
+				else art = VFS.Open<IniFile>("art.ini"); // rules is already loaded
 			}
 			else {
 				if (engineType == EngineType.YurisRevenge || engineType == EngineType.FireStorm) {
@@ -211,6 +223,13 @@ namespace CNCMaps.MapLogic {
 					art = VFS.Open<IniFile>("art.ini");
 				}
 			}
+
+			if (rules == null || art == null) {
+				logger.Fatal("Rules or art config file could not be loaded! You cannot render a YR/FS map" +
+					" without the expansion installed");
+				return false;
+			}
+
 			Drawable.TileWidth = (ushort)TileWidth;
 			Drawable.TileHeight = (ushort)TileHeight;
 
@@ -219,10 +238,7 @@ namespace CNCMaps.MapLogic {
 
 			OverrideRulesWithMap();
 
-			// we need foundations from the theater to plce the structures at the correct tile,
-			// so we load these last
-			logger.Info("Reading map structures");
-			ReadStructures();
+			MoveStructuresToBaseTile();
 
 			PalettesToBeRecalculated.AddRange(theater.GetPalettes());
 
@@ -244,6 +260,44 @@ namespace CNCMaps.MapLogic {
 			ApplyRemappables();
 			// now everything is loaded and we can prepare the palettes before using them to draw
 			RecalculateAllPalettes();
+
+			return true;
+		}
+
+		private void MoveStructuresToBaseTile() {
+			// we need foundations from the theater to place the structures at the correct tile,
+			for (int y = 0; y < structureObjects.GetLength(1); y++) {
+				for (int x = 0; x < structureObjects.GetLength(0); x++) {
+					StructureObject s = structureObjects[x, y];
+					if (s == null || s.DrawTile != null) continue; // s.DrawTile set means we've already moved it
+
+					Size foundation = theater.GetFoundation(s);
+					if (foundation == Size.Empty) continue;
+					s.DrawTile = tiles.GetTileR(s.Tile.Rx + foundation.Width - 1, s.Tile.Ry + foundation.Height - 1);
+					if (s.DrawTile == null) continue;
+
+					// move structure
+					structureObjects[x, y] = null;
+					structureObjects[s.DrawTile.Dx, s.DrawTile.Dy / 2] = s;
+				}
+			}
+
+			// bridges too
+			for (int y = 0; y < overlayObjects.GetLength(1); y++) {
+				for (int x = 0; x < overlayObjects.GetLength(0); x++) {
+					OverlayObject o = overlayObjects[x, y];
+					if (o == null || !o.IsBridge()) continue; // s.DrawTile set means we've already moved it
+
+					Size foundation = theater.GetFoundation(o);
+					if (foundation == Size.Empty) continue;
+					var tile = tiles.GetTileR(o.Tile.Rx, o.Tile.Ry);
+					if (tile == null) continue;
+
+					// move structure
+					overlayObjects[x, y] = null;
+					overlayObjects[tile.Dx, tile.Dy / 2] = o;
+				}
+			}
 		}
 
 		private void OverrideRulesWithMap() {
@@ -306,7 +360,7 @@ namespace CNCMaps.MapLogic {
 		/// <param name="rules">The rules.ini file to be used.</param>
 		/// <returns>The engine to be used to render this map.</returns>
 		private EngineType DetectMapType(IniFile rules) {
-			logger.Info("Determining map name");
+			logger.Info("Determining map type");
 
 			if (ReadBool("Basic", "RequiredAddon"))
 				return EngineType.YurisRevenge;
@@ -390,7 +444,7 @@ namespace CNCMaps.MapLogic {
 				}
 			}
 
-			/*
+
 			objSection = rules.GetSection("BuildingTypes");
 			IniSection objSectionAlt = rules.GetSection("OverlayTypes");
 			for (int y = 0; y < fullSize.Height; y++) {
@@ -405,10 +459,78 @@ namespace CNCMaps.MapLogic {
 					else if (idx2 != -1 && idx2 > 246)
 						return false;
 				}
-			}*/
+			}
 
 			// no need to test smudge types as no new ones were introduced with yr
 			return true;
+		}
+
+		private void RemoveUnknownObjects() {
+			for (int y = 0; y < fullSize.Height; y++) {
+				for (int x = 0; x < fullSize.Width * 2 - 1; x++) {
+					var obj = overlayObjects[x, y];
+					if (obj != null && obj.OverlayID > 246) overlayObjects[x, y] = null;
+				}
+			}
+
+			IniSection objSection = rules.GetSection("TerrainTypes");
+			for (int y = 0; y < fullSize.Height; y++) {
+				for (int x = 0; x < fullSize.Width * 2 - 1; x++) {
+					var obj = terrainObjects[x, y];
+					if (obj == null) continue;
+					int idx = objSection.FindValueIndex(obj.Name);
+					if (idx == -1 || idx > 73) terrainObjects[x, y] = null;
+				}
+			}
+
+			objSection = rules.GetSection("InfantryTypes");
+			for (int y = 0; y < fullSize.Height; y++) {
+				for (int x = 0; x < fullSize.Width * 2 - 1; x++) {
+					var objList = infantryObjects[x, y];
+					if (objList == null) continue;
+
+					objList.RemoveAll(i => objSection.FindValueIndex(i.Name) > 45 || objSection.FindValueIndex(i.Name) == -1);
+				}
+			}
+
+			objSection = rules.GetSection("VehicleTypes");
+			for (int y = 0; y < fullSize.Height; y++) {
+				for (int x = 0; x < fullSize.Width * 2 - 1; x++) {
+					var obj = unitObjects[x, y];
+					if (obj == null) continue;
+					int idx = objSection.FindValueIndex(obj.Name);
+					if (idx == -1 || idx > 57) unitObjects[x, y] = null;
+				}
+			}
+
+			objSection = rules.GetSection("AircraftTypes");
+			for (int y = 0; y < fullSize.Height; y++) {
+				for (int x = 0; x < fullSize.Width * 2 - 1; x++) {
+					var obj = aircraftObjects[x, y];
+					if (obj == null) continue;
+					int idx = objSection.FindValueIndex(obj.Name);
+					if (idx == -1 || idx > 9) aircraftObjects[x, y] = null;
+				}
+			}
+
+
+			objSection = rules.GetSection("BuildingTypes");
+			IniSection objSectionAlt = rules.GetSection("OverlayTypes");
+			for (int y = 0; y < fullSize.Height; y++) {
+				for (int x = 0; x < fullSize.Width * 2 - 1; x++) {
+					var obj = structureObjects[x, y];
+					if (obj == null) continue;
+					int idx1 = objSection.FindValueIndex(obj.Name);
+					int idx2 = objSectionAlt.FindValueIndex(obj.Name);
+					if (idx1 == -1 && idx2 == -1) structureObjects[x, y] = null;
+					else if (idx1 != -1 && idx1 > 303)
+						structureObjects[x, y] = null;
+					else if (idx2 != -1 && idx2 > 246)
+						structureObjects[x, y] = null;
+				}
+			}
+
+			// no need to remove smudges as no new ones were introduced with yr
 		}
 
 		/// <summary>Reads all objects. </summary>
@@ -433,6 +555,9 @@ namespace CNCMaps.MapLogic {
 
 			logger.Info("Reading aircraft on map");
 			ReadAircraft();
+
+			logger.Info("Reading map structures");
+			ReadStructures();
 		}
 
 		/// <summary>Reads the tiles. </summary>
@@ -509,7 +634,7 @@ namespace CNCMaps.MapLogic {
 		private void ReadOverlay() {
 			IniSection overlaySection = GetSection("OverlayPack");
 			if (overlaySection == null) {
-				logger.Warn("OverlayPack section unavailable in {0}, overlay will be unavailable", FileName);
+				logger.Warn("OverlayPack section unavailable in {0}, overlay will be unavailable", Path.GetFileName(FileName));
 				return;
 			}
 
@@ -519,7 +644,7 @@ namespace CNCMaps.MapLogic {
 
 			IniSection overlayDataSection = GetSection("OverlayDataPack");
 			if (overlayDataSection == null) {
-				logger.Warn("OverlayDataPack section unavailable in {0}, overlay will be unavailable", FileName);
+				logger.Warn("OverlayDataPack section unavailable in {0}, overlay will be unavailable", Path.GetFileName(FileName));
 				return;
 			}
 			format80Data = Convert.FromBase64String(overlayDataSection.ConcatenatedValues());
@@ -546,7 +671,7 @@ namespace CNCMaps.MapLogic {
 			IniSection structsSection = GetSection("Structures");
 			structureObjects = new StructureObject[fullSize.Width * 2 - 1, fullSize.Height];
 			if (structsSection == null) {
-				logger.Warn("Structures section unavailable in {0}", FileName);
+				logger.Warn("Structures section unavailable in {0}", Path.GetFileName(FileName));
 				return;
 			}
 			foreach (var v in structsSection.OrderedEntries) {
@@ -559,14 +684,8 @@ namespace CNCMaps.MapLogic {
 					int ry = int.Parse(entries[4]);
 					short direction = short.Parse(entries[5]);
 					var s = new StructureObject(owner, name, health, direction);
-
-					Size foundation = theater.GetFoundation(s);
-					s.DrawTile = tiles.GetTileR(rx + foundation.Width - 1, ry + foundation.Height - 1);
-					if (s.DrawTile != null) {
-						s.DrawTile.AddObject(s);
-						s.Tile = tiles.GetTileR(rx, ry);
-						structureObjects[s.DrawTile.Dx, s.DrawTile.Dy / 2] = s;
-					}
+					s.Tile = tiles.GetTileR(rx, ry);
+					structureObjects[s.Tile.Dx, s.Tile.Dy / 2] = s;
 				}
 				catch (IndexOutOfRangeException) { } // catch invalid entries
 				catch (FormatException) { }
@@ -579,7 +698,7 @@ namespace CNCMaps.MapLogic {
 			IniSection infantrySection = GetSection("Infantry");
 			infantryObjects = new List<InfantryObject>[fullSize.Width * 2 - 1, fullSize.Height];
 			if (infantrySection == null) {
-				logger.Warn("Infantry section unavailable in {0}", FileName);
+				logger.Warn("Infantry section unavailable in {0}", Path.GetFileName(FileName));
 				return;
 			}
 			int count = 0;
@@ -610,7 +729,7 @@ namespace CNCMaps.MapLogic {
 			IniSection unitsSection = GetSection("Units");
 			unitObjects = new UnitObject[fullSize.Width * 2 - 1, fullSize.Height];
 			if (unitsSection == null) {
-				logger.Warn("Units section unavailable in {0}", FileName);
+				logger.Warn("Units section unavailable in {0}", Path.GetFileName(FileName));
 				return;
 			}
 			int count = 0;
@@ -637,7 +756,7 @@ namespace CNCMaps.MapLogic {
 			IniSection aircraftSection = GetSection("Aircraft");
 			aircraftObjects = new AircraftObject[fullSize.Width * 2 - 1, fullSize.Height];
 			if (aircraftSection == null) {
-				logger.Warn("Aircraft section unavailable in {0}", FileName);
+				logger.Warn("Aircraft section unavailable in {0}", Path.GetFileName(FileName));
 				return;
 			}
 			foreach (var v in aircraftSection.OrderedEntries) {
@@ -662,8 +781,8 @@ namespace CNCMaps.MapLogic {
 			logger.Info("Redistributing ore-spread over patches");
 			foreach (OverlayObject o in overlayObjects) {
 				if (o == null) continue;
-				// The value consists of the sum of all x's with a little magic offsets
-				// plus the sum of all y's with also a little magic offset, and also
+				// The value consists of the sum of all dx's with a little magic offsets
+				// plus the sum of all dy's with also a little magic offset, and also
 				// everything is calculated modulo 12
 				if (o.IsOre()) {
 					int x = o.Tile.Dx;
@@ -726,7 +845,6 @@ namespace CNCMaps.MapLogic {
 							// bridge tiles get the same lighting as their corresponding tiles
 							ovl.Palette = t.Palette;
 						}
-
 					}
 				}
 			}
@@ -874,17 +992,18 @@ namespace CNCMaps.MapLogic {
 				for (int x = wx - 2; x < wx + 2; x++) {
 					for (int y = wy - 2; y < wy + 2; y++) {
 						MapTile t = tiles.GetTileR(x, y);
-						if (t != null)
-							t.Palette = PalettePerLevel[t.Z];
-
+						if (t == null) continue;
+						t.Palette = PalettePerLevel[t.Z];
 						// redraw tile
 						theater.GetTileCollection().DrawTile(t, drawingSurface);
 					}
 				}
-				for (int x = wx - 2; x < wx + 2; x++) {
-					for (int y = wy - 2; y < wy + 2; y++) {
+				for (int x = wx - 5; x < wx + 5; x++) {
+					for (int y = wy - 5; y < wy + 5; y++) {
+						MapTile t = tiles.GetTileR(x, y);
+						if (t == null) continue;
 						// redraw objects on here
-						List<RA2Object> objs = GetObjectsAt(x, y / 2);
+						List<RA2Object> objs = GetObjectsAt(t.Dx, t.Dy / 2);
 						foreach (RA2Object o in objs)
 							theater.DrawObject(o, drawingSurface);
 					}
@@ -935,7 +1054,8 @@ namespace CNCMaps.MapLogic {
 				// mark tiles on this row as filled
 				for (int x = 0; x < fullSize.Width; x++) {
 					var tile = tiles.GetTile(x, y / 2);
-					rowFilled[x, y - tile.Z] = true;
+					if (y - tile.Z > 0)
+						rowFilled[x, y - tile.Z] = true;
 				}
 				bool isRowFilled = true;
 				for (int x = 0; x < fullSize.Width; x++) {
@@ -1041,30 +1161,30 @@ namespace CNCMaps.MapLogic {
 			}
 		}
 
-		private List<RA2Object> GetObjectsAt(int x, int y) {
+		private List<RA2Object> GetObjectsAt(int dx, int dy) {
 			var ret = new List<RA2Object>();
 
-			if (smudgeObjects[x, y] != null)
-				ret.Add(smudgeObjects[x, y]);
+			if (smudgeObjects[dx, dy] != null)
+				ret.Add(smudgeObjects[dx, dy]);
 
-			if (overlayObjects[x, y] != null)
-				ret.Add(overlayObjects[x, y]);
+			if (overlayObjects[dx, dy] != null)
+				ret.Add(overlayObjects[dx, dy]);
 
-			if (terrainObjects[x, y] != null)
-				ret.Add(terrainObjects[x, y]);
+			if (terrainObjects[dx, dy] != null)
+				ret.Add(terrainObjects[dx, dy]);
 
-			if (infantryObjects[x, y] != null)
-				foreach (var r in infantryObjects[x, y])
+			if (infantryObjects[dx, dy] != null)
+				foreach (var r in infantryObjects[dx, dy])
 					ret.Add(r);
 
-			if (aircraftObjects[x, y] != null)
-				ret.Add(aircraftObjects[x, y]);
+			if (aircraftObjects[dx, dy] != null)
+				ret.Add(aircraftObjects[dx, dy]);
 
-			if (unitObjects[x, y] != null)
-				ret.Add(unitObjects[x, y]);
+			if (unitObjects[dx, dy] != null)
+				ret.Add(unitObjects[dx, dy]);
 
-			if (structureObjects[x, y] != null)
-				ret.Add(structureObjects[x, y]);
+			if (structureObjects[dx, dy] != null)
+				ret.Add(structureObjects[dx, dy]);
 
 			return ret;
 		}

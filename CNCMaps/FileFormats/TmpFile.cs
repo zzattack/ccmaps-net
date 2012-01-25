@@ -110,48 +110,54 @@ namespace CNCMaps.FileFormats {
 		}
 
 
-		unsafe public void Draw(MapTile t, DrawingSurface ds) {
+		unsafe public void Draw(MapTile tile, DrawingSurface ds) {
 			if (!isInitialized) Initialize();
 
 			logger.Trace("Initializing TMP data for file {0}", FileName);
-			
-			if (t.SubTile >= images.Count) return;
-			TmpImage img = images[t.SubTile];
+
+			if (tile.SubTile >= images.Count) return;
+			TmpImage img = images[tile.SubTile];
 			var zBuf = ds.GetZBuffer();
-			Palette p = t.Palette;
+			var shadows = ds.GetShadows();
+			Palette p = tile.Palette;
 
 			// calculate tile index -> pixel index
-			short height = t.Z;
-			int x_offset = t.Dx * fileHeader.cx / 2;
-			int y_offset = (t.Dy - height) * fileHeader.cy / 2;
-			logger.Trace("Drawing TMP file {0} (subtile {1}) at ({2},{3})", FileName, t.SubTile, x_offset, y_offset);
+			short zBufVal = (short)(tile.Rx + tile.Ry + tile.Z);
+			int xOffset = tile.Dx * fileHeader.cx / 2;
+			int yOffset = (tile.Dy - tile.Z) * fileHeader.cy / 2;
+			logger.Trace("Drawing TMP file {0} (subtile {1}) at ({2},{3})", FileName, tile.SubTile, xOffset, yOffset);
 
 			int stride = ds.bmd.Stride;
 
-			int half_cx = fileHeader.cx / 2,
-				half_cy = fileHeader.cy / 2;
-
-			height += (short)img.header.height;
-
+			int halfCx = fileHeader.cx / 2,
+				halfCy = fileHeader.cy / 2;
+			
+			// writing bounds
 			var w_low = (byte*)ds.bmd.Scan0;
 			byte* w_high = (byte*)ds.bmd.Scan0 + stride * ds.bmd.Height;
+			byte* w = (byte*)ds.bmd.Scan0 + stride * yOffset + (xOffset + halfCx - 2) * 3;
 
-			byte* w = (byte*)ds.bmd.Scan0 + stride * y_offset + (x_offset + half_cx - 2) * 3;
-			int zIdx = y_offset * ds.Width + x_offset + half_cx - 2;
+			int rIdx = 0, zIdx = 0, x = 0, y = 0;
 
-			int cx = 0, // Amount of pixel to copy
-				y = 0;
+			zIdx = yOffset * ds.Width + xOffset + halfCx - 2;
+			int cx = 0; // Amount of pixel to copy
 
-			int rIdx = 0;
-			for (; y < half_cy; y++) {
+			for (; y < halfCy; y++) {
 				cx += 4;
 				for (ushort c = 0; c < cx; c++) {
 					byte paletteValue = img.tileData[rIdx++];
-					if (paletteValue != 0 && w_low <= w && w < w_high) {
-						*(w + 0) = p.colors[paletteValue].B;
-						*(w + 1) = p.colors[paletteValue].G;
-						*(w + 2) = p.colors[paletteValue].R;
-						zBuf[zIdx] = Math.Max(height, zBuf[zIdx]);
+					if (paletteValue != 0 && w_low <= w && w < w_high && zBufVal > zBuf[zIdx]) {
+						if (shadows[zIdx] && Math.Abs(zBuf[zIdx]) >= zBufVal) {
+							*(w + 0) = (byte)(p.colors[paletteValue].B / 2);
+							*(w + 1) = (byte)(p.colors[paletteValue].G / 2);
+							*(w + 2) = (byte)(p.colors[paletteValue].R / 2);
+						}
+						else {
+							*(w + 0) = p.colors[paletteValue].B;
+							*(w + 1) = p.colors[paletteValue].G;
+							*(w + 2) = p.colors[paletteValue].R;
+						}
+						zBuf[zIdx] = zBufVal;
 					}
 					w += 3;
 					zIdx++;
@@ -166,11 +172,22 @@ namespace CNCMaps.FileFormats {
 				cx -= 4;
 				for (ushort c = 0; c < cx; c++) {
 					byte paletteValue = img.tileData[rIdx++];
-					if (paletteValue != 0 && w_low <= w && w < w_high) {
+					if (paletteValue != 0 && w_low <= w && w < w_high && zBufVal > zBuf[zIdx]) {
 						*(w + 0) = p.colors[paletteValue].B;
 						*(w + 1) = p.colors[paletteValue].G;
 						*(w + 2) = p.colors[paletteValue].R;
-						zBuf[zIdx] = Math.Max(height, zBuf[zIdx]);
+
+						if (shadows[zIdx] && Math.Abs(zBuf[zIdx]) >= zBufVal) {
+							*(w + 0) = (byte)(p.colors[paletteValue].B / 2);
+							*(w + 1) = (byte)(p.colors[paletteValue].G / 2);
+							*(w + 2) = (byte)(p.colors[paletteValue].R / 2);
+						}
+						else {
+							*(w + 0) = p.colors[paletteValue].B;
+							*(w + 1) = p.colors[paletteValue].G;
+							*(w + 2) = p.colors[paletteValue].R;
+						}
+						zBuf[zIdx] = zBufVal;
 					}
 					w += 3;
 					zIdx++;
@@ -179,32 +196,44 @@ namespace CNCMaps.FileFormats {
 				zIdx += ds.Width - (cx - 2);
 			}
 
-			if (img.header.HasExtraData) {
 
-				rIdx = 0;
-				int dx = x_offset + img.header.x_extra - img.header.x;
-				int dy = y_offset + img.header.y_extra - img.header.y;
-				w = w_low + stride * dy + 3 * dx;
-				zIdx = dx + dy * ds.Width;
+			if (!img.header.HasExtraData) return; // we're done now
 
-				// Extra graphics are just a square
-				for (y = 0; y < img.header.cy_extra; y++) {
-					for (int x = 0; x < img.header.cx_extra; x++) {
-						// Checking per line is required because v needs to be checked every time
-						byte paletteValue = img.extraData[rIdx++];
+			int dx = xOffset + img.header.x_extra - img.header.x;
+			int dy = yOffset + img.header.y_extra - img.header.y;
+			w = w_low + stride * dy + 3 * dx;
+			zIdx = dx + dy * ds.Width;
+			rIdx = 0;
 
-						if (paletteValue != 0 && w_low <= w && w < w_high) {
+			// Extra graphics are just a square
+			for (y = 0; y < img.header.cy_extra; y++) {
+				for (x = 0; x < img.header.cx_extra; x++) {
+					// Checking per line is required because v needs to be checked every time
+					byte paletteValue = img.extraData[rIdx++];
+
+					if (paletteValue != 0 && w_low <= w && w < w_high && zBufVal > zBuf[zIdx]) {
+
+						if (shadows[zIdx] ) {
+							*w++ = (byte)(p.colors[paletteValue].B / 2);
+							*w++ = (byte)(p.colors[paletteValue].G / 2);
+							*w++ = (byte)(p.colors[paletteValue].R / 2);
+						}
+						else {
 							*w++ = p.colors[paletteValue].B;
 							*w++ = p.colors[paletteValue].G;
 							*w++ = p.colors[paletteValue].R;
-
-							zBuf[zIdx++] = short.MaxValue;
 						}
-						else { w += 3; zIdx++; }
+						//else
+						//	w += 3;
+						zBuf[zIdx] = zBufVal;
+						//shadows[zIdx] = true;
 					}
-					w += stride - img.header.cx_extra * 3;
-					zIdx += ds.Width - img.header.cx_extra;
+					else
+						w += 3;
+					zIdx++;
 				}
+				w += stride - img.header.cx_extra * 3;
+				zIdx += ds.Width - img.header.cx_extra;
 			}
 		}
 	}

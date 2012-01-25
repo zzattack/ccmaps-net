@@ -99,7 +99,10 @@ namespace CNCMaps {
 				var map = new MapFile(File.Open(settings.InputFile, FileMode.Open, FileAccess.Read, FileShare.ReadWrite), Path.GetFileName(settings.InputFile));
 				map.FileName = settings.InputFile;
 
-				map.LoadMap(settings.Engine);
+				if (!map.LoadMap(settings.Engine)) {
+					logger.Error("Could not successfully load all required components for this map. Aborting.");
+					return;
+				}
 				if (settings.StartPositionMarking == StartPositionMarking.Tiled)
 					map.DrawTiledStartPositions();
 

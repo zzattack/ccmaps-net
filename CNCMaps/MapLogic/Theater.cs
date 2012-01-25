@@ -179,7 +179,7 @@ namespace CNCMaps.MapLogic {
 			return GetObjectCollection(o).GetPalette(o);
 		}
 
-		internal Size GetFoundation(StructureObject v) {
+		internal Size GetFoundation(NamedObject v) {
 			if (buildingTypes.HasObject(v))
 				return buildingTypes.GetFoundation(v);
 			else
@@ -190,6 +190,10 @@ namespace CNCMaps.MapLogic {
 			if (t == CollectionType.Overlay)
 				return overlayTypes;
 			return null;
+		}
+
+		internal Size GetFoundation(OverlayObject o) {
+			return overlayTypes.GetFoundation(o);
 		}
 	}
 }

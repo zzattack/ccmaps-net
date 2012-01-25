@@ -138,6 +138,7 @@ namespace CNCMaps.MapLogic {
 			}
 			if (collectionType == CollectionType.Terrain) {
 				yOffset = Drawable.TileHeight / 2; // trees and such are placed in the middle of their tile
+				drawableObject.UseTilePalette = true;
 			}
 			if (rulesSection.ReadString("Land") == "Rock") {
 				yOffset = 15;
@@ -150,6 +151,7 @@ namespace CNCMaps.MapLogic {
 				// For example on TIBTRE / Ore Poles
 				yOffset = -1;
 				drawableObject.Palette = palettes.GetPalette(PaletteType.Unit);
+				drawableObject.UseTilePalette = false;
 			}
 			if (rulesSection.ReadBool("Overrides")) {
 				drawableObject.SetHeightOffset(4);
@@ -340,12 +342,29 @@ namespace CNCMaps.MapLogic {
 			return GetObjectIndex(o) != -1;
 		}
 
-		internal Size GetFoundation(StructureObject v) {
-			return objects[GetObjectIndex(v)].Foundation;
+		internal Size GetFoundation(NamedObject v) {
+			int idx = GetObjectIndex(v);
+			if (0 > idx || idx >= objects.Count) {
+				logger.Error("Cannot obtain information for structure object {0} from object collection", v.Name);
+				return Size.Empty;
+			}
+			else
+				return objects[idx].Foundation;
+		}
+
+		internal Size GetFoundation(OverlayObject o) {
+			int idx = o.Number;
+			if (0 > idx || idx >= objects.Count) {
+				logger.Error("Cannot obtain information for overlay object {0} from object collection", o.Number);
+				return Size.Empty;
+			}
+			else
+				return objects[idx].Foundation;
 		}
 
 		internal string GetName(byte p) {
 			return objects[p].Name;
 		}
+
 	}
 }

@@ -106,7 +106,7 @@ namespace CNCMaps.VirtualFileSystem {
 		}
 
 		public void ScanMixDir(EngineType engine, string installDir = "") {
-			bool useModFiles = engine == EngineType.FireStorm || engine == EngineType.YurisRevenge;
+			bool useModFiles = engine == EngineType.FireStorm || engine == EngineType.YurisRevenge || engine == EngineType.AutoDetect;
 			bool useRA2Engine = engine == EngineType.RedAlert2 || engine == EngineType.YurisRevenge || engine == EngineType.AutoDetect;
 			if (installDir == "") {
 				if (engine == EngineType.TiberianSun)

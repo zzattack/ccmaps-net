@@ -71,5 +71,9 @@ namespace CNCMaps.MapLogic {
 			else
 				return false;
 		}
+
+		public override string ToString() {
+			return string.Format("d({0},{1}),r({2},{3})", Dx, Dy, Rx, Ry);
+		}
 	}
 }
