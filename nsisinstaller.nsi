@@ -2,7 +2,7 @@
 
 ; Define your application name
 !define APPNAME "CNCMaps.NET"
-!define VERSION 1.95
+!define VERSION 1.96
 !define APPNAMEANDVERSION "CNC Maps renderer ${VERSION}"
 
 ; Main Install settings
@@ -21,6 +21,7 @@ SetCompressor LZMA
 !define MUI_FINISHPAGE_RUN "$INSTDIR\CNCMaps_GUI.exe"
 
 !insertmacro MUI_PAGE_WELCOME
+!insertmacro MUI_PAGE_DIRECTORY
 !insertmacro MUI_PAGE_INSTFILES
 !insertmacro MUI_PAGE_FINISH
 
