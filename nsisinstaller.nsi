@@ -2,7 +2,7 @@
 
 ; Define your application name
 !define APPNAME "CNCMaps.NET"
-!define VERSION 1.94
+!define VERSION 1.95
 !define APPNAMEANDVERSION "CNC Maps renderer ${VERSION}"
 
 ; Main Install settings
@@ -12,7 +12,7 @@ InstallDirRegKey HKLM "Software\${APPNAME}" ""
 OutFile "CNCMaps_setup_${VERSION}.exe"
 
 ; Use compression
-; SetCompressor LZMA
+SetCompressor LZMA
 
 ; Modern interface settings
 !include "MUI.nsh"

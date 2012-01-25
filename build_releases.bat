@@ -9,9 +9,9 @@ for /f "delims=" %%a in ('cat nsisinstaller.nsi ^| grep "!define VERSION" ^| gaw
  
 cd CNCMaps/bin/Release
 for /D %%f in (CNCMaps.exe NLog.config NLog.dll OpenGL32.dll OpenTK.dll OpenTK.dll.config osmesa.dll) DO (
-	zip -r -j ../../../Release_v%VER%_win.zip "%%f"
+	zip -r -j ../../../CNCMaps_v%VER%_win.zip "%%f"
 )
 
 for /D %%f in (CNCMaps.exe NLog.config NLog.dll OpenTK.dll OpenTK.dll.config) DO (
-	zip -r -j ../../../Release_v%VER%_nix.zip "%%f"
+	zip -r -j ../../../CNCMaps_v%VER%_nix.zip "%%f"
 )
