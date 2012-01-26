@@ -146,13 +146,7 @@ namespace CNCMaps.MapLogic {
 			#endregion
 
 			int i = 0;
-			// we initialize a theater-specific vfs containing only
-			// the mixes containing the stuff we need to prevent
-			// searching through all archives for every tile
-			var tilesVFS = new VFS();
-			foreach (string s in TheaterDefaults.GetTheaterMixes(theaterType))
-				tilesVFS.AddMix(VFS.Open<MixFile>(s));
-
+		
 			int setNum = 0;
 			while (true) {
 				string sectionName = "TileSet" + i++.ToString("0000");
@@ -175,7 +169,7 @@ namespace CNCMaps.MapLogic {
 						string filename = ts.FileName + j.ToString("00");
 						if (r >= 'a') filename += r;
 						filename += tileExtension;
-						var tmpFile = tilesVFS.OpenFile(filename, FileFormat.Tmp) as TmpFile;
+						var tmpFile = VFS.Open<TmpFile>(filename);
 						if (tmpFile != null) rs.AddTile(tmpFile);
 						else break;
 					}

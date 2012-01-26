@@ -1054,11 +1054,11 @@ namespace CNCMaps.MapLogic {
 				// mark tiles on this row as filled
 				for (int x = 0; x < fullSize.Width; x++) {
 					var tile = tiles.GetTile(x, y / 2);
-					if (y - tile.Z > 0)
+					if (tile != null && (y - tile.Z) >= 0)
 						rowFilled[x, y - tile.Z] = true;
 				}
 				bool isRowFilled = true;
-				for (int x = 0; x < fullSize.Width; x++) {
+				for (int x = 1; x < fullSize.Width - 1; x++) {
 					if (!rowFilled[x, y]) {
 						isRowFilled = false;
 						break;
@@ -1076,9 +1076,11 @@ namespace CNCMaps.MapLogic {
 			top = Math.Max(localSize.Top * TileHeight - 3 * TileHeight, 0);
 			int width = localSize.Width * TileWidth;
 			int height = localSize.Height * TileHeight + 5 * TileHeight;
+			
 			int cutoff = FindCutoffHeight();
 			int height2 = top + cutoff * TileHeight + (cutoff % 2 == 0 ? 0 : 15);
 			height = Math.Min(height, height2);
+			
 			return new Rectangle(left, top, width, height);
 		}
 
@@ -1147,12 +1149,12 @@ namespace CNCMaps.MapLogic {
 
 			for (int y = 0; y < fullSize.Height; y++) {
 				logger.Trace("Drawing objects row {0}", y);
+
 				for (int x = fullSize.Width * 2 - 2; x >= 0; x -= 2) {
 					List<RA2Object> objs = GetObjectsAt(x, y);
 					foreach (RA2Object o in objs)
 						theater.DrawObject(o, drawingSurface);
 				}
-
 				for (int x = fullSize.Width * 2 - 3; x >= 0; x -= 2) {
 					List<RA2Object> objs = GetObjectsAt(x, y);
 					foreach (RA2Object o in objs)

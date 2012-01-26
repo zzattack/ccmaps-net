@@ -101,6 +101,14 @@ namespace CNCMaps.VirtualFileSystem {
 			return ret;
 		}
 
+		public sbyte[] ReadSigned(int numBytes) {
+			var b = new byte[numBytes];
+			Read(b, 0, numBytes);
+			sbyte[] ret = new sbyte[numBytes];
+			Buffer.BlockCopy(b, 0, ret, 0, b.Length);
+			return ret;
+		}
+
 		public new byte ReadByte() {
 			return ReadUInt8();
 		}

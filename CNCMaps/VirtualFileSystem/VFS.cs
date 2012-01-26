@@ -126,7 +126,7 @@ namespace CNCMaps.VirtualFileSystem {
 			AddFile(mixDir);
 
 			if (useRA2) {
-				if (isMod) AddFile(Path.Combine(mixDir, "langmd.mix"));
+				if (isMod) AddFile("langmd.mix");
 				AddFile(Path.Combine(mixDir, "language.mix"));
 			}
 
@@ -145,12 +145,12 @@ namespace CNCMaps.VirtualFileSystem {
 			}
 
 			if (useRA2) {
-				if (isMod) AddFile(Path.Combine(mixDir, "ra2md.mix"));
+				if (isMod) AddFile("ra2md.mix");
 				AddFile(Path.Combine(mixDir, "ra2.mix"));
 			}
 			else {
-				if (isMod) AddFile(Path.Combine(mixDir, "tibsunmd.mix"));
-				AddFile(Path.Combine(mixDir, "tibsun.mix"));
+				if (isMod) AddFile("tibsunmd.mix");
+				AddFile("tibsun.mix");
 			}
 
 			if (isMod) AddFile("cachemd.mix");
@@ -190,10 +190,10 @@ namespace CNCMaps.VirtualFileSystem {
 				if (isMod) AddFile("cameomd.mix");
 				AddFile("cameo.mix");
 				if (isMod) {
-					AddFile(Path.Combine(mixDir, "mapsmd03.mix"));
-					AddFile(Path.Combine(mixDir, "multimd.mix"));
-					AddFile(Path.Combine(mixDir, "thememd.mix"));
-					AddFile(Path.Combine(mixDir, "movmd03.mix"));
+					AddFile("mapsmd03.mix");
+					AddFile( "multimd.mix");
+					AddFile( "thememd.mix");
+					AddFile( "movmd03.mix");
 				}
 			}
 		}
