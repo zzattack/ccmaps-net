@@ -94,7 +94,7 @@ namespace CNCMaps.FileFormats {
 
 		unsafe public void Draw(int frameIndex, DrawingSurface ds, Point offset, MapTile tile, Palette p) {
 			if (!initialized) Initialize();
-
+			
 			logger.Trace("Drawing SHP file {0} (frame {1}) at ({2},{3})", FileName, frameIndex, offset.X, offset.Y);
 
 			var image = GetImage(frameIndex);
@@ -106,7 +106,7 @@ namespace CNCMaps.FileFormats {
 			if (c_px <= 0 || h.cx < 0 || h.cy < 0 || frameIndex > fileHeader.c_images)
 				return;
 
-			short zBufVal = (short)(tile.Rx + tile.Ry + tile.Z);
+			short zBufVal = (short)(((tile.Rx + tile.Ry + tile.Z * 2) * Drawable.TileHeight) / 2 - fileHeader.cy / 2 + h.y + offset.Y);
 
 			var w_low = (byte*)ds.bmd.Scan0;
 			byte* w_high = (byte*)ds.bmd.Scan0 + stride * ds.bmd.Height;
@@ -124,14 +124,19 @@ namespace CNCMaps.FileFormats {
 					zIdx += ds.Width;
 					continue; // out of bounds
 				}
-
+				short z = (short)(zBufVal + y + 2); // why the +2? oh well
+				
 				for (int x = 0; x < h.cx; x++) {
 					byte paletteValue = image.imageData[rIdx];
-					if (paletteValue != 0 && w_low <= w && w < w_high && zBufVal >= zBuffer[zIdx]) {
+					short zcompare = zBuffer[zIdx];
+					if (paletteValue != 0 && w_low <= w && w < w_high && z >= zcompare) {
 						*(w + 0) = p.colors[paletteValue].B;
 						*(w + 1) = p.colors[paletteValue].G;
 						*(w + 2) = p.colors[paletteValue].R;
 						zBuffer[zIdx] = zBufVal;
+					}
+					else if (z  < zcompare) {
+						int i = 0;
 					}
 					// Up to the next pixel
 					rIdx++;
@@ -158,20 +163,22 @@ namespace CNCMaps.FileFormats {
 			if (c_px <= 0 || h.cx < 0 || h.cy < 0 || frameIndex > fileHeader.c_images)
 				return;
 
-			short zBufVal = (short)(tile.Rx + tile.Ry + tile.Z);
+			short zBufVal = (short)(((tile.Rx + tile.Ry) * Drawable.TileHeight) / 2 - h.cy / 2 - offset.Y);
 
 			var w_low = (byte*)ds.bmd.Scan0;
 			byte* w_high = (byte*)ds.bmd.Scan0 + stride * ds.bmd.Height;
 
 			int dx = offset.X + tile.Dx * Drawable.TileWidth / 2 + Drawable.TileWidth / 2 - fileHeader.cx / 2 + h.x,
-				dy = offset.Y + tile.Dy * Drawable.TileHeight / 2 - fileHeader.cy / 2 + h.y;
+				dy = offset.Y + (tile.Dy - tile.Z) * Drawable.TileHeight / 2 - fileHeader.cy / 2 + h.y;
 			byte* w = (byte*)ds.bmd.Scan0 + dx * 3 + stride * dy;
 			int zIdx = dx + dy * ds.Width;
 			int rIdx = 0;
 
 			for (int y = 0; y < h.cy; y++) {
+				short z = (short)(zBufVal + y + 2); // why the +2? oh well
 				for (int x = 0; x < h.cx; x++) {
-					if (w_low <= w && w < w_high && image.imageData[rIdx] != 0 && !shadows[zIdx] && zBufVal >= zBuffer[zIdx]) {
+					short zcompare = zBuffer[zIdx];
+					if (w_low <= w && w < w_high && image.imageData[rIdx] != 0 && !shadows[zIdx] && z >= zcompare) {
 						*(w + 0) /= 2;
 						*(w + 1) /= 2;
 						*(w + 2) /= 2;

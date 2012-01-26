@@ -1,8 +1,6 @@
-; Script generated with the Venis Install Wizard
-
 ; Define your application name
 !define APPNAME "CNCMaps.NET"
-!define VERSION 1.96
+!define VERSION 1.97
 !define APPNAMEANDVERSION "CNC Maps renderer ${VERSION}"
 
 ; Main Install settings
@@ -22,6 +20,7 @@ SetCompressor LZMA
 
 !insertmacro MUI_PAGE_WELCOME
 !insertmacro MUI_PAGE_DIRECTORY
+!insertmacro MUI_PAGE_COMPONENTS
 !insertmacro MUI_PAGE_INSTFILES
 !insertmacro MUI_PAGE_FINISH
 
@@ -32,8 +31,7 @@ SetCompressor LZMA
 !insertmacro MUI_LANGUAGE "English"
 !insertmacro MUI_RESERVEFILE_LANGDLL
 
-Section "RA2/YR Maps Renderer" Section1
-
+Section "RA2/YR Maps Renderer" Program
 	; Set Section properties
 	SetOverwrite on
 
@@ -47,11 +45,16 @@ Section "RA2/YR Maps Renderer" Section1
 	File "CNCMaps\OpenTK.dll"
 	File "CNCMaps\OpenTK.dll.config"
 	File "CNCMaps\osmesa.dll"
+SectionEnd
+
+Section "Desktop shortcut" DesktopShortcut
 	CreateShortCut "$DESKTOP\CNC Maps renderer.lnk" "$INSTDIR\CNCMaps_GUI.exe"
+SectionEnd
+
+Section "Start menu shortcuts" StartMenuShortcuts
 	CreateDirectory "$SMPROGRAMS\CNC Maps renderer"
 	CreateShortCut "$SMPROGRAMS\CNC Maps renderer\CNC Maps renderer.lnk" "$INSTDIR\CNCMaps_GUI.exe"
 	CreateShortCut "$SMPROGRAMS\CNC Maps renderer\Uninstall.lnk" "$INSTDIR\uninstall.exe"
-
 SectionEnd
 
 Section -FinishSection
@@ -64,12 +67,13 @@ SectionEnd
 
 ; Modern install component descriptions
 !insertmacro MUI_FUNCTION_DESCRIPTION_BEGIN
-	!insertmacro MUI_DESCRIPTION_TEXT ${Section1} ""
+	!insertmacro MUI_DESCRIPTION_TEXT ${Program} "The program and its dependencies"
+	!insertmacro MUI_DESCRIPTION_TEXT ${DesktopShortcut} "A shortcut on your desktop"
+	!insertmacro MUI_DESCRIPTION_TEXT ${StartMenuShortcuts} "Shortcuts for the program and uninstaller in your start menu"
 !insertmacro MUI_FUNCTION_DESCRIPTION_END
 
 ;Uninstall section
 Section Uninstall
-
 	;Remove from registry...
 	DeleteRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APPNAME}"
 	DeleteRegKey HKLM "SOFTWARE\${APPNAME}"
@@ -95,8 +99,13 @@ Section Uninstall
 	; Remove remaining directories
 	RMDir "$SMPROGRAMS\CNC Maps renderer"
 	RMDir "$INSTDIR\"
-
 SectionEnd
+
+Function .onInit
+	; disable shortcuts by default
+	!insertmacro ClearSectionFlag ${DesktopShortcut} ${SF_SELECTED}
+	!insertmacro ClearSectionFlag ${StartMenuShortcuts} ${SF_SELECTED}
+FunctionEnd
 
 BrandingText "by Frank Razenberg"
 
