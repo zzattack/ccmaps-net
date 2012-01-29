@@ -22,12 +22,10 @@ namespace CNCMaps.MapLogic {
 		public bool IsOreOrGem() {
 			return IsOre() || IsGem();
 		}
-		public bool IsBridge() {
+		public bool IsHighBridge() {
 			return OverlayID == 24 || OverlayID == 25 || OverlayID == 238 || OverlayID == 237;
 		}
-
 		public Palette Palette { get; set; }
-
 
 	}
 }

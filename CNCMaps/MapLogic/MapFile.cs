@@ -286,7 +286,7 @@ namespace CNCMaps.MapLogic {
 			for (int y = 0; y < overlayObjects.GetLength(1); y++) {
 				for (int x = 0; x < overlayObjects.GetLength(0); x++) {
 					OverlayObject o = overlayObjects[x, y];
-					if (o == null || !o.IsBridge()) continue; // s.DrawTile set means we've already moved it
+					if (o == null || !o.IsHighBridge()) continue; // s.DrawTile set means we've already moved it
 
 					Size foundation = theater.GetFoundation(o);
 					if (foundation == Size.Empty) continue;
@@ -685,7 +685,8 @@ namespace CNCMaps.MapLogic {
 					short direction = short.Parse(entries[5]);
 					var s = new StructureObject(owner, name, health, direction);
 					s.Tile = tiles.GetTileR(rx, ry);
-					structureObjects[s.Tile.Dx, s.Tile.Dy / 2] = s;
+					if (s.Tile != null)
+						structureObjects[s.Tile.Dx, s.Tile.Dy / 2] = s;
 				}
 				catch (IndexOutOfRangeException) { } // catch invalid entries
 				catch (FormatException) { }
@@ -841,7 +842,7 @@ namespace CNCMaps.MapLogic {
 						// (so that for example higher placed rocks look brighter)
 
 						var ovl = overlayObjects[t.Dx, t.Dy / 2];
-						if (ovl != null && ovl.IsBridge()) {
+						if (ovl != null && ovl.IsHighBridge()) {
 							// bridge tiles get the same lighting as their corresponding tiles
 							ovl.Palette = t.Palette;
 						}
@@ -1025,6 +1026,7 @@ namespace CNCMaps.MapLogic {
 				int wx = pos - wy * 1000;
 
 				MapTile t = tiles.GetTileR(wx, wy);
+				if (t == null) continue;
 				int destX = t.Dx * TileWidth / 2;
 				int destY = (t.Dy - t.Z) * TileHeight / 2;
 
@@ -1048,9 +1050,9 @@ namespace CNCMaps.MapLogic {
 		}
 
 		private int FindCutoffHeight() {
-			int y = fullSize.Height;
 			bool[,] rowFilled = new bool[fullSize.Width * 2 - 1, fullSize.Height];
-			while (--y >= 0) {
+			int y;
+			for (y = fullSize.Height - 1; y > fullSize.Height - 15; y--) {
 				// mark tiles on this row as filled
 				for (int x = 0; x < fullSize.Width; x++) {
 					var tile = tiles.GetTile(x, y / 2);
@@ -1091,10 +1093,10 @@ namespace CNCMaps.MapLogic {
 			foreach (var o in overlayObjects) {
 				if (o == null) continue;
 				if (o.IsOre())
-					o.Tile.Palette = Palette.MergePalettes(o.Tile.Palette, yellow, o.OverlayValue / 11.0 * 0.6 + 0.1);
+					o.Tile.Palette = Palette.MergePalettes(o.Tile.Palette, yellow, Math.Min((byte)11, o.OverlayValue) / 11.0 * 0.6 + 0.1);
 
 				else if (o.IsGem())
-					o.Tile.Palette = Palette.MergePalettes(o.Tile.Palette, purple, o.OverlayValue / 11.0 * 0.6 + 0.25);
+					o.Tile.Palette = Palette.MergePalettes(o.Tile.Palette, purple, Math.Min((byte)11, o.OverlayValue) / 11.0 * 0.6 + 0.25);
 			}
 		}
 

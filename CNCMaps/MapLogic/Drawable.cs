@@ -109,7 +109,7 @@ namespace CNCMaps.MapLogic {
 				var o = obj as OverlayObject;
 				if (TileWidth == 60) {
 					// bridge
-					if (o.IsBridge())
+					if (o.IsHighBridge())
 						offset.Y += o.OverlayValue > 8 ? -16 : -1;
 				}
 				else {

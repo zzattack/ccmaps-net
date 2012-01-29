@@ -92,6 +92,7 @@ namespace CNCMaps.MapLogic {
 			bool noUseTileLandType = rulesSection.ReadString("NoUseTileLandType") != "";
 			if (noUseTileLandType) {
 				drawableObject.Palette = palettes.isoPalette;
+				drawableObject.UseTilePalette = true;
 				paletteChosen = true;
 			}
 			else if (rulesSection.ReadBool("TerrainPalette")) {

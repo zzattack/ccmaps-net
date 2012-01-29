@@ -106,7 +106,7 @@ namespace CNCMaps.FileFormats {
 			if (c_px <= 0 || h.cx < 0 || h.cy < 0 || frameIndex > fileHeader.c_images)
 				return;
 
-			short zBufVal = (short)(((tile.Rx + tile.Ry + tile.Z * 2) * Drawable.TileHeight) / 2 - fileHeader.cy / 2 + h.y + offset.Y);
+			short zBufVal = (short)((tile.Rx + tile.Ry + tile.Z) * Drawable.TileHeight / 2 - fileHeader.cy / 2 + h.y + offset.Y);
 
 			var w_low = (byte*)ds.bmd.Scan0;
 			byte* w_high = (byte*)ds.bmd.Scan0 + stride * ds.bmd.Height;
@@ -128,15 +128,11 @@ namespace CNCMaps.FileFormats {
 				
 				for (int x = 0; x < h.cx; x++) {
 					byte paletteValue = image.imageData[rIdx];
-					short zcompare = zBuffer[zIdx];
-					if (paletteValue != 0 && w_low <= w && w < w_high && z >= zcompare) {
+					if (paletteValue != 0 && w_low <= w && w < w_high && z >= zBuffer[zIdx]) {
 						*(w + 0) = p.colors[paletteValue].B;
 						*(w + 1) = p.colors[paletteValue].G;
 						*(w + 2) = p.colors[paletteValue].R;
 						zBuffer[zIdx] = zBufVal;
-					}
-					else if (z  < zcompare) {
-						int i = 0;
 					}
 					// Up to the next pixel
 					rIdx++;
@@ -163,7 +159,7 @@ namespace CNCMaps.FileFormats {
 			if (c_px <= 0 || h.cx < 0 || h.cy < 0 || frameIndex > fileHeader.c_images)
 				return;
 
-			short zBufVal = (short)(((tile.Rx + tile.Ry) * Drawable.TileHeight) / 2 - h.cy / 2 - offset.Y);
+			short zBufVal = (short)((tile.Rx + tile.Ry) * Drawable.TileHeight / 2 - fileHeader.cy / 2 + h.y + offset.Y);
 
 			var w_low = (byte*)ds.bmd.Scan0;
 			byte* w_high = (byte*)ds.bmd.Scan0 + stride * ds.bmd.Height;
@@ -177,8 +173,7 @@ namespace CNCMaps.FileFormats {
 			for (int y = 0; y < h.cy; y++) {
 				short z = (short)(zBufVal + y + 2); // why the +2? oh well
 				for (int x = 0; x < h.cx; x++) {
-					short zcompare = zBuffer[zIdx];
-					if (w_low <= w && w < w_high && image.imageData[rIdx] != 0 && !shadows[zIdx] && z >= zcompare) {
+					if (w_low <= w && w < w_high && image.imageData[rIdx] != 0 && !shadows[zIdx] && z >= zBuffer[zIdx]) {
 						*(w + 0) /= 2;
 						*(w + 1) /= 2;
 						*(w + 2) /= 2;
