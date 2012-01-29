@@ -44,7 +44,6 @@ Section "RA2/YR Maps Renderer" Program
 	File "CNCMaps\opengl32.dll"
 	File "CNCMaps\OpenTK.dll"
 	File "CNCMaps\OpenTK.dll.config"
-	File "CNCMaps\osmesa.dll"
 SectionEnd
 
 Section "Desktop shortcut" DesktopShortcut
@@ -94,7 +93,6 @@ Section Uninstall
 	Delete "$INSTDIR\opengl32.dll"
 	Delete "$INSTDIR\OpenTK.dll"
 	Delete "$INSTDIR\OpenTK.dll.config"
-	Delete "$INSTDIR\osmesa.dll"
 
 	; Remove remaining directories
 	RMDir "$SMPROGRAMS\CNC Maps renderer"

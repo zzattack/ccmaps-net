@@ -21,7 +21,7 @@ namespace CNCMaps.MapLogic {
 			vxl_ds = new DrawingSurface(200, 200, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
 			try {
 				ctx = GraphicsContext.CreateMesaContext();
-				int ctx_ptr = int.Parse(ctx.ToString()); // cannot access private .Context
+				long ctx_ptr = long.Parse(ctx.ToString()); // cannot access private .Context
 				if (ctx_ptr != 0) {
 					ctx.MakeCurrent(new OpenTK.Platform.Mesa.BitmapWindowInfo(vxl_ds.bmd));
 					if (!ctx.IsCurrent) {
@@ -29,13 +29,14 @@ namespace CNCMaps.MapLogic {
 						throw new InvalidOperationException("Mesa context could not be made current");
 					}
 				}
-				else throw new InvalidOperationException("Mesa context could not be created");
+				else throw new InvalidOperationException("CreateMesaContext failed");
 			}
-			catch {
+			catch (Exception exc) {
+				logger.Error("Unknown error while creating OSMesa Context: {0}", exc);
 				logger.Warn("Could not create OSMesa Context, attempting Window manager context");
 				try { gw = new GameWindow(200, 200); }
 				catch {
-					logger.Error("Fallback context could not be created either. Voxel rendering will be unavailable");
+					logger.Error("Fallback GameWindow could not be created either. Voxel rendering will be unavailable");
 					return;
 				}
 			}

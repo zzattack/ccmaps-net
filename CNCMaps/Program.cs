@@ -25,7 +25,7 @@ namespace CNCMaps {
 			if (LogManager.Configuration == null) {
 				// init default config
 				ColoredConsoleTarget target = new ColoredConsoleTarget();
-				target.Name="console";
+				target.Name = "console";
 				target.Layout = "${processtime:format=ss.fff} [${level}] ${message}";
 				target.RowHighlightingRules.Add(new ConsoleRowHighlightingRule() {
 					ForegroundColor = ConsoleOutputColor.Magenta, Condition = "level = LogLevel.Fatal"
@@ -47,7 +47,12 @@ namespace CNCMaps {
 				});
 				LogManager.Configuration = new LoggingConfiguration();
 				LogManager.Configuration.AddTarget("console", target);
+#if DEBUG
+				LogManager.Configuration.LoggingRules.Add(new LoggingRule("*", LogLevel.Debug, target));
+#else
 				LogManager.Configuration.LoggingRules.Add(new LoggingRule("*", LogLevel.Info, target));
+
+#endif
 				LogManager.ReconfigExistingLoggers();
 			}
 			logger = NLog.LogManager.GetCurrentClassLogger();
