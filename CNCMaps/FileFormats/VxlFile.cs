@@ -495,15 +495,17 @@ namespace CNCMaps.FileFormats {
 
 		internal void getXYZNormal(byte normalNum, out float[] normal) {
 			normal = new float[3];
-			if (normalNum >= RA2_NUM_NORMALS)
-				normalNum = RA2_NUM_NORMALS - 1;
 
-			if (limbTailers[curSection].normalType == 2) {
+            if (limbTailers[curSection].normalType == 2) {
+                if (normalNum >= TS_NUM_NORMALS)
+                    normalNum = TS_NUM_NORMALS - 1;
 				normal[0] = TSNormals[normalNum, 0];
 				normal[1] = TSNormals[normalNum, 1];
 				normal[2] = TSNormals[normalNum, 2];
 			}
-			else if (limbTailers[curSection].normalType == 4) {
+            else if (limbTailers[curSection].normalType == 4) {
+                if (normalNum >= RA2_NUM_NORMALS)
+                    normalNum = RA2_NUM_NORMALS - 1;
 				normal[0] = RA2Normals[normalNum, 0];
 				normal[1] = RA2Normals[normalNum, 1];
 				normal[2] = RA2Normals[normalNum, 2];

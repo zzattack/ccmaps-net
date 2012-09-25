@@ -120,7 +120,7 @@ namespace CNCMaps {
 					map.DrawSquaredStartPositions();
 
 				if (settings.OutputFile == "")
-					settings.OutputFile = map.DetermineMapName();
+					settings.OutputFile = map.DetermineMapName(map.EngineType);
 
 				DrawingSurface ds = map.GetDrawingSurface();
 

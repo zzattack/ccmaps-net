@@ -27,5 +27,9 @@ namespace CNCMaps.MapLogic {
 		}
 		public Palette Palette { get; set; }
 
-	}
+
+        public bool IsTSRails() {
+            return 43 <= OverlayID && OverlayID <= 57;
+        }
+    }
 }

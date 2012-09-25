@@ -57,7 +57,7 @@ namespace CNCMaps.MapLogic {
 			string artSectionName = rulesSection.ReadString("Image", objName);
 			IniFile.IniSection artSection = art.GetSection(artSectionName);
 			if (artSection == null)
-				return;
+				artSection = rulesSection;
 
 			string imageFileName;
 			if (collectionType == CollectionType.Building || collectionType == CollectionType.Overlay)
@@ -71,7 +71,7 @@ namespace CNCMaps.MapLogic {
 			if (isVoxel) imageFileName += ".vxl";
 			else if (theaterExtension) {
 				imageFileName += TheaterDefaults.GetExtension(theaterType);
-				if (collectionType != CollectionType.Overlay) {
+				if (collectionType != CollectionType.Overlay || engineType <= EngineType.FireStorm) {
 					drawableObject.Palette = palettes.isoPalette;
 					paletteChosen = true;
 				}
@@ -327,7 +327,10 @@ namespace CNCMaps.MapLogic {
 		}
 
 		internal Palette GetPalette(RA2Object o) {
-			return objects[GetObjectIndex(o)].Palette;
+            if (GetObjectIndex(o) != -1)
+                return objects[GetObjectIndex(o)].Palette;
+            else  // default to this
+                return palettes.isoPalette;
 		}
 
 		private int FindObjectIndex(string p) {

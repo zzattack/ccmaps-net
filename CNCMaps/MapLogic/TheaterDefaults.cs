@@ -57,7 +57,7 @@ namespace CNCMaps.MapLogic {
 					return ".sno";
 				case TheaterType.Lunar: return ".lun";
 				case TheaterType.Desert: return ".des";
-				case TheaterType.NewUrban:
+                case TheaterType.NewUrban: return ".ubn";
 				default: return "";
 			}
 		}

@@ -107,16 +107,20 @@ namespace CNCMaps.MapLogic {
 
 			if (objectOverrides && obj is OverlayObject) {
 				var o = obj as OverlayObject;
-				if (TileWidth == 60) {
-					// bridge
-					if (o.IsHighBridge())
-						offset.Y += o.OverlayValue > 8 ? -16 : -1;
-				}
-				else {
-					// tibsun
-					offset.X += o.OverlayValue > 8 ? -7 : -6;
-					offset.Y += o.OverlayValue > 8 ? -13 : -1;
-				}
+                if (TileWidth == 60) {
+                    // bridge
+                    if (o.IsHighBridge())
+                        offset.Y += o.OverlayValue > 8 ? -16 : -1;
+                }
+                else { // tibsun
+                    if (o.IsTSRails()) {
+                        offset.Y += 11;
+                    }
+                    else {
+                        offset.X += o.OverlayValue > 8 ? -7 : -6;
+                        offset.Y += o.OverlayValue > 8 ? -13 : -1;
+                    }
+                }
 			}
 			file.Draw(frame, ds, offset, obj.Tile, p ?? Palette);
 			if (props.hasShadow)

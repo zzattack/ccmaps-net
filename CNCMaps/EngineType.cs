@@ -1,9 +1,9 @@
 namespace CNCMaps {
 	public enum EngineType {
-		AutoDetect,
-		RedAlert2,
-		YurisRevenge,
-		TiberianSun,
-		FireStorm
+        AutoDetect = 0,
+        TiberianSun = 1,
+        FireStorm = 2,
+		RedAlert2 = 3,
+		YurisRevenge = 4,
 	}
 }
