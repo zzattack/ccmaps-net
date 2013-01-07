@@ -57,7 +57,7 @@ namespace CNCMaps.Utility {
 		}
 
 		public void SavePNG(string path, int quality, Rectangle saveRect) {
-			logger.Info("Saving PNG to {0}, quality {1}, clip @({2},{3});{4}x{5})",
+			logger.Info("Saving PNG to {0}, quality {1}, clip @({2},{3};{4}x{5})",
 				path, quality, saveRect.Left, saveRect.Top, saveRect.Width, saveRect.Height);
 			Unlock();
 			ImageCodecInfo encoder = ImageCodecInfo.GetImageEncoders().First(e => e.FormatID == ImageFormat.Png.Guid);

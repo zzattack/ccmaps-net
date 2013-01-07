@@ -128,7 +128,7 @@ namespace CNCMaps.MapLogic {
                 if (mapEntry != null)
                     mapName = mapEntry.Description;
             }
-            else if (csfEntry != "" && engine == EngineType.RedAlert2 || engine == EngineType.YurisRevenge) {
+            else if ((csfEntry != "" || mapEntry != null) && engine == EngineType.RedAlert2 || engine == EngineType.YurisRevenge) {
                 if (mapEntry != null)
                     csfEntry = mapEntry.Description;
                 csfEntry = csfEntry.ToLower();
@@ -1058,7 +1058,7 @@ namespace CNCMaps.MapLogic {
                 for (int x = 0; x < fullSize.Width; x++) {
                     var tile = tiles.GetTile(x, y / 2);
                     if (tile != null && (y - tile.Z) >= 0)
-                        rowFilled[x, y - tile.Z] = true;
+                        rowFilled[x, y - tile.Z] = true; 
                 }
                 bool isRowFilled = true;
                 for (int x = 1; x < fullSize.Width - 1; x++) {
@@ -1082,7 +1082,7 @@ namespace CNCMaps.MapLogic {
 
             int cutoff = FindCutoffHeight();
             int height2 = top + cutoff * TileHeight + (cutoff % 2 == 0 ? 0 : 15);
-            height = Math.Min(height, height2);
+            // TODO: verify this shit on Cold war; height = Math.Min(height, height2);
 
             return new Rectangle(left, top, width, height);
         }

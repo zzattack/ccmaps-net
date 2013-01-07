@@ -10,6 +10,8 @@ namespace CNCMaps.VirtualFileSystem {
 
 	public class VFS {
 		static VFS instance = new VFS();
+		private VFS() { }
+
 		static NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
 		public static VFS GetInstance() {
@@ -58,7 +60,7 @@ namespace CNCMaps.VirtualFileSystem {
 		List<IArchive> AllArchives = new List<IArchive>();
 
 		bool FileExists(string filename) {
-			return AllArchives.Any(v => v.ContainsFile(filename));
+			return AllArchives.Any(v => v != null && v.ContainsFile(filename));
 		}
 
 		public VirtualFile OpenFile(string filename) {
@@ -67,11 +69,16 @@ namespace CNCMaps.VirtualFileSystem {
 		}
 
 		public VirtualFile OpenFile(string filename, FileFormat format = FileFormat.None) {
-			var archive = AllArchives.FirstOrDefault(v => v.ContainsFile(filename));
-			if (archive == null)
-				return null;
+			if (AllArchives == null || AllArchives.Count == 0) return null;
+			var archive = AllArchives.FirstOrDefault(v => v != null && v.ContainsFile(filename));
+			if (archive == null) return null;
 
-			return archive.OpenFile(filename, format);
+			try {
+				return archive.OpenFile(filename, format);
+			}
+			catch {
+				return null;
+			}
 		}
 
 		public bool AddFile(string path) {
@@ -191,9 +198,9 @@ namespace CNCMaps.VirtualFileSystem {
 				AddFile("cameo.mix");
 				if (isMod) {
 					AddFile("mapsmd03.mix");
-					AddFile( "multimd.mix");
-					AddFile( "thememd.mix");
-					AddFile( "movmd03.mix");
+					AddFile("multimd.mix");
+					AddFile("thememd.mix");
+					AddFile("movmd03.mix");
 				}
 			}
 		}
