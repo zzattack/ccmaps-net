@@ -8,7 +8,7 @@ This project provides a tool to render battle maps of the most popular Westwood 
 
 Status
 ------
-The project has reached maturity and will know no big feature additions, but bugs might be fixed if reported. I am toying with the idea of building a webservice out of the tool, though, but that would probably appear under a different project
+The project has reached maturity and will know no big feature additions, but bugs might be fixed if reported. I am toying with the idea of building a webservice out of the tool, though, but that would probably appear under a different project.
 
 Installation
 ------------
@@ -55,7 +55,7 @@ License
 -------
 (The MIT License)
 
-Copyright (c) 2007-2012 Frank Razenberg
+Copyright (c) 2007-2013 Frank Razenberg
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of
 this software and associated documentation files (the 'Software'), to deal in
