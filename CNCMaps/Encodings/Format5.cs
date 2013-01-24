@@ -3,7 +3,8 @@ using System.IO;
 using CNCMaps.VirtualFileSystem;
 
 namespace CNCMaps.Encodings {
-
+	// basec on code from XCC mixer
+	
 	class Format5 {
 
 		public unsafe static uint DecodeInto(byte[] src, byte[] dest, int format = 5) {

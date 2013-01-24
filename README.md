@@ -53,6 +53,9 @@ Special thanks go out to authors of several modding tools that have greatly bene
 
 License
 -------
+The license below applies only to those parts of the program that do not contain
+a conflicting license placed at the top of the source file.
+
 (The MIT License)
 
 Copyright (c) 2007-2013 Frank Razenberg

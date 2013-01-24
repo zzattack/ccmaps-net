@@ -1,4 +1,6 @@
 ﻿namespace CNCMaps.Encodings {
+	// based on code from XCC mixer
+
 	class Format3 {
 		public unsafe static uint DecodeInto(byte[] src, byte[] dst, int cx, int cy) {
 			fixed (byte* pSrc =  src, pDst = dst) {
