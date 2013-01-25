@@ -8,7 +8,7 @@ using CNCMaps.Utility;
 using CNCMaps.VirtualFileSystem;
 
 namespace CNCMaps.FileFormats {
-
+	// based on code from the XCCU project
 	class CsfFile : VirtualFile {
 
 		Dictionary<string, CsfEntry> LabelMap = new Dictionary<string, CsfEntry>();
