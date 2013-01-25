@@ -54,7 +54,9 @@ Special thanks go out to authors of several modding tools that have greatly bene
 License
 -------
 The license below applies only to those parts of the program that do not contain
-a conflicting license placed at the top of the source file.
+a conflicting license placed at the top of the source file. These include parts
+from the [OpenRA](http://github.com/OpenRA/OpenRA/) and [XCC](https://code.google.com/p/xcc/) projects,
+which are licenced under the GPL v3.
 
 (The MIT License)
 
