@@ -24,10 +24,10 @@ namespace CNCMaps.MapLogic {
 		static NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
 		public Theater(string theaterName, EngineType engine) :
-			this(TheaterTypeFromString(theaterName), engine) { }
+			this(TheaterTypeFromString(theaterName, engine), engine) { }
 
 		public Theater(string theaterName, EngineType engine, IniFile rules, IniFile art) :
-			this(TheaterTypeFromString(theaterName), engine, rules, art) { }
+			this(TheaterTypeFromString(theaterName, engine), engine, rules, art) { }
 
 		public Theater(TheaterType theaterType, EngineType engine, IniFile rules, IniFile art) {
 			this.theaterType = theaterType;
@@ -131,7 +131,8 @@ namespace CNCMaps.MapLogic {
 				CollectionType.Vehicle, theaterType, engine, rules, art, palettes);
 		}
 
-		static TheaterType TheaterTypeFromString(string theater, bool yr = false) {
+		static TheaterType TheaterTypeFromString(string theater, EngineType engineType) {
+			bool yr = engineType == EngineType.YurisRevenge;
 			theater = theater.ToLower();
 			if (theater == "lunar") return TheaterType.Lunar;
 			else if (theater == "newurban") return TheaterType.NewUrban;

@@ -247,7 +247,7 @@ namespace CNCMaps.MapLogic {
         }
 
         public short GetSetNum(short tileNum) {
-            if (tileNum < 0) return 0;
+            if (tileNum < 0 || tileNum >= TileNumToSet.Count) return 0;
             return TileNumToSet[tileNum];
         }
 
