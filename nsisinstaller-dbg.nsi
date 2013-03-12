@@ -5,7 +5,7 @@
 
 ; Define your application name
 !define APPNAME "CNCMaps.NET"
-!define VERSION 1.97
+!define VERSION 1.98
 !define APPNAMEANDVERSION "CNC Maps renderer ${VERSION}"
 
 ; Main Install settings

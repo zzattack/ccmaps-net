@@ -52,17 +52,17 @@ namespace CNCMaps.Utility {
 			return zBuffer;
 		}
 
-		public void SavePNG(string path, int quality, int left, int top, int width, int height) {
-			SavePNG(path, quality, new Rectangle(left, top, width, height));
+		public void SavePNG(string path, int compressionLevel, int left, int top, int width, int height) {
+			SavePNG(path, compressionLevel, new Rectangle(left, top, width, height));
 		}
 
-		public void SavePNG(string path, int quality, Rectangle saveRect) {
-			logger.Info("Saving PNG to {0}, quality {1}, clip @({2},{3};{4}x{5})",
-				path, quality, saveRect.Left, saveRect.Top, saveRect.Width, saveRect.Height);
+		public void SavePNG(string path, int compressionLevel, Rectangle saveRect) {
+			logger.Info("Saving PNG to {0}, compression level {1}, clip @({2},{3};{4}x{5})",
+				path, compressionLevel, saveRect.Left, saveRect.Top, saveRect.Width, saveRect.Height);
 			Unlock();
 			ImageCodecInfo encoder = ImageCodecInfo.GetImageEncoders().First(e => e.FormatID == ImageFormat.Png.Guid);
 			var encoderParams = new EncoderParameters(1);
-			encoderParams.Param[0] = new EncoderParameter(Encoder.Quality, quality);
+			encoderParams.Param[0] = new EncoderParameter(Encoder.Quality, compressionLevel);
 			bm.Clone(saveRect, bm.PixelFormat).Save(path, encoder, encoderParams);
 		}
 
@@ -70,13 +70,13 @@ namespace CNCMaps.Utility {
 			SaveJPEG(path, compression, new Rectangle(left, top, width, height));
 		}
 
-		public void SaveJPEG(string path, int compression, Rectangle saveRect) {
+		public void SaveJPEG(string path, int quality, Rectangle saveRect) {
 			Unlock();
-			logger.Info("Saving JPEG to {0}, compression level {1}, clip @({2},{3});{4}x{5})",
-				path, compression, saveRect.Left, saveRect.Top, saveRect.Width, saveRect.Height);
+			logger.Info("Saving JPEG to {0}, quality level {1}, clip @({2},{3});{4}x{5})",
+				path, quality, saveRect.Left, saveRect.Top, saveRect.Width, saveRect.Height);
 			ImageCodecInfo encoder = ImageCodecInfo.GetImageEncoders().First(e => e.FormatID == ImageFormat.Jpeg.Guid);
 			var encoderParams = new EncoderParameters(1);
-			encoderParams.Param[0] = new EncoderParameter(Encoder.Quality, compression);
+			encoderParams.Param[0] = new EncoderParameter(Encoder.Quality, quality);
 			bm.Clone(saveRect, bm.PixelFormat).Save(path, encoder, encoderParams);
 		}
 

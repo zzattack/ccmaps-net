@@ -638,7 +638,7 @@ namespace CNCMaps.MapLogic {
         private void ReadOverlay() {
             IniSection overlaySection = GetSection("OverlayPack");
             if (overlaySection == null) {
-                logger.Warn("OverlayPack section unavailable in {0}, overlay will be unavailable", Path.GetFileName(FileName));
+                logger.Info("OverlayPack section unavailable in {0}, overlay will be unavailable", Path.GetFileName(FileName));
                 return;
             }
 
@@ -648,7 +648,7 @@ namespace CNCMaps.MapLogic {
 
             IniSection overlayDataSection = GetSection("OverlayDataPack");
             if (overlayDataSection == null) {
-                logger.Warn("OverlayDataPack section unavailable in {0}, overlay will be unavailable", Path.GetFileName(FileName));
+                logger.Debug("OverlayDataPack section unavailable in {0}, overlay will be unavailable", Path.GetFileName(FileName));
                 return;
             }
             format80Data = Convert.FromBase64String(overlayDataSection.ConcatenatedValues());
@@ -675,7 +675,7 @@ namespace CNCMaps.MapLogic {
             IniSection structsSection = GetSection("Structures");
             structureObjects = new StructureObject[fullSize.Width * 2 - 1, fullSize.Height];
             if (structsSection == null) {
-                logger.Warn("Structures section unavailable in {0}", Path.GetFileName(FileName));
+                logger.Info("Structures section unavailable in {0}", Path.GetFileName(FileName));
                 return;
             }
             foreach (var v in structsSection.OrderedEntries) {
@@ -703,7 +703,7 @@ namespace CNCMaps.MapLogic {
             IniSection infantrySection = GetSection("Infantry");
             infantryObjects = new List<InfantryObject>[fullSize.Width * 2 - 1, fullSize.Height];
             if (infantrySection == null) {
-                logger.Warn("Infantry section unavailable in {0}", Path.GetFileName(FileName));
+                logger.Info("Infantry section unavailable in {0}", Path.GetFileName(FileName));
                 return;
             }
             int count = 0;
@@ -734,7 +734,7 @@ namespace CNCMaps.MapLogic {
             IniSection unitsSection = GetSection("Units");
             unitObjects = new UnitObject[fullSize.Width * 2 - 1, fullSize.Height];
             if (unitsSection == null) {
-                logger.Warn("Units section unavailable in {0}", Path.GetFileName(FileName));
+                logger.Info("Units section unavailable in {0}", Path.GetFileName(FileName));
                 return;
             }
             int count = 0;
@@ -761,7 +761,7 @@ namespace CNCMaps.MapLogic {
             IniSection aircraftSection = GetSection("Aircraft");
             aircraftObjects = new AircraftObject[fullSize.Width * 2 - 1, fullSize.Height];
             if (aircraftSection == null) {
-                logger.Warn("Aircraft section unavailable in {0}", Path.GetFileName(FileName));
+                logger.Info("Aircraft section unavailable in {0}", Path.GetFileName(FileName));
                 return;
             }
             foreach (var v in aircraftSection.OrderedEntries) {

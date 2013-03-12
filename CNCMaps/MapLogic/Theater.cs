@@ -51,7 +51,6 @@ namespace CNCMaps.MapLogic {
 
 		public void Initialize() {
 			logger.Info("Initializing theater");
-			bool ra2Engine = engine == EngineType.RedAlert2 || engine == EngineType.YurisRevenge;
 			// load palettes and additional mix files for this theater
 			switch (theaterType) {
 				case TheaterType.Temperate:

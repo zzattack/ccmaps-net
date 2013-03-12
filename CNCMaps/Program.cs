@@ -66,9 +66,9 @@ namespace CNCMaps {
 			                        	{"Y|force-yr", "Force using the Yuri's Revenge engine for rendering", v => settings.Engine = EngineType.YurisRevenge},
 			                        	{"t|force-ts", "Force using the Tiberian Sun engine for rendering", v => settings.Engine = EngineType.TiberianSun},
 			                        	{"T|force-fs", "Force using the FireStorm engine for rendering", v => settings.Engine = EngineType.FireStorm},
-			                        	{"j", "Output JPEG file", v => settings.SaveJPEG = true},
+			                        	{"j|output-jpg", "Output JPEG file", v => settings.SaveJPEG = true},
 			                        	{"q|jpeg-quality=", "Set JPEG quality level (0-100)", (int v) => settings.JPEGCompression = v},
-			                        	{"p", "Output PNG file", v => settings.SavePNG = true},
+			                        	{"p|output-png", "Output PNG file", v => settings.SavePNG = true},
 			                        	{"c|png-compression=", "Set PNG compression level (1-9)", (int v) => settings.PNGQuality = v},
 			                        	{"m|mixdir=", "Specify location of .mix files, read from registry if not specified (win only)", v => settings.MixFilesDirectory = v},
 			                        	{"s|start-pos-tiled", "Mark starting positions in a tiled manner", v => settings.StartPositionMarking = StartPositionMarking.Tiled},
@@ -86,15 +86,12 @@ namespace CNCMaps {
 			}
 			else if (!File.Exists(settings.InputFile)) {
 				logger.Error("Specified input file does not exist");
-				ShowHelp();
 			}
 			else if (!settings.SaveJPEG && !settings.SavePNG && !settings.GeneratePreviewPack) {
 				logger.Error("No output format selected. Either specify -j, -p, -k or a combination");
-				ShowHelp();
 			}
 			else if (settings.OutputDir != "" && !System.IO.Directory.Exists(settings.OutputDir)) {
-				logger.Error("Specified output directory does not exist");
-				ShowHelp();
+				logger.Error("Specified output directory does not exist.");
 			}
 			else {
 				logger.Info("Initializing virtual filesystem");
