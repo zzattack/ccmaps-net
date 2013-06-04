@@ -19,17 +19,17 @@ The program requires several .mix files from the original games. These include:
 * language.mix
 * theme.mix
 
-If the original game is installed under Microsoft Windows the file location will be found in the registry, but under Mono you have to specify their location on the command-line.
+If the original game is installed under Microsoft Windows the location of these files will be found in the registry, but under Mono you have to specify their location on the command line.
 
-The program depends on a software-only OpenGL renderer named Mesa. This approach was chosen to maximize compatibility on systems that have no Window manager, such as on remote desktop sessions or on headless servers. This dependency is fulfilled on Windows by shipping the OpenGL32.dll and osmesa.dll files. On *nix systems the package _libosmesa-7.11.2_ or newer needs to be installed.
+The program depends on a software-only OpenGL renderer named Mesa. This approach was chosen to maximize compatibility on systems that have no window manager, such as on remote desktop sessions or on headless servers. This dependency is fulfilled on Windows by shipping the OpenGL32.dll and osmesa.dll files. On *nix systems the package _libosmesa-7.11.2_ or newer needs to be installed.
 
 Usage
 -----
-Instructions on the command-line application can be found by invoking `ccmaps.exe -h`. Alternatively the CNCMaps GUI program can be used which contains descriptions of every option available and interactively updates the corresponding command-line.
+Instructions on the command line application can be found by invoking `ccmaps -h`. Alternatively the CNCMaps GUI program can be used which contains descriptions of every option available and interactively updates the corresponding command line.
 
 Development
 -----------
-Working on CNCMaps should be as easy as checking out the source. All dependencies, on Windows, are provided within the source tree. On linux you need the libmesaos package which may be available by your package manager. Alternatively you can built it from http://www.mesa3d.org/download.html.
+Working on CNCMaps should be as easy as checking out the source. All dependencies, on Windows, are provided within the source tree. On Linux you need the libmesaos package which may be available through your package manager. Alternatively you can build it from http://www.mesa3d.org/download.html.
 
 Older code repositories which contain a fully functional but not bug-free C++ version of this program can be found at 
 
