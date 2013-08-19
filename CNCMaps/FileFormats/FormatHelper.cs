@@ -1,7 +1,6 @@
 ﻿using System.IO;
 using System.Linq;
 using CNCMaps.MapLogic;
-using CNCMaps.Utility;
 using CNCMaps.VirtualFileSystem;
 
 namespace CNCMaps.FileFormats {

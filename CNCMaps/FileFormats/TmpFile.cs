@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
 using CNCMaps.MapLogic;
@@ -141,9 +140,8 @@ namespace CNCMaps.FileFormats {
 			byte* w_high = (byte*)ds.bmd.Scan0 + stride * ds.bmd.Height;
 			byte* w = (byte*)ds.bmd.Scan0 + stride * yOffset + (xOffset + halfCx - 2) * 3;
 
-			int rIdx = 0, zIdx = 0, x = 0, y = 0;
-
-			zIdx = yOffset * ds.Width + xOffset + halfCx - 2;
+			int rIdx = 0, x, y = 0;
+			int zIdx = yOffset * ds.Width + xOffset + halfCx - 2;
 			int cx = 0; // Amount of pixel to copy
 
 			for (; y < halfCy; y++) {

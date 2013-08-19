@@ -1,4 +1,5 @@
 ﻿#region Copyright & License Information
+
 /*
  * Copyright 2007-2011 The OpenRA Developers
  * (see https://raw.github.com/OpenRA/OpenRA/master/AUTHORS)
@@ -7,14 +8,13 @@
  * as published by the Free Software Foundation. For more information,
  * see COPYING.
  */
+
 #endregion
 
 using CNCMaps.VirtualFileSystem;
 
 namespace CNCMaps.Encodings {
-
 	public static class Format2 {
-
 		public static uint DecodeInto(byte[] src, byte[] dest) {
 			VirtualFile vfile = new MemoryFile(src);
 			uint i = 0;
@@ -31,7 +31,7 @@ namespace CNCMaps.Encodings {
 			return i;
 		}
 
-		public unsafe static uint DecodeInto(byte* src, uint srcLen, byte* dest) {
+		public static unsafe uint DecodeInto(byte* src, uint srcLen, byte* dest) {
 			uint idx = 0;
 			while (idx < srcLen) {
 				byte cmd = *src++;

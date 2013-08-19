@@ -1,8 +1,6 @@
-﻿using System;
-using System.Diagnostics;
-using System.Drawing;
+﻿//namespace CNCMaps.Utility {
+	// Replaced by NLog!
 
-namespace CNCMaps.Utility {
 	/*
 	public enum LogLevel : int {
 		Debug = 3,
@@ -61,4 +59,4 @@ namespace CNCMaps.Utility {
 
 	}
 	 */
-}
+//}

@@ -2,7 +2,6 @@
 // summary:		Implements a class for CRC32 calculation
 
 namespace CNCMaps.Encodings {
-
 	/// <summary>
 	/// Static class that uses a lookup table to calculates CRC32
 	/// checksums of input strings.
@@ -11,7 +10,7 @@ namespace CNCMaps.Encodings {
 		/// <summary>
 		/// The CRC32 lookup table
 		/// </summary>
-		private static uint[] lookUp = new uint[256] {
+		private static readonly uint[] LookUp = new uint[256] {
 			0x00000000, 0x77073096, 0xEE0E612C, 0x990951BA,
 			0x076DC419, 0x706AF48F, 0xE963A535, 0x9E6495A3,
 			0x0EDB8832, 0x79DCB8A4, 0xE0D5E91E, 0x97D2D988,
@@ -89,7 +88,7 @@ namespace CNCMaps.Encodings {
 		public static uint CalculateCrc(byte[] data, uint polynomal = 0xFFFFFFFF) {
 			uint crc = polynomal;
 			for (int i = 0; i < data.Length; i++) {
-				crc = (crc >> 8) ^ lookUp[(crc & 0xFF) ^ data[i]];
+				crc = (crc >> 8) ^ LookUp[(crc & 0xFF) ^ data[i]];
 			}
 			crc ^= polynomal;
 			return crc;
@@ -106,7 +105,7 @@ namespace CNCMaps.Encodings {
 		public static unsafe uint CalculateCrc(byte* data, uint len, uint polynomal = 0xFFFFFFFF) {
 			uint crc = polynomal;
 			for (int i = 0; i < len; i++)
-				crc = (crc >> 8) ^ lookUp[(crc & 0xFF) ^ *data++];
+				crc = (crc >> 8) ^ LookUp[(crc & 0xFF) ^ *data++];
 			crc ^= polynomal;
 			return crc;
 		}

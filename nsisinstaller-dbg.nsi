@@ -12,7 +12,7 @@
 Name "${APPNAMEANDVERSION}"
 InstallDir "$PROGRAMFILES\CNCMaps"
 InstallDirRegKey HKLM "Software\${APPNAME}" ""
-OutFile "CNCMaps_${CONFIG}_${VERSION}.exe"
+OutFile "CNCMaps_${CONFIG}_v${VERSION}.exe"
 
 ; Use compression
 SetCompressor LZMA

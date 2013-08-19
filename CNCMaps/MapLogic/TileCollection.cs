@@ -46,6 +46,7 @@ namespace CNCMaps.MapLogic {
             }
         }
 
+		// ReSharper disable InconsistentNaming
         int ACliffMMPieces; short ACliffPieces; short BlackTile;
         short BridgeBottomLeft1; short BridgeBottomLeft2; short BridgeBottomRight1;
         short BridgeBottomRight2; short BridgeMiddle1; short BridgeMiddle2;
@@ -68,6 +69,7 @@ namespace CNCMaps.MapLogic {
         short WaterCliffAPieces; short WaterCliffs; short WaterSet;
         short WaterfallEast; short WaterfallNorth; short WaterfallSouth;
         short WaterfallWest; short WoodBridgeSet;
+		// ReSharper restore InconsistentNaming
 
         public TileCollection(TheaterType theaterType) {
             this.theaterType = theaterType;

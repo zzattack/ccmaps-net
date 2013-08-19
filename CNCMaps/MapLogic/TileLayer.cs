@@ -3,7 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
-using CNCMaps.Utility;
 
 namespace CNCMaps.MapLogic {
 	class TileLayer : IEnumerable<MapTile> {

@@ -57,7 +57,6 @@ using System;
 using System.Diagnostics;
 
 namespace CNCMaps.Encodings {
-
 	public static class MiniLZO {
 		private const uint M2_MAX_LEN = 8;
 		private const uint M3_MAX_LEN = 33;
@@ -72,18 +71,18 @@ namespace CNCMaps.Encodings {
 		private const uint D_MASK = (1 << BITS) - 1;
 		private const uint DICT_SIZE = 65536 + 3;
 
-		public unsafe static void Compress(byte[] src, out byte[] dst) {
+		public static unsafe void Compress(byte[] src, out byte[] dst) {
 			uint tmp;
-			var dstlen = (uint)(src.Length + (src.Length / 16) + 64 + 3);
+			var dstlen = (uint) (src.Length + (src.Length/16) + 64 + 3);
 			dst = new byte[dstlen];
 			if (src.Length <= M2_MAX_LEN + 5) {
-				tmp = (uint)src.Length;
+				tmp = (uint) src.Length;
 				dstlen = 0;
 			}
 			else {
 				var workmem = new byte[DICT_SIZE];
 				fixed (byte* work = workmem, input = src, output = dst) {
-					var dict = (byte**)work;
+					var dict = (byte**) work;
 					byte* in_end = input + src.Length;
 					byte* ip_end = input + src.Length - M2_MAX_LEN - 5;
 					byte* ii = input;
@@ -91,23 +90,19 @@ namespace CNCMaps.Encodings {
 					byte* op = output;
 					bool literal = false;
 					bool match = false;
-					uint offset;
-					uint length;
-					uint index;
-					byte* pos;
 
-					for (; ; ) {
-						offset = 0;
-						index = D_INDEX1(ip);
-						pos = ip - (ip - dict[index]);
-						if (pos < input || (offset = (uint)(ip - pos)) <= 0 || offset > M4_MAX_OFFSET)
+					for (;;) {
+						uint offset = 0;
+						uint index = D_INDEX1(ip);
+						byte* pos = ip - (ip - dict[index]);
+						if (pos < input || (offset = (uint) (ip - pos)) <= 0 || offset > M4_MAX_OFFSET)
 							literal = true;
 						else if (offset <= M2_MAX_OFFSET || pos[3] == ip[3]) {
 						}
 						else {
 							index = D_INDEX2(index);
 							pos = ip - (ip - dict[index]);
-							if (pos < input || (offset = (uint)(ip - pos)) <= 0 || offset > M4_MAX_OFFSET)
+							if (pos < input || (offset = (uint) (ip - pos)) <= 0 || offset > M4_MAX_OFFSET)
 								literal = true;
 							else if (offset <= M2_MAX_OFFSET || pos[3] == ip[3]) {
 							}
@@ -116,7 +111,7 @@ namespace CNCMaps.Encodings {
 						}
 
 						if (!literal) {
-							if (*((ushort*)pos) == *((ushort*)ip) && pos[2] == ip[2])
+							if (*((ushort*) pos) == *((ushort*) ip) && pos[2] == ip[2])
 								match = true;
 						}
 
@@ -131,13 +126,13 @@ namespace CNCMaps.Encodings {
 						match = false;
 						dict[index] = ip;
 						if (ip - ii > 0) {
-							var t = (uint)(ip - ii);
+							var t = (uint) (ip - ii);
 							if (t <= 3) {
 								Debug.Assert(op - 2 > output);
-								op[-2] |= (byte)(t);
+								op[-2] |= (byte) (t);
 							}
 							else if (t <= 18)
-								*op++ = (byte)(t - 3);
+								*op++ = (byte) (t - 3);
 							else {
 								uint tt = t - 18;
 								*op++ = 0;
@@ -146,7 +141,7 @@ namespace CNCMaps.Encodings {
 									*op++ = 0;
 								}
 								Debug.Assert(tt > 0);
-								*op++ = (byte)(tt);
+								*op++ = (byte) (tt);
 							}
 							do {
 								*op++ = *ii++;
@@ -154,30 +149,31 @@ namespace CNCMaps.Encodings {
 						}
 						Debug.Assert(ii == ip);
 						ip += 3;
+						uint length;
 						if (pos[3] != *ip++ || pos[4] != *ip++ || pos[5] != *ip++
-						|| pos[6] != *ip++ || pos[7] != *ip++ || pos[8] != *ip++) {
+						    || pos[6] != *ip++ || pos[7] != *ip++ || pos[8] != *ip++) {
 							--ip;
-							length = (uint)(ip - ii);
+							length = (uint) (ip - ii);
 							Debug.Assert(length >= 3);
 							Debug.Assert(length <= M2_MAX_LEN);
 							if (offset <= M2_MAX_OFFSET) {
 								--offset;
-								*op++ = (byte)(((length - 1) << 5) | ((offset & 7) << 2));
-								*op++ = (byte)(offset >> 3);
+								*op++ = (byte) (((length - 1) << 5) | ((offset & 7) << 2));
+								*op++ = (byte) (offset >> 3);
 							}
 							else if (offset <= M3_MAX_OFFSET) {
 								--offset;
-								*op++ = (byte)(M3_MARKER | (length - 2));
-								*op++ = (byte)((offset & 63) << 2);
-								*op++ = (byte)(offset >> 6);
+								*op++ = (byte) (M3_MARKER | (length - 2));
+								*op++ = (byte) ((offset & 63) << 2);
+								*op++ = (byte) (offset >> 6);
 							}
 							else {
 								offset -= 0x4000;
 								Debug.Assert(offset > 0);
 								Debug.Assert(offset <= 0x7FFF);
-								*op++ = (byte)(M4_MARKER | ((offset & 0x4000) >> 11) | (length - 2));
-								*op++ = (byte)((offset & 63) << 2);
-								*op++ = (byte)(offset >> 6);
+								*op++ = (byte) (M4_MARKER | ((offset & 0x4000) >> 11) | (length - 2));
+								*op++ = (byte) ((offset & 63) << 2);
+								*op++ = (byte) (offset >> 6);
 							}
 						}
 						else {
@@ -186,12 +182,12 @@ namespace CNCMaps.Encodings {
 								++m;
 								++ip;
 							}
-							length = (uint)(ip - ii);
+							length = (uint) (ip - ii);
 							Debug.Assert(length > M2_MAX_LEN);
 							if (offset <= M3_MAX_OFFSET) {
 								--offset;
 								if (length <= 33)
-									*op++ = (byte)(M3_MARKER | (length - 2));
+									*op++ = (byte) (M3_MARKER | (length - 2));
 								else {
 									length -= 33;
 									*op++ = M3_MARKER | 0;
@@ -200,7 +196,7 @@ namespace CNCMaps.Encodings {
 										*op++ = 0;
 									}
 									Debug.Assert(length > 0);
-									*op++ = (byte)(length);
+									*op++ = (byte) (length);
 								}
 							}
 							else {
@@ -208,39 +204,39 @@ namespace CNCMaps.Encodings {
 								Debug.Assert(offset > 0);
 								Debug.Assert(offset <= 0x7FFF);
 								if (length <= M4_MAX_LEN)
-									*op++ = (byte)(M4_MARKER | ((offset & 0x4000) >> 11) | (length - 2));
+									*op++ = (byte) (M4_MARKER | ((offset & 0x4000) >> 11) | (length - 2));
 								else {
 									length -= M4_MAX_LEN;
-									*op++ = (byte)(M4_MARKER | ((offset & 0x4000) >> 11));
+									*op++ = (byte) (M4_MARKER | ((offset & 0x4000) >> 11));
 									while (length > 255) {
 										length -= 255;
 										*op++ = 0;
 									}
 									Debug.Assert(length > 0);
-									*op++ = (byte)(length);
+									*op++ = (byte) (length);
 								}
 							}
-							*op++ = (byte)((offset & 63) << 2);
-							*op++ = (byte)(offset >> 6);
+							*op++ = (byte) ((offset & 63) << 2);
+							*op++ = (byte) (offset >> 6);
 						}
 						ii = ip;
 						if (ip >= ip_end)
 							break;
 					}
-					dstlen = (uint)(op - output);
-					tmp = (uint)(in_end - ii);
+					dstlen = (uint) (op - output);
+					tmp = (uint) (in_end - ii);
 				}
 			}
 			if (tmp > 0) {
-				uint ii = (uint)src.Length - tmp;
+				uint ii = (uint) src.Length - tmp;
 				if (dstlen == 0 && tmp <= 238) {
-					dst[dstlen++] = (byte)(17 + tmp);
+					dst[dstlen++] = (byte) (17 + tmp);
 				}
 				else if (tmp <= 3) {
-					dst[dstlen - 2] |= (byte)(tmp);
+					dst[dstlen - 2] |= (byte) (tmp);
 				}
 				else if (tmp <= 18) {
-					dst[dstlen++] = (byte)(tmp - 3);
+					dst[dstlen++] = (byte) (tmp - 3);
 				}
 				else {
 					uint tt = tmp - 18;
@@ -250,7 +246,7 @@ namespace CNCMaps.Encodings {
 						dst[dstlen++] = 0;
 					}
 					Debug.Assert(tt > 0);
-					dst[dstlen++] = (byte)(tt);
+					dst[dstlen++] = (byte) (tt);
 				}
 				do {
 					dst[dstlen++] = src[ii++];
@@ -262,19 +258,18 @@ namespace CNCMaps.Encodings {
 
 			if (dst.Length != dstlen) {
 				var final = new byte[dstlen];
-				Buffer.BlockCopy(dst, 0, final, 0, (int)dstlen);
+				Buffer.BlockCopy(dst, 0, final, 0, (int) dstlen);
 				dst = final;
 			}
 		}
 
-		public unsafe static uint Decompress(byte[] src, byte[] dst) {
+		public static unsafe uint Decompress(byte[] src, byte[] dst) {
 			fixed (byte* input = src, output = dst) {
 				return Decompress(input, output, src.Length, dst.Length);
 			}
 		}
 
-		public unsafe static uint Decompress(byte* input, byte* output, int srcLen, int dstLen) {
-			byte* pos = null;
+		public static unsafe uint Decompress(byte* input, byte* output, int srcLen, int dstLen) {
 			byte* ip_end = input + srcLen;
 			byte* op_end = output + dstLen;
 			byte* ip = input;
@@ -287,7 +282,7 @@ namespace CNCMaps.Encodings {
 			bool eof_found = false;
 			uint t = 0;
 			if (*ip > 17) {
-				t = (uint)(*ip++ - 17);
+				t = (uint) (*ip++ - 17);
 				if (t < 4)
 					match_next = true;
 				else {
@@ -317,7 +312,7 @@ namespace CNCMaps.Encodings {
 								if ((ip_end - ip) < 1)
 									throw new OverflowException("Input Overrun");
 							}
-							t += (uint)(15 + *ip++);
+							t += (uint) (15 + *ip++);
 						}
 						Debug.Assert(t > 0);
 						if ((op_end - op) < t + 3)
@@ -347,6 +342,7 @@ namespace CNCMaps.Encodings {
 						}
 					}
 				}
+				byte* pos = null;
 				if (!match && !match_next) {
 					first_literal_run = false;
 
@@ -391,10 +387,10 @@ namespace CNCMaps.Encodings {
 								if ((ip_end - ip) < 1)
 									throw new OverflowException("Input Overrun");
 							}
-							t += (uint)(31 + *ip++);
+							t += (uint) (31 + *ip++);
 						}
 						pos = op - 1;
-						pos -= (*(ushort*)ip) >> 2;
+						pos -= (*(ushort*) ip) >> 2;
 						ip += 2;
 					}
 					else if (t >= 16) {
@@ -411,9 +407,9 @@ namespace CNCMaps.Encodings {
 								if ((ip_end - ip) < 1)
 									throw new OverflowException("Input Overrun");
 							}
-							t += (uint)(7 + *ip++);
+							t += (uint) (7 + *ip++);
 						}
-						pos -= (*(ushort*)ip) >> 2;
+						pos -= (*(ushort*) ip) >> 2;
 						ip += 2;
 						if (pos == op)
 							eof_found = true;
@@ -439,7 +435,7 @@ namespace CNCMaps.Encodings {
 						if ((op_end - op) < t + 2)
 							throw new OverflowException("Output Overrun");
 					}
-					if (!eof_found && t >= 2 * 4 - 2 && (op - pos) >= 4 && !match_done && !copy_match) {
+					if (!eof_found && t >= 2*4 - 2 && (op - pos) >= 4 && !match_done && !copy_match) {
 						for (int x = 0; x < 4; ++x, ++op, ++pos)
 							*op = *pos;
 						t -= 2;
@@ -467,7 +463,7 @@ namespace CNCMaps.Encodings {
 					if (!eof_found && !match_next) {
 						match_done = false;
 
-						t = (uint)(ip[-2] & 3);
+						t = (uint) (ip[-2] & 3);
 						if (t == 0)
 							break;
 					}
@@ -501,7 +497,7 @@ namespace CNCMaps.Encodings {
 			return t;
 		}
 
-		private unsafe static uint D_INDEX1(byte* input) {
+		private static unsafe uint D_INDEX1(byte* input) {
 			return D_MS(D_MUL(0x21, D_X3(input, 5, 5, 6)) >> 5, 0);
 		}
 
@@ -514,14 +510,14 @@ namespace CNCMaps.Encodings {
 		}
 
 		private static uint D_MUL(uint a, uint b) {
-			return a * b;
+			return a*b;
 		}
 
-		private unsafe static uint D_X2(byte* input, byte s1, byte s2) {
-			return (uint)((((input[2] << s2) ^ input[1]) << s1) ^ input[0]);
+		private static unsafe uint D_X2(byte* input, byte s1, byte s2) {
+			return (uint) ((((input[2] << s2) ^ input[1]) << s1) ^ input[0]);
 		}
 
-		private unsafe static uint D_X3(byte* input, byte s1, byte s2, byte s3) {
+		private static unsafe uint D_X3(byte* input, byte s1, byte s2, byte s3) {
 			return (D_X2(input + 1, s2, s3) << s1) ^ input[0];
 		}
 	}

@@ -142,11 +142,6 @@ namespace CNCMaps.MapLogic {
 			else throw new InvalidOperationException();
 		}
 
-		void DrawObject(RA2Object obj, Bitmap bm) {
-			if (obj is SmudgeObject) {
-			}
-		}
-
 		internal TileCollection GetTileCollection() {
 			return _tileTypes;
 		}

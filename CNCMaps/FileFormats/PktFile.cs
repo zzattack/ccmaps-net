@@ -37,7 +37,7 @@ namespace CNCMaps.FileFormats {
 		}
 
 		[Flags]
-		public enum GameMode : byte {
+		public enum GameMode : uint {
 			None = 0x00,
 			Standard = 0x01,
 			MeatGrind = 0x02,
@@ -46,7 +46,9 @@ namespace CNCMaps.FileFormats {
 			AirWar = 0x10,
 			Cooperative = 0x20,
 			Duel = 0x40,
-			Megawealth = 0x80
+			Megawealth = 0x80,
+			TeamGame = 0x100,
+			Siege = 0x200,
 		}
 
 		public class PktMapEntry {

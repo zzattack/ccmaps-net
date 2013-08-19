@@ -1,18 +1,18 @@
 ﻿namespace CNCMaps.Encodings {
 	// based on code from XCC mixer
 
-	class Format3 {
-		public unsafe static uint DecodeInto(byte[] src, byte[] dst, int cx, int cy) {
-			fixed (byte* pSrc =  src, pDst = dst) {
+	internal class Format3 {
+		public static unsafe uint DecodeInto(byte[] src, byte[] dst, int cx, int cy) {
+			fixed (byte* pSrc = src, pDst = dst) {
 				return DecodeInto(pSrc, src.Length, pDst, cx, cy);
 			}
 		}
 
-		public unsafe static uint DecodeInto(byte* src, int srcLen, byte* dst, int cx, int cy) {
+		public static unsafe uint DecodeInto(byte* src, int srcLen, byte* dst, int cx, int cy) {
 			byte* r = src;
 			byte* w = dst;
 			for (int y = 0; y < cy; y++) {
-				var count = (ushort)(*(ushort*)r - 2);
+				var count = (ushort) (*(ushort*) r - 2);
 				r += 2;
 				int x = 0;
 				while (count-- > 0) {
@@ -25,16 +25,14 @@
 						count--;
 						v = *r++;
 						if (x + v > cx)
-							v = (byte)(cx - x);
+							v = (byte) (cx - x);
 						x += v;
 						while (v-- != 0)
 							*w++ = 0;
 					}
 				}
 			}
-			return (uint)(w - dst);
+			return (uint) (w - dst);
 		}
-			
-
 	}
 }

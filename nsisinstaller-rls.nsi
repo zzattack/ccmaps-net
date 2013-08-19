@@ -1,3 +1,3 @@
-!define CONFIG "Release"
+!define CONFIG "release"
 
 !include "nsisinstaller-dbg.nsi"

@@ -352,9 +352,13 @@ namespace CNCMaps.MapLogic {
 			return -1;
 		}
 
-
 		internal bool HasObject(RA2Object o) {
 			return GetObjectIndex(o) != -1;
+		}
+
+		internal Drawable GetObject(RA2Object o) {
+			int idx = GetObjectIndex(o);
+			return idx == -1 ? null : _drawables[idx];
 		}
 
 		internal Size GetFoundation(NamedObject v) {

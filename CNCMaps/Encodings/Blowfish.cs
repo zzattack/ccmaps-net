@@ -1,4 +1,5 @@
 #region Copyright & License Information
+
 /*
  * Copyright 2007-2011 The OpenRA Developers
  * (see https://raw.github.com/OpenRA/OpenRA/master/AUTHORS)
@@ -7,48 +8,51 @@
  * as published by the Free Software Foundation. For more information,
  * see COPYING.
  */
+
 #endregion
 
 namespace CNCMaps.Encodings {
-
-	class Blowfish {
-
+	internal class Blowfish {
 		public Blowfish(byte[] key) {
 			for (int i = 0, j = 0; i < 18; ++i) {
-				uint a = key[j++ % key.Length];
-				uint b = key[j++ % key.Length];
-				uint c = key[j++ % key.Length];
-				uint d = key[j++ % key.Length];
+				uint a = key[j++%key.Length];
+				uint b = key[j++%key.Length];
+				uint c = key[j++%key.Length];
+				uint d = key[j++%key.Length];
 
 				m_p[i] ^= a << 24 | b << 16 | c << 8 | d;
 			}
 
 			uint l = 0, r = 0;
 
-			for (int i = 0; i < 18; ) {
+			for (int i = 0; i < 18;) {
 				Encrypt(ref l, ref r);
 				m_p[i++] = l;
 				m_p[i++] = r;
 			}
 
 			for (int i = 0; i < 4; ++i)
-				for (int j = 0; j < 256; ) {
+				for (int j = 0; j < 256;) {
 					Encrypt(ref l, ref r);
 					m_s[i, j++] = l;
 					m_s[i, j++] = r;
 				}
 		}
 
-		public uint[] Encrypt(uint[] data) { return RunCipher(data, Encrypt); }
+		public uint[] Encrypt(uint[] data) {
+			return RunCipher(data, Encrypt);
+		}
 
-		public uint[] Decrypt(uint[] data) { return RunCipher(data, Decrypt); }
+		public uint[] Decrypt(uint[] data) {
+			return RunCipher(data, Decrypt);
+		}
 
-		delegate void CipherFunc(ref uint a, ref uint b);
+		private delegate void CipherFunc(ref uint a, ref uint b);
 
-		uint[] RunCipher(uint[] data, CipherFunc f) {
+		private uint[] RunCipher(uint[] data, CipherFunc f) {
 			var result = new uint[data.Length];
 
-			int size = data.Length / 2;
+			int size = data.Length/2;
 			int i = 0;
 			while (size-- > 0) {
 				uint a = SwapBytes(data[i]);
@@ -63,7 +67,7 @@ namespace CNCMaps.Encodings {
 			return result;
 		}
 
-		void Encrypt(ref uint a, ref uint b) {
+		private void Encrypt(ref uint a, ref uint b) {
 			uint _a = a, _b = b;
 			_a ^= m_p[0];
 
@@ -80,7 +84,7 @@ namespace CNCMaps.Encodings {
 			b = _a;
 		}
 
-		void Decrypt(ref uint a, ref uint b) {
+		private void Decrypt(ref uint a, ref uint b) {
 			uint _a = a, _b = b;
 			_a ^= m_p[17];
 
@@ -97,25 +101,25 @@ namespace CNCMaps.Encodings {
 			b = _a;
 		}
 
-		uint S(uint x, int i) {
+		private uint S(uint x, int i) {
 			return m_s[i, (x >> ((3 - i) << 3)) & 0xff];
 		}
 
-		uint bf_f(uint x) {
+		private uint bf_f(uint x) {
 			return ((S(x, 0) + S(x, 1)) ^ S(x, 2)) + S(x, 3);
 		}
 
-		void Round(ref uint a, uint b, int n) {
+		private void Round(ref uint a, uint b, int n) {
 			a ^= bf_f(b) ^ m_p[n];
 		}
 
-		uint SwapBytes(uint i) {
+		private uint SwapBytes(uint i) {
 			i = (i << 16) | (i >> 16);
 			i = ((i << 8) & 0xff00ff00) | ((i >> 8) & 0x00ff00ff);
 			return i;
 		}
 
-		uint[] m_p = new uint[] {
+		private readonly uint[] m_p = new uint[] {
 			0x243f6a88, 0x85a308d3, 0x13198a2e, 0x03707344,
 			0xa4093822, 0x299f31d0, 0x082efa98, 0xec4e6c89,
 			0x452821e6, 0x38d01377, 0xbe5466cf, 0x34e90c6c,
@@ -123,7 +127,7 @@ namespace CNCMaps.Encodings {
 			0x9216d5d9, 0x8979fb1b
 		};
 
-		uint[,] m_s = new uint[,] {
+		private readonly uint[,] m_s = new uint[,] {
 			{
 				0xd1310ba6, 0x98dfb5ac, 0x2ffd72db, 0xd01adfb7,
 				0xb8e1afed, 0x6a267e96, 0xba7c9045, 0xf12c7f99,
@@ -189,8 +193,7 @@ namespace CNCMaps.Encodings {
 				0x08ba6fb5, 0x571be91f, 0xf296ec6b, 0x2a0dd915,
 				0xb6636521, 0xe7b9f9b6, 0xff34052e, 0xc5855664,
 				0x53b02d5d, 0xa99f8fa1, 0x08ba4799, 0x6e85076a
-			},
-			{
+			}, {
 				0x4b7a70e9, 0xb5b32944, 0xdb75092e, 0xc4192623,
 				0xad6ea6b0, 0x49a7df7d, 0x9cee60b8, 0x8fedb266,
 				0xecaa8c71, 0x699a17ff, 0x5664526c, 0xc2b19ee1,
@@ -255,8 +258,7 @@ namespace CNCMaps.Encodings {
 				0xdb73dbd3, 0x105588cd, 0x675fda79, 0xe3674340,
 				0xc5c43465, 0x713e38d8, 0x3d28f89e, 0xf16dff20,
 				0x153e21e7, 0x8fb03d4a, 0xe6e39f2b, 0xdb83adf7
-			},
-			{
+			}, {
 				0xe93d5a68, 0x948140f7, 0xf64c261c, 0x94692934,
 				0x411520f7, 0x7602d4f7, 0xbcf46b2e, 0xd4a20068,
 				0xd4082471, 0x3320f46a, 0x43b7d4b7, 0x500061af,
@@ -321,8 +323,7 @@ namespace CNCMaps.Encodings {
 				0x1e50ef5e, 0xb161e6f8, 0xa28514d9, 0x6c51133c,
 				0x6fd5c7e7, 0x56e14ec4, 0x362abfce, 0xddc6c837,
 				0xd79a3234, 0x92638212, 0x670efa8e, 0x406000e0
-			},
-			{
+			}, {
 				0x3a39ce37, 0xd3faf5cf, 0xabc27737, 0x5ac52d1b,
 				0x5cb0679e, 0x4fa33742, 0xd3822740, 0x99bc9bbe,
 				0xd5118e9d, 0xbf0f7315, 0xd62d1c7e, 0xc700c47b,

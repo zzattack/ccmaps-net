@@ -1,5 +1,4 @@
 ﻿using CNCMaps.FileFormats;
-using CNCMaps.Utility;
 
 namespace CNCMaps.MapLogic {
 	public class Lighting {

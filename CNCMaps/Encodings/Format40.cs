@@ -1,4 +1,5 @@
 #region Copyright & License Information
+
 /*
  * Copyright 2007-2011 The OpenRA Developers
  * (see https://raw.github.com/OpenRA/OpenRA/master/AUTHORS)
@@ -7,14 +8,13 @@
  * as published by the Free Software Foundation. For more information,
  * see COPYING.
  */
+
 #endregion
 
 using CNCMaps.VirtualFileSystem;
 
 namespace CNCMaps.Encodings {
-
 	public static class Format40 {
-
 		public static int DecodeInto(byte[] src, byte[] dest) {
 			var ctx = new MemoryFile(src);
 			int destIndex = 0;
@@ -27,7 +27,8 @@ namespace CNCMaps.Encodings {
 						// case 6
 						count = ctx.ReadByte();
 						byte value = ctx.ReadByte();
-						for (int end = destIndex + count; destIndex < end; destIndex++)
+						int end = destIndex + count;
+						for (; destIndex < end; destIndex++)
 							dest[destIndex] ^= value;
 					}
 					else {
@@ -67,7 +68,7 @@ namespace CNCMaps.Encodings {
 			}
 		}
 
-		public unsafe static int DecodeInto(byte* src, int srcLen, byte[] dest) {
+		public static unsafe int DecodeInto(byte* src, int srcLen, byte[] dest) {
 			int destIndex = 0;
 
 			while (true) {

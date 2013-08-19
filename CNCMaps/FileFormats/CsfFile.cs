@@ -10,10 +10,9 @@ using CNCMaps.VirtualFileSystem;
 namespace CNCMaps.FileFormats {
 	// based on code from the XCCU project
 	class CsfFile : VirtualFile {
+		readonly Dictionary<string, CsfEntry> LabelMap = new Dictionary<string, CsfEntry>();
 
-		Dictionary<string, CsfEntry> LabelMap = new Dictionary<string, CsfEntry>();
-
-		static NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
+		static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
 
 		public CsfFile(Stream baseStream, string filename, bool isBuffered = true) : this(baseStream, filename, 0, baseStream.Length, isBuffered) { }
 
@@ -24,26 +23,24 @@ namespace CNCMaps.FileFormats {
 		
 		[StructLayout(LayoutKind.Sequential, Size = 24, Pack = 1)]
 		struct CsfHeader {
-			public int id;
-			public int flags1;
-			public int numlabels;
-			public int numextravalues;
-			public int zero;
-			public int language;
+			public readonly int id;
+			public readonly int Flags1;
+			public readonly int NumLabels;
+			public readonly int NumExtraValues;
+			public readonly int Zero;
+			public readonly int Language;
 		}
 
 		class CsfEntry {
-			public string Value { get; set; }
-
-			public string ExtraValue { get; set; }
-
+			public string Value { get; private set; }
+			public string ExtraValue { get; private set; }
 			public CsfEntry(string value, string extraValue) {
 				Value = value;
 				ExtraValue = extraValue;
 			}
 		}
 
-		enum LANGUAGE : byte {
+		enum CsvLanguage : byte {
 			US, ZERO1, GERMAN, FRENCH, ZERO2, ZERO3,
 			ZERO4, ZERO5, KOREAN, CHINESE
 		}
@@ -54,9 +51,9 @@ namespace CNCMaps.FileFormats {
 		static int csf_string_w_id = BitConverter.ToInt32(Encoding.ASCII.GetBytes("STRW").Reverse().ToArray(), 0);
 
 		int Parse() {
-			logger.Info("Parsing {0}", FileName);
+			Logger.Info("Parsing {0}", FileName);
 			var header = EzMarshal.ByteArrayToStructure<CsfHeader>(Read(Marshal.SizeOf(typeof(CsfHeader))));
-			for (int i = 0; i < header.numlabels; i++) {
+			for (int i = 0; i < header.NumLabels; i++) {
 				ReadInt32();
 				int flags = ReadInt32();
 				string name = ReadString();
@@ -71,7 +68,7 @@ namespace CNCMaps.FileFormats {
 				else
 					SetValue(name, "", "");
 			}
-			logger.Debug("Loaded {0} csf entries", LabelMap.Count());
+			Logger.Debug("Loaded {0} csf entries", LabelMap.Count());
 			return 0;
 		}
 

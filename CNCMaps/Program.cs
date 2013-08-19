@@ -1,8 +1,6 @@
 ﻿using System.Drawing;
 using System.Drawing.Drawing2D;
-using System.Drawing.Imaging;
 using System.IO;
-using CNCMaps.FileFormats;
 using CNCMaps.MapLogic;
 using CNCMaps.Utility;
 using CNCMaps.VirtualFileSystem;
@@ -103,10 +101,21 @@ namespace CNCMaps {
 					Path.GetFileName(settings.InputFile));
 				map.FileName = settings.InputFile;
 
+				/*
+				 * crap thingie to move maps in a directory for themselves
+				string mapName = map.DetermineMapName(EngineType.YurisRevenge);
+				string dir = Path.Combine(Path.GetDirectoryName(map.FileName), mapName);
+				if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
+				map.Close();
+				map.Dispose();
+ 				File.Move(map.FileName, Path.Combine(dir, Path.GetFileName(map.FileName)));
+				return;
+				*/
 				if (!map.LoadMap(settings.Engine)) {
 					logger.Error("Could not successfully load all required components for this map. Aborting.");
 					return;
 				}
+
 				if (settings.StartPositionMarking == StartPositionMarking.Tiled)
 					map.DrawTiledStartPositions();
 

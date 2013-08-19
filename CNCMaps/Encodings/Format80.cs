@@ -1,4 +1,5 @@
 #region Copyright & License Information
+
 /*
  * Copyright 2007-2011 The OpenRA Developers
  * (see https://raw.github.com/OpenRA/OpenRA/master/AUTHORS)
@@ -7,6 +8,7 @@
  * as published by the Free Software Foundation. For more information,
  * see COPYING.
  */
+
 #endregion
 
 using System;
@@ -14,10 +16,8 @@ using System.IO;
 using CNCMaps.VirtualFileSystem;
 
 namespace CNCMaps.Encodings {
-
 	public static class Format80 {
-
-		static void ReplicatePrevious(byte[] dest, int destIndex, int srcIndex, int count) {
+		private static void ReplicatePrevious(byte[] dest, int destIndex, int srcIndex, int count) {
 			if (srcIndex > destIndex)
 				throw new NotImplementedException(string.Format("srcIndex > destIndex  {0}  {1}", srcIndex, destIndex));
 
@@ -89,18 +89,15 @@ namespace CNCMaps.Encodings {
 			}
 		}
 
-		public unsafe static uint DecodeInto(byte* src, byte* dest) {
+		public static unsafe uint DecodeInto(byte* src, byte* dest) {
 			byte* pdest = dest;
-			byte* psrc = src;
-
-			byte* copyp;
 			byte* readp = src;
 			byte* writep = dest;
-			byte code;
-			int count;
 
 			while (true) {
-				code = *readp++;
+				byte code = *readp++;
+				byte* copyp;
+				int count;
 				if ((~code & 0x80) != 0) {
 					//bit 7 = 0
 					//command 0 (0cccpppp p): copy
@@ -126,7 +123,7 @@ namespace CNCMaps.Encodings {
 						if (count < 0x3e) {
 							//command 2 (11cccccc p p): copy
 							count += 3;
-							copyp = &pdest[*(ushort*)readp];
+							copyp = &pdest[*(ushort*) readp];
 
 							readp += 2;
 							while (count-- != 0)
@@ -134,7 +131,7 @@ namespace CNCMaps.Encodings {
 						}
 						else if (count == 0x3e) {
 							//command 3 (11111110 c c v): fill
-							count = *(ushort*)readp;
+							count = *(ushort*) readp;
 							readp += 2;
 							code = *readp++;
 							while (count-- != 0)
@@ -142,9 +139,9 @@ namespace CNCMaps.Encodings {
 						}
 						else {
 							//command 4 (copy 11111111 c c p p): copy
-							count = *(ushort*)readp;
+							count = *(ushort*) readp;
 							readp += 2;
-							copyp = &pdest[*(ushort*)readp];
+							copyp = &pdest[*(ushort*) readp];
 							readp += 2;
 							while (count-- != 0)
 								*writep++ = *copyp++;
@@ -153,7 +150,7 @@ namespace CNCMaps.Encodings {
 				}
 			}
 
-			return (uint)(dest - pdest);
+			return (uint) (dest - pdest);
 		}
 
 		public static byte[] Encode(byte[] src) {
@@ -164,13 +161,12 @@ namespace CNCMaps.Encodings {
 
 			do {
 				var len = Math.Min(ctx.Position, 0x3F);
-				ms.WriteByte((byte)(0x80 | len));
+				ms.WriteByte((byte) (0x80 | len));
 				while (len-- > 0)
 					ms.WriteByte(ctx.ReadByte());
-			}
-			while (!ctx.Eof);
+			} while (!ctx.Eof);
 
-			ms.WriteByte(0x80);	// terminator -- 0-length run.
+			ms.WriteByte(0x80); // terminator -- 0-length run.
 
 			return ms.ToArray();
 		}

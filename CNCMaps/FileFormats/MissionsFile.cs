@@ -24,7 +24,7 @@ namespace CNCMaps.FileFormats {
 
 		public MissionEntry GetMissionEntry(string missionName) {
 			// skip extension
-			MissionEntry ret = null;
+			MissionEntry ret;
 			MissionEntries.TryGetValue(missionName.ToLower(), out ret);
 			return ret;
 		}

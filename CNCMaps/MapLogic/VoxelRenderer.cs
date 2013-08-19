@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
 using CNCMaps.FileFormats;
 using CNCMaps.Utility;
 using OpenTK;

@@ -3,7 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.Globalization;
 using System.IO;
 using System.Runtime.Serialization;
 using System.Security.Permissions;
@@ -629,10 +628,6 @@ namespace CNCMaps.Utility {
 		}
 
 		public abstract class ArgumentSource {
-
-			protected ArgumentSource() {
-			}
-
 			public abstract string[] GetNames();
 			public abstract string Description { get; }
 			public abstract bool GetArguments(string value, out IEnumerable<string> replacement);

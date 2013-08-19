@@ -115,12 +115,9 @@ namespace CNCMaps.VirtualFileSystem {
 		public void ScanMixDir(EngineType engine, string installDir = "") {
 			bool useModFiles = engine == EngineType.FireStorm || engine == EngineType.YurisRevenge || engine == EngineType.AutoDetect;
 			bool useRA2Engine = engine == EngineType.RedAlert2 || engine == EngineType.YurisRevenge || engine == EngineType.AutoDetect;
-			if (installDir == "") {
-				if (engine == EngineType.TiberianSun)
-					installDir = TSInstallDir;
-				else
-					installDir = RA2InstallDir;
-			}
+			if (installDir == "")
+				installDir = engine == EngineType.TiberianSun ? TSInstallDir : RA2InstallDir;
+
 			ScanMixDir(installDir, useRA2Engine, useModFiles);
 		}
 

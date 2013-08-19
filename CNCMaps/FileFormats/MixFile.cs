@@ -157,7 +157,7 @@ namespace CNCMaps.FileFormats {
 					int i = 3 - (l & 3);
 					while (i-- != 0) filename += filename[a << 2];
 				}
-				return CNCMaps.Encodings.CRC32.CalculateCrc(Encoding.ASCII.GetBytes(filename));
+				return CRC32.CalculateCrc(Encoding.ASCII.GetBytes(filename));
 			}
 
 			static Dictionary<uint, string> Names = new Dictionary<uint, string>();

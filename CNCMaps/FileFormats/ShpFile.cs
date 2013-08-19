@@ -224,8 +224,8 @@ namespace CNCMaps.FileFormats {
 					if (image.imageData[rIdx] != 0 && w_low <= w && w < w_high) {
 						float mult = image.imageData[rIdx] / 128.0f;
 						*(w + 0) = limit(mult, *(w + 0));
-						*(w + 1) = limit(mult, *(w + 0));
-						*(w + 2) = limit(mult, *(w + 0));
+						*(w + 1) = limit(mult, *(w + 1));
+						*(w + 2) = limit(mult, *(w + 2));
 					}
 					// Up to the next pixel
 					rIdx++;
@@ -237,7 +237,7 @@ namespace CNCMaps.FileFormats {
 		}
 
 		private byte limit(float mult, byte p) {
-			return (byte)Math.Max(0f, Math.Min(255f, mult));
+			return (byte)Math.Max(0f, Math.Min(255f, mult * p));
 		}
 	}
 }
