@@ -15,10 +15,10 @@ namespace CNCMaps.MapLogic {
 
 		bool sorted;
 		void Sort() {
-			fires.Sort();
-			shps.Sort();
-			damagedShps.Sort();
-			voxels.Sort();
+			_fires.Sort();
+			_shps.Sort();
+			_damagedShps.Sort();
+			_voxels.Sort();
 			sorted = true;
 		}
 
@@ -28,46 +28,46 @@ namespace CNCMaps.MapLogic {
 			if (!sorted) Sort();
 
 			if (obj is DamageableObject && (obj as DamageableObject).Health < 128) {
-				foreach (var v in damagedShps)
-					DrawFile(obj, ds, v.file, v.props);
+				foreach (var v in _damagedShps)
+					DrawFile(obj, ds, v.File, v.Props);
 
-				foreach (var v in fires)
-					DrawFile(obj, ds, v.file, v.props, palettes.animPalette);
+				foreach (var v in _fires)
+					DrawFile(obj, ds, v.File, v.Props, Palettes.animPalette);
 			}
 			else {
-				foreach (var v in shps)
-					DrawFile(obj, ds, v.file, v.props);
+				foreach (var v in _shps)
+					DrawFile(obj, ds, v.File, v.Props);
 			}
 
-			if (alphaImage != null) {
+			if (_alphaImage != null) {
 				int dx = obj.Tile.Dx * TileWidth / 2;
 				int dy = (obj.Tile.Dy - obj.Tile.Z) * TileHeight / 2;
-				dx += globalOffset.X;
-				dy += globalOffset.Y;
-				alphaImage.DrawAlpha(0, ds, dx, dy);
+				dx += _globalOffset.X;
+				dy += _globalOffset.Y;
+				_alphaImage.DrawAlpha(0, ds, dx, dy);
 			}
 
-			for (int i = 0; i < voxels.Count; i++) {
+			for (int i = 0; i < _voxels.Count; i++) {
 				Palette p = null;
 
 				if (obj is RemappableObject) p = (obj as RemappableObject).Palette;
-				if (obj is UnitObject) direction = (obj as UnitObject).Direction;
-				else if (obj is StructureObject) direction = (obj as StructureObject).Direction;
-				DrawingSurface vxl_ds = voxelrenderer.Render(voxels[i].file, hvas[i], -(double)direction / 256.0 * 360 + 45, p ?? Palette);
+				if (obj is UnitObject) Direction = (obj as UnitObject).Direction;
+				else if (obj is StructureObject) Direction = (obj as StructureObject).Direction;
+				DrawingSurface vxl_ds = Voxelrenderer.Render(_voxels[i].File, _hvas[i], -(double)Direction / 256.0 * 360 + 45, p ?? Palette);
 				if (vxl_ds == null)
 					continue;
 
 				// rows inverted!
 				int dx = obj.Tile.Dx * TileWidth / 2;
 				int dy = (obj.Tile.Dy - obj.Tile.Z) * TileHeight / 2;
-				dx += globalOffset.X;
-				dy += globalOffset.Y;
-				var props = voxels[i].props;
+				dx += _globalOffset.X;
+				dy += _globalOffset.Y;
+				var props = _voxels[i].Props;
 				dx += props.offset.X;
 				dy += props.offset.Y;
 				dx -= vxl_ds.bmd.Width / 2;
 				dy -= vxl_ds.bmd.Height / 2;
-				
+
 				unsafe {
 					var w_low = (byte*)ds.bmd.Scan0;
 					byte* w_high = w_low + ds.bmd.Stride * ds.bmd.Height;
@@ -93,74 +93,67 @@ namespace CNCMaps.MapLogic {
 
 		}
 
-		static VoxelRenderer voxelrenderer = new VoxelRenderer();
+		static readonly VoxelRenderer Voxelrenderer = new VoxelRenderer();
 
 		private void DrawFile(RA2Object obj, DrawingSurface ds, ShpFile file, DrawProperties props, Palette p = null) {
 			if (file == null || obj == null || obj.Tile == null) return;
 
-			Point offset = globalOffset;
+			Point offset = _globalOffset;
 			offset.Offset(props.offset);
 
-			if (UseTilePalette) p = obj.Tile.Palette;
-			else if (p == null && obj is RemappableObject)
+			if (p == null && obj is RemappableObject)
 				p = (obj as RemappableObject).Palette;
+			else if (UseTilePalette) 
+				p = obj.Tile.Palette;
 
-			if (objectOverrides && obj is OverlayObject) {
+			if (Overrides && obj is OverlayObject) {
 				var o = obj as OverlayObject;
-                if (TileWidth == 60) {
-                    // bridge
-                    if (o.IsHighBridge())
-                        offset.Y += o.OverlayValue > 8 ? -16 : -1;
-                }
-                else { // tibsun
-                    if (o.IsTSRails()) {
-                        offset.Y += 11;
-                    }
-                    else {
-                        offset.X += o.OverlayValue > 8 ? -7 : -6;
-                        offset.Y += o.OverlayValue > 8 ? -13 : -1;
-                    }
-                }
+				if (TileWidth == 60) {
+					// bridge
+					if (o.IsHighBridge())
+						offset.Y += o.OverlayValue > 8 ? -16 : -1;
+				}
+				else { // tibsun
+					if (o.IsTSRails()) {
+						offset.Y += 11;
+					}
+					else {
+						offset.X += o.OverlayValue > 8 ? -7 : -6;
+						offset.Y += o.OverlayValue > 8 ? -13 : -1;
+					}
+				}
 			}
-			file.Draw(frame, ds, offset, obj.Tile, p ?? Palette);
+			file.Draw(Frame, ds, offset, obj.Tile, p ?? Palette, Overrides);
 			if (props.hasShadow)
-				file.DrawShadow(frame, ds, offset, obj.Tile);
+				file.DrawShadow(Frame, ds, offset, obj.Tile);
 		}
 
-		public static PaletteCollection palettes { get; set; }
+		public static PaletteCollection Palettes { get; set; }
 		public Palette Palette { get; set; }
-		ShpFile alphaImage;
-		Point globalOffset = new Point(0, 0);
+		ShpFile _alphaImage;
+		Point _globalOffset = new Point(0, 0);
 
-		int heightOffset;
-		bool objectOverrides;
-		public Size Foundation { get; set; }
-		int direction; // for voxels
-		int frame; // for shps
 		public string Name { get; private set; }
+		public bool Overrides { get; set; }
+		public Size Foundation { get; set; }
+		public int Direction { get; set; } // for voxels
+		public int HeightOffset { get; set; }
+		public int Frame { get; set; } // for shps
 
-		List<DrawableFile<VxlFile>> voxels = new List<DrawableFile<VxlFile>>();
-		List<HvaFile> hvas = new List<HvaFile>();
+		readonly List<DrawableFile<VxlFile>> _voxels = new List<DrawableFile<VxlFile>>();
+		readonly List<HvaFile> _hvas = new List<HvaFile>();
 
-		List<DrawableFile<ShpFile>> shps = new List<DrawableFile<ShpFile>>();
-		List<DrawableFile<ShpFile>> fires = new List<DrawableFile<ShpFile>>();
-		List<DrawableFile<ShpFile>> damagedShps = new List<DrawableFile<ShpFile>>();
+		readonly List<DrawableFile<ShpFile>> _shps = new List<DrawableFile<ShpFile>>();
+		readonly List<DrawableFile<ShpFile>> _fires = new List<DrawableFile<ShpFile>>();
+		readonly List<DrawableFile<ShpFile>> _damagedShps = new List<DrawableFile<ShpFile>>();
 
 		internal void SetAlphaImage(ShpFile shpFile) {
-			alphaImage = shpFile;
+			_alphaImage = shpFile;
 		}
 
 		internal void SetOffset(int xOffset, int yOffset) {
-			globalOffset.X = xOffset;
-			globalOffset.Y = yOffset;
-		}
-
-		internal void SetHeightOffset(int heightOffset) {
-			this.heightOffset = heightOffset;
-		}
-
-		internal void SetOverrides(bool overrides) {
-			objectOverrides = overrides;
+			_globalOffset.X = xOffset;
+			_globalOffset.Y = yOffset;
 		}
 
 		internal void SetFoundation(int w, int h) {
@@ -168,29 +161,29 @@ namespace CNCMaps.MapLogic {
 		}
 
 		internal void AddOffset(int extraXOffset, int extraYOffset) {
-			globalOffset.X += extraXOffset;
-			globalOffset.Y += extraYOffset;
+			_globalOffset.X += extraXOffset;
+			_globalOffset.Y += extraYOffset;
 		}
 
 		internal void AddVoxel(VxlFile vxlFile, HvaFile hvaFile, int xOffset = 0, int yOffset = 0, bool hasShadow = false, int ySort = 0) {
-			voxels.Add(new DrawableFile<VxlFile>(vxlFile, new DrawProperties(new Point(xOffset, yOffset), hasShadow, ySort), voxels.Count));
-			hvas.Add(hvaFile);
+			_voxels.Add(new DrawableFile<VxlFile>(vxlFile, new DrawProperties(new Point(xOffset, yOffset), hasShadow, ySort), _voxels.Count));
+			_hvas.Add(hvaFile);
 		}
 
 		internal void AddShp(ShpFile shpFile, int xOffset = 0, int yOffset = 0, bool hasShadow = false, int ySort = 0) {
-			shps.Add(new DrawableFile<ShpFile>(shpFile, new DrawProperties(new Point(xOffset, yOffset), hasShadow, ySort), shps.Count));
+			_shps.Add(new DrawableFile<ShpFile>(shpFile, new DrawProperties(new Point(xOffset, yOffset), hasShadow, ySort), _shps.Count));
 		}
 
 		internal void AddDamagedShp(ShpFile shpFile, int xOffset = 0, int yOffset = 0, bool hasShadow = false, int ySort = 0) {
-			damagedShps.Add(new DrawableFile<ShpFile>(shpFile, new DrawProperties(new Point(xOffset, yOffset), hasShadow, ySort), damagedShps.Count));
+			_damagedShps.Add(new DrawableFile<ShpFile>(shpFile, new DrawProperties(new Point(xOffset, yOffset), hasShadow, ySort), _damagedShps.Count));
 		}
 
 		internal void AddFire(ShpFile shpFile, int xOffset, int yOffset) {
-			fires.Add(new DrawableFile<ShpFile>(shpFile, new DrawProperties(new Point(xOffset, yOffset), false, 0), fires.Count));
+			_fires.Add(new DrawableFile<ShpFile>(shpFile, new DrawProperties(new Point(xOffset, yOffset), false, 0), _fires.Count));
 		}
 
 		internal void SetFrame(int frameNum) {
-			frame = frameNum;
+			Frame = frameNum;
 		}
 
 		public static ushort TileWidth { get; set; }
@@ -200,19 +193,19 @@ namespace CNCMaps.MapLogic {
 	}
 
 	class DrawableFile<T> : System.IComparable where T : VirtualFile {
-		public DrawProperties props;
-		public T file;
-		int index;
+		public DrawProperties Props;
+		public T File;
+		readonly int index;
 		public DrawableFile(T file, DrawProperties drawProperties, int index) {
-			this.file = file;
-			props = drawProperties;
+			this.File = file;
+			Props = drawProperties;
 			this.index = index;
 		}
 
 		public int CompareTo(object obj) {
 			var other = obj as DrawableFile<T>;
-			if (props.ySort != other.props.ySort)
-				return props.ySort - other.props.ySort;
+			if (Props.ySort != other.Props.ySort)
+				return Props.ySort - other.Props.ySort;
 			else
 				return index - other.index;
 		}

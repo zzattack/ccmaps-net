@@ -8,8 +8,8 @@ namespace CNCMaps.MapLogic {
 		public Color[] colors = new Color[256];
 		PalFile originalPalette;
 		byte[] origColors;
+		public bool IsShared { get; set; }
 
-		bool hasLighting;
 		double redMult = 1.0,
 			greenMult = 1.0,
 			blueMult = 1.0,
@@ -24,16 +24,16 @@ namespace CNCMaps.MapLogic {
 			greenMult = l.Green;
 			blueMult = l.Blue;
 			ambientMult = (l.Ambient - l.Ground) + l.Level * level;
-			hasLighting = true;
 		}
 
 		internal Palette Clone() {
 			var p = (Palette)MemberwiseClone();
 			p.colors = new Color[256];
+			p.IsShared = false;
 			return p;
 		}
 
-		internal void ApplyLamp(LightSource lamp, double lsEffect) {
+		public void ApplyLamp(LightSource lamp, double lsEffect) {
 			ambientMult += lsEffect * lamp.LightIntensity;
 			redMult += lsEffect * lamp.LightRedTint;
 			greenMult += lsEffect * lamp.LightGreenTint;
@@ -55,10 +55,11 @@ namespace CNCMaps.MapLogic {
 				LoadOriginalColors();
 			if (!originalColorsLoaded) return;
 
-			ambientMult = Math.Min(Math.Max(ambientMult, -1.3), 1.3);
-			redMult = Math.Min(Math.Max(redMult, -1.3), 1.3);
-			greenMult = Math.Min(Math.Max(greenMult, -1.3), 1.3);
-			blueMult = Math.Min(Math.Max(blueMult, -1.3), 1.3);
+			const double clipMult = 1.6;
+			ambientMult = Math.Min(Math.Max(ambientMult, -clipMult), clipMult);
+			redMult = Math.Min(Math.Max(redMult, -clipMult), clipMult);
+			greenMult = Math.Min(Math.Max(greenMult, -clipMult), clipMult);
+			blueMult = Math.Min(Math.Max(blueMult, -clipMult), clipMult);
 
 			for (int i = 0; i < 256; i++) {
 				var r = (byte)Math.Min(255, origColors[i * 3 + 0] * (ambientMult * redMult) / 63.0 * 255.0);

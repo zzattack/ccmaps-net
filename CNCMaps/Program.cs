@@ -24,7 +24,7 @@ namespace CNCMaps {
 #endif
 			if (LogManager.Configuration == null) {
 				// init default config
-				ColoredConsoleTarget target = new ColoredConsoleTarget();
+				var target = new ColoredConsoleTarget();
 				target.Name = "console";
 				target.Layout = "${processtime:format=ss.fff} [${level}] ${message}";
 				target.RowHighlightingRules.Add(new ConsoleRowHighlightingRule() {
@@ -98,7 +98,9 @@ namespace CNCMaps {
 				var vfs = VFS.GetInstance();
 				vfs.ScanMixDir(settings.Engine, settings.MixFilesDirectory);
 
-				var map = new MapFile(File.Open(settings.InputFile, FileMode.Open, FileAccess.Read, FileShare.ReadWrite), Path.GetFileName(settings.InputFile));
+				var map = new MapFile(
+					File.Open(settings.InputFile, FileMode.Open, FileAccess.Read, FileShare.ReadWrite),
+					Path.GetFileName(settings.InputFile));
 				map.FileName = settings.InputFile;
 
 				if (!map.LoadMap(settings.Engine)) {

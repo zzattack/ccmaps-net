@@ -1,4 +1,5 @@
-﻿using CNCMaps.FileFormats;
+﻿using System;
+using CNCMaps.FileFormats;
 
 namespace CNCMaps.MapLogic {
 	public class LightSource : RA2Object {
@@ -28,6 +29,35 @@ namespace CNCMaps.MapLogic {
 			LightGreenTint = lamp.ReadDouble("LightGreenTint", 1.0);
 			LightBlueTint = lamp.ReadDouble("LightBlueTint", 1.0);
 			this.scenario = scenario;
+		}
+		
+		/// <summary>
+		/// Applies a lamp to this object's palette if it's in range
+		/// </summary>
+		/// <param name="lamp">The lamp to apply</param>
+		/// <returns>Whether the palette was replaced, meaning it needs to be recalculated</returns>
+		public static bool ApplyLamp(RemappableObject paletteOwner, MapTile drawLocation, LightSource lamp) {
+			if (lamp.LightIntensity == 0.0)
+				return false;
+
+			double sqX = (lamp.Tile.Rx - drawLocation.Rx) * (lamp.Tile.Rx - drawLocation.Rx);
+			double sqY = (lamp.Tile.Ry - (drawLocation.Ry)) * (lamp.Tile.Ry - (drawLocation.Ry));
+
+			double distance = Math.Sqrt(sqX + sqY);
+
+			// checks whether we're in range
+			if ((0 < lamp.LightVisibility) && (distance < lamp.LightVisibility / 256)) {
+				double lsEffect = (lamp.LightVisibility - 256 * distance) / lamp.LightVisibility;
+				
+				// we don't want to apply lamps to shared palettes, so clone first
+				if (paletteOwner.Palette.IsShared)
+					paletteOwner.Palette = paletteOwner.Palette.Clone();
+
+				paletteOwner.Palette.ApplyLamp(lamp, lsEffect);
+				return true;
+			}
+			else
+				return false;
 		}
 	}
 }

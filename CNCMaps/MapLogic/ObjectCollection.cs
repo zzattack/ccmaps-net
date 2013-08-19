@@ -8,12 +8,13 @@ using CNCMaps.VirtualFileSystem;
 
 namespace CNCMaps.MapLogic {
 	class ObjectCollection {
-		private CollectionType collectionType;
-		private TheaterType theaterType;
-		private EngineType engineType;
-		IniFile rules, art;
-		PaletteCollection palettes;
-		private List<Drawable> objects = new List<Drawable>();
+		private readonly CollectionType _collectionType;
+		private readonly TheaterType _theaterType;
+		private readonly EngineType _engineType;
+		private readonly IniFile _rules;
+		private readonly IniFile _art;
+		private PaletteCollection _palettes;
+		private readonly List<Drawable> _drawables = new List<Drawable>();
 
 		static readonly string[] ExtraBuildingImages = {
 			"ProductionAnim",
@@ -34,12 +35,12 @@ namespace CNCMaps.MapLogic {
 
 		public ObjectCollection(IniFile.IniSection objectSection, CollectionType collectionType,
 			TheaterType theaterType, EngineType engineType, IniFile rules, IniFile art, PaletteCollection palettes) {
-			this.theaterType = theaterType;
-			this.engineType = engineType;
-			this.collectionType = collectionType;
-			this.rules = rules;
-			this.art = art;
-			this.palettes = palettes;
+			this._theaterType = theaterType;
+			this._engineType = engineType;
+			this._collectionType = collectionType;
+			this._rules = rules;
+			this._art = art;
+			this._palettes = palettes;
 			foreach (var entry in objectSection.OrderedEntries) {
 				logger.Trace("Loading object {0}.{0}", objectSection.Name, entry.Value);
 				LoadObject(entry.Value);
@@ -47,20 +48,20 @@ namespace CNCMaps.MapLogic {
 		}
 
 		private void LoadObject(string objName) {
-			IniFile.IniSection rulesSection = rules.GetSection(objName);
+			IniFile.IniSection rulesSection = _rules.GetSection(objName);
 			var drawableObject = new Drawable(objName);
-			objects.Add(drawableObject);
+			_drawables.Add(drawableObject);
 
 			if (rulesSection == null || rulesSection.ReadBool("IsRubble"))
 				return;
 
 			string artSectionName = rulesSection.ReadString("Image", objName);
-			IniFile.IniSection artSection = art.GetSection(artSectionName);
+			IniFile.IniSection artSection = _art.GetSection(artSectionName);
 			if (artSection == null)
 				artSection = rulesSection;
 
 			string imageFileName;
-			if (collectionType == CollectionType.Building || collectionType == CollectionType.Overlay)
+			if (_collectionType == CollectionType.Building || _collectionType == CollectionType.Overlay)
 				imageFileName = artSection.ReadString("Image", artSectionName);
 			else
 				imageFileName = artSectionName;
@@ -70,20 +71,20 @@ namespace CNCMaps.MapLogic {
 			bool theaterExtension = artSection.ReadBool("Theater");
 			if (isVoxel) imageFileName += ".vxl";
 			else if (theaterExtension) {
-				imageFileName += TheaterDefaults.GetExtension(theaterType);
-				if (collectionType != CollectionType.Overlay || engineType <= EngineType.FireStorm) {
-					drawableObject.Palette = palettes.isoPalette;
+				imageFileName += TheaterDefaults.GetExtension(_theaterType);
+				if (_collectionType != CollectionType.Overlay || _engineType <= EngineType.FireStorm) {
+					drawableObject.Palette = _palettes.isoPalette;
 					paletteChosen = true;
 				}
 			}
-			else imageFileName += TheaterDefaults.GetExtension(theaterType, collectionType);
+			else imageFileName += TheaterDefaults.GetExtension(_theaterType, _collectionType);
 
 			// See if a theater-specific image is used
 			bool NewTheater = artSection.ReadBool("NewTheater");
 			if (NewTheater) {
 				ApplyNewTheater(ref imageFileName);
-				if (engineType == EngineType.RedAlert2 || engineType == EngineType.YurisRevenge) {
-					drawableObject.Palette = (palettes.unitPalette);
+				if (_engineType == EngineType.RedAlert2 || _engineType == EngineType.YurisRevenge) {
+					drawableObject.Palette = (_palettes.unitPalette);
 					paletteChosen = true;
 				}
 			}
@@ -91,24 +92,24 @@ namespace CNCMaps.MapLogic {
 			// Used palet can be overriden
 			bool noUseTileLandType = rulesSection.ReadString("NoUseTileLandType") != "";
 			if (noUseTileLandType) {
-				drawableObject.Palette = palettes.isoPalette;
+				drawableObject.Palette = _palettes.isoPalette;
 				drawableObject.UseTilePalette = true;
 				paletteChosen = true;
 			}
 			else if (rulesSection.ReadBool("TerrainPalette")) {
-				drawableObject.Palette = palettes.isoPalette;
+				drawableObject.Palette = _palettes.isoPalette;
 				paletteChosen = true;
 			}
 			else if (rulesSection.ReadBool("AnimPalette")) {
-				drawableObject.Palette = palettes.animPalette;
+				drawableObject.Palette = _palettes.animPalette;
 				paletteChosen = true;
 			}
 			else if (rulesSection.ReadBool("AltPalette")) {
-				drawableObject.Palette = palettes.unitPalette;
+				drawableObject.Palette = _palettes.unitPalette;
 				paletteChosen = true;
 			}
 			else if (artSection.ReadString("Palette") == "lib") {
-				drawableObject.Palette = palettes.libPalette;
+				drawableObject.Palette = _palettes.libPalette;
 				paletteChosen = true;
 			}
 
@@ -121,11 +122,11 @@ namespace CNCMaps.MapLogic {
 
 			if (!paletteChosen) {
 				// Set palette, determined by type of SHP collection
-				Palette p = palettes.GetPalette(TheaterDefaults.GetPaletteType(collectionType, engineType));
+				Palette p = _palettes.GetPalette(TheaterDefaults.GetPaletteType(_collectionType, _engineType));
 				drawableObject.Palette = p;
 			}
 
-			bool shadow = TheaterDefaults.GetShadowAssumption(collectionType);
+			bool shadow = TheaterDefaults.GetShadowAssumption(_collectionType);
 			if (artSection.ReadString("Shadow") != "")
 				shadow = artSection.ReadBool("Shadow");
 
@@ -137,7 +138,7 @@ namespace CNCMaps.MapLogic {
 			if (rulesSection.ReadBool("BridgeRepairHut")) {
 				// xOffset = yOffset = 0;
 			}
-			if (collectionType == CollectionType.Terrain) {
+			if (_collectionType == CollectionType.Terrain) {
 				yOffset = Drawable.TileHeight / 2; // trees and such are placed in the middle of their tile
 				drawableObject.UseTilePalette = true;
 			}
@@ -151,12 +152,11 @@ namespace CNCMaps.MapLogic {
 			if (rulesSection.ReadBool("Immune")) {
 				// For example on TIBTRE / Ore Poles
 				yOffset = -1;
-				drawableObject.Palette = palettes.GetPalette(PaletteType.Unit);
+				drawableObject.Palette = _palettes.GetPalette(PaletteType.Unit);
 				drawableObject.UseTilePalette = false;
-			}
+			} 
 			if (rulesSection.ReadBool("Overrides")) {
-				drawableObject.SetHeightOffset(4);
-				drawableObject.SetOverrides(true);
+				drawableObject.Overrides = true;
 			}
 
 			// Find out foundation
@@ -164,11 +164,11 @@ namespace CNCMaps.MapLogic {
 			int fx = foundation[0] - '0';
 			int fy = foundation[2] - '0';
 			drawableObject.Foundation = new Size(fx, fy);
-
+			
 			AddImageToObject(drawableObject, imageFileName, xOffset, yOffset, shadow);
 
 			// Buildings often consist of multiple SHP files
-			if (collectionType == CollectionType.Building) {
+			if (_collectionType == CollectionType.Building) {
 				drawableObject.AddDamagedShp(VFS.Open(imageFileName) as ShpFile, 0, 0, shadow, 0);
 
 				foreach (string extraImage in ExtraBuildingImages) {
@@ -177,7 +177,7 @@ namespace CNCMaps.MapLogic {
 					string extraImageDamagedSectionName = artSection.ReadString(extraImageDamaged, extraImageSectionName);
 
 					if (extraImageSectionName != "") {
-						IniFile.IniSection extraArtSection = art.GetSection(extraImageSectionName);
+						IniFile.IniSection extraArtSection = _art.GetSection(extraImageSectionName);
 
 						int ySort = 0;
 						bool extraShadow = false;
@@ -189,9 +189,9 @@ namespace CNCMaps.MapLogic {
 							extraImageFileName = extraArtSection.ReadString("Image", extraImageSectionName);
 						}
 						if (theaterExtension)
-							extraImageFileName += TheaterDefaults.GetExtension(theaterType);
+							extraImageFileName += TheaterDefaults.GetExtension(_theaterType);
 						else
-							extraImageFileName += TheaterDefaults.GetExtension(theaterType, collectionType);
+							extraImageFileName += TheaterDefaults.GetExtension(_theaterType, _collectionType);
 
 						if (NewTheater)
 							ApplyNewTheater(ref extraImageFileName);
@@ -200,7 +200,7 @@ namespace CNCMaps.MapLogic {
 					}
 
 					if (extraImageDamagedSectionName != "") {
-						IniFile.IniSection extraArtDamagedSection = art.GetSection(extraImageDamagedSectionName);
+						IniFile.IniSection extraArtDamagedSection = _art.GetSection(extraImageDamagedSectionName);
 
 						int ySort = 0;
 						bool extraShadow = false;
@@ -211,9 +211,9 @@ namespace CNCMaps.MapLogic {
 							extraImageDamagedFileName = extraArtDamagedSection.ReadString("Image", extraImageDamagedSectionName);
 						}
 						if (theaterExtension)
-							extraImageDamagedFileName += TheaterDefaults.GetExtension(theaterType);
+							extraImageDamagedFileName += TheaterDefaults.GetExtension(_theaterType);
 						else
-							extraImageDamagedFileName += TheaterDefaults.GetExtension(theaterType, collectionType);
+							extraImageDamagedFileName += TheaterDefaults.GetExtension(_theaterType, _collectionType);
 
 						if (NewTheater)
 							ApplyNewTheater(ref extraImageDamagedFileName);
@@ -252,7 +252,7 @@ namespace CNCMaps.MapLogic {
 				}
 			}
 
-			else if (collectionType == CollectionType.Vehicle) {
+			else if (_collectionType == CollectionType.Vehicle) {
 				// Add turrets
 				if (rulesSection.ReadBool("Turret")) {
 					string turretFile = Path.GetFileNameWithoutExtension(imageFileName) + "tur.vxl";
@@ -260,7 +260,7 @@ namespace CNCMaps.MapLogic {
 				}
 			}
 
-			if (collectionType == CollectionType.Building || collectionType == CollectionType.Vehicle) {
+			if (_collectionType == CollectionType.Building || _collectionType == CollectionType.Vehicle) {
 				// try to add barrel
 				string barrelFile = Path.GetFileNameWithoutExtension(imageFileName) + "barl.vxl";
 				AddImageToObject(drawableObject, barrelFile,
@@ -276,11 +276,11 @@ namespace CNCMaps.MapLogic {
 					string hvaFileName = Path.ChangeExtension(fileName, ".hva");
 					var hva = VFS.Open(hvaFileName) as HvaFile;
 
-					if (collectionType == CollectionType.Building) {
+					if (_collectionType == CollectionType.Building) {
 						// half tile to the left
 						xOffset += 30;
 					}
-					else if (collectionType == CollectionType.Vehicle) {
+					else if (_collectionType == CollectionType.Vehicle) {
 						// also vertical tile center
 						xOffset += 30;
 						yOffset += 15;
@@ -297,7 +297,7 @@ namespace CNCMaps.MapLogic {
 
 		private void ApplyNewTheater(ref string imageFileName) {
 			var sb = new StringBuilder(imageFileName);
-			sb[1] = TheaterDefaults.GetTheaterPrefix(theaterType);
+			sb[1] = TheaterDefaults.GetTheaterPrefix(_theaterType);
 			if (!VFS.Exists(sb.ToString())) {
 				sb[1] = 'G'; // generic
 			}
@@ -315,11 +315,22 @@ namespace CNCMaps.MapLogic {
 			return idx;
 		}
 
+		public Drawable GetDrawable(RA2Object o) {
+			int idx = -1;
+
+			if (o is NamedObject)
+				idx = FindObjectIndex((o as NamedObject).Name);
+			else if (o is NumberedObject)
+				idx = (o as NumberedObject).Number;
+
+			return _drawables[idx];
+		}
+
 		internal void Draw(RA2Object o, DrawingSurface drawingSurface) {
 			int idx = GetObjectIndex(o);
 			if (idx == -1) return;
 
-			Drawable d = objects[idx];
+			Drawable d = _drawables[idx];
 			if (o is OverlayObject)
 				d.SetFrame((o as OverlayObject).OverlayValue);
 
@@ -328,14 +339,14 @@ namespace CNCMaps.MapLogic {
 
 		internal Palette GetPalette(RA2Object o) {
             if (GetObjectIndex(o) != -1)
-                return objects[GetObjectIndex(o)].Palette;
+                return _drawables[GetObjectIndex(o)].Palette;
             else  // default to this
-                return palettes.isoPalette;
+                return _palettes.isoPalette;
 		}
 
 		private int FindObjectIndex(string p) {
-			for (int i = 0; i < objects.Count; i++) {
-				if (objects[i].Name == p)
+			for (int i = 0; i < _drawables.Count; i++) {
+				if (_drawables[i].Name == p)
 					return i;
 			}
 			return -1;
@@ -348,26 +359,26 @@ namespace CNCMaps.MapLogic {
 
 		internal Size GetFoundation(NamedObject v) {
 			int idx = GetObjectIndex(v);
-			if (0 > idx || idx >= objects.Count) {
+			if (0 > idx || idx >= _drawables.Count) {
 				logger.Error("Cannot obtain information for structure object {0} from object collection", v.Name);
 				return Size.Empty;
 			}
 			else
-				return objects[idx].Foundation;
+				return _drawables[idx].Foundation;
 		}
 
 		internal Size GetFoundation(OverlayObject o) {
 			int idx = o.Number;
-			if (0 > idx || idx >= objects.Count) {
+			if (0 > idx || idx >= _drawables.Count) {
 				logger.Error("Cannot obtain information for overlay object {0} from object collection", o.Number);
 				return Size.Empty;
 			}
 			else
-				return objects[idx].Foundation;
+				return _drawables[idx].Foundation;
 		}
 
 		internal string GetName(byte p) {
-			return objects[p].Name;
+			return _drawables[p].Name;
 		}
 
 	}

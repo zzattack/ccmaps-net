@@ -92,10 +92,19 @@ namespace CNCMaps.FileFormats {
 			return img;
 		}
 
-		unsafe public void Draw(int frameIndex, DrawingSurface ds, Point offset, MapTile tile, Palette p) {
+		/// <summary>
+		/// Draws a SHP image 
+		/// </summary>
+		/// <param name="frameIndex">Frame of SHP image</param>
+		/// <param name="ds">Drawing surface buffer</param>
+		/// <param name="offset">Offset from tile where object is stored</param>
+		/// <param name="tile">Tile used to </param>
+		/// <param name="p">Pallette used to draw this object</param>
+		/// <param name="overrides">Whether z-buffer should be ignored</param>
+		unsafe public void Draw(int frameIndex, DrawingSurface ds, Point offset, MapTile tile, Palette p, bool overrides = false) {
 			if (!initialized) Initialize();
 			
-			logger.Trace("Drawing SHP file {0} (frame {1}) at ({2},{3})", FileName, frameIndex, offset.X, offset.Y);
+			logger.Trace("Drawing SHP file {0} (Frame {1}) at ({2},{3})", FileName, frameIndex, offset.X, offset.Y);
 
 			var image = GetImage(frameIndex);
 			var h = image.header;
@@ -128,7 +137,7 @@ namespace CNCMaps.FileFormats {
 				
 				for (int x = 0; x < h.cx; x++) {
 					byte paletteValue = image.imageData[rIdx];
-					if (paletteValue != 0 && w_low <= w && w < w_high && z >= zBuffer[zIdx]) {
+					if (paletteValue != 0 && w_low <= w && w < w_high && (overrides || z >= zBuffer[zIdx])) {
 						*(w + 0) = p.colors[paletteValue].B;
 						*(w + 1) = p.colors[paletteValue].G;
 						*(w + 2) = p.colors[paletteValue].R;
