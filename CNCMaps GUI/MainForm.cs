@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
+using System.Security;
 using System.Windows.Forms;
 using Microsoft.Win32;
 
@@ -23,16 +24,27 @@ namespace CNCMaps.GUI {
 		}
 
 		private string FindRenderProg() {
-			try {
-				RegistryKey k = Registry.LocalMachine.OpenSubKey("SOFTWARE\\CNC Map Render");
-				if (k != null) {
-					var s = (string) k.GetValue("");
-					k.Close();
-					return s + "\\" + RendererExe;
+			if (!IsLinux) {
+				try {
+					RegistryKey k = Registry.LocalMachine.OpenSubKey("SOFTWARE\\CNC Map Render");
+					if (k != null) {
+						var s = (string) k.GetValue("");
+						k.Close();
+						return s + "\\" + RendererExe;
+					}
 				}
+				catch (NullReferenceException) { }
+				catch (SecurityException) { }
 			}
-			catch (NullReferenceException) { } 
+
 			return File.Exists(RendererExe) ? RendererExe : "";
+		}
+
+		public static bool IsLinux {
+			get {
+				int p = (int)Environment.OSVersion.Platform;
+				return (p == 4) || (p == 6) || (p == 128);
+			}
 		}
 
 		private void OutputNameCheckedChanged(object sender, EventArgs e) {

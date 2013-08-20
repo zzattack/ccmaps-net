@@ -112,16 +112,18 @@ namespace CNCMaps.VirtualFileSystem {
 			return true;
 		}
 
-		public void ScanMixDir(EngineType engine, string installDir = "") {
+		public bool ScanMixDir(EngineType engine, string installDir = "") {
 			if (installDir == "")
 				installDir = engine <= EngineType.FireStorm ? TSInstallDir : RA2InstallDir;
 
-			ScanMixDir(installDir, engine == EngineType.AutoDetect ? EngineType.YurisRevenge : engine);
+			return ScanMixDir(installDir, engine == EngineType.AutoDetect ? EngineType.YurisRevenge : engine);
 		}
 
-		public void ScanMixDir(string mixDir, EngineType engine) {
-			if (string.IsNullOrEmpty(mixDir))
+		public bool ScanMixDir(string mixDir, EngineType engine) {
+			if (string.IsNullOrEmpty(mixDir)) {
 				logger.Fatal("No mix directory detected!");
+				return false;
+			}
 
 			// see http://modenc.renegadeprojects.com/MIX for more info
 			logger.Info("Initializing filesystem on {0} for the {1} engine", mixDir, engine.ToString());
@@ -147,39 +149,42 @@ namespace CNCMaps.VirtualFileSystem {
 			}
 
 			if (engine >= EngineType.RedAlert2) {
-				if (engine == EngineType.YurisRevenge) AddFile("ra2md.mix");
+				if (engine == EngineType.YurisRevenge)
+					AddFile("ra2md.mix");
 				AddFile(Path.Combine(mixDir, "ra2.mix"));
 			}
 			else {
-				if (engine == EngineType.YurisRevenge) AddFile("tibsunmd.mix");
+				if (engine == EngineType.YurisRevenge) 
+					AddFile("tibsunmd.mix");
 				AddFile("tibsun.mix");
 			}
 
-			if (engine == EngineType.YurisRevenge) AddFile("cachemd.mix");
+			if (engine == EngineType.YurisRevenge) 
+				AddFile("cachemd.mix");
 			AddFile("cache.mix");
 
-			if (engine == EngineType.YurisRevenge) AddFile("localmd.mix");
+			if (engine == EngineType.YurisRevenge) 
+				AddFile("localmd.mix");
 			AddFile("local.mix");
 
-			if (engine == EngineType.YurisRevenge) AddFile("audiomd.mix");
+			if (engine == EngineType.YurisRevenge) 
+				AddFile("audiomd.mix");
 
-			foreach (string file in Directory.GetFiles(mixDir, "ecache*.mix")) {
+			foreach (string file in Directory.GetFiles(mixDir, "ecache*.mix")) 
 				AddFile(Path.Combine(mixDir, file));
-			}
+			
 
-			foreach (string file in Directory.GetFiles(mixDir, "elocal*.mix")) {
+			foreach (string file in Directory.GetFiles(mixDir, "elocal*.mix")) 
 				AddFile(Path.Combine(mixDir, file));
-			}
+			
 
 			if (engine >= EngineType.RedAlert2) {
-				foreach (string file in Directory.GetFiles(mixDir, "*.mmx")) {
+				foreach (string file in Directory.GetFiles(mixDir, "*.mmx"))
 					AddFile(Path.Combine(mixDir, file));
-				}
-				if (engine == EngineType.YurisRevenge) {
-					foreach (string file in Directory.GetFiles(mixDir, "*.yro")) {
+				
+				if (engine == EngineType.YurisRevenge) 
+					foreach (string file in Directory.GetFiles(mixDir, "*.yro")) 
 						AddFile(Path.Combine(mixDir, file));
-					}
-				}
 			}
 
 			if (engine >= EngineType.RedAlert2) {
@@ -201,6 +206,8 @@ namespace CNCMaps.VirtualFileSystem {
 					AddFile("movmd03.mix");
 				}
 			}
+
+			return true;
 		}
 
 		public static string RA2InstallPath {
