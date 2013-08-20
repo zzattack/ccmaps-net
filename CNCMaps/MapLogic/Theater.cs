@@ -171,7 +171,7 @@ namespace CNCMaps.MapLogic {
 		}
 
 		internal Palette GetPalette(RA2Object o) {
-			return GetObjectCollection(o).GetPalette(o);
+			return GetObjectCollection(o).GetDrawable(o).Palette;
 		}
 
 		internal Size GetFoundation(NamedObject v) {
@@ -182,9 +182,24 @@ namespace CNCMaps.MapLogic {
 		}
 
 		internal ObjectCollection GetCollection(CollectionType t) {
-			if (t == CollectionType.Overlay)
-				return _overlayTypes;
-			return null;
+			switch (t) {
+				case CollectionType.Aircraft:
+					return _aircraftTypes;
+				case CollectionType.Building:
+					return _buildingTypes;
+				case CollectionType.Infantry:
+					return _infantryTypes;
+				case CollectionType.Overlay:
+					return _overlayTypes;
+				case CollectionType.Smudge:
+					return _smudgeTypes;
+				case CollectionType.Terrain:
+					return _terrainTypes;
+				case CollectionType.Vehicle:
+					return _vehicleTypes;
+				default:
+					throw new ArgumentOutOfRangeException("t");
+			}
 		}
 
 		internal Size GetFoundation(OverlayObject o) {

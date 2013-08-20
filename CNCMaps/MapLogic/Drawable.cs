@@ -190,6 +190,8 @@ namespace CNCMaps.MapLogic {
 		public static ushort TileHeight { get; set; }
 
 		public bool UseTilePalette { get; set; }
+
+		public bool IsValid { get; set; }
 	}
 
 	class DrawableFile<T> : System.IComparable where T : VirtualFile {

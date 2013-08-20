@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Text;
@@ -15,6 +16,7 @@ namespace CNCMaps.MapLogic {
 		private readonly IniFile _art;
 		private PaletteCollection _palettes;
 		private readonly List<Drawable> _drawables = new List<Drawable>();
+		private readonly Dictionary<string, Drawable> _drawablesDict = new Dictionary<string, Drawable>();
 
 		static readonly string[] ExtraBuildingImages = {
 			"ProductionAnim",
@@ -51,10 +53,12 @@ namespace CNCMaps.MapLogic {
 			IniFile.IniSection rulesSection = _rules.GetSection(objName);
 			var drawableObject = new Drawable(objName);
 			_drawables.Add(drawableObject);
+			_drawablesDict[objName] = drawableObject;
 
 			if (rulesSection == null || rulesSection.ReadBool("IsRubble"))
 				return;
 
+			drawableObject.IsValid = true;
 			string artSectionName = rulesSection.ReadString("Image", objName);
 			IniFile.IniSection artSection = _art.GetSection(artSectionName);
 			if (artSection == null)
@@ -83,10 +87,14 @@ namespace CNCMaps.MapLogic {
 			bool NewTheater = artSection.ReadBool("NewTheater");
 			if (NewTheater) {
 				ApplyNewTheater(ref imageFileName);
-				if (_engineType == EngineType.RedAlert2 || _engineType == EngineType.YurisRevenge) {
+				if (_engineType >= EngineType.RedAlert2) {
 					drawableObject.Palette = (_palettes.unitPalette);
 					paletteChosen = true;
 				}
+			}
+			if (_engineType <= EngineType.FireStorm && artSection.ReadBool("Remapable")) {
+				drawableObject.Palette = (_palettes.unitPalette);
+				paletteChosen = true;
 			}
 
 			// Used palet can be overriden
@@ -303,84 +311,40 @@ namespace CNCMaps.MapLogic {
 			}
 			imageFileName = sb.ToString();
 		}
-
-
-		private int GetObjectIndex(RA2Object o) {
-			int idx = -1;
-
-			if (o is NamedObject)
-				idx = FindObjectIndex((o as NamedObject).Name);
-			else if (o is NumberedObject)
-				idx = (o as NumberedObject).Number;
-			return idx;
-		}
-
+		
 		public Drawable GetDrawable(RA2Object o) {
-			int idx = -1;
-
-			if (o is NamedObject)
-				idx = FindObjectIndex((o as NamedObject).Name);
-			else if (o is NumberedObject)
-				idx = (o as NumberedObject).Number;
-
-			return _drawables[idx];
+			if (o is NamedObject) {
+				Drawable ret;
+				_drawablesDict.TryGetValue((o as NamedObject).Name, out ret);
+				return ret;
+			}
+			else if (o is NumberedObject) {
+				int idx = (o as NumberedObject).Number;
+				if (idx >= 0 && idx < _drawables.Count)
+					return _drawables[idx];
+				else
+					return null;
+			}
+			throw new ArgumentException();
 		}
 
 		internal void Draw(RA2Object o, DrawingSurface drawingSurface) {
-			int idx = GetObjectIndex(o);
-			if (idx == -1) return;
-
-			Drawable d = _drawables[idx];
+			Drawable d = GetDrawable(o);
 			if (o is OverlayObject)
 				d.SetFrame((o as OverlayObject).OverlayValue);
 
 			d.Draw(o, drawingSurface);
 		}
-
-		internal Palette GetPalette(RA2Object o) {
-            if (GetObjectIndex(o) != -1)
-                return _drawables[GetObjectIndex(o)].Palette;
-            else  // default to this
-                return _palettes.isoPalette;
+		
+		public bool HasObject(RA2Object o) {
+			var obj = GetDrawable(o);
+			return obj != null && obj.IsValid;
 		}
-
-		private int FindObjectIndex(string p) {
-			for (int i = 0; i < _drawables.Count; i++) {
-				if (_drawables[i].Name == p)
-					return i;
-			}
-			return -1;
+		
+		internal Size GetFoundation(RA2Object v) {
+			return GetDrawable(v).Foundation;
 		}
-
-		internal bool HasObject(RA2Object o) {
-			return GetObjectIndex(o) != -1;
-		}
-
-		internal Drawable GetObject(RA2Object o) {
-			int idx = GetObjectIndex(o);
-			return idx == -1 ? null : _drawables[idx];
-		}
-
-		internal Size GetFoundation(NamedObject v) {
-			int idx = GetObjectIndex(v);
-			if (0 > idx || idx >= _drawables.Count) {
-				logger.Error("Cannot obtain information for structure object {0} from object collection", v.Name);
-				return Size.Empty;
-			}
-			else
-				return _drawables[idx].Foundation;
-		}
-
-		internal Size GetFoundation(OverlayObject o) {
-			int idx = o.Number;
-			if (0 > idx || idx >= _drawables.Count) {
-				logger.Error("Cannot obtain information for overlay object {0} from object collection", o.Number);
-				return Size.Empty;
-			}
-			else
-				return _drawables[idx].Foundation;
-		}
-
+		
 		internal string GetName(byte p) {
 			return _drawables[p].Name;
 		}

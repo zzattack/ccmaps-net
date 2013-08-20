@@ -54,87 +54,118 @@ namespace CNCMaps.MapLogic {
 		/// <summary>Gets the determine map name. </summary>
 		/// <returns>The filename to save the map as</returns>
 		internal string DetermineMapName(EngineType engine) {
-			string infile_nopath = Path.GetFileNameWithoutExtension(FileName);
+			string fileNameWithoutExtension = Path.GetFileNameWithoutExtension(FileName);
 
 			IniSection basic = GetSection("Basic");
 			if (basic.ReadBool("Official") == false)
-				return basic.ReadString("Name", infile_nopath);
+				return StripPlayersFromName(basic.ReadString("Name", fileNameWithoutExtension));
 
-			string mapext = Path.GetExtension(FileName);
-			bool customPkt = false;
-			string csfEntry = "";
+			string mapExt = Path.GetExtension(FileName);
+			string missionName = "";
 			string mapName = "";
-			PktFile.PktMapEntry mapEntry = null;
-			bool isMission;
-			bool isyr = engine == EngineType.YurisRevenge;
+			PktFile.PktMapEntry pktMapEntry = null;
+			MissionsFile.MissionEntry missionEntry = null;
 
 			// campaign mission
 			if (!basic.ReadBool("MultiplayerOnly") && basic.ReadBool("Official")) {
-				var mf = VFS.Open<MissionsFile>(isyr ? "missionmd.ini" : "mission.ini");
-				var me = mf.GetMissionEntry(Path.GetFileName(FileName));
-				csfEntry = me.UIName;
-				isMission = true;
-			}
-			// multiplayer map
-			else {
-				isMission = false;
-				string pkt_mapname = "";
-
-				PktFile pkt;
-				if (mapext == ".mmx" || mapext == ".yro") {
-					// this file contains the pkt file
-					var mix = new MixFile(File.Open(FileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite));
-					pkt = mix.OpenFile(infile_nopath + ".pkt", FileFormat.Pkt) as PktFile;
-					mix.Close();
-					customPkt = true;
-					if (mapext == ".yro") // definitely YR map
-						isyr = true;
+				string missionsFile;
+				switch (engine) {
+					case EngineType.TiberianSun:
+					case EngineType.RedAlert2:
+						missionsFile = "mission.ini";
+						break;
+					case EngineType.FireStorm:
+						missionsFile = "mission1.ini";
+						break;
+					case EngineType.YurisRevenge:
+						missionsFile = "missionmd.ini";
+						break;
+					default:
+						throw new ArgumentOutOfRangeException("engine");
 				}
-				else if (isyr)
-					pkt = VFS.Open<PktFile>("missionsmd.pkt");
-				else
-					pkt = VFS.Open<PktFile>("missions.pkt");
+				var mf = VFS.Open<MissionsFile>(missionsFile);
+				missionEntry = mf.GetMissionEntry(Path.GetFileName(FileName));
+				missionName = (engine >= EngineType.RedAlert2) ? missionEntry.UIName : missionEntry.Name;
+			}
 
-				if (customPkt)
-					pkt_mapname = pkt.MapEntries.First().Key;
-				else {
-					// fallback for multiplayer maps with, .map extension,
-					// no YR objects so assumed to be ra2, but actually meant to be used on yr
-					if (!isyr && mapext == ".map" && !pkt.MapEntries.ContainsKey(infile_nopath) && basic.ReadBool("MultiplayerOnly")) {
+			else { // multiplayer map
+				string pktEntryName = fileNameWithoutExtension;
+				PktFile pkt = null;
 
+				if (mapExt == ".mmx" || mapExt == ".yro") {
+					// this is an 'official' map 'archive' containing a PKT file with its name
+					try {
 						var mix = new MixFile(File.Open(FileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite));
-						pkt = mix.OpenFile(infile_nopath + ".pkt", FileFormat.Pkt) as PktFile;
+						pkt = mix.OpenFile(fileNameWithoutExtension + ".pkt", FileFormat.Pkt) as PktFile;
+						// pkt file is cached by default, so we can close the handle to the file
 						mix.Close();
 
-						if (pkt != null && pkt.MapEntries.ContainsKey(infile_nopath))
-							isyr = true;
+						if (pkt != null && pkt.MapEntries.Count > 0)
+							pktEntryName = pkt.MapEntries.First().Key;
+					}
+					catch (ArgumentException) { }
+				}
+
+				else {
+					// determine pkt file based on engine
+					switch (engine) {
+						case EngineType.TiberianSun:
+						case EngineType.RedAlert2:
+							pkt = VFS.Open<PktFile>("missions.pkt");
+							break;
+						case EngineType.FireStorm:
+							pkt = VFS.Open<PktFile>("multi01.pkt");
+							break;
+						case EngineType.YurisRevenge:
+							pkt = VFS.Open<PktFile>("missionsmd.pkt");
+							break;
+						default:
+							throw new ArgumentOutOfRangeException("engine");
 					}
 				}
-				// last resort
-				if (pkt_mapname == "")
-					pkt_mapname = infile_nopath;
 
-				mapEntry = pkt.GetMapEntry(pkt_mapname);
+
+				// fallback for multiplayer maps with, .map extension,
+				// no YR objects so assumed to be ra2, but actually meant to be used on yr
+				if (mapExt == ".map" && pkt != null && !pkt.MapEntries.ContainsKey(pktEntryName) && engine >= EngineType.RedAlert2) {
+					VFS.GetInstance().ScanMixDir(EngineType.YurisRevenge);
+					pkt = VFS.Open<PktFile>("missionsmd.pkt");
+				}
+
+				if (pkt != null && !string.IsNullOrEmpty(pktEntryName))
+					pktMapEntry = pkt.GetMapEntry(pktEntryName);
 			}
 
-			if (engine == EngineType.FireStorm || engine == EngineType.TiberianSun) {
-				if (mapEntry != null)
-					mapName = mapEntry.Description;
+			// now, if we have a map entry from a PKT file, 
+			// for TS we are done, but for RA2 we need to look in the CSV file for the translated mapname
+			if (engine <= EngineType.FireStorm) {
+				if (pktMapEntry != null)
+					mapName = pktMapEntry.Description;
+				else if (missionEntry != null) {
+					if (engine == EngineType.TiberianSun) {
+						string campaignSide = missionEntry.Briefing.Length >= 3 ? missionEntry.Briefing.Substring(0, 3) : "XXX";
+						string missionNumber = missionEntry.Briefing.Length > 3 ? missionEntry.Briefing.Substring(3) : "";
+						mapName = string.Format("{0} {1} - {2}", campaignSide, missionNumber.TrimEnd('A').PadLeft(2, '0'), missionName);
+					}
+					else {
+						// FS map names are constructed a bit easier
+						mapName = missionName.Replace(":", " - ");
+					}
+				}
+				else if (!string.IsNullOrEmpty(basic.ReadString("Name")))
+					mapName = basic.ReadString("Name", fileNameWithoutExtension);
 			}
-			else if ((csfEntry != "" || mapEntry != null) && (engine == EngineType.RedAlert2 || engine == EngineType.YurisRevenge)) {
-				if (mapEntry != null)
-					csfEntry = mapEntry.Description;
-				csfEntry = csfEntry.ToLower();
 
-				string csfFile = isyr ? "ra2md.csf" : "ra2.csf";
+			// if this is a RA2/YR mission (csfEntry set) or official map with valid pktMapEntry
+			else if (missionEntry != null || pktMapEntry != null) {
+				string csfEntryName = missionEntry != null ? missionName : pktMapEntry.Description;
+
+				string csfFile = engine == EngineType.YurisRevenge ? "ra2md.csf" : "ra2.csf";
 				Logger.Info("Loading csf file {0}", csfFile);
 				var csf = VFS.Open<CsfFile>(csfFile);
-				mapName = csf.GetValue(csfEntry);
+				mapName = csf.GetValue(csfEntryName.ToLower());
 
-				if (mapName.IndexOf(" (") != -1)
-					mapName = mapName.Substring(0, mapName.IndexOf(" ("));
-
-				if (isMission) {
+				if (missionEntry != null) {
 					if (mapName.Contains("Operation: ")) {
 						string missionMapName = Path.GetFileName(FileName);
 						if (char.IsDigit(missionMapName[3]) && char.IsDigit(missionMapName[4])) {
@@ -145,26 +176,32 @@ namespace CNCMaps.MapLogic {
 				}
 				else {
 					// not standard map
-					if ((mapEntry.GameModes & PktFile.GameMode.Standard) == 0) {
-						if ((mapEntry.GameModes & PktFile.GameMode.Megawealth) == PktFile.GameMode.Megawealth)
+					if ((pktMapEntry.GameModes & PktFile.GameMode.Standard) == 0) {
+						if ((pktMapEntry.GameModes & PktFile.GameMode.Megawealth) == PktFile.GameMode.Megawealth)
 							mapName += " (Megawealth)";
-						if ((mapEntry.GameModes & PktFile.GameMode.Duel) == PktFile.GameMode.Duel)
+						if ((pktMapEntry.GameModes & PktFile.GameMode.Duel) == PktFile.GameMode.Duel)
 							mapName += " (Land Rush)";
-						if ((mapEntry.GameModes & PktFile.GameMode.NavalWar) == PktFile.GameMode.NavalWar)
+						if ((pktMapEntry.GameModes & PktFile.GameMode.NavalWar) == PktFile.GameMode.NavalWar)
 							mapName += " (Naval War)";
 					}
 				}
 			}
+
 			if (mapName == "") {
-				Logger.Warn("No valid mapname given or found, reverting to default filename {0}", infile_nopath);
-				mapName = infile_nopath;
+				Logger.Warn("No valid mapname given or found, reverting to default filename {0}", fileNameWithoutExtension);
+				mapName = fileNameWithoutExtension;
 			}
 			else {
 				Logger.Info("Mapname found: {0}", mapName);
 			}
 
-			mapName = MakeValidFileName(mapName);
+			mapName = StripPlayersFromName(MakeValidFileName(mapName));
+			return mapName;
+		}
 
+		private static string StripPlayersFromName(string mapName) {
+			if (mapName.IndexOf(" (") != -1)
+				mapName = mapName.Substring(0, mapName.IndexOf(" ("));
 			return mapName;
 		}
 
@@ -534,62 +571,67 @@ namespace CNCMaps.MapLogic {
 		}
 
 		private void RemoveUnknownObjects() {
-			IniSection objSection = _rules.GetSection("TerrainTypes");
+			ObjectCollection c = _theater.GetCollection(CollectionType.Terrain);
 			for (int y = 0; y < _fullSize.Height; y++) {
 				for (int x = 0; x < _fullSize.Width * 2 - 1; x++) {
 					var obj = _terrainObjects[x, y];
 					if (obj == null) continue;
-					int idx = objSection.FindValueIndex(obj.Name);
-					if (idx == -1) _terrainObjects[x, y] = null;
+					if (!c.HasObject(obj))
+						_terrainObjects[x, y] = null;
 				}
 			}
 
-			objSection = _rules.GetSection("InfantryTypes");
+			c = _theater.GetCollection(CollectionType.Infantry);
 			for (int y = 0; y < _fullSize.Height; y++) {
 				for (int x = 0; x < _fullSize.Width * 2 - 1; x++) {
 					var objList = _infantryObjects[x, y];
 					if (objList == null) continue;
-					objList.RemoveAll(i => objSection.FindValueIndex(i.Name) == -1);
+					objList.RemoveAll(i => !c.HasObject(i));
 				}
 			}
 
-			objSection = _rules.GetSection("VehicleTypes");
+			c = _theater.GetCollection(CollectionType.Vehicle);
 			for (int y = 0; y < _fullSize.Height; y++) {
 				for (int x = 0; x < _fullSize.Width * 2 - 1; x++) {
 					var obj = _unitObjects[x, y];
 					if (obj == null) continue;
-					int idx = objSection.FindValueIndex(obj.Name);
-					if (idx == -1) _unitObjects[x, y] = null;
+					if (!c.HasObject(obj))
+						_unitObjects[x, y] = null;
 				}
 			}
 
-			objSection = _rules.GetSection("AircraftTypes");
+			c = _theater.GetCollection(CollectionType.Aircraft);
 			for (int y = 0; y < _fullSize.Height; y++) {
 				for (int x = 0; x < _fullSize.Width * 2 - 1; x++) {
 					var obj = _aircraftObjects[x, y];
 					if (obj == null) continue;
-					int idx = objSection.FindValueIndex(obj.Name);
-					if (idx == -1) _aircraftObjects[x, y] = null;
+					if (!c.HasObject(obj))
+						_aircraftObjects[x, y] = null;
 				}
 			}
-			
-			objSection = _rules.GetSection("BuildingTypes");
+
+			c = _theater.GetCollection(CollectionType.Smudge);
+			for (int y = 0; y < _fullSize.Height; y++) {
+				for (int x = 0; x < _fullSize.Width * 2 - 1; x++) {
+					var obj = _smudgeObjects[x, y];
+					if (obj == null) continue;
+					if (!c.HasObject(obj))
+						_smudgeObjects[x, y] = null;
+				}
+			}
+
+			c = _theater.GetCollection(CollectionType.Building);
+			var cAlt = _theater.GetCollection(CollectionType.Overlay);
 			IniSection objSectionAlt = _rules.GetSection("OverlayTypes");
 			for (int y = 0; y < _fullSize.Height; y++) {
 				for (int x = 0; x < _fullSize.Width * 2 - 1; x++) {
 					var obj = _structureObjects[x, y];
 					if (obj == null) continue;
-					int idx1 = objSection.FindValueIndex(obj.Name);
-					int idx2 = objSectionAlt.FindValueIndex(obj.Name);
-					if (idx1 == -1 && idx2 == -1) _structureObjects[x, y] = null;
-					else if (idx1 != -1)
-						_structureObjects[x, y] = null;
-					else if (idx2 != -1)
+					if (!c.HasObject(obj) && !cAlt.HasObject(obj))
 						_structureObjects[x, y] = null;
 				}
 			}
 
-			// no need to remove smudges as no new ones were introduced with yr
 		}
 
 		/// <summary>Reads all objects. </summary>
@@ -902,8 +944,8 @@ namespace CNCMaps.MapLogic {
 					var ovl = _overlayObjects[t.Dx, t.Dy / 2];
 					if (ovl == null) continue;
 
-					var drawable = overlayObjects.GetObject(ovl); 
-					if (drawable.UseTilePalette) {
+					var drawable = overlayObjects.GetDrawable(ovl);
+					if (drawable != null && drawable.IsValid && drawable.UseTilePalette) {
 						// bridge tiles get the same lighting as their corresponding tiles, 
 						// which are located a bit above their associated tile
 						ovl.Palette = _palettePerLevel[ovl.Tile.Z + 4].Clone();
@@ -943,8 +985,9 @@ namespace CNCMaps.MapLogic {
 			int before = _palettesToBeRecalculated.Count;
 			foreach (LightSource s in _lightSources) {
 				foreach (MapTile t in _tiles) {
-					bool wasShared = t.Palette.IsShared;
+					if (t == null || t.Palette == null) continue;
 
+					bool wasShared = t.Palette.IsShared;
 					// make sure this tile can only end up in the "to-be-recalculated list" once
 					if (LightSource.ApplyLamp(t, t, s))
 						// if this lamp caused a new unshared palette to be created

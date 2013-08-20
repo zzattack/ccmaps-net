@@ -30,30 +30,22 @@ namespace CNCMaps.FileFormats {
 		}
 
 		public class MissionEntry {
-
 			public string Briefing { get; set; }
-
-			public string UIName { get; set; }
-
+			public string UIName { get; set; } // used by RA2/YR, localized by CSF file
+			public string Name { get; set; } // used by TS/FS
 			public string LSLoadMessage { get; set; }
-
 			public string LSLoadBriefing { get; set; }
-
 			public int LS640BriefLocX { get; set; }
-
 			public int LS640BriefLocY { get; set; }
-
 			public int LS800BriefLocX { get; set; }
-
 			public int LS800BriefLocY { get; set; }
-
 			public string LS640BkgdName { get; set; }
-
 			public string LS800BkgdName { get; set; }
 
 			public MissionEntry(IniSection iniSection) {
 				Briefing = iniSection.ReadString("Briefing");
 				UIName = iniSection.ReadString("UIName");
+				Name = iniSection.ReadString("Name");
 				LS640BriefLocX = iniSection.ReadInt("LS640BriefLocX");
 				LS640BriefLocY = iniSection.ReadInt("LS640BriefLocY");
 				LS800BriefLocX = iniSection.ReadInt("LS800BriefLocX");

@@ -86,13 +86,13 @@ namespace CNCMaps.FileFormats {
 
 		public void Initialize() {
 			logger.Debug("Initializing TMP data for file {0}", FileName);
-		
+
 			isInitialized = true;
 			Position = 0;
 			byte[] header = Read(Marshal.SizeOf(typeof(TmpFileHeader)));
 			fileHeader = EzMarshal.ByteArrayToStructure<TmpFileHeader>(header);
 			byte[] index = Read(fileHeader.cblocks_x * fileHeader.cblocks_y * sizeof(int));
-			
+
 			images = new List<TmpImage>(fileHeader.cblocks_x * fileHeader.cblocks_y);
 			for (int x = 0; x < fileHeader.cblocks_x * fileHeader.cblocks_y; x++) {
 				int imageData = BitConverter.ToInt32(index, x * 4);
@@ -183,7 +183,7 @@ namespace CNCMaps.FileFormats {
 				w += stride - 3 * (cx - 2);
 				zIdx += ds.Width - (cx - 2);
 			}
-			
+
 			if (!img.header.HasExtraData) return; // we're done now
 
 			int dx = xOffset + img.header.x_extra - img.header.x;
@@ -197,8 +197,8 @@ namespace CNCMaps.FileFormats {
 				for (x = 0; x < img.header.cx_extra; x++) {
 					// Checking per line is required because v needs to be checked every time
 					byte paletteValue = img.extraData[rIdx];
-					short z = (short)(zBufVal - img.extraZData[rIdx]);
-					
+					short z = (img.extraZData != null) ? (short)(zBufVal - img.extraZData[rIdx]) : short.MaxValue;
+
 					if (paletteValue != 0 && w_low <= w && w < w_high && z > zBuffer[zIdx]) {
 						*w++ = p.colors[paletteValue].B;
 						*w++ = p.colors[paletteValue].G;

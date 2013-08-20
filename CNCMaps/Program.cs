@@ -101,16 +101,15 @@ namespace CNCMaps {
 					Path.GetFileName(settings.InputFile));
 				map.FileName = settings.InputFile;
 
-				/*
-				 * crap thingie to move maps in a directory for themselves
-				string mapName = map.DetermineMapName(EngineType.YurisRevenge);
+				// crap thingie to move maps in a directory for themselves
+				/*string mapName = map.DetermineMapName(EngineType.FireStorm);
 				string dir = Path.Combine(Path.GetDirectoryName(map.FileName), mapName);
 				if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
 				map.Close();
 				map.Dispose();
  				File.Move(map.FileName, Path.Combine(dir, Path.GetFileName(map.FileName)));
-				return;
-				*/
+				return;*/
+				
 				if (!map.LoadMap(settings.Engine)) {
 					logger.Error("Could not successfully load all required components for this map. Aborting.");
 					return;

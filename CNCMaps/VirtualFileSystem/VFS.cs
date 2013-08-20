@@ -116,7 +116,7 @@ namespace CNCMaps.VirtualFileSystem {
 			bool useModFiles = engine == EngineType.FireStorm || engine == EngineType.YurisRevenge || engine == EngineType.AutoDetect;
 			bool useRA2Engine = engine == EngineType.RedAlert2 || engine == EngineType.YurisRevenge || engine == EngineType.AutoDetect;
 			if (installDir == "")
-				installDir = engine == EngineType.TiberianSun ? TSInstallDir : RA2InstallDir;
+				installDir = engine <= EngineType.FireStorm ? TSInstallDir : RA2InstallDir;
 
 			ScanMixDir(installDir, useRA2Engine, useModFiles);
 		}
