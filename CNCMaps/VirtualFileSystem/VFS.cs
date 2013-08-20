@@ -113,24 +113,22 @@ namespace CNCMaps.VirtualFileSystem {
 		}
 
 		public void ScanMixDir(EngineType engine, string installDir = "") {
-			bool useModFiles = engine == EngineType.FireStorm || engine == EngineType.YurisRevenge || engine == EngineType.AutoDetect;
-			bool useRA2Engine = engine == EngineType.RedAlert2 || engine == EngineType.YurisRevenge || engine == EngineType.AutoDetect;
 			if (installDir == "")
 				installDir = engine <= EngineType.FireStorm ? TSInstallDir : RA2InstallDir;
 
-			ScanMixDir(installDir, useRA2Engine, useModFiles);
+			ScanMixDir(installDir, engine == EngineType.AutoDetect ? EngineType.YurisRevenge : engine);
 		}
 
-		public void ScanMixDir(string mixDir, bool useRA2, bool isMod) {
+		public void ScanMixDir(string mixDir, EngineType engine) {
 			if (string.IsNullOrEmpty(mixDir))
 				logger.Fatal("No mix directory detected!");
 
 			// see http://modenc.renegadeprojects.com/MIX for more info
-			logger.Info("Initializing filesystem on {0}, {1} Yuri's Revenge support", mixDir, isMod ? "with" : "without");
+			logger.Info("Initializing filesystem on {0} for the {1} engine", mixDir, engine.ToString());
 			AddFile(mixDir);
 
-			if (useRA2) {
-				if (isMod) AddFile("langmd.mix");
+			if (engine >= EngineType.RedAlert2) {
+				if (engine == EngineType.YurisRevenge) AddFile("langmd.mix");
 				AddFile(Path.Combine(mixDir, "language.mix"));
 			}
 
@@ -140,7 +138,7 @@ namespace CNCMaps.VirtualFileSystem {
 				string path = Path.Combine(mixDir, file);
 				if (File.Exists(path))
 					AddFile(path);
-				if (isMod) {
+				if (engine == EngineType.YurisRevenge) {
 					file = "expandmd" + i.ToString("00") + ".mix";
 					path = Path.Combine(mixDir, file);
 					if (File.Exists(path))
@@ -148,22 +146,22 @@ namespace CNCMaps.VirtualFileSystem {
 				}
 			}
 
-			if (useRA2) {
-				if (isMod) AddFile("ra2md.mix");
+			if (engine >= EngineType.RedAlert2) {
+				if (engine == EngineType.YurisRevenge) AddFile("ra2md.mix");
 				AddFile(Path.Combine(mixDir, "ra2.mix"));
 			}
 			else {
-				if (isMod) AddFile("tibsunmd.mix");
+				if (engine == EngineType.YurisRevenge) AddFile("tibsunmd.mix");
 				AddFile("tibsun.mix");
 			}
 
-			if (isMod) AddFile("cachemd.mix");
+			if (engine == EngineType.YurisRevenge) AddFile("cachemd.mix");
 			AddFile("cache.mix");
 
-			if (isMod) AddFile("localmd.mix");
+			if (engine == EngineType.YurisRevenge) AddFile("localmd.mix");
 			AddFile("local.mix");
 
-			if (isMod && useRA2) AddFile("audiomd.mix");
+			if (engine == EngineType.YurisRevenge) AddFile("audiomd.mix");
 
 			foreach (string file in Directory.GetFiles(mixDir, "ecache*.mix")) {
 				AddFile(Path.Combine(mixDir, file));
@@ -173,27 +171,30 @@ namespace CNCMaps.VirtualFileSystem {
 				AddFile(Path.Combine(mixDir, file));
 			}
 
-			if (useRA2) {
+			if (engine >= EngineType.RedAlert2) {
 				foreach (string file in Directory.GetFiles(mixDir, "*.mmx")) {
 					AddFile(Path.Combine(mixDir, file));
 				}
-				if (isMod) {
+				if (engine == EngineType.YurisRevenge) {
 					foreach (string file in Directory.GetFiles(mixDir, "*.yro")) {
 						AddFile(Path.Combine(mixDir, file));
 					}
 				}
 			}
 
-			if (useRA2) {
-				if (isMod) AddFile("conqmd.mix");
-				if (isMod) AddFile("genermd.mix");
+			if (engine >= EngineType.RedAlert2) {
+				if (engine == EngineType.YurisRevenge) {
+					AddFile("conqmd.mix");
+					AddFile("genermd.mix");
+				}
 				AddFile("generic.mix");
-				if (isMod) AddFile("isogenmd.mix");
+				if (engine == EngineType.YurisRevenge)
+					AddFile("isogenmd.mix");
 				AddFile("isogen.mix");
 				AddFile("conquer.mix");
-				if (isMod) AddFile("cameomd.mix");
+				if (engine == EngineType.YurisRevenge) AddFile("cameomd.mix");
 				AddFile("cameo.mix");
-				if (isMod) {
+				if (engine == EngineType.YurisRevenge) {
 					AddFile("mapsmd03.mix");
 					AddFile("multimd.mix");
 					AddFile("thememd.mix");

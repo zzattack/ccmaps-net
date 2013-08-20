@@ -43,8 +43,15 @@ namespace CNCMaps.MapLogic {
 				_rules = VFS.Open("rules.ini") as IniFile;
 				_art = VFS.Open("art.ini") as IniFile;
 			}
-			else if (engine == EngineType.YurisRevenge || engine == EngineType.FireStorm) {
+			else if (engine == EngineType.YurisRevenge) {
 				_rules = VFS.Open("rulesmd.ini") as IniFile;
+				_art = VFS.Open("artmd.ini") as IniFile;
+			}
+			else if (engine == EngineType.FireStorm) {
+				_rules = VFS.Open("rules.ini") as IniFile;
+				var fsRules = VFS.Open<IniFile>("firestrm.ini");
+				Logger.Info("Merging Firestorm rules with TS rules");
+				_rules.MergeWith(fsRules);
 				_art = VFS.Open("artmd.ini") as IniFile;
 			}
 		}

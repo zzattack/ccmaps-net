@@ -283,5 +283,18 @@ namespace CNCMaps.FileFormats {
 			}
 			sw.Flush();
 		}
+
+		/// <summary>
+		/// Merges (and overrides) the entries from given ini files with this
+		/// </summary>
+		/// <param name="ini"></param>
+		public void MergeWith(IniFile ini) {
+			foreach (var v in ini.Sections) {
+				var ownSection = GetOrCreateSection(v.Name);
+				foreach (var kvp in v.OrderedEntries)
+					ownSection.SetValue(kvp.Key, kvp.Value);
+			}
+		}
+
 	}
 }

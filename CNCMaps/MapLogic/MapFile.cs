@@ -231,6 +231,7 @@ namespace CNCMaps.MapLogic {
 			if (et == EngineType.AutoDetect) {
 				_rules = VFS.Open<IniFile>("rules.ini");
 				EngineType = DetectMapType(_rules);
+
 				if (EngineType == EngineType.YurisRevenge) {
 					var rulesmd = VFS.Open<IniFile>("rulesmd.ini");
 					var artmd = VFS.Open<IniFile>("artmd.ini");
@@ -249,15 +250,22 @@ namespace CNCMaps.MapLogic {
 				}
 				else _art = VFS.Open<IniFile>("art.ini"); // rules is already loaded
 			}
+			else if (EngineType == EngineType.YurisRevenge) {
+				_rules = VFS.Open("rulesmd.ini") as IniFile;
+				_art = VFS.Open("artmd.ini") as IniFile;
+			}
+			else if (EngineType == EngineType.FireStorm) {
+				_rules = VFS.Open("rules.ini") as IniFile;
+				_art = VFS.Open("art.ini") as IniFile;
+
+				Logger.Info("Merging Firestorm rules with TS rules");
+				_rules.MergeWith(VFS.Open<IniFile>("firestrm.ini"));
+				_art.MergeWith(VFS.Open<IniFile>("artfs.ini"));
+
+			}
 			else {
-				if (EngineType == EngineType.YurisRevenge || EngineType == EngineType.FireStorm) {
-					_rules = VFS.Open<IniFile>("rulesmd.ini");
-					_art = VFS.Open<IniFile>("artmd.ini");
-				}
-				else {
-					_rules = VFS.Open<IniFile>("rules.ini");
-					_art = VFS.Open<IniFile>("art.ini");
-				}
+				_rules = VFS.Open("rules.ini") as IniFile;
+				_art = VFS.Open("art.ini") as IniFile;
 			}
 
 			if (_rules == null || _art == null) {
@@ -273,7 +281,8 @@ namespace CNCMaps.MapLogic {
 			_theater.Initialize();
 			RemoveUnknownObjects();
 
-			OverrideRulesWithMap();
+			Logger.Info("Overriding rules.ini with map INI entries");
+			_rules.MergeWith(this);
 
 			MoveStructuresToBaseTile();
 
@@ -334,15 +343,6 @@ namespace CNCMaps.MapLogic {
 						_overlayObjects[o.DrawTile.Dx, o.DrawTile.Dy / 2] = o;
 					}
 				}
-			}
-		}
-
-		private void OverrideRulesWithMap() {
-			Logger.Info("Overriding rules.ini with map INI entries");
-			foreach (var v in Sections) {
-				var rulesSection = _rules.GetOrCreateSection(v.Name);
-				foreach (var kvp in v.OrderedEntries)
-					rulesSection.SetValue(kvp.Key, kvp.Value);
 			}
 		}
 
