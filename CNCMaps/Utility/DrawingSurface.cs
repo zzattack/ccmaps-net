@@ -6,7 +6,9 @@ namespace CNCMaps.Utility {
 	public class DrawingSurface {
 		public BitmapData bmd { get; private set; }
 		public Bitmap bm { get; private set; }
-
+		public int Width { get; private set; } // prevents repeated (slow) lookups in bm.Width
+		public int Height { get; private set; } // prevents repeated (slow) lookups in bm.Width
+		
 		short[] zBuffer;
 		bool[] shadowBuffer;
 
@@ -15,6 +17,8 @@ namespace CNCMaps.Utility {
 		public DrawingSurface(int width, int height, PixelFormat pixelFormat) {
 			logger.Debug("Initializing DrawingSurface with dimensions ({0},{1}), pixel format {2}", width, height, pixelFormat.ToString());
 			bm = new Bitmap(width, height, pixelFormat);
+			Width = width;
+			Height = height;
 			Lock(bm.PixelFormat);
 			zBuffer = new short[width * height];
 			shadowBuffer = new bool[width * height];
@@ -63,7 +67,12 @@ namespace CNCMaps.Utility {
 			ImageCodecInfo encoder = ImageCodecInfo.GetImageEncoders().First(e => e.FormatID == ImageFormat.Png.Guid);
 			var encoderParams = new EncoderParameters(1);
 			encoderParams.Param[0] = new EncoderParameter(Encoder.Quality, compressionLevel);
-			bm.Clone(saveRect, bm.PixelFormat).Save(path, encoder, encoderParams);
+
+			if (saveRect.Location == Point.Empty && saveRect.Size == bm.Size)
+				bm.Save(path, encoder, encoderParams);
+			else
+				using (var cutRect = bm.Clone(saveRect, bm.PixelFormat))
+					cutRect.Save(path, encoder, encoderParams);
 		}
 
 		public void SaveJPEG(string path, int compression, int left, int top, int width, int height) {
@@ -77,11 +86,26 @@ namespace CNCMaps.Utility {
 			ImageCodecInfo encoder = ImageCodecInfo.GetImageEncoders().First(e => e.FormatID == ImageFormat.Jpeg.Guid);
 			var encoderParams = new EncoderParameters(1);
 			encoderParams.Param[0] = new EncoderParameter(Encoder.Quality, quality);
-			bm.Clone(saveRect, bm.PixelFormat).Save(path, encoder, encoderParams);
+
+			if (saveRect.Location == Point.Empty && saveRect.Size == bm.Size)
+				bm.Save(path, encoder, encoderParams);
+			else
+				using (var cutRect = bm.Clone(saveRect, bm.PixelFormat))
+					cutRect.Save(path, encoder, encoderParams);
 		}
 
 
-		public int Width { get { return bm.Width; } }
-		public int Height { get { return bm.Height; } }
+		internal void FreeNonBitmap() {
+			this.zBuffer = null;
+			this.shadowBuffer = null;
+		}
+
+
+		internal void Dispose() {
+			Unlock();
+			this.zBuffer = null;
+			this.shadowBuffer = null;
+			bm.Dispose();
+		}
 	}
 }

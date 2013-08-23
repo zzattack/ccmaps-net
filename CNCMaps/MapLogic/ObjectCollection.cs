@@ -147,7 +147,7 @@ namespace CNCMaps.MapLogic {
 				// xOffset = yOffset = 0;
 			}
 			if (_collectionType == CollectionType.Terrain) {
-				yOffset = Drawable.TileHeight / 2; // trees and such are placed in the middle of their tile
+				yOffset = Drawable.TileHeight/2; // trees and such are placed in the middle of their tile
 				drawableObject.UseTilePalette = true;
 			}
 			if (rulesSection.ReadString("Land") == "Rock") {
@@ -162,7 +162,7 @@ namespace CNCMaps.MapLogic {
 				yOffset = -1;
 				drawableObject.Palette = _palettes.GetPalette(PaletteType.Unit);
 				drawableObject.UseTilePalette = false;
-			} 
+			}
 			if (rulesSection.ReadBool("Overrides")) {
 				drawableObject.Overrides = true;
 			}
@@ -172,7 +172,7 @@ namespace CNCMaps.MapLogic {
 			int fx = foundation[0] - '0';
 			int fy = foundation[2] - '0';
 			drawableObject.Foundation = new Size(fx, fy);
-			
+
 			AddImageToObject(drawableObject, imageFileName, xOffset, yOffset, shadow);
 
 			// Buildings often consist of multiple SHP files
@@ -215,7 +215,8 @@ namespace CNCMaps.MapLogic {
 						string extraImageDamagedFileName = extraImageDamagedSectionName;
 						if (extraArtDamagedSection != null) {
 							ySort = extraArtDamagedSection.ReadInt("YSort", artSection.ReadInt(extraImage + "YSort"));
-							extraShadow = extraArtDamagedSection.ReadBool("Shadow", false); // additional building need shadows listed explicitly
+							extraShadow = extraArtDamagedSection.ReadBool("Shadow", false);
+								// additional building need shadows listed explicitly
 							extraImageDamagedFileName = extraArtDamagedSection.ReadString("Image", extraImageDamagedSectionName);
 						}
 						if (theaterExtension)
@@ -255,25 +256,27 @@ namespace CNCMaps.MapLogic {
 					string img = rulesSection.ReadString("TurretAnim");
 					img += rulesSection.ReadBool("TurretAnimIsVoxel") ? ".vxl" : ".shp";
 					int m_x = rulesSection.ReadInt("TurretAnimX"),
-						m_y = rulesSection.ReadInt("TurretAnimY");
+					    m_y = rulesSection.ReadInt("TurretAnimY");
 					AddImageToObject(drawableObject, img, m_x, m_y);
+
+					string barrelFile = img.Replace("TUR", "BARL");
+					if (img.EndsWith("TUR.vxl") && VFS.Exists(barrelFile))
+						AddImageToObject(drawableObject, barrelFile, m_x, m_y);
 				}
 			}
 
 			else if (_collectionType == CollectionType.Vehicle) {
 				// Add turrets
-				if (rulesSection.ReadBool("Turret")) {
-					string turretFile = Path.GetFileNameWithoutExtension(imageFileName) + "tur.vxl";
-					AddImageToObject(drawableObject, turretFile, rulesSection.ReadInt("TurretAnimX"));
-				}
-			}
+				if (rulesSection.ReadBool("Turret") && artSection.ReadBool("Voxel")) {
+					string turretFile = Path.GetFileNameWithoutExtension(imageFileName) + "TUR.vxl";
+					int m_x = rulesSection.ReadInt("TurretAnimX"),
+						m_y = rulesSection.ReadInt("TurretAnimY");
+					AddImageToObject(drawableObject, turretFile, m_x, m_y);
 
-			if (_collectionType == CollectionType.Building || _collectionType == CollectionType.Vehicle) {
-				// try to add barrel
-				string barrelFile = Path.GetFileNameWithoutExtension(imageFileName) + "barl.vxl";
-				AddImageToObject(drawableObject, barrelFile,
-					rulesSection.ReadInt("TurretAnimX"),
-					rulesSection.ReadInt("TurretAnimY"));
+					string barrelFile = turretFile.Replace("TUR", "BARL");
+					if (VFS.Exists(barrelFile))
+						AddImageToObject(drawableObject, barrelFile, m_x, m_y);
+				}
 			}
 		}
 
@@ -311,7 +314,7 @@ namespace CNCMaps.MapLogic {
 			}
 			imageFileName = sb.ToString();
 		}
-		
+
 		public Drawable GetDrawable(RA2Object o) {
 			if (o is NamedObject) {
 				Drawable ret;
@@ -335,16 +338,16 @@ namespace CNCMaps.MapLogic {
 
 			d.Draw(o, drawingSurface);
 		}
-		
+
 		public bool HasObject(RA2Object o) {
 			var obj = GetDrawable(o);
 			return obj != null && obj.IsValid;
 		}
-		
+
 		internal Size GetFoundation(RA2Object v) {
 			return GetDrawable(v).Foundation;
 		}
-		
+
 		internal string GetName(byte p) {
 			return _drawables[p].Name;
 		}

@@ -12,7 +12,7 @@ using NLog.Targets;
 namespace CNCMaps {
 	class Program {
 		static OptionSet options;
-		public static RenderSettings settings;
+		public static RenderSettings Settings;
 		static NLog.Logger logger;
 
 		public static void Main(string[] args) {
@@ -54,55 +54,57 @@ namespace CNCMaps {
 				LogManager.ReconfigExistingLoggers();
 			}
 			logger = NLog.LogManager.GetCurrentClassLogger();
-			settings = RenderSettings.CreateDefaults();
+			Settings = RenderSettings.CreateDefaults();
 			options = new OptionSet {
-				{"h|help", "Show this short help text", v => settings.ShowHelp = true},
-				{"i|infile=", "Input file", v => settings.InputFile = v},
-				{"o|outfile=", "Output file, without extension, read from map if not specified.", v => settings.OutputFile = v},
-				{"d|outdir=", "Output directiory", v => settings.OutputDir = v},
-				{"y|force-ra2", "Force using the Red Alert 2 engine for rendering", v => settings.Engine = EngineType.RedAlert2},
-				{"Y|force-yr", "Force using the Yuri's Revenge engine for rendering", v => settings.Engine = EngineType.YurisRevenge},
-				{"t|force-ts", "Force using the Tiberian Sun engine for rendering", v => settings.Engine = EngineType.TiberianSun},
-				{"T|force-fs", "Force using the FireStorm engine for rendering", v => settings.Engine = EngineType.FireStorm},
-				{"j|output-jpg", "Output JPEG file", v => settings.SaveJPEG = true},
-				{"q|jpeg-quality=", "Set JPEG quality level (0-100)", (int v) => settings.JPEGCompression = v},
-				{"p|output-png", "Output PNG file", v => settings.SavePNG = true},
-				{"c|png-compression=", "Set PNG compression level (1-9)", (int v) => settings.PNGQuality = v},
-				{"m|mixdir=", "Specify location of .mix files, read from registry if not specified (win only)", v => settings.MixFilesDirectory = v},
-				{"s|start-pos-tiled", "Mark starting positions in a tiled manner", v => settings.StartPositionMarking = StartPositionMarking.Tiled},
-				{"S|start-pos-squared", "Mark starting positions in a squared manner", v => settings.StartPositionMarking = StartPositionMarking.Squared},
-				{"r|mark-ore", "Mark ore and gem fields more explicity, looks good when resizing to a preview", v => settings.MarkOreFields = true},
-				{"F|force-fullmap", "Ignore LocalSize definition and just save the full map", v => settings.IgnoreLocalSize = true},
-				{"f|force-localsize", "Use localsize for map dimensions (default)", v => settings.IgnoreLocalSize = true},
-				{"k|replace-preview", "Update the maps [PreviewPack] data with the rendered image", v => settings.GeneratePreviewPack = true}
+				{"h|help", "Show this short help text", v => Settings.ShowHelp = true},
+				{"i|infile=", "Input file", v => Settings.InputFile = v},
+				{"o|outfile=", "Output file, without extension, read from map if not specified.", v => Settings.OutputFile = v},
+				{"d|outdir=", "Output directiory", v => Settings.OutputDir = v},
+				{"y|force-ra2", "Force using the Red Alert 2 engine for rendering", v => Settings.Engine = EngineType.RedAlert2},
+				{"Y|force-yr", "Force using the Yuri's Revenge engine for rendering", v => Settings.Engine = EngineType.YurisRevenge},
+				{"t|force-ts", "Force using the Tiberian Sun engine for rendering", v => Settings.Engine = EngineType.TiberianSun},
+				{"T|force-fs", "Force using the FireStorm engine for rendering", v => Settings.Engine = EngineType.FireStorm},
+				{"j|output-jpg", "Output JPEG file", v => Settings.SaveJPEG = true},
+				{"q|jpeg-quality=", "Set JPEG quality level (0-100)", (int v) => Settings.JPEGCompression = v},
+				{"p|output-png", "Output PNG file", v => Settings.SavePNG = true},
+				{"c|png-compression=", "Set PNG compression level (1-9)", (int v) => Settings.PNGQuality = v},
+				{"m|mixdir=", "Specify location of .mix files, read from registry if not specified (win only)", v => Settings.MixFilesDirectory = v},
+				{"s|start-pos-tiled", "Mark starting positions in a tiled manner", v => Settings.StartPositionMarking = StartPositionMarking.Tiled},
+				{"S|start-pos-squared", "Mark starting positions in a squared manner", v => Settings.StartPositionMarking = StartPositionMarking.Squared},
+				{"r|mark-ore", "Mark ore and gem fields more explicity, looks good when resizing to a preview", v => Settings.MarkOreFields = true},
+				{"F|force-fullmap", "Ignore LocalSize definition and just save the full map", v => Settings.IgnoreLocalSize = true},
+				{"f|force-localsize", "Use localsize for map dimensions (default)", v => Settings.IgnoreLocalSize = true},
+				{"k|replace-preview", "Update the maps [PreviewPack] data with the rendered image", v => Settings.GeneratePreviewPack = true},
+				{"G|graphics-winmgr", "Attempt rendering voxels using window manager context first (default)", v => Settings.PreferOSMesa = false},
+				{"g|graphics-osmesa", "Attempt rendering voxels using OSMesa context first", v => Settings.PreferOSMesa = true},
 			};
 
 			options.Parse(args);
 
-			if (settings.ShowHelp) {
+			if (Settings.ShowHelp) {
 				ShowHelp();
 			}
-			else if (!File.Exists(settings.InputFile)) {
+			else if (!File.Exists(Settings.InputFile)) {
 				logger.Error("Specified input file does not exist");
 			}
-			else if (!settings.SaveJPEG && !settings.SavePNG && !settings.GeneratePreviewPack) {
+			else if (!Settings.SaveJPEG && !Settings.SavePNG && !Settings.GeneratePreviewPack) {
 				logger.Error("No output format selected. Either specify -j, -p, -k or a combination");
 			}
-			else if (settings.OutputDir != "" && !System.IO.Directory.Exists(settings.OutputDir)) {
+			else if (Settings.OutputDir != "" && !System.IO.Directory.Exists(Settings.OutputDir)) {
 				logger.Error("Specified output directory does not exist.");
 			}
 			else {
 				logger.Info("Initializing virtual filesystem");
 				var vfs = VFS.GetInstance();
-				if (!vfs.ScanMixDir(settings.Engine, settings.MixFilesDirectory)) {
+				if (!vfs.ScanMixDir(Settings.Engine, Settings.MixFilesDirectory)) {
 					logger.Fatal("Scanning for mix files failed. If on Linux, specify the --mixdir command line argument");
 					return;
 				}
 
 				var map = new MapFile(
-					File.Open(settings.InputFile, FileMode.Open, FileAccess.Read, FileShare.ReadWrite),
-					Path.GetFileName(settings.InputFile));
-				map.FileName = settings.InputFile;
+					File.Open(Settings.InputFile, FileMode.Open, FileAccess.Read, FileShare.ReadWrite),
+					Path.GetFileName(Settings.InputFile));
+				map.FileName = Settings.InputFile;
 
 				// crap thingie to move maps in a directory for themselves
 				/*string mapName = map.DetermineMapName(EngineType.FireStorm);
@@ -113,55 +115,60 @@ namespace CNCMaps {
  				File.Move(map.FileName, Path.Combine(dir, Path.GetFileName(map.FileName)));
 				return;*/
 				
-				if (!map.LoadMap(settings.Engine)) {
+				if (!map.LoadMap(Settings.Engine)) {
 					logger.Error("Could not successfully load all required components for this map. Aborting.");
 					return;
 				}
 
-				if (settings.StartPositionMarking == StartPositionMarking.Tiled)
+				if (Settings.StartPositionMarking == StartPositionMarking.Tiled)
 					map.DrawTiledStartPositions();
 
-				if (settings.MarkOreFields)
+				if (Settings.MarkOreFields)
 					map.MarkOreAndGems();
 
 				map.DrawMap();
 
-				if (settings.StartPositionMarking == StartPositionMarking.Squared)
+				if (Settings.StartPositionMarking == StartPositionMarking.Squared)
 					map.DrawSquaredStartPositions();
 
-				if (settings.OutputFile == "")
-					settings.OutputFile = map.DetermineMapName(map.EngineType);
+				if (Settings.OutputFile == "")
+					Settings.OutputFile = map.DetermineMapName(map.EngineType);
 
 				DrawingSurface ds = map.GetDrawingSurface();
 
 				Rectangle saveRect;
-				if (settings.IgnoreLocalSize)
-					saveRect = new Rectangle(0, 0, ds.Width, ds.Height);
+				if (Settings.IgnoreLocalSize)
+					saveRect = new Rectangle(map.TileWidth / 2, map.TileHeight / 2, ds.Width - map.TileWidth, ds.Height - map.TileHeight);
 				else
 					saveRect = map.GetLocalSizePixels();
 
-				if (settings.OutputDir == "")
-					settings.OutputDir = Path.GetDirectoryName(settings.InputFile);
+				if (Settings.OutputDir == "")
+					Settings.OutputDir = Path.GetDirectoryName(Settings.InputFile);
 
-				if (settings.SaveJPEG)
-					ds.SaveJPEG(Path.Combine(settings.OutputDir, settings.OutputFile + ".jpg"), settings.JPEGCompression, saveRect);
+				// free up as much memory as possible
+				ds.FreeNonBitmap();
+				map.FreeUseless(); 
+				GC.Collect();
 
-				if (settings.SavePNG)
-					ds.SavePNG(Path.Combine(settings.OutputDir, settings.OutputFile + ".png"), settings.PNGQuality, saveRect);
+				if (Settings.SaveJPEG)
+					ds.SaveJPEG(Path.Combine(Settings.OutputDir, Settings.OutputFile + ".jpg"), Settings.JPEGCompression, saveRect);
 
-				if (settings.GeneratePreviewPack) {
+				if (Settings.SavePNG)
+					ds.SavePNG(Path.Combine(Settings.OutputDir, Settings.OutputFile + ".png"), Settings.PNGQuality, saveRect);
+
+				if (Settings.GeneratePreviewPack) {
 					logger.Info("Generating PreviewPack data");
 					// we will have to re-lock the bmd
 					ds.Lock(ds.bm.PixelFormat);
 
-					if (settings.MarkOreFields == false) {
+					if (Settings.MarkOreFields == false) {
 						map.MarkOreAndGems();
 						logger.Debug("Redrawing ore and gems areas");
 						map.RedrawOreAndGems();
 					}
-					if (settings.StartPositionMarking != StartPositionMarking.Squared) {
+					if (Settings.StartPositionMarking != StartPositionMarking.Squared) {
 						// undo tiled, if needed
-						if (settings.StartPositionMarking == StartPositionMarking.Tiled)
+						if (Settings.StartPositionMarking == StartPositionMarking.Tiled)
 							map.UndrawTiledStartPositions();
 						map.DrawSquaredStartPositions();
 					}

@@ -13,6 +13,8 @@ namespace CNCMaps.MapLogic {
 			Foundation = new Size(1, 1);
 		}
 
+		internal static readonly VoxelRenderer Voxelrenderer = new VoxelRenderer();
+
 		bool sorted;
 		void Sort() {
 			_fires.Sort();
@@ -92,8 +94,6 @@ namespace CNCMaps.MapLogic {
 			}
 
 		}
-
-		static readonly VoxelRenderer Voxelrenderer = new VoxelRenderer();
 
 		private void DrawFile(RA2Object obj, DrawingSurface ds, ShpFile file, DrawProperties props, Palette p = null) {
 			if (file == null || obj == null || obj.Tile == null) return;

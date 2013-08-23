@@ -4,9 +4,9 @@
 !include LogicLib.nsh
 
 ; Define your application name
-!define APPNAME "CNCMaps.NET"
-!define VERSION 1.98
-!define APPNAMEANDVERSION "CNC Maps renderer ${VERSION}"
+!define APPNAME "CNC Map Render"
+!define VERSION 1.99
+!define APPNAMEANDVERSION "CNC Map Render ${VERSION}"
 
 ; Main Install settings
 Name "${APPNAMEANDVERSION}"

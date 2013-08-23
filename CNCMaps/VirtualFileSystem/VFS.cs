@@ -114,7 +114,7 @@ namespace CNCMaps.VirtualFileSystem {
 
 		public bool ScanMixDir(EngineType engine, string installDir = "") {
 			if (installDir == "")
-				installDir = engine <= EngineType.FireStorm ? TSInstallDir : RA2InstallDir;
+				installDir = engine >= EngineType.RedAlert2 || engine==EngineType.AutoDetect ? RA2InstallDir : TSInstallDir;
 
 			return ScanMixDir(installDir, engine == EngineType.AutoDetect ? EngineType.YurisRevenge : engine);
 		}
@@ -154,36 +154,36 @@ namespace CNCMaps.VirtualFileSystem {
 				AddFile(Path.Combine(mixDir, "ra2.mix"));
 			}
 			else {
-				if (engine == EngineType.YurisRevenge) 
+				if (engine == EngineType.YurisRevenge)
 					AddFile("tibsunmd.mix");
 				AddFile("tibsun.mix");
 			}
 
-			if (engine == EngineType.YurisRevenge) 
+			if (engine == EngineType.YurisRevenge)
 				AddFile("cachemd.mix");
 			AddFile("cache.mix");
 
-			if (engine == EngineType.YurisRevenge) 
+			if (engine == EngineType.YurisRevenge)
 				AddFile("localmd.mix");
 			AddFile("local.mix");
 
-			if (engine == EngineType.YurisRevenge) 
+			if (engine == EngineType.YurisRevenge)
 				AddFile("audiomd.mix");
 
-			foreach (string file in Directory.GetFiles(mixDir, "ecache*.mix")) 
+			foreach (string file in Directory.GetFiles(mixDir, "ecache*.mix"))
 				AddFile(Path.Combine(mixDir, file));
-			
 
-			foreach (string file in Directory.GetFiles(mixDir, "elocal*.mix")) 
+
+			foreach (string file in Directory.GetFiles(mixDir, "elocal*.mix"))
 				AddFile(Path.Combine(mixDir, file));
-			
+
 
 			if (engine >= EngineType.RedAlert2) {
 				foreach (string file in Directory.GetFiles(mixDir, "*.mmx"))
 					AddFile(Path.Combine(mixDir, file));
-				
-				if (engine == EngineType.YurisRevenge) 
-					foreach (string file in Directory.GetFiles(mixDir, "*.yro")) 
+
+				if (engine == EngineType.YurisRevenge)
+					foreach (string file in Directory.GetFiles(mixDir, "*.yro"))
 						AddFile(Path.Combine(mixDir, file));
 			}
 
@@ -210,14 +210,18 @@ namespace CNCMaps.VirtualFileSystem {
 			return true;
 		}
 
+		public void Clear() { AllArchives.Clear(); }
+
 		public static string RA2InstallPath {
 			get {
-				return ReadRegistryString(Registry.LocalMachine, "SOFTWARE\\Westwood\\Red Alert 2", "InstallPath");
+				var key = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry32);
+				return ReadRegistryString(key, "SOFTWARE\\Westwood\\Red Alert 2", "InstallPath");
 			}
 		}
 		public static string TSInstallPath {
 			get {
-				return ReadRegistryString(Registry.LocalMachine, "SOFTWARE\\Westwood\\Tiberian Sun", "InstallPath");
+				var key = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry32);
+				return ReadRegistryString(key, "SOFTWARE\\Westwood\\Tiberian Sun", "InstallPath");
 			}
 		}
 
@@ -242,5 +246,6 @@ namespace CNCMaps.VirtualFileSystem {
 			}
 			return ret;
 		}
+
 	}
 }

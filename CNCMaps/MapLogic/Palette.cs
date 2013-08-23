@@ -19,7 +19,7 @@ namespace CNCMaps.MapLogic {
 			this.originalPalette = originalPalette;
 		}
 
-		public void ApplyLighting(Lighting l, int level) {
+		public void ApplyLighting(Lighting l, int level = 0) {
 			redMult = l.Red;
 			greenMult = l.Green;
 			blueMult = l.Blue;
@@ -51,7 +51,7 @@ namespace CNCMaps.MapLogic {
 		}
 
 		public void Recalculate() {
-			if (!originalColorsLoaded) 
+			if (!originalColorsLoaded)
 				LoadOriginalColors();
 			if (!originalColorsLoaded) return;
 
@@ -93,7 +93,7 @@ namespace CNCMaps.MapLogic {
 
 		internal void Remap(Color color) {
 			if (!originalColorsLoaded)
-				LoadOriginalColors();	
+				LoadOriginalColors();
 			double[] mults = { 0xFC >> 2, 0xEC >> 2, 0xDC >> 2, 0xD0 >> 2,
 						0xC0 >> 2, 0xB0 >> 2, 0xA4 >> 2, 0x94 >> 2,
 						0x84 >> 2, 0x78 >> 2, 0x68 >> 2, 0x58 >> 2,
@@ -104,6 +104,17 @@ namespace CNCMaps.MapLogic {
 				origColors[i * 3 + 1] = (byte)(color.G / 255.0 * mults[i - 16]);
 				origColors[i * 3 + 2] = (byte)(color.B / 255.0 * mults[i - 16]);
 			}
+		}
+
+		internal Lighting GetLighting() {
+			return new Lighting {
+				Ambient = ambientMult,
+				Red = redMult,
+				Green = greenMult,
+				Blue = blueMult,
+				Ground = 0,
+				Level = 0,
+			};
 		}
 	}
 }

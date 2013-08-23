@@ -6,39 +6,38 @@ using OpenTK.Graphics.OpenGL;
 using OpenTK.Graphics;
 
 namespace CNCMaps.MapLogic {
-	public class VoxelRenderer {
+	public class VoxelRenderer : IDisposable {
 		static NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 		GraphicsContext ctx;
 		GameWindow gw;
-			
+
 		float[] lightPos = { 5f, 5f, 10f, 0f };
 		float[] lightSpec = { 1f, 0.5f, 0f, 0f };
 		float[] lightDiffuse = { 0.95f, 0.95f, 0.95f, 1f };
 		float[] lightAmb = { 0.6f, 0.6f, 0.6f, 1f };
 
-		public VoxelRenderer() {
+		DrawingSurface vxl_ds;
+		VxlFile _vxlFile;
+		HvaFile _hvaFile;
+		Palette _palette;
+
+		int frame;
+		int pitch;
+		double _objectRotation;
+		bool _canRender;
+		bool _isInit;
+
+
+		public void Initialize() {
+			logger.Info("Initializing voxel renderer");
+			_isInit = true;
+
 			vxl_ds = new DrawingSurface(200, 200, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
-			try {
-				ctx = GraphicsContext.CreateMesaContext();
-				long ctx_ptr = long.Parse(ctx.ToString()); // cannot access private .Context
-				if (ctx_ptr != 0) {
-					ctx.MakeCurrent(new OpenTK.Platform.Mesa.BitmapWindowInfo(vxl_ds.bmd));
-					if (!ctx.IsCurrent) {
-						logger.Debug("Could not make context current");
-						throw new InvalidOperationException("Mesa context could not be made current");
-					}
-				}
-				else throw new InvalidOperationException("CreateMesaContext failed");
+			if (!CreateContext()) {
+				logger.Error("No graphics context could not be initialized, voxel rendering will be unavailable");
+				return;
 			}
-			catch (Exception exc) {
-				logger.Error("Unknown error while creating OSMesa Context: {0}", exc);
-				logger.Warn("Could not create OSMesa Context, attempting Window manager context");
-				try { gw = new GameWindow(200, 200); }
-				catch {
-					logger.Error("Fallback GameWindow could not be created either. Voxel rendering will be unavailable");
-					return;
-				}
-			}
+
 			logger.Debug("GL context created");
 			try {
 				GL.LoadAll();
@@ -58,35 +57,70 @@ namespace CNCMaps.MapLogic {
 				GL.Enable(EnableCap.Light0);
 				GL.ClearColor(0.5f, 0.9f, 0.3f, 0.0f);
 
-				canRender = SetupFramebuffer();
+				_canRender = SetupFramebuffer();
 			}
 
 			catch (Exception exc) {
-				logger.Error("Voxel rendering will not be available because an exception occurred while initializing OpenGL: {0}", exc.ToString());
-				return;
+				logger.Error("Voxel rendering will not be available because an exception occurred while initializing OpenGL: {0}",
+							 exc.ToString());
 			}
 		}
 
 
-		DrawingSurface vxl_ds;
-		VxlFile vxlFile;
-		HvaFile hvaFile;
-		Palette palette;
+		private bool CreateContext() {
+			logger.Debug("Creating graphics context, trying {0} first", Program.Settings.PreferOSMesa ? "OSMesa" : "Window Manager");
+			if (Program.Settings.PreferOSMesa)
+				return CreateMesaContext() || CreateGameWindow();
+			else
+				return CreateGameWindow() || CreateMesaContext();
+		}
 
-		int frame;
-		int pitch;
-		bool canRender;
+		private bool CreateGameWindow() {
+			try {
+				gw = new GameWindow(200, 200);
+				return true;
+			}
+			catch {
+				logger.Warn("GameWindow could not be created.");
+				return false;
+			}
+		}
 
-		double objectRotation;
+		private bool CreateMesaContext() {
+			try {
+				ctx = GraphicsContext.CreateMesaContext();
+				long ctxPtr = long.Parse(ctx.ToString()); // cannot access private .Context
+				if (ctxPtr != 0) {
+					ctx.MakeCurrent(new OpenTK.Platform.Mesa.BitmapWindowInfo(vxl_ds.bmd));
+					if (!ctx.IsCurrent) {
+						logger.Warn("Could not make context current");
+						throw new InvalidOperationException("Mesa context could not be made current");
+					}
+				}
+				return true;
+			}
+			catch {
+				logger.Warn("Mesa context could not be created");
+				return false;
+			}
+		}
+
+		public void Dispose() {
+			vxl_ds.Dispose();
+			if (ctx != null) ctx.Dispose();
+			if (gw != null) gw.Dispose();
+		}
+		
 		public DrawingSurface Render(VxlFile vxlFile, HvaFile hvaFile, double objectRotation, Palette palette) {
-			if (!canRender) {
+			if (!_isInit) Initialize();
+			if (!_canRender) {
 				logger.Warn("Not rendering {0} because no OpenGL context could be obtained", vxlFile.FileName);
 				return null;
 			}
-			this.vxlFile = vxlFile;
-			this.hvaFile = hvaFile;
-			this.palette = palette;
-			this.objectRotation = objectRotation;
+			this._vxlFile = vxlFile;
+			this._hvaFile = hvaFile;
+			this._palette = palette;
+			this._objectRotation = objectRotation;
 
 			logger.Debug("Rendering voxel {0}", vxlFile.FileName);
 
@@ -146,7 +180,7 @@ namespace CNCMaps.MapLogic {
 			GL.Translate(0, 0, 10);
 			GL.Rotate(60, 1, 0, 0);
 			GL.Rotate(180, 0, 1, 0);
-			GL.Rotate(objectRotation, 0, 0, 1);
+			GL.Rotate(_objectRotation, 0, 0, 1);
 
 			GL.Scale(0.075, 0.075, 0.075);
 		}
@@ -155,10 +189,10 @@ namespace CNCMaps.MapLogic {
 			GL.PushMatrix();
 
 			byte xs, ys, zs;
-			vxlFile.getSize(out xs, out ys, out zs);
+			_vxlFile.getSize(out xs, out ys, out zs);
 
 			float[] min, max;
-			vxlFile.getBounds(out min, out max);
+			_vxlFile.getBounds(out min, out max);
 
 			/* Calculate the screen units / voxel ratio for scaling */
 			max[0] -= min[0];
@@ -171,11 +205,11 @@ namespace CNCMaps.MapLogic {
 
 			// Load transformation matrix
 			float[] transform;
-			hvaFile.loadGLMatrix(frame, out transform);
+			_hvaFile.loadGLMatrix(frame, out transform);
 			// The HVA transformation matrices have to be scaled
-			transform[12] *= vxlFile.getScale() * sectionScale[0];
-			transform[13] *= vxlFile.getScale() * sectionScale[1];
-			transform[14] *= vxlFile.getScale() * sectionScale[2];
+			transform[12] *= _vxlFile.getScale() * sectionScale[0];
+			transform[13] *= _vxlFile.getScale() * sectionScale[1];
+			transform[14] *= _vxlFile.getScale() * sectionScale[2];
 
 			// Apply the transform for this frame
 			GL.MultMatrix(transform);
@@ -189,10 +223,10 @@ namespace CNCMaps.MapLogic {
 			for (uint x = 0; x != xs; x++) {
 				for (uint y = 0; y != ys; y++) {
 					for (uint z = 0; z != zs; z++) {
-						if (vxlFile.getVoxel(x, y, z, out vx)) {
-							GL.Color3(palette.colors[vx.colour]);
+						if (_vxlFile.getVoxel(x, y, z, out vx)) {
+							GL.Color3(_palette.colors[vx.colour]);
 							var normal = new float[3];
-							vxlFile.getXYZNormal(vx.normal, out normal);
+							_vxlFile.getXYZNormal(vx.normal, out normal);
 							GL.Normal3(normal);
 							renderVoxel(x * sectionScale[0], y * sectionScale[1], z * sectionScale[2], (1.0f - pitch) / 2.0f);
 						}

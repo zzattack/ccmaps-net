@@ -2,14 +2,16 @@
 
 namespace CNCMaps.MapLogic {
 	public class Lighting {
-		public double Level { get; private set; }
-		public double Ambient { get; private set; }
-		public double Red { get; private set; }
-		public double Green { get; private set; }
-		public double Blue { get; private set; }
-		public double Ground { get; private set; }
+		public double Level { get; set; }
+		public double Ambient { get; set; }
+		public double Red { get; set; }
+		public double Green { get; set; }
+		public double Blue { get; set; }
+		public double Ground { get; set; }
 
 		static NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
+
+		public Lighting() { }
 
 		public Lighting(IniFile.IniSection iniSection) {
 			System.Diagnostics.Debug.Assert(iniSection.Name == "Lighting");

@@ -15,35 +15,37 @@ namespace CNCMaps.MapLogic {
 	class MapFile : IniFile {
 		public EngineType EngineType { get; private set; }
 
-		Rectangle _fullSize, _localSize;
-		Theater _theater;
-		IniFile _rules;
-		IniFile _art;
+		private Rectangle _fullSize, _localSize;
+		private Theater _theater;
+		private IniFile _rules;
+		private IniFile _art;
 
-		TileLayer _tiles;
-		OverlayObject[,] _overlayObjects;
-		SmudgeObject[,] _smudgeObjects;
-		TerrainObject[,] _terrainObjects;
-		StructureObject[,] _structureObjects;
-		List<InfantryObject>[,] _infantryObjects;
-		UnitObject[,] _unitObjects;
-		AircraftObject[,] _aircraftObjects;
+		private TileLayer _tiles;
+		private OverlayObject[,] _overlayObjects;
+		private SmudgeObject[,] _smudgeObjects;
+		private TerrainObject[,] _terrainObjects;
+		private StructureObject[,] _structureObjects;
+		private List<InfantryObject>[,] _infantryObjects;
+		private UnitObject[,] _unitObjects;
+		private AircraftObject[,] _aircraftObjects;
 
-		readonly Dictionary<string, Color> _countryColors = new Dictionary<string, Color>();
-		readonly Dictionary<string, Color> _namedColors = new Dictionary<string, Color>();
+		private readonly Dictionary<string, Color> _countryColors = new Dictionary<string, Color>();
+		private readonly Dictionary<string, Color> _namedColors = new Dictionary<string, Color>();
 
-		Lighting _lighting;
-		readonly List<LightSource> _lightSources = new List<LightSource>();
-		readonly List<Palette> _palettePerLevel = new List<Palette>(15);
-		readonly List<Palette> _palettesToBeRecalculated = new List<Palette>(15);
+		private Lighting _lighting;
+		private readonly List<LightSource> _lightSources = new List<LightSource>();
+		private readonly List<Palette> _palettePerLevel = new List<Palette>(15);
+		private readonly List<Palette> _palettesToBeRecalculated = new List<Palette>(15);
 
 		private DrawingSurface _drawingSurface;
 
-		static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
+		private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
 
 		/// <summary>Constructor.</summary>
 		/// <param name="baseStream">The base stream.</param>
-		public MapFile(Stream baseStream, string filename = "") : this(baseStream, filename, 0, baseStream.Length) { }
+		public MapFile(Stream baseStream, string filename = "")
+			: this(baseStream, filename, 0, baseStream.Length) {
+		}
 
 		public MapFile(Stream baseStream, string filename, int offset, long length, bool isBuffered = true) :
 			base(baseStream, filename, offset, length, isBuffered) {
@@ -88,7 +90,8 @@ namespace CNCMaps.MapLogic {
 				missionName = (engine >= EngineType.RedAlert2) ? missionEntry.UIName : missionEntry.Name;
 			}
 
-			else { // multiplayer map
+			else {
+				// multiplayer map
 				string pktEntryName = fileNameWithoutExtension;
 				PktFile pkt = null;
 
@@ -156,7 +159,7 @@ namespace CNCMaps.MapLogic {
 					mapName = basic.ReadString("Name", fileNameWithoutExtension);
 			}
 
-			// if this is a RA2/YR mission (csfEntry set) or official map with valid pktMapEntry
+				// if this is a RA2/YR mission (csfEntry set) or official map with valid pktMapEntry
 			else if (missionEntry != null || pktMapEntry != null) {
 				string csfEntryName = missionEntry != null ? missionName : pktMapEntry.Description;
 
@@ -170,7 +173,8 @@ namespace CNCMaps.MapLogic {
 						string missionMapName = Path.GetFileName(FileName);
 						if (char.IsDigit(missionMapName[3]) && char.IsDigit(missionMapName[4])) {
 							string missionNr = Path.GetFileName(FileName).Substring(3, 2);
-							mapName = mapName.Substring(0, mapName.IndexOf(":")) + " " + missionNr + " -" + mapName.Substring(mapName.IndexOf(":") + 1);
+							mapName = mapName.Substring(0, mapName.IndexOf(":")) + " " + missionNr + " -" +
+									  mapName.Substring(mapName.IndexOf(":") + 1);
 						}
 					}
 				}
@@ -233,12 +237,16 @@ namespace CNCMaps.MapLogic {
 				EngineType = DetectMapType(_rules);
 
 				if (EngineType == EngineType.YurisRevenge) {
+					// add YR mixes to VFS
+					VFS.GetInstance().Clear();
+					VFS.GetInstance().ScanMixDir(EngineType.YurisRevenge);
+
 					var rulesmd = VFS.Open<IniFile>("rulesmd.ini");
 					var artmd = VFS.Open<IniFile>("artmd.ini");
 
 					if (rulesmd == null) {
 						Logger.Error("rulesmd.ini or artmd.ini could not be loaded! You cannot render a YR/FS map " +
-							"without the expansion installed. Unavailable objects will not be rendered, reverting to rules.ini.");
+									 "without the expansion installed. Unavailable objects will not be rendered, reverting to rules.ini.");
 						RemoveYRObjects();
 
 						_art = VFS.Open<IniFile>("art.ini");
@@ -270,7 +278,7 @@ namespace CNCMaps.MapLogic {
 
 			if (_rules == null || _art == null) {
 				Logger.Fatal("Rules or art config file could not be loaded! You cannot render a YR/FS map" +
-					" without the expansion installed");
+							 " without the expansion installed");
 				return false;
 			}
 
@@ -350,9 +358,10 @@ namespace CNCMaps.MapLogic {
 		private void LoadCountries() {
 			Logger.Info("Loading countries");
 
-			var countriesSection = _rules.GetSection("Countries");
+			var countriesSection = _rules.GetSection(EngineType >= EngineType.RedAlert2 ? "Countries" : "Houses");
 			foreach (var entry in countriesSection.OrderedEntries) {
 				IniSection countrySection = _rules.GetSection(entry.Value);
+				if (countrySection == null) continue;
 				Color c;
 				if (!_namedColors.TryGetValue(countrySection.ReadString("Color"), out c))
 					c = _namedColors.Values.First();
@@ -366,7 +375,7 @@ namespace CNCMaps.MapLogic {
 			foreach (var entry in colorsSection.OrderedEntries) {
 				string[] colorComponents = ((string)entry.Value).Split(',');
 				var h = new HsvColor(int.Parse(colorComponents[0]),
-					int.Parse(colorComponents[1]), int.Parse(colorComponents[2]));
+									 int.Parse(colorComponents[1]), int.Parse(colorComponents[2]));
 				_namedColors[entry.Key] = h.ToRGB();
 			}
 		}
@@ -789,8 +798,10 @@ namespace CNCMaps.MapLogic {
 					if (s.Tile != null)
 						_structureObjects[s.Tile.Dx, s.Tile.Dy / 2] = s;
 				}
-				catch (IndexOutOfRangeException) { } // catch invalid entries
-				catch (FormatException) { }
+				catch (IndexOutOfRangeException) {
+				} // catch invalid entries
+				catch (FormatException) {
+				}
 			}
 			Logger.Trace("Loaded structures ({0})", _structureObjects.Length);
 		}
@@ -822,7 +833,8 @@ namespace CNCMaps.MapLogic {
 					infantryList.Add(i);
 					count++;
 				}
-			} Logger.Trace("Loaded infantry objects ({0})", count);
+			}
+			Logger.Trace("Loaded infantry objects ({0})", count);
 
 		}
 
@@ -958,11 +970,14 @@ namespace CNCMaps.MapLogic {
 			}
 		}
 
-		static string[] lampNames = new[] {
-			"REDLAMP", "BLUELAMP", "GRENLAMP", "YELWLAMP", "PURPLAMP", "INORANLAMP", "INGRNLMP", "INREDLMP", "INBLULMP", "INGALITE",
-			"INYELWLAMP", "INPURPLAMP", "NEGLAMP", "NERGRED", "TEMMORLAMP", "TEMPDAYLAMP", "TEMDAYLAMP", "TEMDUSLAMP", "TEMNITLAMP", "SNOMORLAMP",
+		private static string[] lampNames = new[] {
+			"REDLAMP", "BLUELAMP", "GRENLAMP", "YELWLAMP", "PURPLAMP", "INORANLAMP", "INGRNLMP", "INREDLMP", "INBLULMP",
+			"INGALITE",
+			"INYELWLAMP", "INPURPLAMP", "NEGLAMP", "NERGRED", "TEMMORLAMP", "TEMPDAYLAMP", "TEMDAYLAMP", "TEMDUSLAMP",
+			"TEMNITLAMP", "SNOMORLAMP",
 			"SNODAYLAMP", "SNODUSLAMP", "SNONITLAMP"
 		};
+
 		private void LoadLightSources() {
 			Logger.Info("Loading light sources");
 			var forDeletion = new List<StructureObject>();
@@ -1001,7 +1016,8 @@ namespace CNCMaps.MapLogic {
 					// this is already added to the PalettesToBeRecalculated list
 				}
 			}
-			Logger.Debug("Determined palettes to be recalculated due to lightsources ({0})", _palettesToBeRecalculated.Count - before);
+			Logger.Debug("Determined palettes to be recalculated due to lightsources ({0})",
+						 _palettesToBeRecalculated.Count - before);
 		}
 
 		private void ApplyRemappables() {
@@ -1010,18 +1026,21 @@ namespace CNCMaps.MapLogic {
 				if (s == null) continue;
 				s.Palette = _theater.GetPalette(s).Clone();
 				s.Palette.Remap(_countryColors[s.Owner]);
+				s.Palette.ApplyLighting(s.Tile.Palette.GetLighting());
 				_palettesToBeRecalculated.Add(s.Palette);
 			}
 			foreach (var u in _unitObjects) {
 				if (u == null) continue;
 				u.Palette = _theater.GetPalette(u).Clone();
 				u.Palette.Remap(_countryColors[u.Owner]);
+				u.Palette.ApplyLighting(u.Tile.Palette.GetLighting());
 				_palettesToBeRecalculated.Add(u.Palette);
 			}
 			foreach (var a in _aircraftObjects) {
 				if (a == null) continue;
 				a.Palette = _theater.GetPalette(a).Clone();
 				a.Palette.Remap(_countryColors[a.Owner]);
+				a.Palette.ApplyLighting(a.Tile.Palette.GetLighting());
 				_palettesToBeRecalculated.Add(a.Palette);
 			}
 			foreach (var il in _infantryObjects) {
@@ -1030,6 +1049,7 @@ namespace CNCMaps.MapLogic {
 					if (i == null) continue;
 					i.Palette = _theater.GetPalette(i).Clone();
 					i.Palette.Remap(_countryColors[i.Owner]);
+					i.Palette.ApplyLighting(i.Tile.Palette.GetLighting());
 					_palettesToBeRecalculated.Add(i.Palette);
 				}
 			}
@@ -1038,7 +1058,8 @@ namespace CNCMaps.MapLogic {
 			if (EngineType == EngineType.TiberianSun || EngineType == EngineType.FireStorm) {
 				var collection = _theater.GetCollection(CollectionType.Overlay);
 				var tiberiumsSections = _rules.GetSection("Tiberiums");
-				var tiberiumRemaps = tiberiumsSections.OrderedEntries.Select(v => _rules.GetSection(v.Value).ReadString("Color")).ToList();
+				var tiberiumRemaps =
+					tiberiumsSections.OrderedEntries.Select(v => _rules.GetSection(v.Value).ReadString("Color")).ToList();
 
 				foreach (var ovl in _overlayObjects) {
 					if (ovl == null) continue;
@@ -1053,7 +1074,8 @@ namespace CNCMaps.MapLogic {
 					}
 				}
 			}
-			Logger.Debug("Determined palettes to be recalculated due to remappables ({0})", _palettesToBeRecalculated.Count - before);
+			Logger.Debug("Determined palettes to be recalculated due to remappables ({0})",
+						 _palettesToBeRecalculated.Count - before);
 		}
 
 		private void RecalculateAllPalettes() {
@@ -1190,7 +1212,7 @@ namespace CNCMaps.MapLogic {
 
 		public Rectangle GetLocalSizePixels() {
 			int left = Math.Max(_localSize.Left * TileWidth, 0),
-			top = Math.Max(_localSize.Top * TileHeight - 3 * TileHeight, 0);
+				top = Math.Max(_localSize.Top * TileHeight - 3 * TileHeight, 0);
 			int width = _localSize.Width * TileWidth;
 			int height = _localSize.Height * TileHeight + 5 * TileHeight;
 
@@ -1249,7 +1271,8 @@ namespace CNCMaps.MapLogic {
 
 		public void DrawMap() {
 			Logger.Info("Drawing map");
-			_drawingSurface = new DrawingSurface(_fullSize.Width * TileWidth, _fullSize.Height * TileHeight, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
+			_drawingSurface = new DrawingSurface(_fullSize.Width * TileWidth, _fullSize.Height * TileHeight,
+												 System.Drawing.Imaging.PixelFormat.Format24bppRgb);
 			var tileCollection = _theater.GetTileCollection();
 
 			// zig-zag drawing technique explanation: http://stackoverflow.com/questions/892811/drawing-isometric-game-worlds
@@ -1320,15 +1343,31 @@ namespace CNCMaps.MapLogic {
 		}
 
 		public int TileWidth {
-			get {
-				return EngineType == EngineType.RedAlert2 || EngineType == EngineType.YurisRevenge ? 60 : 48;
-			}
+			get { return EngineType == EngineType.RedAlert2 || EngineType == EngineType.YurisRevenge ? 60 : 48; }
 		}
 
 		public int TileHeight {
-			get {
-				return EngineType == EngineType.RedAlert2 || EngineType == EngineType.YurisRevenge ? 30 : 24;
-			}
+			get { return EngineType == EngineType.RedAlert2 || EngineType == EngineType.YurisRevenge ? 30 : 24; }
+		}
+
+		internal void FreeUseless() {
+			_rules.Dispose();
+			_art.Dispose();
+			baseStream.Dispose();
+			_theater = null;
+			_tiles = null;
+			_overlayObjects = null;
+			_smudgeObjects = null;
+			_unitObjects = null;
+			_infantryObjects = null;
+			_structureObjects = null;
+			_unitObjects = null;
+			_aircraftObjects = null; ;
+			_countryColors.Clear();
+			_namedColors.Clear();
+			_lightSources.Clear();
+			_palettePerLevel.Clear();
+			_palettesToBeRecalculated.Clear();
 		}
 	}
 }

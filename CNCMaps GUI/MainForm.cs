@@ -26,25 +26,14 @@ namespace CNCMaps.GUI {
 		private string FindRenderProg() {
 			if (!IsLinux) {
 				try {
-					RegistryKey k = Registry.LocalMachine.OpenSubKey("SOFTWARE\\CNC Map Render");
-					if (k != null) {
-						var s = (string) k.GetValue("");
-						k.Close();
-						return s + "\\" + RendererExe;
-					}
+					using (var key = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry32))
+						return (string)key.OpenSubKey("SOFTWARE\\CNC Map Render").GetValue("") + "\\" + RendererExe;
 				}
 				catch (NullReferenceException) { }
 				catch (SecurityException) { }
 			}
 
-			return File.Exists(RendererExe) ? RendererExe : "";
-		}
-
-		public static bool IsLinux {
-			get {
-				int p = (int)Environment.OSVersion.Platform;
-				return (p == 4) || (p == 6) || (p == 128);
-			}
+			return File.Exists(Path.Combine(Environment.CurrentDirectory, RendererExe)) ? RendererExe : "";
 		}
 
 		private void OutputNameCheckedChanged(object sender, EventArgs e) {
@@ -66,7 +55,7 @@ namespace CNCMaps.GUI {
 			ofd.Multiselect = false;
 			ofd.Filter = "Executable (*.exe)|*.exe";
 			ofd.InitialDirectory = Directory.GetCurrentDirectory();
-			ofd.FileName = "cncmaprender.exe";
+			ofd.FileName = RendererExe;
 			if (ofd.ShowDialog() == DialogResult.OK) {
 				tbRenderProg.Text = ofd.FileName.StartsWith(Directory.GetCurrentDirectory()) ?
 					ofd.FileName.Substring(Directory.GetCurrentDirectory().Length + 1) :
@@ -126,17 +115,25 @@ namespace CNCMaps.GUI {
 			return cmd;
 		}
 
-		private static string GetMixDir() {
-			try {
-				RegistryKey k = Registry.LocalMachine.OpenSubKey("SOFTWARE\\Westwood\\Red Alert 2");
-				if (k != null) {
-					var s = (string) k.GetValue("InstallPath");
-					k.Close();
-					return s.Substring(0, s.LastIndexOf('\\'));
-				}
+		public static bool IsLinux {
+			get {
+				int p = (int)Environment.OSVersion.Platform;
+				return (p == 4) || (p == 6) || (p == 128);
 			}
-			catch (NullReferenceException) {}
-			return "";
+		}
+
+		private static string GetMixDir() {
+			if (IsLinux) // don't expect registry access..
+				return Environment.CurrentDirectory;
+
+			try {
+				using (var key = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry32))
+					return Path.GetDirectoryName(
+						(string)key.OpenSubKey("SOFTWARE\\Westwood\\Red Alert 2").GetValue("InstallPath", string.Empty));
+			}
+			catch (NullReferenceException) { }
+
+			return Environment.CurrentDirectory;
 		}
 
 		private void UIChanged(object sender, EventArgs e) { UpdateCommandline(); }

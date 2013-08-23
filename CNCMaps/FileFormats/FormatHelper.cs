@@ -68,7 +68,7 @@ namespace CNCMaps.FileFormats {
 					ret = new MissionsFile(baseStream, filename, offset, length, true);
 					break;
 				case FileFormat.Mix:
-					ret = new MixFile(baseStream, filename, offset, length, true);
+					ret = new MixFile(baseStream, filename, offset, length, false);
 					break;
 				case FileFormat.Pal:
 					ret = new PalFile(baseStream, filename, offset, length, true);

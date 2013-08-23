@@ -1,8 +1,9 @@
 del CNCMaps_*.zip
 del CNCMaps_setup_*.exe
 
-set MSBUILD=%WINDIR%\Microsoft.NET\Framework\v3.5\msbuild.exe
+set MSBUILD=%WINDIR%\Microsoft.NET\Framework\v4.0.30319\msbuild.exe
 set MAKENSIS="%PROGRAMFILES(X86)%\nsis\makensis.exe"
+set VER=1.99
 
 %MSBUILD% CNCMaps.sln /p:Configuration=Release
 %MAKENSIS% nsisinstaller-rls.nsi

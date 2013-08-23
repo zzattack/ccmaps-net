@@ -46,5 +46,7 @@ namespace CNCMaps {
 
 
 		public bool GeneratePreviewPack { get; set; }
+
+		public bool PreferOSMesa { get; set; }
 	}
 }
