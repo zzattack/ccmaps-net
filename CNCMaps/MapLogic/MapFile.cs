@@ -191,6 +191,10 @@ namespace CNCMaps.MapLogic {
 				}
 			}
 
+			// not really used, likely empty, but if this is filled in it's probably better than guessing
+			if (mapName == "" && basic.SortedEntries.ContainsKey("Name"))
+				mapName = basic.ReadString("Name");
+
 			if (mapName == "") {
 				Logger.Warn("No valid mapname given or found, reverting to default filename {0}", fileNameWithoutExtension);
 				mapName = fileNameWithoutExtension;
