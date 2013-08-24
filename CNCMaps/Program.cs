@@ -75,8 +75,8 @@ namespace CNCMaps {
 				{"F|force-fullmap", "Ignore LocalSize definition and just save the full map", v => Settings.IgnoreLocalSize = true},
 				{"f|force-localsize", "Use localsize for map dimensions (default)", v => Settings.IgnoreLocalSize = true},
 				{"k|replace-preview", "Update the maps [PreviewPack] data with the rendered image", v => Settings.GeneratePreviewPack = true},
-				{"G|graphics-winmgr", "Attempt rendering voxels using window manager context first (default)", v => Settings.PreferOSMesa = false},
-				{"g|graphics-osmesa", "Attempt rendering voxels using OSMesa context first", v => Settings.PreferOSMesa = true},
+				{"G|graphics-winmgr", "Attempt rendering voxels using window manager context first (default)", v => Settings.PreferOSMesa = true},
+				{"g|graphics-osmesa", "Attempt rendering voxels using OSMesa context first", v => Settings.PreferOSMesa = false},
 			};
 
 			options.Parse(args);

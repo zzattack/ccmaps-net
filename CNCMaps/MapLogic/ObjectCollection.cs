@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Text;
+using System.Linq;
 using CNCMaps.FileFormats;
 using CNCMaps.Utility;
 using CNCMaps.VirtualFileSystem;
@@ -86,12 +87,29 @@ namespace CNCMaps.MapLogic {
 			// See if a theater-specific image is used
 			bool NewTheater = artSection.ReadBool("NewTheater");
 			if (NewTheater) {
-				ApplyNewTheater(ref imageFileName);
-				if (_engineType >= EngineType.RedAlert2) {
-					drawableObject.Palette = (_palettes.unitPalette);
-					paletteChosen = true;
+				// http://modenc.renegadeprojects.com/NewTheater
+
+				if (_engineType <= EngineType.FireStorm) {
+					// the tag will only work if the ID for the object starts with either G, N or C and its second letter is A (for Arctic/Snow theater) or T (for Temperate theater)
+					if (new[] {'G', 'N', 'C'}.Contains(objName[0]) && new[] {'A', 'T'}.Contains(objName[1]))
+						ApplyNewTheater(ref imageFileName);
 				}
+				else if (_engineType == EngineType.RedAlert2) {
+					// In RA2, for the tag to work, it must start with either G, N or C, and its second letter must be A, T or U (Urban theater). 
+					if (new[] {'G', 'N', 'C'}.Contains(objName[0]) && new[] {'A', 'T', 'U'}.Contains(objName[1]))
+						ApplyNewTheater(ref imageFileName);
+				}
+				else {
+					//  In Yuri's Revenge, the ID can also start with Y."
+					if (new[] {'G', 'N', 'C', 'Y'}.Contains(objName[0]) && new[] {'A', 'T', 'U'}.Contains(objName[1]))
+						ApplyNewTheater(ref imageFileName);
+				}
+
+				// Additionaly, this tag means the unit palette is used to draw this image.
+				drawableObject.Palette = (_palettes.unitPalette);
+				paletteChosen = true;
 			}
+
 			if (_engineType <= EngineType.FireStorm && artSection.ReadBool("Remapable")) {
 				drawableObject.Palette = (_palettes.unitPalette);
 				paletteChosen = true;
@@ -104,15 +122,17 @@ namespace CNCMaps.MapLogic {
 				drawableObject.UseTilePalette = true;
 				paletteChosen = true;
 			}
-			else if (rulesSection.ReadBool("TerrainPalette")) {
+			else if (artSection.ReadBool("TerrainPalette")) {
 				drawableObject.Palette = _palettes.isoPalette;
 				paletteChosen = true;
 			}
-			else if (rulesSection.ReadBool("AnimPalette")) {
+			else if (artSection.ReadBool("AnimPalette")) {
 				drawableObject.Palette = _palettes.animPalette;
 				paletteChosen = true;
 			}
-			else if (rulesSection.ReadBool("AltPalette")) {
+			else if (artSection.ReadBool("AltPalette")) {
+				// If AltPalette=yes is set on an animation then that animation will use the unit palette instead of the animation palette. 
+				// However, remappable colours are ignored - they will not be remapped. (TODO: make sure this doesn't happen indeed)
 				drawableObject.Palette = _palettes.unitPalette;
 				paletteChosen = true;
 			}
