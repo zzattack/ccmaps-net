@@ -113,8 +113,8 @@ namespace CNCMaps.VirtualFileSystem {
 		}
 
 		public bool ScanMixDir(EngineType engine, string installDir = "") {
-			if (installDir == "")
-				installDir = engine >= EngineType.RedAlert2 || engine==EngineType.AutoDetect ? RA2InstallDir : TSInstallDir;
+			if (string.IsNullOrEmpty(installDir))
+				installDir = engine >= EngineType.RedAlert2 || engine == EngineType.AutoDetect ? RA2InstallDir : TSInstallDir;
 
 			return ScanMixDir(installDir, engine == EngineType.AutoDetect ? EngineType.YurisRevenge : engine);
 		}
@@ -154,8 +154,8 @@ namespace CNCMaps.VirtualFileSystem {
 				AddFile(Path.Combine(mixDir, "ra2.mix"));
 			}
 			else {
-				if (engine == EngineType.YurisRevenge)
-					AddFile("tibsunmd.mix");
+				if (engine == EngineType.FireStorm)
+					AddFile("patch.mix");
 				AddFile("tibsun.mix");
 			}
 
@@ -176,7 +176,6 @@ namespace CNCMaps.VirtualFileSystem {
 
 			foreach (string file in Directory.GetFiles(mixDir, "elocal*.mix"))
 				AddFile(Path.Combine(mixDir, file));
-
 
 			if (engine >= EngineType.RedAlert2) {
 				foreach (string file in Directory.GetFiles(mixDir, "*.mmx"))
@@ -203,7 +202,6 @@ namespace CNCMaps.VirtualFileSystem {
 					AddFile("mapsmd03.mix");
 					AddFile("multimd.mix");
 					AddFile("thememd.mix");
-					AddFile("movmd03.mix");
 				}
 			}
 
