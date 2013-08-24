@@ -25,6 +25,10 @@
 		private void InitializeComponent() {
 			System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
 			this.gbMiscOptions = new System.Windows.Forms.GroupBox();
+			this.panel1 = new System.Windows.Forms.Panel();
+			this.rbPreferHardwareRendering = new System.Windows.Forms.RadioButton();
+			this.rbPreferSoftwareRendering = new System.Windows.Forms.RadioButton();
+			this.cbReplacePreview = new System.Windows.Forms.CheckBox();
 			this.pnlMapSize = new System.Windows.Forms.Panel();
 			this.rbSizeLocal = new System.Windows.Forms.RadioButton();
 			this.rbSizeFullmap = new System.Windows.Forms.RadioButton();
@@ -67,8 +71,8 @@
 			this.cbLog = new System.Windows.Forms.GroupBox();
 			this.rtbLog = new System.Windows.Forms.RichTextBox();
 			this.folderBrowserDialog1 = new System.Windows.Forms.FolderBrowserDialog();
-			this.cbReplacePreview = new System.Windows.Forms.CheckBox();
 			this.gbMiscOptions.SuspendLayout();
+			this.panel1.SuspendLayout();
 			this.pnlMapSize.SuspendLayout();
 			this.pnlEngine.SuspendLayout();
 			this.lblCompression.SuspendLayout();
@@ -79,6 +83,7 @@
 			// 
 			// gbMiscOptions
 			// 
+			this.gbMiscOptions.Controls.Add(this.panel1);
 			this.gbMiscOptions.Controls.Add(this.cbReplacePreview);
 			this.gbMiscOptions.Controls.Add(this.pnlMapSize);
 			this.gbMiscOptions.Controls.Add(this.pnlEngine);
@@ -90,18 +95,60 @@
 			this.gbMiscOptions.Controls.Add(this.cbEmphasizeOre);
 			this.gbMiscOptions.Location = new System.Drawing.Point(12, 209);
 			this.gbMiscOptions.Name = "gbMiscOptions";
-			this.gbMiscOptions.Size = new System.Drawing.Size(541, 231);
+			this.gbMiscOptions.Size = new System.Drawing.Size(541, 267);
 			this.gbMiscOptions.TabIndex = 1;
 			this.gbMiscOptions.TabStop = false;
 			this.gbMiscOptions.Text = "Misc. Options";
 			this.gbMiscOptions.DragDrop += new System.Windows.Forms.DragEventHandler(this.InputDragDrop);
 			this.gbMiscOptions.DragEnter += new System.Windows.Forms.DragEventHandler(this.InputDragEnter);
 			// 
+			// panel1
+			// 
+			this.panel1.Controls.Add(this.rbPreferHardwareRendering);
+			this.panel1.Controls.Add(this.rbPreferSoftwareRendering);
+			this.panel1.Location = new System.Drawing.Point(17, 226);
+			this.panel1.Name = "panel1";
+			this.panel1.Size = new System.Drawing.Size(461, 25);
+			this.panel1.TabIndex = 16;
+			// 
+			// rbPreferHardwareRendering
+			// 
+			this.rbPreferHardwareRendering.AutoSize = true;
+			this.rbPreferHardwareRendering.Checked = true;
+			this.rbPreferHardwareRendering.Location = new System.Drawing.Point(12, 4);
+			this.rbPreferHardwareRendering.Name = "rbPreferHardwareRendering";
+			this.rbPreferHardwareRendering.Size = new System.Drawing.Size(175, 17);
+			this.rbPreferHardwareRendering.TabIndex = 10;
+			this.rbPreferHardwareRendering.TabStop = true;
+			this.rbPreferHardwareRendering.Text = "Prefer hardware voxel rendering";
+			this.rbPreferHardwareRendering.UseVisualStyleBackColor = true;
+			// 
+			// rbPreferSoftwareRendering
+			// 
+			this.rbPreferSoftwareRendering.AutoSize = true;
+			this.rbPreferSoftwareRendering.Location = new System.Drawing.Point(226, 3);
+			this.rbPreferSoftwareRendering.Name = "rbPreferSoftwareRendering";
+			this.rbPreferSoftwareRendering.Size = new System.Drawing.Size(209, 17);
+			this.rbPreferSoftwareRendering.TabIndex = 11;
+			this.rbPreferSoftwareRendering.Text = "Prefer software rendering (compatibility)";
+			this.rbPreferSoftwareRendering.UseVisualStyleBackColor = true;
+			// 
+			// cbReplacePreview
+			// 
+			this.cbReplacePreview.AutoSize = true;
+			this.cbReplacePreview.Location = new System.Drawing.Point(29, 206);
+			this.cbReplacePreview.Name = "cbReplacePreview";
+			this.cbReplacePreview.Size = new System.Drawing.Size(284, 17);
+			this.cbReplacePreview.TabIndex = 15;
+			this.cbReplacePreview.Text = "Replace map preview with thumbnail of resulting image";
+			this.cbReplacePreview.UseVisualStyleBackColor = true;
+			this.cbReplacePreview.CheckedChanged += new System.EventHandler(this.UIChanged);
+			// 
 			// pnlMapSize
 			// 
 			this.pnlMapSize.Controls.Add(this.rbSizeLocal);
 			this.pnlMapSize.Controls.Add(this.rbSizeFullmap);
-			this.pnlMapSize.Location = new System.Drawing.Point(17, 177);
+			this.pnlMapSize.Location = new System.Drawing.Point(17, 175);
 			this.pnlMapSize.Name = "pnlMapSize";
 			this.pnlMapSize.Size = new System.Drawing.Size(461, 26);
 			this.pnlMapSize.TabIndex = 14;
@@ -139,7 +186,7 @@
 			this.pnlEngine.Controls.Add(this.rbEngineYR);
 			this.pnlEngine.Location = new System.Drawing.Point(17, 145);
 			this.pnlEngine.Name = "pnlEngine";
-			this.pnlEngine.Size = new System.Drawing.Size(461, 26);
+			this.pnlEngine.Size = new System.Drawing.Size(461, 25);
 			this.pnlEngine.TabIndex = 13;
 			// 
 			// rbEngineFS
@@ -151,7 +198,7 @@
 			this.rbEngineFS.TabIndex = 14;
 			this.rbEngineFS.Text = "Force FS";
 			this.rbEngineFS.UseVisualStyleBackColor = true;
-			this.rbEngineFS.CheckedChanged += new System.EventHandler(this.UIChanged);
+			this.rbEngineFS.CheckedChanged += new System.EventHandler(this.RbEngineCheckedChanged);
 			// 
 			// rbEngineTS
 			// 
@@ -162,7 +209,7 @@
 			this.rbEngineTS.TabIndex = 13;
 			this.rbEngineTS.Text = "Force TS";
 			this.rbEngineTS.UseVisualStyleBackColor = true;
-			this.rbEngineTS.CheckedChanged += new System.EventHandler(this.UIChanged);
+			this.rbEngineTS.CheckedChanged += new System.EventHandler(this.RbEngineCheckedChanged);
 			// 
 			// rbEngineAuto
 			// 
@@ -175,7 +222,7 @@
 			this.rbEngineAuto.TabStop = true;
 			this.rbEngineAuto.Text = "Automatic engine rules";
 			this.rbEngineAuto.UseVisualStyleBackColor = true;
-			this.rbEngineAuto.CheckedChanged += new System.EventHandler(this.UIChanged);
+			this.rbEngineAuto.CheckedChanged += new System.EventHandler(this.RbEngineCheckedChanged);
 			// 
 			// rbEngineRA2
 			// 
@@ -186,7 +233,7 @@
 			this.rbEngineRA2.TabIndex = 12;
 			this.rbEngineRA2.Text = "Force RA2";
 			this.rbEngineRA2.UseVisualStyleBackColor = true;
-			this.rbEngineRA2.CheckedChanged += new System.EventHandler(this.UIChanged);
+			this.rbEngineRA2.CheckedChanged += new System.EventHandler(this.RbEngineCheckedChanged);
 			// 
 			// rbEngineYR
 			// 
@@ -197,7 +244,7 @@
 			this.rbEngineYR.TabIndex = 11;
 			this.rbEngineYR.Text = "Force YR";
 			this.rbEngineYR.UseVisualStyleBackColor = true;
-			this.rbEngineYR.CheckedChanged += new System.EventHandler(this.UIChanged);
+			this.rbEngineYR.CheckedChanged += new System.EventHandler(this.RbEngineCheckedChanged);
 			// 
 			// lblTiledSquaredPosDescription
 			// 
@@ -387,12 +434,11 @@
 			// lblQuality
 			// 
 			this.lblQuality.AutoSize = true;
-			this.lblQuality.Location = new System.Drawing.Point(132, 120);
+			this.lblQuality.Location = new System.Drawing.Point(132, 95);
 			this.lblQuality.Name = "lblQuality";
 			this.lblQuality.Size = new System.Drawing.Size(85, 13);
 			this.lblQuality.TabIndex = 5;
 			this.lblQuality.Text = "Encoding quality";
-			this.lblQuality.Visible = false;
 			// 
 			// tbInput
 			// 
@@ -405,11 +451,12 @@
 			// label1
 			// 
 			this.label1.AutoSize = true;
-			this.label1.Location = new System.Drawing.Point(132, 98);
+			this.label1.Location = new System.Drawing.Point(132, 118);
 			this.label1.Name = "label1";
 			this.label1.Size = new System.Drawing.Size(92, 13);
 			this.label1.TabIndex = 1;
 			this.label1.Text = "Compression level";
+			this.label1.Visible = false;
 			// 
 			// lblInputMap
 			// 
@@ -422,7 +469,7 @@
 			// 
 			// nudEncodingQuality
 			// 
-			this.nudEncodingQuality.Location = new System.Drawing.Point(230, 119);
+			this.nudEncodingQuality.Location = new System.Drawing.Point(230, 94);
 			this.nudEncodingQuality.Name = "nudEncodingQuality";
 			this.nudEncodingQuality.Size = new System.Drawing.Size(43, 20);
 			this.nudEncodingQuality.TabIndex = 6;
@@ -431,7 +478,6 @@
             0,
             0,
             0});
-			this.nudEncodingQuality.Visible = false;
 			this.nudEncodingQuality.ValueChanged += new System.EventHandler(this.UIChanged);
 			// 
 			// btnBrowseInput
@@ -449,7 +495,7 @@
 			this.cbOutputJPG.AutoSize = true;
 			this.cbOutputJPG.Checked = true;
 			this.cbOutputJPG.CheckState = System.Windows.Forms.CheckState.Checked;
-			this.cbOutputJPG.Location = new System.Drawing.Point(42, 119);
+			this.cbOutputJPG.Location = new System.Drawing.Point(42, 94);
 			this.cbOutputJPG.Name = "cbOutputJPG";
 			this.cbOutputJPG.Size = new System.Drawing.Size(81, 17);
 			this.cbOutputJPG.TabIndex = 4;
@@ -460,7 +506,7 @@
 			// cbOutputPNG
 			// 
 			this.cbOutputPNG.AutoSize = true;
-			this.cbOutputPNG.Location = new System.Drawing.Point(42, 97);
+			this.cbOutputPNG.Location = new System.Drawing.Point(42, 117);
 			this.cbOutputPNG.Name = "cbOutputPNG";
 			this.cbOutputPNG.Size = new System.Drawing.Size(84, 17);
 			this.cbOutputPNG.TabIndex = 0;
@@ -470,7 +516,7 @@
 			// 
 			// nudCompression
 			// 
-			this.nudCompression.Location = new System.Drawing.Point(230, 97);
+			this.nudCompression.Location = new System.Drawing.Point(230, 117);
 			this.nudCompression.Maximum = new decimal(new int[] {
             9,
             0,
@@ -484,11 +530,12 @@
             0,
             0,
             0});
+			this.nudCompression.Visible = false;
 			this.nudCompression.ValueChanged += new System.EventHandler(this.UIChanged);
 			// 
 			// btnRenderExecute
 			// 
-			this.btnRenderExecute.Location = new System.Drawing.Point(462, 446);
+			this.btnRenderExecute.Location = new System.Drawing.Point(462, 482);
 			this.btnRenderExecute.Name = "btnRenderExecute";
 			this.btnRenderExecute.Size = new System.Drawing.Size(75, 23);
 			this.btnRenderExecute.TabIndex = 5;
@@ -498,14 +545,14 @@
 			// 
 			// tbCommandPreview
 			// 
-			this.tbCommandPreview.Location = new System.Drawing.Point(84, 446);
+			this.tbCommandPreview.Location = new System.Drawing.Point(84, 482);
 			this.tbCommandPreview.Name = "tbCommandPreview";
 			this.tbCommandPreview.Size = new System.Drawing.Size(361, 20);
 			this.tbCommandPreview.TabIndex = 4;
 			// 
 			// lblCommand
 			// 
-			this.lblCommand.Location = new System.Drawing.Point(22, 449);
+			this.lblCommand.Location = new System.Drawing.Point(22, 485);
 			this.lblCommand.Name = "lblCommand";
 			this.lblCommand.Size = new System.Drawing.Size(62, 17);
 			this.lblCommand.TabIndex = 3;
@@ -518,7 +565,7 @@
 			// cbLog
 			// 
 			this.cbLog.Controls.Add(this.rtbLog);
-			this.cbLog.Location = new System.Drawing.Point(16, 470);
+			this.cbLog.Location = new System.Drawing.Point(16, 506);
 			this.cbLog.Name = "cbLog";
 			this.cbLog.Size = new System.Drawing.Size(542, 176);
 			this.cbLog.TabIndex = 6;
@@ -536,23 +583,12 @@
 			this.rtbLog.TabIndex = 0;
 			this.rtbLog.Text = "";
 			// 
-			// cbReplacePreview
-			// 
-			this.cbReplacePreview.AutoSize = true;
-			this.cbReplacePreview.Location = new System.Drawing.Point(29, 209);
-			this.cbReplacePreview.Name = "cbReplacePreview";
-			this.cbReplacePreview.Size = new System.Drawing.Size(284, 17);
-			this.cbReplacePreview.TabIndex = 15;
-			this.cbReplacePreview.Text = "Replace map preview with thumbnail of resulting image";
-			this.cbReplacePreview.UseVisualStyleBackColor = true;
-			this.cbReplacePreview.CheckedChanged += new System.EventHandler(this.UIChanged);
-			// 
 			// MainForm
 			// 
 			this.AllowDrop = true;
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-			this.ClientSize = new System.Drawing.Size(566, 651);
+			this.ClientSize = new System.Drawing.Size(566, 691);
 			this.Controls.Add(this.cbLog);
 			this.Controls.Add(this.lblCommand);
 			this.Controls.Add(this.tbCommandPreview);
@@ -560,12 +596,14 @@
 			this.Controls.Add(this.gbMiscOptions);
 			this.Controls.Add(this.lblCompression);
 			this.Name = "MainForm";
-			this.Text = "RA2/YR Map Renderer by Frank Razenberg";
+			this.Text = "Red Alert 2 and Tiberian Sun Map Renderer";
 			this.Load += new System.EventHandler(this.MainFormLoad);
 			this.DragDrop += new System.Windows.Forms.DragEventHandler(this.InputDragDrop);
 			this.DragEnter += new System.Windows.Forms.DragEventHandler(this.InputDragEnter);
 			this.gbMiscOptions.ResumeLayout(false);
 			this.gbMiscOptions.PerformLayout();
+			this.panel1.ResumeLayout(false);
+			this.panel1.PerformLayout();
 			this.pnlMapSize.ResumeLayout(false);
 			this.pnlMapSize.PerformLayout();
 			this.pnlEngine.ResumeLayout(false);
@@ -626,6 +664,9 @@
 		private System.Windows.Forms.RadioButton rbEngineFS;
 		private System.Windows.Forms.RadioButton rbEngineTS;
 		private System.Windows.Forms.CheckBox cbReplacePreview;
+		private System.Windows.Forms.Panel panel1;
+		private System.Windows.Forms.RadioButton rbPreferHardwareRendering;
+		private System.Windows.Forms.RadioButton rbPreferSoftwareRendering;
 
 	}
 }
