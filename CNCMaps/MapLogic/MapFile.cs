@@ -131,7 +131,7 @@ namespace CNCMaps.MapLogic {
 				// fallback for multiplayer maps with, .map extension,
 				// no YR objects so assumed to be ra2, but actually meant to be used on yr
 				if (mapExt == ".map" && pkt != null && !pkt.MapEntries.ContainsKey(pktEntryName) && engine >= EngineType.RedAlert2) {
-					VFS.GetInstance().ScanMixDir(EngineType.YurisRevenge);
+					VFS.GetInstance().ScanMixDir(EngineType.YurisRevenge, Program.Settings.MixFilesDirectory);
 					pkt = VFS.Open<PktFile>("missionsmd.pkt");
 				}
 
