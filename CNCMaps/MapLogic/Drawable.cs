@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Drawing;
+using System.Drawing.Imaging;
 using CNCMaps.FileFormats;
 using CNCMaps.Utility;
 using CNCMaps.VirtualFileSystem;
@@ -103,17 +104,21 @@ namespace CNCMaps.MapLogic {
 
 			if (p == null && obj is RemappableObject)
 				p = (obj as RemappableObject).Palette;
-			else if (UseTilePalette) 
+			else if (UseTilePalette)
 				p = obj.Tile.Palette;
 
-			// hacky bridge crap
+			// hacky bridge crap, somehow they have crazy offsets. hopefully this never needs to be touched again.
+			var shadowOffset = offset;
 			if (Overrides && obj is OverlayObject) {
 				var o = obj as OverlayObject;
 				if (TileWidth == 60) { // RA2
 					// bridge
 					if (o.IsHighBridge()) {
 						// 0-8 are bridge parts bottom-left -- top-right, 9-16 are top-left -- bottom right
-						offset.Y += o.OverlayValue > 8 ? -16 : -1;
+						offset.X += o.OverlayValue <= 8 ? 0 : 0;
+						offset.Y += o.OverlayValue <= 8 ? -1 : -16;
+						shadowOffset.X += o.OverlayValue <= 8 ? 0 : -15;
+						shadowOffset.Y += o.OverlayValue <= 8 ? -1 : -9;
 					}
 				}
 				else { // TS
@@ -122,6 +127,7 @@ namespace CNCMaps.MapLogic {
 					}
 					else {
 						// 0-8 are bridge parts bottom-left -- top-right, 9-16 are top-left -- bottom right
+						// but perhaps they're already aligned correctly?
 						offset.X += o.OverlayValue <= 8 ? 0 : 0;
 						offset.Y += o.OverlayValue <= 8 ? 0 : 0;
 					}
@@ -129,7 +135,7 @@ namespace CNCMaps.MapLogic {
 			}
 			file.Draw(Frame, ds, offset, obj.Tile, p ?? Palette, Overrides);
 			if (props.hasShadow) {
-				file.DrawShadow(Frame, ds, offset, obj.Tile);
+				file.DrawShadow(Frame, ds, shadowOffset, obj.Tile);
 			}
 		}
 
