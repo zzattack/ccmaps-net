@@ -10,13 +10,11 @@ namespace CNCMaps.VirtualFileSystem {
 
 	public class VFS {
 		static VFS instance = new VFS();
+		readonly List<IArchive> _allArchives = new List<IArchive>();
+		static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
+
 		private VFS() { }
-
-		static NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
-
-		public static VFS GetInstance() {
-			return instance;
-		}
+		public static VFS GetInstance() { return instance; }
 
 		public static VirtualFile Open(string filename) {
 			return instance.OpenFile(filename);
@@ -49,18 +47,17 @@ namespace CNCMaps.VirtualFileSystem {
 			return instance.OpenFile(filename, format);
 		}
 
-		public static bool Add(string filename) {
-			return instance.AddFile(filename);
+		public static bool Add(string filename, CacheMethod cache = CacheMethod.Default) {
+			return instance.AddFile(filename, cache);
 		}
 
 		public static bool Exists(string imageFileName) {
 			return instance.FileExists(imageFileName);
 		}
 
-		List<IArchive> AllArchives = new List<IArchive>();
 
 		bool FileExists(string filename) {
-			return AllArchives.Any(v => v != null && v.ContainsFile(filename));
+			return _allArchives.Any(v => v != null && v.ContainsFile(filename));
 		}
 
 		public VirtualFile OpenFile(string filename) {
@@ -69,8 +66,8 @@ namespace CNCMaps.VirtualFileSystem {
 		}
 
 		public VirtualFile OpenFile(string filename, FileFormat format = FileFormat.None) {
-			if (AllArchives == null || AllArchives.Count == 0) return null;
-			var archive = AllArchives.FirstOrDefault(v => v != null && v.ContainsFile(filename));
+			if (_allArchives == null || _allArchives.Count == 0) return null;
+			var archive = _allArchives.FirstOrDefault(v => v != null && v.ContainsFile(filename));
 			if (archive == null) return null;
 
 			try {
@@ -81,10 +78,10 @@ namespace CNCMaps.VirtualFileSystem {
 			}
 		}
 
-		public bool AddFile(string path) {
+		public bool AddFile(string path, CacheMethod m = CacheMethod.Default) {
 			// directory
 			if (Directory.Exists(path)) {
-				AllArchives.Add(new DirArchive(path));
+				_allArchives.Add(new DirArchive(path));
 				return true;
 			}
 			// regular file
@@ -94,21 +91,21 @@ namespace CNCMaps.VirtualFileSystem {
 				if (FormatHelper.MixArchiveExtensions.Contains(fi.Extension, StringComparer.InvariantCultureIgnoreCase)) {
 					var mf = new MixFile(File.Open(path, FileMode.Open, FileAccess.Read, FileShare.Read));
 					mf.FileName = path;
-					AllArchives.Add(mf);
+					_allArchives.Add(mf);
 					return true;
 				}
 			}
 			// virtual mix file
 			else if (Exists(path)) {
 				var mx = Open<MixFile>(path);
-				AllArchives.Add(mx);
+				_allArchives.Add(mx);
 				return true;
 			}
 			return false;
 		}
 
 		public bool AddMix(MixFile mix) {
-			AllArchives.Add(mix);
+			_allArchives.Add(mix);
 			return true;
 		}
 
@@ -121,12 +118,12 @@ namespace CNCMaps.VirtualFileSystem {
 
 		public bool ScanMixDir(string mixDir, EngineType engine) {
 			if (string.IsNullOrEmpty(mixDir)) {
-				logger.Fatal("No mix directory detected!");
+				Logger.Fatal("No mix directory detected!");
 				return false;
 			}
 
 			// see http://modenc.renegadeprojects.com/MIX for more info
-			logger.Info("Initializing filesystem on {0} for the {1} engine", mixDir, engine.ToString());
+			Logger.Info("Initializing filesystem on {0} for the {1} engine", mixDir, engine.ToString());
 			AddFile(mixDir);
 
 			if (engine >= EngineType.RedAlert2) {
@@ -208,7 +205,7 @@ namespace CNCMaps.VirtualFileSystem {
 			return true;
 		}
 
-		public void Clear() { AllArchives.Clear(); }
+		public void Clear() { _allArchives.Clear(); }
 
 		public static string RA2InstallPath {
 			get {
@@ -240,10 +237,16 @@ namespace CNCMaps.VirtualFileSystem {
 				ret = rkey.OpenSubKey(regpath).GetValue(keyname, "").ToString();
 			}
 			catch {
-				logger.Error("Could not read registry key {0} at {1}", keyname, regpath);
+				Logger.Error("Could not read registry key {0} at {1}", keyname, regpath);
 			}
 			return ret;
 		}
 
+	}
+
+	public enum CacheMethod {
+		Default,
+		Cache,
+		NoCache
 	}
 }

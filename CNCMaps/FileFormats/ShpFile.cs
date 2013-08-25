@@ -141,7 +141,7 @@ namespace CNCMaps.FileFormats {
 						*(w + 0) = p.colors[paletteValue].B;
 						*(w + 1) = p.colors[paletteValue].G;
 						*(w + 2) = p.colors[paletteValue].R;
-						zBuffer[zIdx] = zBufVal;
+						//zBuffer[zIdx] = zBufVal;
 					}
 					// Up to the next pixel
 					rIdx++;
@@ -180,7 +180,7 @@ namespace CNCMaps.FileFormats {
 			int rIdx = 0;
 
 			for (int y = 0; y < h.cy; y++) {
-				short z = (short)(zBufVal + y + 2); // why the +2? oh well
+				short z = (short)(zBufVal + y + 0); // why the +2? oh well
 				for (int x = 0; x < h.cx; x++) {
 					if (w_low <= w && w < w_high && image.imageData[rIdx] != 0 && !shadows[zIdx] && z >= zBuffer[zIdx]) {
 						*(w + 0) /= 2;

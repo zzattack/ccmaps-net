@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Text.RegularExpressions;
 using CNCMaps.Encodings;
 using CNCMaps.FileFormats;
@@ -306,7 +307,7 @@ namespace CNCMaps.MapLogic {
 			LoadHouses();
 
 			if (EngineType == EngineType.RedAlert2 || EngineType == EngineType.YurisRevenge)
-				_theater.GetTileCollection().RecalculateTileSystem(_tiles);
+				// _theater.GetTileCollection().RecalculateTileSystem(_tiles);
 
 			if (EngineType == EngineType.RedAlert2 || EngineType == EngineType.YurisRevenge)
 				RecalculateOreSpread();
@@ -699,9 +700,9 @@ namespace CNCMaps.MapLogic {
 				int dx = rx - ry + _fullSize.Width - 1;
 				int dy = rx + ry - _fullSize.Width - 1;
 				numtiles++;
-				if (dx >= 0 && dx < 2 * _tiles.GetWidth() &&
-					dy >= 0 && dy < 2 * _tiles.GetHeight()) {
-					_tiles[(ushort)dx, (ushort)dy / 2] = new MapTile((ushort)dx, (ushort)dy, rx, ry, z, tilenum, subtile);
+				if (dx >= 0 && dx < 2 * _tiles.Width &&
+					dy >= 0 && dy < 2 * _tiles.Height) {
+					_tiles[(ushort)dx, (ushort)dy / 2] = new MapTile((ushort)dx, (ushort)dy, rx, ry, z, tilenum, subtile, _tiles);
 				}
 			}
 		}
@@ -974,7 +975,7 @@ namespace CNCMaps.MapLogic {
 			}
 		}
 
-		private static string[] lampNames = new[] {
+		private static readonly string[] LampNames = new[] {
 			"REDLAMP", "BLUELAMP", "GRENLAMP", "YELWLAMP", "PURPLAMP", "INORANLAMP", "INGRNLMP", "INREDLMP", "INBLULMP",
 			"INGALITE", "GALITE",
 			"INYELWLAMP", "INPURPLAMP", "NEGLAMP", "NERGRED", "TEMMORLAMP", "TEMPDAYLAMP", "TEMDAYLAMP", "TEMDUSLAMP",
@@ -987,7 +988,7 @@ namespace CNCMaps.MapLogic {
 			var forDeletion = new List<StructureObject>();
 			foreach (StructureObject s in _structureObjects) {
 				if (s == null) continue;
-				if (lampNames.Contains(s.Name)) {
+				if (LampNames.Contains(s.Name)) {
 					var ls = new LightSource(_rules.GetSection(s.Name), _lighting);
 					ls.Tile = s.Tile;
 					_lightSources.Add(ls);
@@ -1190,19 +1191,31 @@ namespace CNCMaps.MapLogic {
 			}
 		}
 
-		private int FindCutoffHeight() {
-			bool[,] rowFilled = new bool[_fullSize.Width * 2 - 1, _fullSize.Height];
+
+		public int FindCutoffHeight() {
+			// searches in 10 rows, starting from the bottom up, for the first fully tiled row
 			int y;
-			for (y = _fullSize.Height - 1; y > _fullSize.Height - 15; y--) {
-				// mark tiles on this row as filled
-				for (int x = 0; x < _fullSize.Width; x++) {
-					var tile = _tiles.GetTile(x, y / 2);
-					if (tile != null && (y - tile.Z) >= 0)
-						rowFilled[x, y - tile.Z] = true;
+
+			/*// print map:
+			var tileTouchGrid = _tiles.GridTouched;
+			var sb = new StringBuilder();
+			for (y = 0; y < tileTouchGrid.GetLength(1); y++) {
+				for (int x = 0; x < tileTouchGrid.GetLength(0); x++) {
+					if (tileTouchGrid[x, y] == TileLayer.TouchType.Untouched)
+						sb.Append(' ');
+					else if ((tileTouchGrid[x, y] & TileLayer.TouchType.ByExtraData) == TileLayer.TouchType.ByExtraData)
+						sb.Append('*');
+					else
+						sb.Append('o');
 				}
+				sb.AppendLine();
+			}
+			File.WriteAllText("cutoffmap.txt", sb.ToString());*/
+
+			for (y = _fullSize.Height - 1; y > _fullSize.Height - 10; y--) {
 				bool isRowFilled = true;
 				for (int x = 1; x < _fullSize.Width - 1; x++) {
-					if (!rowFilled[x, y]) {
+					if (_tiles.GridTouched[x, y] == TileLayer.TouchType.Untouched) {
 						isRowFilled = false;
 						break;
 					}
@@ -1214,17 +1227,25 @@ namespace CNCMaps.MapLogic {
 			return y;
 		}
 
+		public Rectangle GetFullMapSizePixels() {
+			int left = TileWidth / 2,
+				top = TileHeight / 2;
+			int right = (_fullSize.Width - 1) * TileWidth;
+			int cutoff = FindCutoffHeight();
+			int bottom = cutoff * TileHeight + (1 + (cutoff % 2)) * (TileHeight / 2);
+			return Rectangle.FromLTRB(left, top, right, bottom);
+		}
+
 		public Rectangle GetLocalSizePixels() {
 			int left = Math.Max(_localSize.Left * TileWidth, 0),
-				top = Math.Max(_localSize.Top * TileHeight - 3 * TileHeight, 0);
-			int width = _localSize.Width * TileWidth;
-			int height = _localSize.Height * TileHeight + 5 * TileHeight;
+				top = Math.Max(_localSize.Top - 3, 0) * TileHeight + TileHeight / 2;
+			int right = (_localSize.Left + _localSize.Width) * TileWidth;
 
-			int cutoff = FindCutoffHeight();
-			int height2 = top + cutoff * TileHeight + (cutoff % 2 == 0 ? 0 : 15);
-			// TODO: verify this shit on Cold war; height = Math.Min(height, height2);
-
-			return new Rectangle(left, top, width, height);
+			int bottom1 = 2 * (_localSize.Top - 3 + _localSize.Height + 5);
+			int cutoff = FindCutoffHeight() * 2;
+			int bottom2 = (cutoff + 1 + (cutoff % 2));
+			int bottom = Math.Min(bottom1, bottom2) * (TileHeight / 2);
+			return Rectangle.FromLTRB(left, top, right, bottom);
 		}
 
 		public void MarkOreAndGems() {
@@ -1306,6 +1327,13 @@ namespace CNCMaps.MapLogic {
 			}
 		}
 
+		internal void DebugDrawTile(MapTile tile) {
+			_theater.GetTileCollection().DrawTile(tile, _drawingSurface);
+			foreach (RA2Object o in tile.AllObjects)
+				_theater.DrawObject(o, _drawingSurface);
+		}
+
+
 		private List<RA2Object> GetObjectsAt(int dx, int dy) {
 			var ret = new List<RA2Object>();
 
@@ -1344,6 +1372,12 @@ namespace CNCMaps.MapLogic {
 
 		public DrawingSurface GetDrawingSurface() {
 			return _drawingSurface;
+		}
+		public TileLayer GetTiles() {
+			return _tiles;
+		}
+		public Theater GetTheater() {
+			return _theater;
 		}
 
 		public int TileWidth {

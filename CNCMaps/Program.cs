@@ -26,22 +26,28 @@ namespace CNCMaps {
 				target.Name = "console";
 				target.Layout = "${processtime:format=ss.fff} [${level}] ${message}";
 				target.RowHighlightingRules.Add(new ConsoleRowHighlightingRule() {
-					ForegroundColor = ConsoleOutputColor.Magenta, Condition = "level = LogLevel.Fatal"
+					ForegroundColor = ConsoleOutputColor.Magenta,
+					Condition = "level = LogLevel.Fatal"
 				});
 				target.RowHighlightingRules.Add(new ConsoleRowHighlightingRule() {
-					ForegroundColor = ConsoleOutputColor.Red, Condition = "level = LogLevel.Error"
+					ForegroundColor = ConsoleOutputColor.Red,
+					Condition = "level = LogLevel.Error"
 				});
 				target.RowHighlightingRules.Add(new ConsoleRowHighlightingRule() {
-					ForegroundColor = ConsoleOutputColor.Yellow, Condition = "level = LogLevel.Warn"
+					ForegroundColor = ConsoleOutputColor.Yellow,
+					Condition = "level = LogLevel.Warn"
 				});
 				target.RowHighlightingRules.Add(new ConsoleRowHighlightingRule() {
-					ForegroundColor = ConsoleOutputColor.Gray, Condition = "level = LogLevel.Info"
+					ForegroundColor = ConsoleOutputColor.Gray,
+					Condition = "level = LogLevel.Info"
 				});
 				target.RowHighlightingRules.Add(new ConsoleRowHighlightingRule() {
-					ForegroundColor = ConsoleOutputColor.DarkGray, Condition = "level = LogLevel.Debug"
+					ForegroundColor = ConsoleOutputColor.DarkGray,
+					Condition = "level = LogLevel.Debug"
 				});
 				target.RowHighlightingRules.Add(new ConsoleRowHighlightingRule() {
-					ForegroundColor = ConsoleOutputColor.White, Condition = "level = LogLevel.Trace"
+					ForegroundColor = ConsoleOutputColor.White,
+					Condition = "level = LogLevel.Trace"
 				});
 				LogManager.Configuration = new LoggingConfiguration();
 				LogManager.Configuration.AddTarget("console", target);
@@ -73,10 +79,10 @@ namespace CNCMaps {
 				{"S|start-pos-squared", "Mark starting positions in a squared manner", v => Settings.StartPositionMarking = StartPositionMarking.Squared},
 				{"r|mark-ore", "Mark ore and gem fields more explicity, looks good when resizing to a preview", v => Settings.MarkOreFields = true},
 				{"F|force-fullmap", "Ignore LocalSize definition and just save the full map", v => Settings.IgnoreLocalSize = true},
-				{"f|force-localsize", "Use localsize for map dimensions (default)", v => Settings.IgnoreLocalSize = true},
+				{"f|force-localsize", "Use localsize for map dimensions (default)", v => Settings.IgnoreLocalSize = false},
 				{"k|replace-preview", "Update the maps [PreviewPack] data with the rendered image", v => Settings.GeneratePreviewPack = true},
-				{"G|graphics-winmgr", "Attempt rendering voxels using window manager context first (default)", v => Settings.PreferOSMesa = true},
-				{"g|graphics-osmesa", "Attempt rendering voxels using OSMesa context first", v => Settings.PreferOSMesa = false},
+				{"G|graphics-winmgr", "Attempt rendering voxels using window manager context first (default)", v => Settings.PreferOSMesa = false},
+				{"g|graphics-osmesa", "Attempt rendering voxels using OSMesa context first", v => Settings.PreferOSMesa = true},
 			};
 
 			options.Parse(args);
@@ -114,7 +120,7 @@ namespace CNCMaps {
 				map.Dispose();
  				File.Move(map.FileName, Path.Combine(dir, Path.GetFileName(map.FileName)));
 				return;*/
-				
+
 				if (!map.LoadMap(Settings.Engine)) {
 					logger.Error("Could not successfully load all required components for this map. Aborting.");
 					return;
@@ -128,26 +134,25 @@ namespace CNCMaps {
 
 				map.DrawMap();
 
+				using (var form = new DebugDrawingSurfaceWindow(map.GetDrawingSurface(), map.GetTiles(), map.GetTheater(), map)) {
+					form.RequestTileEvaluate += tile => map.DebugDrawTile(tile);
+					form.ShowDialog();
+				}
+
 				if (Settings.StartPositionMarking == StartPositionMarking.Squared)
 					map.DrawSquaredStartPositions();
 
 				if (Settings.OutputFile == "")
 					Settings.OutputFile = map.DetermineMapName(map.EngineType);
-
-				DrawingSurface ds = map.GetDrawingSurface();
-
-				Rectangle saveRect;
-				if (Settings.IgnoreLocalSize)
-					saveRect = new Rectangle(map.TileWidth / 2, map.TileHeight / 2, ds.Width - map.TileWidth, ds.Height - map.TileHeight);
-				else
-					saveRect = map.GetLocalSizePixels();
-
+				
 				if (Settings.OutputDir == "")
 					Settings.OutputDir = Path.GetDirectoryName(Settings.InputFile);
 
-				// free up as much memory as possible
+				// free up as much memory as possible before saving
+				Rectangle saveRect = Settings.IgnoreLocalSize ? map.GetFullMapSizePixels() : map.GetLocalSizePixels();
+				DrawingSurface ds = map.GetDrawingSurface(); 
 				ds.FreeNonBitmap();
-				map.FreeUseless(); 
+				map.FreeUseless();
 				GC.Collect();
 
 				if (Settings.SaveJPEG)
@@ -179,19 +184,20 @@ namespace CNCMaps {
 
 					ds.Unlock();
 
-					Bitmap preview = new Bitmap((int)Math.Round(ds.Width * ratio, 0), (int)Math.Round(ds.Height * ratio, 0));
-					using (Graphics gfx = Graphics.FromImage(preview)) {
-						// use high-quality scaling
-						gfx.InterpolationMode = InterpolationMode.HighQualityBicubic;
-						gfx.SmoothingMode = SmoothingMode.HighQuality;
-						gfx.PixelOffsetMode = PixelOffsetMode.HighQuality;
-						gfx.CompositingQuality = CompositingQuality.HighQuality;
+					using (var preview = new Bitmap((int) Math.Round(ds.Width*ratio, 0), (int) Math.Round(ds.Height*ratio, 0))) {
+						using (Graphics gfx = Graphics.FromImage(preview)) {
+							// use high-quality scaling
+							gfx.InterpolationMode = InterpolationMode.HighQualityBicubic;
+							gfx.SmoothingMode = SmoothingMode.HighQuality;
+							gfx.PixelOffsetMode = PixelOffsetMode.HighQuality;
+							gfx.CompositingQuality = CompositingQuality.HighQuality;
 
-						gfx.DrawImage(ds.bm, new Rectangle(0, 0, preview.Width, preview.Height), saveRect, GraphicsUnit.Pixel);
+							gfx.DrawImage(ds.bm, new Rectangle(0, 0, preview.Width, preview.Height), saveRect, GraphicsUnit.Pixel);
+						}
+
+						logger.Info("Injecting thumbnail into map");
+						ThumbInjector.InjectThumb(preview, map);
 					}
-
-					logger.Info("Injecting thumbnail into map");
-					ThumbInjector.InjectThumb(preview, map);
 
 					logger.Info("Saving map");
 					map.Save(map.FileName);

@@ -8,8 +8,6 @@ using CNCMaps.FileFormats;
 namespace CNCMaps.Utility {
 	class ThumbInjector {
 		public static unsafe void InjectThumb(Bitmap preview, IniFile map) {
-
-			preview.Save("C:\\soms.png");
 			BitmapData bmd = preview.LockBits(new Rectangle(0, 0, preview.Width, preview.Height), ImageLockMode.ReadOnly, PixelFormat.Format24bppRgb);
 			byte[] image = new byte[preview.Width * preview.Height * 3];
 			int idx = 0;

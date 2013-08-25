@@ -106,20 +106,24 @@ namespace CNCMaps.MapLogic {
 			else if (UseTilePalette) 
 				p = obj.Tile.Palette;
 
+			// hacky bridge crap
 			if (Overrides && obj is OverlayObject) {
 				var o = obj as OverlayObject;
-				if (TileWidth == 60) {
+				if (TileWidth == 60) { // RA2
 					// bridge
-					if (o.IsHighBridge())
+					if (o.IsHighBridge()) {
+						// 0-8 are bridge parts bottom-left -- top-right, 9-16 are top-left -- bottom right
 						offset.Y += o.OverlayValue > 8 ? -16 : -1;
+					}
 				}
-				else { // tibsun
+				else { // TS
 					if (o.IsTSRails()) {
 						offset.Y += 11;
 					}
 					else {
-						offset.X += o.OverlayValue > 8 ? -7 : -6;
-						offset.Y += o.OverlayValue > 8 ? -13 : -1;
+						// 0-8 are bridge parts bottom-left -- top-right, 9-16 are top-left -- bottom right
+						offset.X += o.OverlayValue <= 8 ? 0 : 0;
+						offset.Y += o.OverlayValue <= 8 ? 0 : 0;
 					}
 				}
 			}
@@ -192,6 +196,10 @@ namespace CNCMaps.MapLogic {
 		public bool UseTilePalette { get; set; }
 
 		public bool IsValid { get; set; }
+
+		public override string ToString() {
+			return Name;
+		}
 	}
 
 	class DrawableFile<T> : System.IComparable where T : VirtualFile {
