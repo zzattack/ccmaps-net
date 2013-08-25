@@ -128,8 +128,9 @@ namespace CNCMaps.MapLogic {
 				}
 			}
 			file.Draw(Frame, ds, offset, obj.Tile, p ?? Palette, Overrides);
-			if (props.hasShadow)
+			if (props.hasShadow) {
 				file.DrawShadow(Frame, ds, offset, obj.Tile);
+			}
 		}
 
 		public static PaletteCollection Palettes { get; set; }
