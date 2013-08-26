@@ -1,11 +1,11 @@
 !ifndef CONFIG
-!define CONFIG "Debug"
+!define CONFIG "debug"
 !endif
 !include LogicLib.nsh
 
 ; Define your application name
 !define APPNAME "CNC Map Render"
-!define VERSION 1.99
+!define VERSION $%VER% ; environment variable, call from .bat file
 !define APPNAMEANDVERSION "CNC Map Render ${VERSION}"
 
 ; Main Install settings

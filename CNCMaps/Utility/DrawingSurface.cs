@@ -8,7 +8,7 @@ namespace CNCMaps.Utility {
 		public Bitmap bm { get; private set; }
 		public int Width { get; private set; } // prevents repeated (slow) lookups in bm.Width
 		public int Height { get; private set; } // prevents repeated (slow) lookups in bm.Width
-		
+
 		short[] zBuffer;
 		bool[] shadowBuffer;
 
@@ -24,7 +24,7 @@ namespace CNCMaps.Utility {
 			shadowBuffer = new bool[width * height];
 		}
 
-		public void Lock(PixelFormat pixelFormat) {
+		public void Lock(PixelFormat pixelFormat = PixelFormat.Format24bppRgb) {
 			if (bmd == null)
 				bmd = bm.LockBits(new Rectangle(0, 0, bm.Width, bm.Height), ImageLockMode.ReadWrite, pixelFormat);
 		}

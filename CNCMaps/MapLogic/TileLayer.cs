@@ -3,11 +3,25 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
+using System.Drawing.Drawing2D;
 
 namespace CNCMaps.MapLogic {
-	class TileLayer : IEnumerable<MapTile> {
+	public class TileLayer : IEnumerable<MapTile> {
+		/* 
+		Coordinate formulas
+
+		dx = rx - ry + mapwidth - 1
+		dy = rx + ry - mapwidth - 1
+
+		rx = (dx + dy) / 2 + 1
+		ry = dy - rx + mapwidth + 1
+
+		*/
+
 		static NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
+		public TouchType[,] GridTouched { get; private set; }
+		public MapTile[,] GridTouchedBy { get; private set; }
 		MapTile[,] tiles;
 		private Size fullSize;
 
@@ -16,16 +30,18 @@ namespace CNCMaps.MapLogic {
 		}
 
 		public TileLayer(Size fullSize) {
-			tiles = new MapTile[fullSize.Width * 2 - 1, fullSize.Height];
 			this.fullSize = fullSize;
+			this.tiles = new MapTile[fullSize.Width * 2 - 1, fullSize.Height];
+			this.GridTouched = new TouchType[fullSize.Width * 2 - 1, fullSize.Height];
+			this.GridTouchedBy = new MapTile[fullSize.Width * 2 - 1, fullSize.Height];
 		}
 
-		public int GetWidth() {
-			return fullSize.Width;
+		public int Width {
+			get { return fullSize.Width; }
 		}
 
-		public int GetHeight() {
-			return fullSize.Height;
+		public int Height {
+			get { return fullSize.Height; }
 		}
 
 		public MapTile this[int x, int y] {
@@ -55,14 +71,27 @@ namespace CNCMaps.MapLogic {
 		public MapTile GetTileR(int rx, int ry) {
 			int dx = (rx - ry + fullSize.Width - 1);
 			int dy = (rx + ry - fullSize.Width - 1) / 2;
+
 			if (dx < 0 || dy < 0 || dx >= tiles.GetLength(0) || dy >= tiles.GetLength(1)) {
-				logger.Warn("Referencing empty tile at (rx,ry)= ({0},{1}); (dx,dy)=({2},{3})", rx, ry, dx, dy);
+				logger.Warn("Referencing empty tile at (rx,ry)=({0},{1}); (dx,dy)=({2},{3})", rx, ry, dx, dy);
 				return null;
 			}
 			else
 				return GetTile(dx, dy);
 		}
 
+		internal MapTile GetTileScreen(Point p) {
+			// use inverse matrix of world projection for screen to world
+			int w = Drawable.TileWidth / 2;
+			int h = Drawable.TileHeight / 2;
+			int fx = w * Width;
+			int fy = h * (-1 - Width);
+			int rx = (p.X * h + p.Y * w - fx * h - fy * w) / (2 * w * h);
+			int ry = (p.X * -h + p.Y * w + fx * h - fy * w) / (2 * w * h);
+			return GetTileR(rx, ry);
+		}
+
+		#region neighbouring tiles tests (auto-lat tests)
 		public void testNeighbours() {
 			testNeighbours(15, 9);
 			testNeighbours(14, 13);
@@ -132,6 +161,9 @@ namespace CNCMaps.MapLogic {
 			throw new InvalidOperationException();
 		}
 
+		#endregion
+
+		#region enumerator stuff
 		public IEnumerator<MapTile> GetEnumerator() {
 			return new TwoDimensionalEnumerator<MapTile>(tiles);
 		}
@@ -171,6 +203,14 @@ namespace CNCMaps.MapLogic {
 
 		}
 
+		#endregion
+
+		[Flags]
+		public enum TouchType {
+			Untouched = 0,
+			ByNormalData = 1,
+			ByExtraData = 2,
+		}
 	}
 
 }

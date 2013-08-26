@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Runtime.InteropServices;
@@ -28,8 +29,11 @@ namespace CNCMaps.FileFormats {
 			public short y;
 			public short cx;
 			public short cy;
-			public int compression;
-			private int unknown;
+			public byte compression;
+			public byte unknown1;
+			public byte unknown2;
+			public byte unknown3;
+			private int unknown4;
 			private int zero;
 			public int offset;
 		}
@@ -53,17 +57,10 @@ namespace CNCMaps.FileFormats {
 			logger.Debug("Initializing SHP data for file {0}", FileName);
 			fileHeader = EzMarshal.ByteArrayToStructure<ShpFileHeader>(Read(Marshal.SizeOf(typeof(ShpFileHeader))));
 			images = new List<ShpImage>(fileHeader.c_images);
-			int prevOffset = int.MinValue;
 			for (int i = 0; i < fileHeader.c_images; i++) {
 				var img = new ShpImage();
 				img.header = EzMarshal.ByteArrayToStructure<ShpImageHeader>(Read(Marshal.SizeOf(typeof(ShpImageHeader))));
 				images.Add(img);
-
-				// if this is a valid image, make sure the offsets are contiguous
-				if (img.header.cx * img.header.cy > 0) {
-					System.Diagnostics.Debug.Assert(prevOffset < img.header.offset);
-					prevOffset = img.header.offset;
-				}
 			}
 		}
 
@@ -71,12 +68,30 @@ namespace CNCMaps.FileFormats {
 			if (imageIndex >= images.Count) return new ShpImage();
 
 			ShpImage img = images[imageIndex];
+
 			// make sure imageData is present/decoded if needed
 			if (img.imageData == null) {
 				Position = img.header.offset;
 				int c_px = img.header.cx * img.header.cy;
 
-				if ((img.header.compression & 2) == 2) {
+				//img.header.compression &= 0x03;
+				if (img.header.compression <= 1) {
+					// Raw 8 bits-per-pixel image data
+					img.imageData = Read(c_px);
+				}
+				else if (img.header.compression == 2) {
+					// Image data divided into scanlines {
+					// -- Length of scanline (ImageHeader.width + 2) : uint16
+					// -- Raw 8 bits-per-pixel image data : uint8[ImageHeader.width]
+					img.imageData = new byte[c_px];
+					int offset = 0;
+					for (int y = 0; y < img.header.cy; y++) {
+						ushort scanlineLength = (ushort)(ReadUInt16() - sizeof(ushort));
+						Read(img.imageData, offset, scanlineLength);
+						offset += scanlineLength;
+					}
+				}
+				else if (img.header.compression == 3) {
 					img.imageData = new byte[c_px];
 					var compressedEnd = (int)Length;
 					if (imageIndex < images.Count - 1)
@@ -86,7 +101,7 @@ namespace CNCMaps.FileFormats {
 					Format3.DecodeInto(Read(compressedEnd - img.header.offset), img.imageData, img.header.cx, img.header.cy);
 				}
 				else {
-					img.imageData = Read(c_px);
+					logger.Warn("SHP image {0} frame {1} has unknown compression!", FileName, imageIndex);
 				}
 			}
 			return img;
@@ -103,10 +118,13 @@ namespace CNCMaps.FileFormats {
 		/// <param name="overrides">Whether z-buffer should be ignored</param>
 		unsafe public void Draw(int frameIndex, DrawingSurface ds, Point offset, MapTile tile, Palette p, bool overrides = false) {
 			if (!initialized) Initialize();
-			
+
 			logger.Trace("Drawing SHP file {0} (Frame {1}) at ({2},{3})", FileName, frameIndex, offset.X, offset.Y);
 
 			var image = GetImage(frameIndex);
+			if (image.imageData == null || image.header.cx * image.header.cy != image.imageData.Length)
+				return;
+
 			var h = image.header;
 			var c_px = (uint)(h.cx * h.cy);
 			int stride = ds.bmd.Stride;
@@ -134,7 +152,7 @@ namespace CNCMaps.FileFormats {
 					continue; // out of bounds
 				}
 				short z = (short)(zBufVal + y + 2); // why the +2? oh well
-				
+
 				for (int x = 0; x < h.cx; x++) {
 					byte paletteValue = image.imageData[rIdx];
 					if (paletteValue != 0 && w_low <= w && w < w_high && (overrides || z >= zBuffer[zIdx])) {
@@ -159,6 +177,9 @@ namespace CNCMaps.FileFormats {
 			logger.Trace("Drawing SHP shadow {0} (frame {1}) at ({2},{3})", FileName, frameIndex, offset.X, offset.Y);
 
 			var image = GetImage(frameIndex + images.Count / 2);
+			if (image.imageData == null || image.header.cx * image.header.cy != image.imageData.Length)
+				return;
+
 			var h = image.header;
 			var c_px = (uint)(h.cx * h.cy);
 			int stride = ds.bmd.Stride;

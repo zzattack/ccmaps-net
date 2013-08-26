@@ -42,7 +42,6 @@ namespace CNCMaps.MapLogic {
 
 
 		bool originalColorsLoaded;
-
 		private void LoadOriginalColors() {
 			if (originalPalette != null) {
 				origColors = originalPalette.GetOriginalColors();
@@ -55,7 +54,7 @@ namespace CNCMaps.MapLogic {
 				LoadOriginalColors();
 			if (!originalColorsLoaded) return;
 
-			const double clipMult = 1.6;
+			const double clipMult = 1.3;
 			ambientMult = Math.Min(Math.Max(ambientMult, -clipMult), clipMult);
 			redMult = Math.Min(Math.Max(redMult, -clipMult), clipMult);
 			greenMult = Math.Min(Math.Max(greenMult, -clipMult), clipMult);
@@ -106,12 +105,21 @@ namespace CNCMaps.MapLogic {
 			}
 		}
 
-		internal Lighting GetLighting() {
-			return new Lighting {
+		internal Lighting GetLighting(bool ambientOnly = false) {
+			if (!ambientOnly) 
+				return new Lighting {
 				Ambient = ambientMult,
 				Red = redMult,
 				Green = greenMult,
 				Blue = blueMult,
+				Ground = 0,
+				Level = 0,
+				};
+			return new Lighting {
+				Ambient = ambientMult,
+				Red = 1.0,
+				Green = 1.0,
+				Blue = 1.0,
 				Ground = 0,
 				Level = 0,
 			};

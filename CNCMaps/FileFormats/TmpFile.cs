@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.IO;
 using System.Runtime.InteropServices;
 using CNCMaps.MapLogic;
@@ -106,7 +107,7 @@ namespace CNCMaps.FileFormats {
 				if (img.header.HasExtraData) {
 					img.extraData = Read(img.header.cx_extra * img.header.cy_extra);
 				}
-				if (img.header.HasZData && img.header.HasExtraData && img.header.extra_z_ofs > 0 && img.header.extra_z_ofs < Length) {
+				if (img.header.HasZData && img.header.HasExtraData && 0 < img.header.extra_z_ofs && img.header.extra_z_ofs < Length) {
 					img.extraZData = Read(img.header.cx_extra * img.header.cy_extra);
 				}
 				images.Add(img);
@@ -128,6 +129,14 @@ namespace CNCMaps.FileFormats {
 			short zBufVal = (short)((tile.Rx + tile.Ry) * fileHeader.cy / 2);
 			int xOffset = tile.Dx * fileHeader.cx / 2;
 			int yOffset = (tile.Dy - tile.Z) * fileHeader.cy / 2;
+
+			// make touched tiles (used for determining image cutoff)
+			int gx = tile.Dx, gy = (tile.Dy - tile.Z) / 2;
+			if (gx >= 0 && gy >= 0 && gx < tile.Layer.GridTouched.GetLength(0) && gy < tile.Layer.GridTouched.GetLength(1)) {
+				tile.Layer.GridTouched[gx, gy] |= TileLayer.TouchType.ByNormalData;
+				tile.Layer.GridTouchedBy[gx, gy] = tile;
+			}
+
 			logger.Trace("Drawing TMP file {0} (subtile {1}) at ({2},{3})", FileName, tile.SubTile, xOffset, yOffset);
 
 			int stride = ds.bmd.Stride;
@@ -148,7 +157,7 @@ namespace CNCMaps.FileFormats {
 				cx += 4;
 				for (ushort c = 0; c < cx; c++) {
 					byte paletteValue = img.tileData[rIdx];
-					short z = (short)(zBufVal - img.zData[rIdx]);
+					short z = (img.zData != null) ? (short)(zBufVal - img.zData[rIdx]) : short.MaxValue;
 					if (w_low <= w && w < w_high && z >= zBuffer[zIdx]) {
 						*(w + 0) = p.colors[paletteValue].B;
 						*(w + 1) = p.colors[paletteValue].G;
@@ -169,7 +178,7 @@ namespace CNCMaps.FileFormats {
 				cx -= 4;
 				for (ushort c = 0; c < cx; c++) {
 					byte paletteValue = img.tileData[rIdx];
-					short z = (short)(zBufVal - img.zData[rIdx]);
+					short z = (img.zData != null) ? (short)(zBufVal - img.zData[rIdx]) : short.MaxValue;
 					if (w_low <= w && w < w_high && z >= zBuffer[zIdx]) {
 						*(w + 0) = p.colors[paletteValue].B;
 						*(w + 1) = p.colors[paletteValue].G;
@@ -191,6 +200,20 @@ namespace CNCMaps.FileFormats {
 			w = w_low + stride * dy + 3 * dx;
 			zIdx = dx + dy * ds.Width;
 			rIdx = 0;
+
+			// identify extra-data affected tiles for cutoff
+			var extraBounds = Rectangle.FromLTRB(
+				Math.Max(0, (int)Math.Floor(dx / (fileHeader.cx / 2.0))),
+				Math.Max(0, (int)Math.Floor(dy / (fileHeader.cy / 2.0))),
+				Math.Min(tile.Layer.Width - 1, (int)Math.Ceiling((dx + img.header.cx_extra) / (fileHeader.cx / 2.0))),
+				Math.Min((tile.Layer.Height - 1) * 2, (int)Math.Ceiling((dy + img.header.cy_extra) / (fileHeader.cy / 2.0))));
+			for (int by = extraBounds.Top; by < extraBounds.Bottom; by++) {
+				for (int bx = extraBounds.Left; bx < extraBounds.Right; bx++) {
+					logger.Trace("Tile at ({0},{1}) has extradata affecting ({2},{3})", tile.Dx, tile.Dy, bx, by);
+					tile.Layer.GridTouched[bx, by / 2] |= TileLayer.TouchType.ByExtraData;
+					tile.Layer.GridTouchedBy[bx, by / 2] = tile;
+				}
+			}
 
 			// Extra graphics are just a square
 			for (y = 0; y < img.header.cy_extra; y++) {

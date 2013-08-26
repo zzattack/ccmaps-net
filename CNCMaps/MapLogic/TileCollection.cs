@@ -322,5 +322,11 @@ namespace CNCMaps.MapLogic {
             if (tmpFile != null)
                 tmpFile.Draw(t, ds);
         }
-    }
+
+		internal TmpFile GetTileFile(MapTile t) {
+			if (t == null) return null;
+			else if (t.TileNum < 0 || t.TileNum >= Tiles.Count) t.TileNum = 0;
+			return Tiles[t.TileNum].GetTile();
+		}
+	}
 }

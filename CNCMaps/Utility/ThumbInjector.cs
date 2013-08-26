@@ -8,8 +8,6 @@ using CNCMaps.FileFormats;
 namespace CNCMaps.Utility {
 	class ThumbInjector {
 		public static unsafe void InjectThumb(Bitmap preview, IniFile map) {
-
-			preview.Save("C:\\soms.png");
 			BitmapData bmd = preview.LockBits(new Rectangle(0, 0, preview.Width, preview.Height), ImageLockMode.ReadOnly, PixelFormat.Format24bppRgb);
 			byte[] image = new byte[preview.Width * preview.Height * 3];
 			int idx = 0;
@@ -45,6 +43,37 @@ namespace CNCMaps.Utility {
 			}
 
 			map.GetOrCreateSection("Preview").SetValue("Size", string.Format("0,0,{0},{1}", preview.Width, preview.Height));
+		}
+
+		public static unsafe Bitmap ExtractThumb(IniFile map) {
+			var prevSection = map.GetSection("Preview");
+			var size = prevSection.ReadString("Size").Split(',');
+			var previewSize = new Rectangle(int.Parse(size[0]), int.Parse(size[1]), int.Parse(size[2]), int.Parse(size[3]));
+			var preview = new Bitmap(previewSize.Width, previewSize.Height, PixelFormat.Format24bppRgb);
+
+			byte[] image = new byte[preview.Width * preview.Height * 3];
+			var prevDataSection = map.GetSection("PreviewPack");
+			var image_compressed = Convert.FromBase64String(prevDataSection.ConcatenatedValues());
+			Format5.DecodeInto(image_compressed, image, 5);
+
+			// invert rgb->bgr
+			BitmapData bmd = preview.LockBits(new Rectangle(0, 0, preview.Width, preview.Height), ImageLockMode.WriteOnly, PixelFormat.Format24bppRgb);
+			int idx = 0;
+			for (int y = 0; y < bmd.Height; y++) {
+				byte* row = (byte*)bmd.Scan0 + bmd.Stride * y;
+				byte* p = row;
+				for (int x = 0; x < bmd.Width; x++) {
+					byte b = image[idx++];
+					byte g = image[idx++];
+					byte r = image[idx++];
+					*p++ = r;
+					*p++ = g;
+					*p++ = b;
+				}
+			}
+
+			preview.UnlockBits(bmd);
+			return preview;
 		}
 	}
 }

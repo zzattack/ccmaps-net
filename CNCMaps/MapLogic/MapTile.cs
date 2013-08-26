@@ -14,11 +14,13 @@ namespace CNCMaps.MapLogic {
 		public short SetNum { get; set; }
 		public ushort SubTile { get; private set; }
 
-		readonly List<RA2Object> AllObjects = new List<RA2Object>();
+		internal TileLayer Layer { get; private set; }
+		internal bool ExtraDataAffected { get; set; }
+		internal readonly List<RA2Object> AllObjects = new List<RA2Object>();
 
 		public Palette Palette { get; set; }
 
-		public MapTile(ushort dx, ushort dy, ushort rx, ushort ry, short rz, short tilenum, ushort subtile, short setnum = 0) {
+		public MapTile(ushort dx, ushort dy, ushort rx, ushort ry, short rz, short tilenum, ushort subtile, TileLayer layer, short setnum = 0) {
 			Dx = dx;
 			Dy = dy;
 			Rx = rx;
@@ -27,6 +29,7 @@ namespace CNCMaps.MapLogic {
 			TileNum = tilenum;
 			SetNum = setnum;
 			SubTile = subtile;
+			Layer = layer;
 		}
 
 		internal void AddObject(RA2Object obj) {
@@ -37,5 +40,6 @@ namespace CNCMaps.MapLogic {
 		public override string ToString() {
 			return string.Format("d({0},{1}),r({2},{3})", Dx, Dy, Rx, Ry);
 		}
+
 	}
 }

@@ -89,21 +89,7 @@ namespace CNCMaps.MapLogic {
 			if (NewTheater) {
 				// http://modenc.renegadeprojects.com/NewTheater
 
-				if (_engineType <= EngineType.FireStorm) {
-					// the tag will only work if the ID for the object starts with either G, N or C and its second letter is A (for Arctic/Snow theater) or T (for Temperate theater)
-					if (new[] {'G', 'N', 'C'}.Contains(objName[0]) && new[] {'A', 'T'}.Contains(objName[1]))
-						ApplyNewTheater(ref imageFileName);
-				}
-				else if (_engineType == EngineType.RedAlert2) {
-					// In RA2, for the tag to work, it must start with either G, N or C, and its second letter must be A, T or U (Urban theater). 
-					if (new[] {'G', 'N', 'C'}.Contains(objName[0]) && new[] {'A', 'T', 'U'}.Contains(objName[1]))
-						ApplyNewTheater(ref imageFileName);
-				}
-				else {
-					//  In Yuri's Revenge, the ID can also start with Y."
-					if (new[] {'G', 'N', 'C', 'Y'}.Contains(objName[0]) && new[] {'A', 'T', 'U'}.Contains(objName[1]))
-						ApplyNewTheater(ref imageFileName);
-				}
+				ApplyNewTheaterIfNeeded(artSectionName, ref imageFileName);
 
 				// Additionaly, this tag means the unit palette is used to draw this image.
 				drawableObject.Palette = (_palettes.unitPalette);
@@ -167,7 +153,7 @@ namespace CNCMaps.MapLogic {
 				// xOffset = yOffset = 0;
 			}
 			if (_collectionType == CollectionType.Terrain) {
-				yOffset = Drawable.TileHeight/2; // trees and such are placed in the middle of their tile
+				yOffset = Drawable.TileHeight / 2; // trees and such are placed in the middle of their tile
 				drawableObject.UseTilePalette = true;
 			}
 			if (rulesSection.ReadString("Land") == "Rock") {
@@ -222,7 +208,7 @@ namespace CNCMaps.MapLogic {
 							extraImageFileName += TheaterDefaults.GetExtension(_theaterType, _collectionType);
 
 						if (NewTheater)
-							ApplyNewTheater(ref extraImageFileName);
+							ApplyNewTheaterIfNeeded(artSectionName, ref extraImageFileName);
 
 						AddImageToObject(drawableObject, extraImageFileName, 0, 0, extraShadow, ySort);
 					}
@@ -236,7 +222,7 @@ namespace CNCMaps.MapLogic {
 						if (extraArtDamagedSection != null) {
 							ySort = extraArtDamagedSection.ReadInt("YSort", artSection.ReadInt(extraImage + "YSort"));
 							extraShadow = extraArtDamagedSection.ReadBool("Shadow", false);
-								// additional building need shadows listed explicitly
+							// additional building need shadows listed explicitly
 							extraImageDamagedFileName = extraArtDamagedSection.ReadString("Image", extraImageDamagedSectionName);
 						}
 						if (theaterExtension)
@@ -245,7 +231,7 @@ namespace CNCMaps.MapLogic {
 							extraImageDamagedFileName += TheaterDefaults.GetExtension(_theaterType, _collectionType);
 
 						if (NewTheater)
-							ApplyNewTheater(ref extraImageDamagedFileName);
+							ApplyNewTheaterIfNeeded(artSectionName, ref extraImageDamagedFileName);
 
 						drawableObject.AddDamagedShp(VFS.Open(extraImageDamagedFileName) as ShpFile, 0, 0, extraShadow, ySort);
 					}
@@ -276,7 +262,7 @@ namespace CNCMaps.MapLogic {
 					string img = rulesSection.ReadString("TurretAnim");
 					img += rulesSection.ReadBool("TurretAnimIsVoxel") ? ".vxl" : ".shp";
 					int m_x = rulesSection.ReadInt("TurretAnimX"),
-					    m_y = rulesSection.ReadInt("TurretAnimY");
+						m_y = rulesSection.ReadInt("TurretAnimY");
 					AddImageToObject(drawableObject, img, m_x, m_y);
 
 					string barrelFile = img.Replace("TUR", "BARL");
@@ -297,6 +283,24 @@ namespace CNCMaps.MapLogic {
 					if (VFS.Exists(barrelFile))
 						AddImageToObject(drawableObject, barrelFile, m_x, m_y);
 				}
+			}
+		}
+
+		private void ApplyNewTheaterIfNeeded(string artName, ref string imageFileName) {
+			if (_engineType <= EngineType.FireStorm) {
+				// the tag will only work if the ID for the object starts with either G, N or C and its second letter is A (for Arctic/Snow theater) or T (for Temperate theater)
+				if (new[] {'G', 'N', 'C'}.Contains(artName[0]) && new[] {'A', 'T'}.Contains(artName[1]))
+					ApplyNewTheater(ref imageFileName);
+			}
+			else if (_engineType == EngineType.RedAlert2) {
+				// In RA2, for the tag to work, it must start with either G, N or C, and its second letter must be A, T or U (Urban theater). 
+				if (new[] {'G', 'N', 'C'}.Contains(artName[0]) && new[] {'A', 'T', 'U'}.Contains(artName[1]))
+					ApplyNewTheater(ref imageFileName);
+			}
+			else {
+				//  In Yuri's Revenge, the ID can also start with Y."
+				if (new[] {'G', 'N', 'C', 'Y'}.Contains(artName[0]) && new[] {'A', 'T', 'U'}.Contains(artName[1]))
+					ApplyNewTheater(ref imageFileName);
 			}
 		}
 
