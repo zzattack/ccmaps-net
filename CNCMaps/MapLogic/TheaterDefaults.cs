@@ -99,10 +99,6 @@ namespace CNCMaps.MapLogic {
 		public static IEnumerable<string> GetTheaterMixes(TheaterType theaterType) {
 			var ret = new List<string>();
 
-			// there's a few files in isosnow.mix (flag shps mainly) that shouldn't be there,
-			// but they can be used outside snow theaters anyway
-			ret.Add("isosnow.mix");
-
 			switch (theaterType) {
 				case TheaterType.Desert:
 					ret.Add("isodesmd.mix");
@@ -163,6 +159,12 @@ namespace CNCMaps.MapLogic {
 					ret.Add("urban.mix");
 					break;
 			}
+
+			// there's a few files in isosnow.mix (flag shps mainly) that shouldn't be there,
+			// but they can be used outside snow theaters anyway
+			ret.Add("isosnow.mix");
+			ret.Add("snow.mix");
+
 			return ret;
 		}
 

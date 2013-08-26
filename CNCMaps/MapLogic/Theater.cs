@@ -5,7 +5,7 @@ using CNCMaps.Utility;
 using CNCMaps.VirtualFileSystem;
 
 namespace CNCMaps.MapLogic {
-	class Theater {
+	public class Theater {
 		readonly TheaterType _theaterType;
 		readonly EngineType _engine;
 		readonly IniFile _rules;
