@@ -88,7 +88,7 @@ namespace CNCMaps {
 					ds.SavePNG(Path.Combine(Settings.OutputDir, Settings.OutputFile + ".png"), Settings.PNGQuality, saveRect);
 			}
 			catch (Exception exc) {
-				_logger.ErrorException("An unknown fatal exception occured", exc);
+				_logger.ErrorException("An unknown fatal exception occured: {0}", exc);
 				return 1;
 			}
 

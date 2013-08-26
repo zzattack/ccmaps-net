@@ -1389,15 +1389,15 @@ namespace CNCMaps.MapLogic {
 					var dstRect = new Rectangle(0, 0, preview.Width, preview.Height);
 					gfx.DrawImage(_drawingSurface.bm, dstRect, srcRect, GraphicsUnit.Pixel);
 				}
-				
-				Logger.Info("Injecting thumbnail into map"); // todo: fix comments below
-				preview.Save("C:\\thumbs\\" + Program.Settings.OutputFile + ".png");
-				// ThumbInjector.InjectThumb(preview, this);
-				// var originalPreview = ThumbInjector.ExtractThumb(this);
-				// originalPreview.Save("C:\\soms.png");
+
+				Logger.Info("Injecting thumbnail into map");
+				ThumbInjector.InjectThumb(preview, this);
 
 				// debug thing to dump original previewpack dimensions
-				var prev = GetSection("Preview");
+				// preview.Save("C:\\thumbs\\" + Program.Settings.OutputFile + ".png");
+				// var originalPreview = ThumbInjector.ExtractThumb(this);
+				// originalPreview.Save("C:\\soms.png");
+				/*var prev = GetSection("Preview");
 				if (prev != null) {
 					var name = DetermineMapName(this.EngineType);
 					var size = GetSection("Preview").ReadString("Size").Split(',');
@@ -1406,7 +1406,7 @@ namespace CNCMaps.MapLogic {
 					File.AppendAllText("C:\\thumbs\\map_preview_dimensions.txt",
 										string.Format("{0}\t{1}\t{2}\t{3}\t{4}\t{5}\t{6}\n", name,
 										previewSize.Width, previewSize.Height, LocalSize.Width, LocalSize.Height, FullSize.Width, FullSize.Height));
-				}
+				}*/
 			}
 
 			Logger.Info("Saving map");
