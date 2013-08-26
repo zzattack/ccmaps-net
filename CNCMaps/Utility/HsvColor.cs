@@ -13,9 +13,6 @@ namespace CNCMaps.Utility {
 		}
 
 		public HsvColor(Color color) {
-			Hue = 0;
-			Saturation = 0;
-			Value = 0;
 			FromRGB(color);
 		}
 
