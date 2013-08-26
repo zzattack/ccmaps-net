@@ -275,13 +275,14 @@ namespace CNCMaps.FileFormats {
 		}
 
 		public void Save(string filename) {
-			StreamWriter sw = new StreamWriter(filename, false, Encoding.Default, 64 * 1024);
+			var sw = new StreamWriter(filename, false, Encoding.Default, 64 * 1024);
 			foreach (var section in Sections) {
 				section.WriteTo(sw);
 				if (section != Sections.Last())
 					sw.WriteLine();
 			}
 			sw.Flush();
+			sw.Dispose();
 		}
 
 		/// <summary>

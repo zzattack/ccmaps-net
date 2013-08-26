@@ -179,6 +179,7 @@ namespace CNCMaps.GUI {
 
 		private void CbReplacePreviewCheckedChanged(object sender, EventArgs e) {
 			cbOmitSquareMarkers.Visible = cbReplacePreview.Checked;
+			UpdateCommandline();
 		}
 
 		private void ExecuteCommand(object sender, EventArgs e) {
@@ -199,8 +200,8 @@ namespace CNCMaps.GUI {
 				}
 			}
 
-			if (!cbOutputPNG.Checked && !cbOutputJPG.Checked) {
-				MessageBox.Show("No output format chosen. Aborting.");
+			if (!cbOutputPNG.Checked && !cbOutputJPG.Checked && !cbReplacePreview.Checked) {
+				MessageBox.Show("Either PNG, JPEG or Replace Preview must be checked.", "Nothing to do..", MessageBoxButtons.OK, MessageBoxIcon.Information);
 				return;
 			}
 

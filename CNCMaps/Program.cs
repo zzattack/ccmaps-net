@@ -2,6 +2,8 @@
 using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 using System.IO;
+using CNCMaps.Encodings;
+using CNCMaps.FileFormats;
 using CNCMaps.MapLogic;
 using CNCMaps.Utility;
 using CNCMaps.VirtualFileSystem;
@@ -74,9 +76,12 @@ namespace CNCMaps {
 				// free up as much memory as possible before saving the large images
 				Rectangle saveRect = Settings.IgnoreLocalSize ? map.GetFullMapSizePixels() : map.GetLocalSizePixels();
 				DrawingSurface ds = map.GetDrawingSurface();
-				ds.FreeNonBitmap();
-				map.FreeUseless();
-				GC.Collect();
+				// if we don't need this data anymore, we can try to save some memory
+				if (!Settings.GeneratePreviewPack) {
+					ds.FreeNonBitmap();
+					map.FreeUseless();
+					GC.Collect();
+				}
 
 				if (Settings.SaveJPEG)
 					ds.SaveJPEG(Path.Combine(Settings.OutputDir, Settings.OutputFile + ".jpg"), Settings.JPEGCompression, saveRect);
@@ -85,10 +90,11 @@ namespace CNCMaps {
 					ds.SavePNG(Path.Combine(Settings.OutputDir, Settings.OutputFile + ".png"), Settings.PNGQuality, saveRect);
 
 				if (Settings.GeneratePreviewPack)
-					map.GeneratePreviewPack(Program.Settings.OmitPreviewPackMarkers);
+					for (int i = 0; i < 100; i++) // todo: fix diz
+						map.GeneratePreviewPack(Settings.OmitPreviewPackMarkers);
 			}
 			catch (Exception exc) {
-				_logger.ErrorException("An unknown fatal exception occured: {0}", exc);
+				_logger.Error(string.Format("An unknown fatal exception occured: {0}", exc), exc);
 				return 1;
 			}
 
@@ -170,7 +176,7 @@ namespace CNCMaps {
 				{"F|force-fullmap", "Ignore LocalSize definition and just save the full map", v => Settings.IgnoreLocalSize = true},
 				{"f|force-localsize", "Use localsize for map dimensions (default)", v => Settings.IgnoreLocalSize = false}, 
 				{"k|replace-preview", "Update the maps [PreviewPack] data with the rendered image",v => Settings.GeneratePreviewPack = true}, 
-				{"k|replace-preview-nosquares", "Update the maps [PreviewPack] data with the rendered image, without squares",
+				{"K|replace-preview-nosquares", "Update the maps [PreviewPack] data with the rendered image, without squares",
 					v => {
 						Settings.GeneratePreviewPack = true;
 						Settings.OmitPreviewPackMarkers = true;

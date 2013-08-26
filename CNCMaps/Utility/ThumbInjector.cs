@@ -14,8 +14,7 @@ namespace CNCMaps.Utility {
 
 			// invert rgb->bgr
 			for (int y = 0; y < bmd.Height; y++) {
-				byte* row = (byte*)bmd.Scan0 + bmd.Stride * y;
-				byte* p = row;
+				byte* p = (byte*)bmd.Scan0 + bmd.Stride * y;
 				for (int x = 0; x < bmd.Width; x++) {
 					byte r = *p++;
 					byte g = *p++;
@@ -29,7 +28,7 @@ namespace CNCMaps.Utility {
 
 			// encode
 			byte[] image_compressed = Format5.Encode(image, 5);
-
+			
 			// base64 encode
 			string image_base64 = Convert.ToBase64String(image_compressed, Base64FormattingOptions.None);
 

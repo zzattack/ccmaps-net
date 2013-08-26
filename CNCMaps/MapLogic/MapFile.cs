@@ -1478,7 +1478,6 @@ namespace CNCMaps.MapLogic {
 		internal void FreeUseless() {
 			_rules.Dispose();
 			_art.Dispose();
-			baseStream.Dispose();
 			_countryColors.Clear();
 			_namedColors.Clear();
 			_lightSources.Clear();

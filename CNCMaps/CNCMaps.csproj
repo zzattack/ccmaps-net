@@ -27,7 +27,7 @@
     <UseVSHostingProcess>false</UseVSHostingProcess>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
+    <PlatformTarget>x86</PlatformTarget>
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
@@ -70,6 +70,7 @@
     <Compile Include="FileFormats\FormatHelper.cs" />
     <Compile Include="FileFormats\HvaFile.cs" />
     <Compile Include="FileFormats\IniFile.cs" />
+    <Compile Include="FileFormats\LZO.cs" />
     <Compile Include="FileFormats\MissionsFile.cs" />
     <Compile Include="FileFormats\PalFile.cs" />
     <Compile Include="FileFormats\PktFile.cs" />
@@ -137,6 +138,9 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="lzo2.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="NLog.config">
       <SubType>Designer</SubType>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
