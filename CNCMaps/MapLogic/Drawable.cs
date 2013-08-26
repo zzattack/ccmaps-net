@@ -129,7 +129,9 @@ namespace CNCMaps.MapLogic {
 						// 0-8 are bridge parts bottom-left -- top-right, 9-16 are top-left -- bottom right
 						// but perhaps they're already aligned correctly?
 						offset.X += o.OverlayValue <= 8 ? 0 : 0;
-						offset.Y += o.OverlayValue <= 8 ? 0 : 0;
+						offset.Y += o.OverlayValue <= 8 ? 0 : -13;
+						shadowOffset.X += o.OverlayValue <= 8 ? 0 : -15;
+						shadowOffset.Y += o.OverlayValue <= 8 ? -1 : -9;
 					}
 				}
 			}
