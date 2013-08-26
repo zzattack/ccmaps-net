@@ -1332,7 +1332,7 @@ namespace CNCMaps.MapLogic {
 			}
 		}
 
-		public void GeneratePreviewPack() {
+		public void GeneratePreviewPack(bool omitMarkers) {
 			Logger.Info("Generating PreviewPack data");
 			// we will have to re-lock the bmd
 			
@@ -1347,12 +1347,13 @@ namespace CNCMaps.MapLogic {
 				// undo tiled, if needed
 				if (Program.Settings.StartPositionMarking == StartPositionMarking.Tiled)
 					UndrawTiledStartPositions();
-				DrawSquaredStartPositions();
+
+				if (!omitMarkers)
+					DrawSquaredStartPositions();
 			}
 
 			_drawingSurface.Unlock();
 			
-
 			// Number magic explained: http://modenc.renegadeprojects.com/Maps/PreviewPack
 			int pw, ph;
 			switch (EngineType) {
@@ -1478,15 +1479,6 @@ namespace CNCMaps.MapLogic {
 			_rules.Dispose();
 			_art.Dispose();
 			baseStream.Dispose();
-			_theater = null;
-			_tiles = null;
-			_overlayObjects = null;
-			_smudgeObjects = null;
-			_unitObjects = null;
-			_infantryObjects = null;
-			_structureObjects = null;
-			_unitObjects = null;
-			_aircraftObjects = null; ;
 			_countryColors.Clear();
 			_namedColors.Clear();
 			_lightSources.Clear();

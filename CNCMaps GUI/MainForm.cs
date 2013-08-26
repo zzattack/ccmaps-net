@@ -137,7 +137,8 @@ namespace CNCMaps.GUI {
 			if (rbPreferSoftwareRendering.Checked) cmd += "-g ";
 			else if (rbPreferHardwareRendering.Checked) cmd += "-G ";
 
-			if (cbReplacePreview.Checked) cmd += "-k ";
+			if (cbReplacePreview.Checked) 
+				cmd += cbOmitSquareMarkers.Checked ? "-K" : "-k ";
 
 			return cmd;
 		}
@@ -174,6 +175,10 @@ namespace CNCMaps.GUI {
 			if (cbTiledStartPositions.Checked)
 				cbSquaredStartPositions.Checked = false;
 			UpdateCommandline();
+		}
+
+		private void CbReplacePreviewCheckedChanged(object sender, EventArgs e) {
+			cbOmitSquareMarkers.Visible = cbReplacePreview.Checked;
 		}
 
 		private void ExecuteCommand(object sender, EventArgs e) {

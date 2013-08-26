@@ -71,6 +71,7 @@
 			this.cbLog = new System.Windows.Forms.GroupBox();
 			this.rtbLog = new System.Windows.Forms.RichTextBox();
 			this.folderBrowserDialog1 = new System.Windows.Forms.FolderBrowserDialog();
+			this.cbOmitSquareMarkers = new System.Windows.Forms.CheckBox();
 			this.gbMiscOptions.SuspendLayout();
 			this.panel1.SuspendLayout();
 			this.pnlMapSize.SuspendLayout();
@@ -83,6 +84,7 @@
 			// 
 			// gbMiscOptions
 			// 
+			this.gbMiscOptions.Controls.Add(this.cbOmitSquareMarkers);
 			this.gbMiscOptions.Controls.Add(this.panel1);
 			this.gbMiscOptions.Controls.Add(this.cbReplacePreview);
 			this.gbMiscOptions.Controls.Add(this.pnlMapSize);
@@ -122,6 +124,7 @@
 			this.rbPreferHardwareRendering.TabStop = true;
 			this.rbPreferHardwareRendering.Text = "Prefer hardware voxel rendering";
 			this.rbPreferHardwareRendering.UseVisualStyleBackColor = true;
+			this.rbPreferHardwareRendering.CheckedChanged += new System.EventHandler(this.UIChanged);
 			// 
 			// rbPreferSoftwareRendering
 			// 
@@ -132,6 +135,7 @@
 			this.rbPreferSoftwareRendering.TabIndex = 11;
 			this.rbPreferSoftwareRendering.Text = "Prefer software rendering (compatibility)";
 			this.rbPreferSoftwareRendering.UseVisualStyleBackColor = true;
+			this.rbPreferSoftwareRendering.CheckedChanged += new System.EventHandler(this.UIChanged);
 			// 
 			// cbReplacePreview
 			// 
@@ -142,7 +146,7 @@
 			this.cbReplacePreview.TabIndex = 15;
 			this.cbReplacePreview.Text = "Replace map preview with thumbnail of resulting image";
 			this.cbReplacePreview.UseVisualStyleBackColor = true;
-			this.cbReplacePreview.CheckedChanged += new System.EventHandler(this.UIChanged);
+			this.cbReplacePreview.CheckedChanged += new System.EventHandler(this.CbReplacePreviewCheckedChanged);
 			// 
 			// pnlMapSize
 			// 
@@ -583,6 +587,17 @@
 			this.rtbLog.TabIndex = 0;
 			this.rtbLog.Text = "";
 			// 
+			// cbOmitSquareMarkers
+			// 
+			this.cbOmitSquareMarkers.AutoSize = true;
+			this.cbOmitSquareMarkers.Location = new System.Drawing.Point(319, 206);
+			this.cbOmitSquareMarkers.Name = "cbOmitSquareMarkers";
+			this.cbOmitSquareMarkers.Size = new System.Drawing.Size(122, 17);
+			this.cbOmitSquareMarkers.TabIndex = 17;
+			this.cbOmitSquareMarkers.Text = "Omit square markers";
+			this.cbOmitSquareMarkers.UseVisualStyleBackColor = true;
+			this.cbOmitSquareMarkers.CheckedChanged += new System.EventHandler(this.UIChanged);
+			// 
 			// MainForm
 			// 
 			this.AllowDrop = true;
@@ -667,6 +682,7 @@
 		private System.Windows.Forms.Panel panel1;
 		private System.Windows.Forms.RadioButton rbPreferHardwareRendering;
 		private System.Windows.Forms.RadioButton rbPreferSoftwareRendering;
+		private System.Windows.Forms.CheckBox cbOmitSquareMarkers;
 
 	}
 }

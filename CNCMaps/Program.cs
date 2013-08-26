@@ -48,7 +48,7 @@ namespace CNCMaps {
 					_logger.Error("Could not successfully load all required components for this map. Aborting.");
 					return 1;
 				}
-				
+
 				if (Settings.StartPositionMarking == StartPositionMarking.Tiled)
 					map.DrawTiledStartPositions();
 
@@ -71,9 +71,6 @@ namespace CNCMaps {
 				if (Settings.OutputDir == "")
 					Settings.OutputDir = Path.GetDirectoryName(Settings.InputFile);
 
-				if (Settings.GeneratePreviewPack)
-					map.GeneratePreviewPack();
-
 				// free up as much memory as possible before saving the large images
 				Rectangle saveRect = Settings.IgnoreLocalSize ? map.GetFullMapSizePixels() : map.GetLocalSizePixels();
 				DrawingSurface ds = map.GetDrawingSurface();
@@ -86,6 +83,9 @@ namespace CNCMaps {
 
 				if (Settings.SavePNG)
 					ds.SavePNG(Path.Combine(Settings.OutputDir, Settings.OutputFile + ".png"), Settings.PNGQuality, saveRect);
+
+				if (Settings.GeneratePreviewPack)
+					map.GeneratePreviewPack(Program.Settings.OmitPreviewPackMarkers);
 			}
 			catch (Exception exc) {
 				_logger.ErrorException("An unknown fatal exception occured: {0}", exc);
@@ -155,35 +155,28 @@ namespace CNCMaps {
 				{"i|infile=", "Input file", v => Settings.InputFile = v},
 				{"o|outfile=", "Output file, without extension, read from map if not specified.", v => Settings.OutputFile = v},
 				{"d|outdir=", "Output directiory", v => Settings.OutputDir = v},
-				{"y|force-ra2", "Force using the Red Alert 2 engine for rendering", v => Settings.Engine = EngineType.RedAlert2}, {
-					"Y|force-yr", "Force using the Yuri's Revenge engine for rendering", v => Settings.Engine = EngineType.YurisRevenge
-				},
+				{"y|force-ra2", "Force using the Red Alert 2 engine for rendering", v => Settings.Engine = EngineType.RedAlert2}, 
+				{"Y|force-yr", "Force using the Yuri's Revenge engine for rendering", v => Settings.Engine = EngineType.YurisRevenge},
 				{"t|force-ts", "Force using the Tiberian Sun engine for rendering", v => Settings.Engine = EngineType.TiberianSun},
 				{"T|force-fs", "Force using the FireStorm engine for rendering", v => Settings.Engine = EngineType.FireStorm},
 				{"j|output-jpg", "Output JPEG file", v => Settings.SaveJPEG = true},
 				{"q|jpeg-quality=", "Set JPEG quality level (0-100)", (int v) => Settings.JPEGCompression = v},
 				{"p|output-png", "Output PNG file", v => Settings.SavePNG = true},
-				{"c|png-compression=", "Set PNG compression level (1-9)", (int v) => Settings.PNGQuality = v}, {
-					"m|mixdir=", "Specify location of .mix files, read from registry if not specified (win only)",
-					v => Settings.MixFilesDirectory = v
-				}, {
-					"s|start-pos-tiled", "Mark starting positions in a tiled manner",
-					v => Settings.StartPositionMarking = StartPositionMarking.Tiled
-				}, {
-					"S|start-pos-squared", "Mark starting positions in a squared manner",
-					v => Settings.StartPositionMarking = StartPositionMarking.Squared
-				}, {
-					"r|mark-ore", "Mark ore and gem fields more explicity, looks good when resizing to a preview",
-					v => Settings.MarkOreFields = true
-				},
+				{"c|png-compression=", "Set PNG compression level (1-9)", (int v) => Settings.PNGQuality = v}, 
+				{"m|mixdir=", "Specify location of .mix files, read from registry if not specified (win only)",v => Settings.MixFilesDirectory = v},
+				{"s|start-pos-tiled", "Mark starting positions in a tiled manner",v => Settings.StartPositionMarking = StartPositionMarking.Tiled},
+				{"S|start-pos-squared", "Mark starting positions in a squared manner",v => Settings.StartPositionMarking = StartPositionMarking.Squared}, 
+				{"r|mark-ore", "Mark ore and gem fields more explicity, looks good when resizing to a preview",v => Settings.MarkOreFields = true},
 				{"F|force-fullmap", "Ignore LocalSize definition and just save the full map", v => Settings.IgnoreLocalSize = true},
-				{"f|force-localsize", "Use localsize for map dimensions (default)", v => Settings.IgnoreLocalSize = false}, {
-					"k|replace-preview", "Update the maps [PreviewPack] data with the rendered image",
-					v => Settings.GeneratePreviewPack = true
-				}, {
-					"G|graphics-winmgr", "Attempt rendering voxels using window manager context first (default)",
-					v => Settings.PreferOSMesa = false
-				},
+				{"f|force-localsize", "Use localsize for map dimensions (default)", v => Settings.IgnoreLocalSize = false}, 
+				{"k|replace-preview", "Update the maps [PreviewPack] data with the rendered image",v => Settings.GeneratePreviewPack = true}, 
+				{"k|replace-preview-nosquares", "Update the maps [PreviewPack] data with the rendered image, without squares",
+					v => {
+						Settings.GeneratePreviewPack = true;
+						Settings.OmitPreviewPackMarkers = true;
+					}
+				}, 
+				{"G|graphics-winmgr", "Attempt rendering voxels using window manager context first (default)",v => Settings.PreferOSMesa = false},
 				{"g|graphics-osmesa", "Attempt rendering voxels using OSMesa context first", v => Settings.PreferOSMesa = true},
 			};
 
