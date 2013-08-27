@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Runtime.InteropServices;
+using System.Runtime.Remoting.Messaging;
 using CNCMaps.Encodings;
 using CNCMaps.MapLogic;
 using CNCMaps.Utility;
@@ -220,10 +221,27 @@ namespace CNCMaps.FileFormats {
 			}
 		}
 
-		public unsafe void DrawAlpha(int frameIndex, DrawingSurface ds, int xOffset, int yOffset) {
+		/// <summary>
+		/// 
+		/// </summary>
+		/// <param name="unitDirectionFacing"></param>
+		/// <param name="ds"></param>
+		/// <param name="xOffset"></param>
+		/// <param name="yOffset"></param>
+		public unsafe void DrawAlpha(int unitDirectionFacing, DrawingSurface ds, int xOffset, int yOffset) {
+			if (!initialized) Initialize();
+
+			// Change originally implemented by Starkku: Ares supports multiframe AlphaImages, based on frame count 
+			// the direction the unit it facing.
+			int frameIndex = 
+				fileHeader.c_images > 1 && (fileHeader.c_images % 8) == 0
+				? unitDirectionFacing / 8
+				: 0;
+
 			logger.Trace("Drawing AlphaImage SHP file {0} (frame {1}) at ({2},{3})", FileName, frameIndex, xOffset, yOffset);
 
-			var image = GetImage(frameIndex + images.Count / 2);
+			var image = GetImage(frameIndex);
+			//var image = GetImage(frameIndex + images.Count / 2);
 			var h = image.header;
 			var c_px = (uint)(h.cx * h.cy);
 			int stride = ds.bmd.Stride;
@@ -243,7 +261,7 @@ namespace CNCMaps.FileFormats {
 			for (int y = 0; y < h.cy; y++) {
 				for (int x = 0; x < h.cx; x++) {
 					if (image.imageData[rIdx] != 0 && w_low <= w && w < w_high) {
-						float mult = image.imageData[rIdx] / 128.0f;
+						float mult = image.imageData[rIdx] / 127.0f;
 						*(w + 0) = limit(mult, *(w + 0));
 						*(w + 1) = limit(mult, *(w + 1));
 						*(w + 2) = limit(mult, *(w + 2));
@@ -259,6 +277,12 @@ namespace CNCMaps.FileFormats {
 
 		private byte limit(float mult, byte p) {
 			return (byte)Math.Max(0f, Math.Min(255f, mult * p));
+		}
+
+		// Starkku: Necessary addition to make few things like multi-framed alpha images work properly.
+		public int frameCount() {
+			if (!initialized) Initialize();
+			return images.Count;
 		}
 	}
 }
