@@ -88,9 +88,9 @@
     <Compile Include="MapLogic\OverlayObject.cs" />
     <Compile Include="MapLogic\Palette.cs" />
     <Compile Include="MapLogic\PaletteCollection.cs" />
-    <Compile Include="MapLogic\PaletteType.cs" />
-    <Compile Include="MapLogic\RA2Object.cs" />
-    <Compile Include="MapLogic\RemappableObject.cs" />
+    <Compile Include="MapLogic\PaletteOwner.cs" />
+    <Compile Include="MapLogic\PaletteSettings.cs" />
+    <Compile Include="MapLogic\GameObject.cs" />
     <Compile Include="MapLogic\SmudgeObject.cs" />
     <Compile Include="MapLogic\StructureObject.cs" />
     <Compile Include="MapLogic\TerrainObject.cs" />

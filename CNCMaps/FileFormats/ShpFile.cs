@@ -233,7 +233,7 @@ namespace CNCMaps.FileFormats {
 
 			// Change originally implemented by Starkku: Ares supports multiframe AlphaImages, based on frame count 
 			// the direction the unit it facing.
-			int frameIndex = 
+			int frameIndex =
 				fileHeader.c_images > 1 && (fileHeader.c_images % 8) == 0
 				? unitDirectionFacing / 8
 				: 0;
@@ -275,14 +275,9 @@ namespace CNCMaps.FileFormats {
 			}
 		}
 
-		private byte limit(float mult, byte p) {
+		private static byte limit(float mult, byte p) {
 			return (byte)Math.Max(0f, Math.Min(255f, mult * p));
 		}
 
-		// Starkku: Necessary addition to make few things like multi-framed alpha images work properly.
-		public int frameCount() {
-			if (!initialized) Initialize();
-			return images.Count;
-		}
 	}
 }

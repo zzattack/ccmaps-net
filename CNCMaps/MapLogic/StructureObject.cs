@@ -1,5 +1,5 @@
 namespace CNCMaps.MapLogic {
-	public class StructureObject : NamedObject, DamageableObject, RemappableObject {
+	public class StructureObject : NamedObject, DamageableObject {
 
 		public StructureObject(string owner, string name, short health, short direction) {
 			Owner = owner;

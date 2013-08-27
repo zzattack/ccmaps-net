@@ -23,24 +23,24 @@ namespace CNCMaps.MapLogic {
 			}
 		}
 
-		public static PaletteType GetPaletteType(CollectionType t, EngineType engine) {
+		public static PaletteSettings GetPaletteType(CollectionType t, EngineType engine) {
 			switch (t) {
 				case CollectionType.Building:
 					return engine == EngineType.TiberianSun || engine == EngineType.FireStorm ?
-						PaletteType.Iso : PaletteType.Unit;
+						PaletteSettings.Iso : PaletteSettings.Unit;
 
 				case CollectionType.Aircraft:
 				case CollectionType.Infantry:
 				case CollectionType.Vehicle:
-					return PaletteType.Unit;
+					return PaletteSettings.Unit;
 
 				case CollectionType.Overlay:
-					return PaletteType.Overlay;
+					return PaletteSettings.Overlay;
 
 				case CollectionType.Smudge:
 				case CollectionType.Terrain:
 				default:
-					return PaletteType.Iso;
+					return PaletteSettings.Iso;
 			}
 		}
 

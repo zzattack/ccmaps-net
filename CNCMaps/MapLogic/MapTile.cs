@@ -2,7 +2,7 @@
 
 namespace CNCMaps.MapLogic {
 
-	public class MapTile : RemappableObject {
+	public class MapTile : PaletteOwner {
 
 		public ushort Dx { get; private set; }
 		public ushort Dy { get; private set; }
@@ -16,7 +16,7 @@ namespace CNCMaps.MapLogic {
 
 		internal TileLayer Layer { get; private set; }
 		internal bool ExtraDataAffected { get; set; }
-		internal readonly List<RA2Object> AllObjects = new List<RA2Object>();
+		internal readonly List<GameObject> AllObjects = new List<GameObject>();
 
 		public Palette Palette { get; set; }
 
@@ -32,11 +32,11 @@ namespace CNCMaps.MapLogic {
 			Layer = layer;
 		}
 
-		internal void AddObject(RA2Object obj) {
+		internal void AddObject(GameObject obj) {
 			AllObjects.Add(obj);
 			obj.Tile = this;
 		}
-		
+
 		public override string ToString() {
 			return string.Format("d({0},{1}),r({2},{3})", Dx, Dy, Rx, Ry);
 		}

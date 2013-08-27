@@ -56,64 +56,65 @@ namespace CNCMaps.MapLogic {
 			}
 		}
 
+		/* Starkku: Statue of Liberty does not need special palette handling anymore, so commented those lines out.
+		 * Also, game only uses temperat.pal for ore overlays - snow.pal, urban.pal etc. are UNUSED - some code below changed to match this.
+		 */
 		public void Initialize() {
 			Logger.Info("Initializing theater");
 			// load palettes and additional mix files for this theater
 			switch (_theaterType) {
 				case TheaterType.Temperate:
 				case TheaterType.TemperateYR:
-					_palettes.isoPalette = new Palette(VFS.Open<PalFile>("isotem.pal"));
-					_palettes.libPalette = new Palette(VFS.Open<PalFile>("libtem.pal"));
-					_palettes.ovlPalette = new Palette(VFS.Open<PalFile>("temperat.pal"));
-					_palettes.unitPalette = new Palette(VFS.Open<PalFile>("unittem.pal"));
+					_palettes = new PaletteCollection(_theaterType);
+					_palettes.IsoPalette = new Palette(VFS.Open<PalFile>("isotem.pal"));
+					_palettes.OvlPalette = new Palette(VFS.Open<PalFile>("temperat.pal"));
+					_palettes.UnitPalette = new Palette(VFS.Open<PalFile>("unittem.pal"));
 					break;
 
 				case TheaterType.Snow:
 				case TheaterType.SnowYR:
-					_palettes.isoPalette = new Palette(VFS.Open<PalFile>("isosno.pal"));
-					_palettes.libPalette = new Palette(VFS.Open<PalFile>("libsno.pal"));
-					_palettes.ovlPalette = new Palette(VFS.Open<PalFile>("snow.pal"));
-					_palettes.unitPalette = new Palette(VFS.Open<PalFile>("unitsno.pal"));
+					_palettes = new PaletteCollection(_theaterType);
+					_palettes.IsoPalette = new Palette(VFS.Open<PalFile>("isosno.pal"));
+					_palettes.OvlPalette = new Palette(VFS.Open<PalFile>("temperat.pal"));
+					_palettes.UnitPalette = new Palette(VFS.Open<PalFile>("unitsno.pal"));
 					break;
 
 				case TheaterType.Urban:
 				case TheaterType.UrbanYR:
-					_palettes.isoPalette = new Palette(VFS.Open<PalFile>("isourb.pal"));
-					_palettes.libPalette = new Palette(VFS.Open<PalFile>("liburb.pal"));
-					_palettes.ovlPalette = new Palette(VFS.Open<PalFile>("urban.pal"));
-					_palettes.unitPalette = new Palette(VFS.Open<PalFile>("uniturb.pal"));
+					_palettes = new PaletteCollection(_theaterType);
+					_palettes.IsoPalette = new Palette(VFS.Open<PalFile>("isourb.pal"));
+					_palettes.OvlPalette = new Palette(VFS.Open<PalFile>("temperat.pal"));
+					_palettes.UnitPalette = new Palette(VFS.Open<PalFile>("uniturb.pal"));
 					break;
 
 				case TheaterType.Desert:
-					_palettes.isoPalette = new Palette(VFS.Open<PalFile>("isodes.pal"));
-					_palettes.libPalette = new Palette(VFS.Open<PalFile>("libdes.pal"));
-					_palettes.ovlPalette = new Palette(VFS.Open<PalFile>("desert.pal"));
-					_palettes.unitPalette = new Palette(VFS.Open<PalFile>("unitdes.pal"));
+					_palettes = new PaletteCollection(_theaterType);
+					_palettes.IsoPalette = new Palette(VFS.Open<PalFile>("isodes.pal"));
+					_palettes.OvlPalette = new Palette(VFS.Open<PalFile>("temperat.pal"));
+					_palettes.UnitPalette = new Palette(VFS.Open<PalFile>("unitdes.pal"));
 					break;
 
 				case TheaterType.Lunar:
-					_palettes.isoPalette = new Palette(VFS.Open<PalFile>("isolun.pal"));
-					_palettes.libPalette = new Palette(VFS.Open<PalFile>("liblun.pal"));
-					_palettes.ovlPalette = new Palette(VFS.Open<PalFile>("lunar.pal"));
-					_palettes.unitPalette = new Palette(VFS.Open<PalFile>("unitlun.pal"));
+					_palettes = new PaletteCollection(_theaterType);
+					_palettes.IsoPalette = new Palette(VFS.Open<PalFile>("isolun.pal"));
+					_palettes.OvlPalette = new Palette(VFS.Open<PalFile>("temperat.pal"));
+					_palettes.UnitPalette = new Palette(VFS.Open<PalFile>("unitlun.pal"));
 					break;
 
 				case TheaterType.NewUrban:
-					_palettes.isoPalette = new Palette(VFS.Open<PalFile>("isoubn.pal"));
-					_palettes.libPalette = new Palette(VFS.Open<PalFile>("libubn.pal"));
-					_palettes.ovlPalette = new Palette(VFS.Open<PalFile>("urbann.pal"));
-					_palettes.unitPalette = new Palette(VFS.Open<PalFile>("unitubn.pal"));
+					_palettes = new PaletteCollection(_theaterType);
+					_palettes.IsoPalette = new Palette(VFS.Open<PalFile>("isoubn.pal"));
+					_palettes.OvlPalette = new Palette(VFS.Open<PalFile>("temperat.pal"));
+					_palettes.UnitPalette = new Palette(VFS.Open<PalFile>("unitubn.pal"));
 					break;
 			}
 
 			foreach (string mix in TheaterDefaults.GetTheaterMixes(_theaterType))
 				VFS.Add(mix);
 
-			_palettes.animPalette = new Palette(VFS.Open<PalFile>("anim.pal"));
+			_palettes.AnimPalette = new Palette(VFS.Open<PalFile>("anim.pal"));
 
 			_tileTypes = new TileCollection(_theaterType);
-
-			Drawable.Palettes = _palettes;
 
 			_buildingTypes = new ObjectCollection(_rules.GetSection("BuildingTypes"),
 				CollectionType.Building, _theaterType, _engine, _rules, _art, _palettes);
@@ -157,7 +158,7 @@ namespace CNCMaps.MapLogic {
 			return _palettes;
 		}
 
-		ObjectCollection GetObjectCollection(RA2Object o) {
+		ObjectCollection GetObjectCollection(GameObject o) {
 			if (o is InfantryObject) return _infantryTypes;
 			else if (o is UnitObject) return _vehicleTypes;
 			else if (o is AircraftObject) return _aircraftTypes;
@@ -173,12 +174,8 @@ namespace CNCMaps.MapLogic {
 			throw new InvalidOperationException("Invalid object");
 		}
 
-		internal void DrawObject(RA2Object o, DrawingSurface drawingSurface) {
+		internal void DrawObject(GameObject o, DrawingSurface drawingSurface) {
 			GetObjectCollection(o).Draw(o, drawingSurface);
-		}
-
-		internal Palette GetPalette(RA2Object o) {
-			return GetObjectCollection(o).GetDrawable(o).Palette;
 		}
 
 		internal Size GetFoundation(NamedObject v) {

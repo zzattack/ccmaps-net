@@ -1,5 +1,5 @@
 namespace CNCMaps.MapLogic {
-	public class UnitObject : NamedObject, DamageableObject, RemappableObject {
+	public class UnitObject : NamedObject, DamageableObject {
 
 		public UnitObject(string owner, string name, short health, short direction) {
 			Owner = owner;
@@ -13,7 +13,5 @@ namespace CNCMaps.MapLogic {
 		public short Direction { get; set; }
 
 		public string Owner { get; set; }
-
-		public Palette Palette { get; set; }
 	}
 }

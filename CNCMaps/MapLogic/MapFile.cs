@@ -317,10 +317,10 @@ namespace CNCMaps.MapLogic {
 			LoadLighting();
 			CreateLevelPalettes();
 			LoadLightSources();
+			LoadPalettes();
 			ApplyLightSources();
-			ApplyRemappables();
 			// now everything is loaded and we can prepare the palettes before using them to draw
-			RecalculateAllPalettes();
+			RecalculatePalettes();
 
 			return true;
 		}
@@ -772,7 +772,6 @@ namespace CNCMaps.MapLogic {
 			Format5.DecodeInto(format80Data, overlayDataPack, 80);
 
 			_overlayObjects = new OverlayObject[FullSize.Width * 2 - 1, FullSize.Height];
-
 			foreach (MapTile t in _tiles) {
 				if (t == null) continue;
 				int idx = t.Rx + 512 * t.Ry;
@@ -908,7 +907,7 @@ namespace CNCMaps.MapLogic {
 				// The value consists of the sum of all dx's with a little magic offsets
 				// plus the sum of all dy's with also a little magic offset, and also
 				// everything is calculated modulo 12
-				if (o.IsOre()) {
+				if (o.IsOre_Riparius || o.IsOre_Vinifera || o.IsOre_Aboreus) {
 					int x = o.Tile.Dx;
 					int y = o.Tile.Dy;
 					double yInc = ((((y - 9) / 2) % 12) * (((y - 8) / 2) % 12)) % 12;
@@ -920,10 +919,10 @@ namespace CNCMaps.MapLogic {
 					num %= 12;
 
 					// replace ore
-					o.OverlayID = (byte)(OverlayObject.MinOreID + num);
+					o.OverlayID = (byte)(OverlayObject.Min_ID_Riparius + num);
 				}
 
-				else if (o.IsGem()) {
+				else if (o.IsOre_Cruentus) {
 					int x = o.Tile.Dx;
 					int y = o.Tile.Dy;
 					double yInc = ((((y - 9) / 2) % 12) * (((y - 8) / 2) % 12)) % 12;
@@ -935,49 +934,52 @@ namespace CNCMaps.MapLogic {
 					num %= 12;
 
 					// replace gems
-					o.OverlayID = (byte)(OverlayObject.MinGemsID + num);
+					o.OverlayID = (byte)(OverlayObject.Min_ID_Cruentus + num);
 				}
 			}
 		}
 
 		private void LoadLighting() {
 			Logger.Info("Loading lighting");
-			_lighting = new Lighting(GetSection("Lighting"));
+			_lighting = new Lighting(GetOrCreateSection("Lighting"));
 		}
 
+		// Starkku: Large-degree changes to make the lighting better mimic the way it is in the game.
 		private void CreateLevelPalettes() {
+
 			Logger.Info("Creating per-height palettes");
 			PaletteCollection palettes = _theater.GetPalettes();
 			for (int i = 0; i < 19; i++) {
-				Palette isoHeight = palettes.isoPalette.Clone();
+				Palette isoHeight = palettes.IsoPalette.Clone();
 				isoHeight.ApplyLighting(_lighting, i);
 				isoHeight.IsShared = true;
+				isoHeight.Name = string.Format("{0} lvl.{1}", isoHeight.Name, i);
 				_palettePerLevel.Add(isoHeight);
 				_palettesToBeRecalculated.Add(isoHeight);
 			}
+		}
 
-			var overlayObjects = _theater.GetCollection(CollectionType.Overlay);
-			foreach (MapTile t in _tiles) {
-				if (t != null) {
-					t.Palette = _palettePerLevel[t.Z];
-
-					// overlay objects inherit per-level iso palettes 
-					// (so that for example higher placed rocks look brighter)
-					var ovl = _overlayObjects[t.Dx, t.Dy / 2];
-					if (ovl == null) continue;
-
-					var drawable = overlayObjects.GetDrawable(ovl);
-					if (drawable != null && drawable.IsValid && drawable.UseTilePalette) {
-						// bridge tiles get the same lighting as their corresponding tiles, 
-						// which are located a bit above their associated tile
-						ovl.Palette = _palettePerLevel[ovl.Tile.Z + 4].Clone();
-
-						// regardless of whether or not this palette is affected by any light-source,
-						// we'll have to recalculate it
-						_palettesToBeRecalculated.Add(ovl.Palette);
-					}
-				}
-			}
+		// Starkku: Applies lighting to game objects (non-terrain) based on what level of map they are on.
+		// Returns the new palette with applied lighting.
+		private Palette applyObjectLighting(GameObject obj, int level) {
+			Palette np = null;
+			if (obj is StructureObject)
+				np = (obj as StructureObject).Palette.Clone();
+			else if (obj is UnitObject)
+				np = (obj as UnitObject).Palette.Clone();
+			else if (obj is InfantryObject)
+				np = (obj as InfantryObject).Palette.Clone();
+			else if (obj is AircraftObject)
+				np = (obj as AircraftObject).Palette.Clone();
+			else if (obj is TerrainObject)
+				np = (obj as TerrainObject).Palette.Clone();
+			else if (obj is OverlayObject)
+				np = (obj as OverlayObject).Palette.Clone();
+			if (np == null) np = _theater.GetPalettes().UnitPalette.Clone();
+			np.Name = np.Name + "_" + level.ToString();
+			np.ApplyObjectLighting(_lighting, level, false);
+			_palettesToBeRecalculated.Add(np);
+			return np;
 		}
 
 		private static readonly string[] LampNames = new[] {
@@ -1030,36 +1032,32 @@ namespace CNCMaps.MapLogic {
 						 _palettesToBeRecalculated.Count - before);
 		}
 
-		private void ApplyRemappables() {
+		private void LoadPalettes() {
 			int before = _palettesToBeRecalculated.Count;
 			foreach (var s in _structureObjects) {
 				if (s == null) continue;
-				s.Palette = _theater.GetPalette(s).Clone();
 				s.Palette.Remap(_countryColors[s.Owner]);
-				s.Palette.ApplyLighting(s.Tile.Palette.GetLighting());
+				//s.Palette.ApplyLighting(s.Tile.Palette.GetLighting());
 				_palettesToBeRecalculated.Add(s.Palette);
 			}
 			foreach (var u in _unitObjects) {
 				if (u == null) continue;
-				u.Palette = _theater.GetPalette(u).Clone();
 				u.Palette.Remap(_countryColors[u.Owner]);
-				u.Palette.ApplyLighting(u.Tile.Palette.GetLighting(true));
+				//u.Palette.ApplyLighting(u.Tile.Palette.GetLighting(true));
 				_palettesToBeRecalculated.Add(u.Palette);
 			}
 			foreach (var a in _aircraftObjects) {
 				if (a == null) continue;
-				a.Palette = _theater.GetPalette(a).Clone();
 				a.Palette.Remap(_countryColors[a.Owner]);
-				a.Palette.ApplyLighting(a.Tile.Palette.GetLighting(true));
+				//a.Palette.ApplyLighting(a.Tile.Palette.GetLighting(true));
 				_palettesToBeRecalculated.Add(a.Palette);
 			}
 			foreach (var il in _infantryObjects) {
 				if (il == null) continue;
 				foreach (InfantryObject i in il) {
 					if (i == null) continue;
-					i.Palette = _theater.GetPalette(i).Clone();
 					i.Palette.Remap(_countryColors[i.Owner]);
-					i.Palette.ApplyLighting(i.Tile.Palette.GetLighting(true));
+					//i.Palette.ApplyLighting(i.Tile.Palette.GetLighting(true));
 					_palettesToBeRecalculated.Add(i.Palette);
 				}
 			}
@@ -1071,14 +1069,24 @@ namespace CNCMaps.MapLogic {
 				var tiberiumRemaps =
 					tiberiumsSections.OrderedEntries.Select(v => _rules.GetSection(v.Value).ReadString("Color")).ToList();
 
+				string pname = _theater.GetPalettes().UnitPalette.Name;
+				Palette p = _theater.GetPalettes().GetCustomPalette(pname, false);
+				p.Name = pname + "_tiberium_unlighted";
+
 				foreach (var ovl in _overlayObjects) {
 					if (ovl == null) continue;
+					// Starkku: Use a unlighted version of unit palette for tiberium, which is how it works in the game.
+					ovl.Palette = p;
 					string name = collection.GetName(ovl.OverlayID);
+
 					if (name.StartsWith("TIB")) {
 						int tiberiumType;
-						if (name.Contains("_")) tiberiumType = name[3] - '0';
+						// Starkku: Better idea to actually use all 4 ore ore/tiberium types, not just 2.
+						if (ovl.IsOre_Aboreus) tiberiumType = 4;
+						else if (ovl.IsOre_Vinifera) tiberiumType = 3;
+						else if (ovl.IsOre_Cruentus) tiberiumType = 2;
 						else tiberiumType = 1;
-						ovl.Palette = _theater.GetPalette(ovl).Clone();
+						ovl.Palette = ovl.Palette.Clone();
 						ovl.Palette.Remap(_namedColors[tiberiumRemaps[tiberiumType - 1]]);
 						_palettesToBeRecalculated.Add(ovl.Palette);
 					}
@@ -1088,10 +1096,10 @@ namespace CNCMaps.MapLogic {
 						 _palettesToBeRecalculated.Count - before);
 		}
 
-		private void RecalculateAllPalettes() {
+		private void RecalculatePalettes() {
 			Logger.Info("Calculating palette-values for all objects");
 			foreach (Palette p in _palettesToBeRecalculated)
-				p.Recalculate();
+				if (p != null) p.Recalculate();
 		}
 
 		public void DrawTiledStartPositions() {
@@ -1151,8 +1159,8 @@ namespace CNCMaps.MapLogic {
 						MapTile t = _tiles.GetTileR(x, y);
 						if (t == null) continue;
 						// redraw objects on here
-						List<RA2Object> objs = GetObjectsAt(t.Dx, t.Dy / 2);
-						foreach (RA2Object o in objs)
+						List<GameObject> objs = GetObjectsAt(t.Dx, t.Dy / 2);
+						foreach (GameObject o in objs)
 							_theater.DrawObject(o, _drawingSurface);
 					}
 				}
@@ -1253,17 +1261,59 @@ namespace CNCMaps.MapLogic {
 			return Rectangle.FromLTRB(left, top, right, bottom);
 		}
 
+		// Starkku: Changed to make it so that instead of using yellow/purple for TS/FS as well, it marks tiberiums using their 'remap' color.
 		public void MarkOreAndGems() {
+
+			var tiberiumsSections = _rules.GetSection("Tiberiums");
+			var tiberiumRemaps = tiberiumsSections.OrderedEntries.Select(v => _rules.GetSection(v.Value).ReadString("Color")).ToList();
+
 			Logger.Info("Marking ore and gems");
-			Palette yellow = Palette.MakePalette(Color.Yellow);
-			Palette purple = Palette.MakePalette(Color.Purple);
+			Palette orepal;
+			Palette ore1p, ore2p, ore3p, ore4p;
+			double ore1op, ore2op, ore3op, ore4op;
+			if (EngineType == EngineType.RedAlert2 || EngineType == EngineType.YurisRevenge) {
+				ore1p = Palette.MakePalette(Color.Yellow);
+				ore1p.Name = "ore_marked_riparius";
+				ore2p = Palette.MakePalette(Color.Yellow);
+				ore2p.Name = "ore_marked_vinifera";
+				ore3p = Palette.MakePalette(Color.Purple);
+				ore3p.Name = "ore_marked_cruentus";
+				ore4p = Palette.MakePalette(Color.Yellow);
+				ore4p.Name = "ore_marked_aboreus";
+			}
+			else {
+				ore1p = Palette.MakePalette(_namedColors[tiberiumRemaps[0]]);
+				ore1p.Name = "tiberium_marked_riparius";
+				ore2p = Palette.MakePalette(_namedColors[tiberiumRemaps[1]]);
+				ore2p.Name = "tiberium_marked_vinifera";
+				ore3p = Palette.MakePalette(_namedColors[tiberiumRemaps[2]]);
+				ore3p.Name = "tiberium_marked_cruentus";
+				ore4p = Palette.MakePalette(_namedColors[tiberiumRemaps[3]]);
+				ore4p.Name = "tiberium_marked_aboreus";
+			}
+
 			foreach (var o in _overlayObjects) {
 				if (o == null) continue;
-				if (o.IsOre())
-					o.Tile.Palette = Palette.MergePalettes(o.Tile.Palette, yellow, Math.Min((byte)11, o.OverlayValue) / 11.0 * 0.6 + 0.1);
 
-				else if (o.IsGem())
-					o.Tile.Palette = Palette.MergePalettes(o.Tile.Palette, purple, Math.Min((byte)11, o.OverlayValue) / 11.0 * 0.6 + 0.25);
+				ore1op = ore2op = ore4op = Math.Min((byte)11, o.OverlayValue) / 11.0 * 0.6 + 0.1;
+				ore3op = Math.Min((byte)11, o.OverlayValue) / 11.0 * 0.6 + 0.25;
+
+				if (o.IsOre_Riparius) {
+					o.Tile.Palette = Palette.MergePalettes(o.Tile.Palette, ore1p, ore1op);
+					o.Palette = Palette.MergePalettes(o.Palette, ore1p, ore1op);
+				}
+				else if (o.IsOre_Vinifera) {
+					o.Tile.Palette = Palette.MergePalettes(o.Tile.Palette, ore2p, ore2op);
+					o.Palette = Palette.MergePalettes(o.Palette, ore2p, ore2op);
+				}
+				else if (o.IsOre_Cruentus) {
+					o.Tile.Palette = Palette.MergePalettes(o.Tile.Palette, ore3p, ore3op);
+					o.Palette = Palette.MergePalettes(o.Palette, ore3p, ore3op);
+				}
+				else if (o.IsOre_Aboreus) {
+					o.Tile.Palette = Palette.MergePalettes(o.Tile.Palette, ore4p, ore4op);
+					o.Palette = Palette.MergePalettes(o.Palette, ore4p, ore4op);
+				}
 			}
 		}
 
@@ -1273,11 +1323,11 @@ namespace CNCMaps.MapLogic {
 			// first redraw all required tiles (zigzag method)
 			for (int y = 0; y < FullSize.Height; y++) {
 				for (int x = FullSize.Width * 2 - 2; x >= 0; x -= 2) {
-					if (_overlayObjects[x, y] == null || !_overlayObjects[x, y].IsOreOrGem()) continue;
+					if (_overlayObjects[x, y] == null || !_overlayObjects[x, y].IsOreOverlay) continue;
 					tileCollection.DrawTile(_tiles.GetTile(x, y), _drawingSurface);
 				}
 				for (int x = FullSize.Width * 2 - 3; x >= 0; x -= 2) {
-					if (_overlayObjects[x, y] == null || !_overlayObjects[x, y].IsOreOrGem()) continue;
+					if (_overlayObjects[x, y] == null || !_overlayObjects[x, y].IsOreOverlay) continue;
 					tileCollection.DrawTile(_tiles.GetTile(x, y), _drawingSurface);
 				}
 			}
@@ -1285,15 +1335,15 @@ namespace CNCMaps.MapLogic {
 			// then the objects on these ore positions
 			for (int y = 0; y < FullSize.Height; y++) {
 				for (int x = FullSize.Width * 2 - 2; x >= 0; x -= 2) {
-					if (_overlayObjects[x, y] == null || !_overlayObjects[x, y].IsOreOrGem()) continue;
-					List<RA2Object> objs = GetObjectsAt(x, y);
-					foreach (RA2Object o in objs)
+					if (_overlayObjects[x, y] == null || !_overlayObjects[x, y].IsOreOverlay) continue;
+					List<GameObject> objs = GetObjectsAt(x, y);
+					foreach (GameObject o in objs)
 						_theater.DrawObject(o, _drawingSurface);
 				}
 				for (int x = FullSize.Width * 2 - 3; x >= 0; x -= 2) {
-					if (_overlayObjects[x, y] == null || !_overlayObjects[x, y].IsOreOrGem()) continue;
-					List<RA2Object> objs = GetObjectsAt(x, y);
-					foreach (RA2Object o in objs)
+					if (_overlayObjects[x, y] == null || !_overlayObjects[x, y].IsOreOverlay) continue;
+					List<GameObject> objs = GetObjectsAt(x, y);
+					foreach (GameObject o in objs)
 						_theater.DrawObject(o, _drawingSurface);
 				}
 			}
@@ -1301,7 +1351,8 @@ namespace CNCMaps.MapLogic {
 
 		public void DrawMap() {
 			Logger.Info("Drawing map");
-			_drawingSurface = new DrawingSurface(FullSize.Width * TileWidth, FullSize.Height * TileHeight, PixelFormat.Format24bppRgb);
+			_drawingSurface = new DrawingSurface(FullSize.Width * TileWidth, FullSize.Height * TileHeight,
+												 System.Drawing.Imaging.PixelFormat.Format24bppRgb);
 			var tileCollection = _theater.GetTileCollection();
 
 			// zig-zag drawing technique explanation: http://stackoverflow.com/questions/892811/drawing-isometric-game-worlds
@@ -1319,13 +1370,13 @@ namespace CNCMaps.MapLogic {
 			for (int y = 0; y < FullSize.Height; y++) {
 				Logger.Trace("Drawing objects row {0}", y);
 				for (int x = FullSize.Width * 2 - 2; x >= 0; x -= 2) {
-					List<RA2Object> objs = GetObjectsAt(x, y);
-					foreach (RA2Object o in objs)
+					List<GameObject> objs = GetObjectsAt(x, y);
+					foreach (GameObject o in objs)
 						_theater.DrawObject(o, _drawingSurface);
 				}
 				for (int x = FullSize.Width * 2 - 3; x >= 0; x -= 2) {
-					List<RA2Object> objs = GetObjectsAt(x, y);
-					foreach (RA2Object o in objs)
+					List<GameObject> objs = GetObjectsAt(x, y);
+					foreach (GameObject o in objs)
 						_theater.DrawObject(o, _drawingSurface);
 				}
 			}
@@ -1334,7 +1385,7 @@ namespace CNCMaps.MapLogic {
 		public void GeneratePreviewPack(bool omitMarkers) {
 			Logger.Info("Generating PreviewPack data");
 			// we will have to re-lock the bmd
-			
+
 			_drawingSurface.Lock(_drawingSurface.bm.PixelFormat);
 			if (Program.Settings.MarkOreFields == false) {
 				Logger.Trace("Marking ore and gems areas");
@@ -1352,7 +1403,7 @@ namespace CNCMaps.MapLogic {
 			}
 
 			_drawingSurface.Unlock();
-			
+
 			// Number magic explained: http://modenc.renegadeprojects.com/Maps/PreviewPack
 			int pw, ph;
 			switch (EngineType) {
@@ -1377,7 +1428,7 @@ namespace CNCMaps.MapLogic {
 			}
 
 			using (var preview = new Bitmap(pw, ph, PixelFormat.Format24bppRgb)) {
-				
+
 				using (Graphics gfx = Graphics.FromImage(preview)) {
 					// use high-quality scaling
 					gfx.InterpolationMode = InterpolationMode.HighQualityBicubic;
@@ -1415,13 +1466,13 @@ namespace CNCMaps.MapLogic {
 
 		internal void DebugDrawTile(MapTile tile) {
 			_theater.GetTileCollection().DrawTile(tile, _drawingSurface);
-			foreach (RA2Object o in tile.AllObjects)
+			foreach (GameObject o in tile.AllObjects)
 				_theater.DrawObject(o, _drawingSurface);
 		}
 
 
-		private List<RA2Object> GetObjectsAt(int dx, int dy) {
-			var ret = new List<RA2Object>();
+		private List<GameObject> GetObjectsAt(int dx, int dy) {
+			var ret = new List<GameObject>();
 
 			if (_smudgeObjects[dx, dy] != null)
 				ret.Add(_smudgeObjects[dx, dy]);

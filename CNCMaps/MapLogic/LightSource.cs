@@ -2,7 +2,7 @@
 using CNCMaps.FileFormats;
 
 namespace CNCMaps.MapLogic {
-	public class LightSource : RA2Object {
+	public class LightSource : GameObject {
 		public double LightVisibility { get; set; }
 		public double LightIntensity { get; set; }
 		public double LightRedTint { get; set; }
@@ -36,7 +36,7 @@ namespace CNCMaps.MapLogic {
 		/// </summary>
 		/// <param name="lamp">The lamp to apply</param>
 		/// <returns>Whether the palette was replaced, meaning it needs to be recalculated</returns>
-		public static bool ApplyLamp(RemappableObject paletteOwner, MapTile drawLocation, LightSource lamp) {
+		public static bool ApplyLamp(PaletteOwner paletteOwner, MapTile drawLocation, LightSource lamp) {
 			if (lamp.LightIntensity == 0.0)
 				return false;
 

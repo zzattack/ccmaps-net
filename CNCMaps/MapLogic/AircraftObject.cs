@@ -1,5 +1,5 @@
 namespace CNCMaps.MapLogic {
-	public class AircraftObject : NamedObject, DamageableObject, RemappableObject {
+	public class AircraftObject : NamedObject, DamageableObject {
 		public AircraftObject(string owner, string name, short health, short direction) {
 			Owner = owner;
 			Name = name;

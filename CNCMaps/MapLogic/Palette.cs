@@ -1,10 +1,14 @@
 ﻿using System;
 using System.Drawing;
+using System.IO;
 using CNCMaps.FileFormats;
 
 namespace CNCMaps.MapLogic {
 
 	public class Palette {
+		// Starkku: Name of the palette file, without .pal extension. Mostly for debug purposes, but can also be used to identify certain types of palettes semi-reliably.
+		public string Name { get; set; }
+
 		public Color[] colors = new Color[256];
 		PalFile originalPalette;
 		byte[] origColors;
@@ -15,14 +19,39 @@ namespace CNCMaps.MapLogic {
 			blueMult = 1.0,
 			ambientMult = 1.0;
 
-		public Palette(PalFile originalPalette) {
+		/// <summary>
+		/// Starkku: Creates a palette out of already existing palette file.
+		/// </summary>
+		/// <param name="originalPalette">Original palette file.</param>
+		/// <param name="name">An optional custom name for the palette. Defaults to the filename of the palette without file extension.</param>
+		public Palette(PalFile originalPalette, string name = "") {
 			this.originalPalette = originalPalette;
+			if (!string.IsNullOrEmpty(name))
+				this.Name = name;
+			else
+				Name = Path.GetFileNameWithoutExtension(originalPalette.FileName);
 		}
 
-		public void ApplyLighting(Lighting l, int level = 0) {
-			redMult = l.Red;
-			greenMult = l.Green;
-			blueMult = l.Blue;
+		public void ApplyObjectLighting(Lighting l, int level, bool applyColorLighting = false) {
+			if (applyColorLighting) {
+				redMult = l.Red;
+				greenMult = l.Green;
+				blueMult = l.Blue;
+			}
+			else {
+				redMult = 1.0;
+				greenMult = 1.0;
+				blueMult = 1.0;
+			}
+			ambientMult = (l.Ambient - l.Ground) + l.Level * level;
+		}
+
+		public void ApplyLighting(Lighting l, int level = 0, bool ambientOnly = false) {
+			if (!ambientOnly) {
+				redMult = l.Red;
+				greenMult = l.Green;
+				blueMult = l.Blue;
+			}
 			ambientMult = (l.Ambient - l.Ground) + l.Level * level;
 		}
 
@@ -42,6 +71,7 @@ namespace CNCMaps.MapLogic {
 
 
 		bool originalColorsLoaded;
+
 		private void LoadOriginalColors() {
 			if (originalPalette != null) {
 				origColors = originalPalette.GetOriginalColors();
@@ -50,8 +80,7 @@ namespace CNCMaps.MapLogic {
 		}
 
 		public void Recalculate() {
-			if (!originalColorsLoaded)
-				LoadOriginalColors();
+			if (!originalColorsLoaded) LoadOriginalColors();
 			if (!originalColorsLoaded) return;
 
 			const double clipMult = 1.3;
@@ -59,7 +88,6 @@ namespace CNCMaps.MapLogic {
 			redMult = Math.Min(Math.Max(redMult, -clipMult), clipMult);
 			greenMult = Math.Min(Math.Max(greenMult, -clipMult), clipMult);
 			blueMult = Math.Min(Math.Max(blueMult, -clipMult), clipMult);
-
 			for (int i = 0; i < 256; i++) {
 				var r = (byte)Math.Min(255, origColors[i * 3 + 0] * (ambientMult * redMult) / 63.0 * 255.0);
 				var g = (byte)Math.Min(255, origColors[i * 3 + 1] * (ambientMult * greenMult) / 63.0 * 255.0);
@@ -106,14 +134,14 @@ namespace CNCMaps.MapLogic {
 		}
 
 		internal Lighting GetLighting(bool ambientOnly = false) {
-			if (!ambientOnly) 
+			if (!ambientOnly)
 				return new Lighting {
-				Ambient = ambientMult,
-				Red = redMult,
-				Green = greenMult,
-				Blue = blueMult,
-				Ground = 0,
-				Level = 0,
+					Ambient = ambientMult,
+					Red = redMult,
+					Green = greenMult,
+					Blue = blueMult,
+					Ground = 0,
+					Level = 0,
 				};
 			return new Lighting {
 				Ambient = ambientMult,
@@ -124,5 +152,6 @@ namespace CNCMaps.MapLogic {
 				Level = 0,
 			};
 		}
+
 	}
 }
