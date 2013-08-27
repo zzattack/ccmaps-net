@@ -105,10 +105,10 @@ namespace CNCMaps.FileFormats {
 					img.zData = Read(fileHeader.cx * fileHeader.cy / 2);
 				}
 				if (img.header.HasExtraData) {
-					img.extraData = Read(img.header.cx_extra * img.header.cy_extra);
+					img.extraData = Read(Math.Abs(img.header.cx_extra * img.header.cy_extra));
 				}
 				if (img.header.HasZData && img.header.HasExtraData && 0 < img.header.extra_z_ofs && img.header.extra_z_ofs < Length) {
-					img.extraZData = Read(img.header.cx_extra * img.header.cy_extra);
+					img.extraZData = Read(Math.Abs(img.header.cx_extra * img.header.cy_extra));
 				}
 				images.Add(img);
 			}
