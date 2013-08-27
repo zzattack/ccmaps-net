@@ -70,7 +70,6 @@
     <Compile Include="FileFormats\FormatHelper.cs" />
     <Compile Include="FileFormats\HvaFile.cs" />
     <Compile Include="FileFormats\IniFile.cs" />
-    <Compile Include="FileFormats\LZO.cs" />
     <Compile Include="FileFormats\MissionsFile.cs" />
     <Compile Include="FileFormats\PalFile.cs" />
     <Compile Include="FileFormats\PktFile.cs" />

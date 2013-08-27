@@ -17,37 +17,79 @@ namespace CNCMaps.MapLogic {
 		internal static readonly VoxelRenderer Voxelrenderer = new VoxelRenderer();
 
 		bool sorted;
+        private List<Palette> firepalettes = new List<Palette>();
+        private bool ignore_extra = false;
 		void Sort() {
-			_fires.Sort();
+            // Starkku: Causes issues with the extended fire animations code.
+			//_fires.Sort();
 			_shps.Sort();
 			_damagedShps.Sort();
 			_voxels.Sort();
 			sorted = true;
 		}
 
+        public static PaletteCollection Palettes { get; set; }
+        public Palette Palette { get; set; }
+        ShpFile _alphaImage;
+        DrawableFile<ShpFile> _turret;
+        Point _globalOffset = new Point(0, 0);
+
+        public string Name { get; private set; }
+        public bool Overrides { get; set; }
+        public Size Foundation { get; set; }
+        public int Direction { get; set; } // for voxels
+        public int HeightOffset { get; set; }
+        public int Frame { get; set; } // for shps
+        public int TurretFrame { get; set; } // Starkku: Turret frame based on direction for turreted buildings.
+        public int AlphaImgFCount { get; set; } // Starkku: Alpha image frame count for multi-frame alpha images.
+
+        readonly List<DrawableFile<VxlFile>> _voxels = new List<DrawableFile<VxlFile>>();
+        readonly List<HvaFile> _hvas = new List<HvaFile>();
+
+        readonly List<DrawableFile<ShpFile>> _shps = new List<DrawableFile<ShpFile>>();
+        readonly List<DrawableFile<ShpFile>> _fires = new List<DrawableFile<ShpFile>>();
+        readonly List<DrawableFile<ShpFile>> _damagedShps = new List<DrawableFile<ShpFile>>();
+
 		public virtual void Draw(RA2Object obj, DrawingSurface ds) {
 			logger.Trace("Drawing object {0} (type {1})", obj, obj.GetType());
+
+            if (obj is UnitObject) Direction = (obj as UnitObject).Direction;
+            else if (obj is StructureObject) Direction = (obj as StructureObject).Direction;
 
 			if (!sorted) Sort();
 
 			if (obj is DamageableObject && (obj as DamageableObject).Health < 128) {
+                SetFrame(1); // Starkku: Make building display it's damaged artwork..
 				foreach (var v in _damagedShps)
 					DrawFile(obj, ds, v.File, v.Props);
 
+                int i = 0;
 				foreach (var v in _fires)
-					DrawFile(obj, ds, v.File, v.Props, Palettes.animPalette);
+                    DrawFile(obj, ds, v.File, v.Props, firepalettes[i++], false, true);
 			}
-			else {
-				foreach (var v in _shps)
-					DrawFile(obj, ds, v.File, v.Props);
-			}
+
+            else
+            {
+                foreach (var v in _shps)
+                    if (v.Equals(_turret))
+                    {
+                        setTurretFrame(Direction);
+                        DrawFile(obj, ds, v.File, v.Props, null, true);
+                    }
+                    else
+                    {
+                        DrawFile(obj, ds, v.File, v.Props);
+                    }
+            }
 
 			if (_alphaImage != null) {
 				int dx = obj.Tile.Dx * TileWidth / 2;
 				int dy = (obj.Tile.Dy - obj.Tile.Z) * TileHeight / 2;
 				dx += _globalOffset.X;
 				dy += _globalOffset.Y;
-				_alphaImage.DrawAlpha(0, ds, dx, dy);
+                // Starkku: Fix the alphaimage height to match in-game height correctly.
+                dy += 15;
+                _alphaImage.DrawAlpha(getAlphaFrame(), ds, dx, dy);
 			}
 
 			for (int i = 0; i < _voxels.Count; i++) {
@@ -96,7 +138,8 @@ namespace CNCMaps.MapLogic {
 
 		}
 
-		private void DrawFile(RA2Object obj, DrawingSurface ds, ShpFile file, DrawProperties props, Palette p = null) {
+        private void DrawFile(RA2Object obj, DrawingSurface ds, ShpFile file, DrawProperties props, Palette p = null, bool IsSHPTurret = false, bool IsAnimation = false)
+        {
 			if (file == null || obj == null || obj.Tile == null) return;
 
 			Point offset = _globalOffset;
@@ -106,6 +149,23 @@ namespace CNCMaps.MapLogic {
 				p = (obj as RemappableObject).Palette;
 			else if (UseTilePalette)
 				p = obj.Tile.Palette;
+
+            // Starkku: Smudge palette fix.
+            if (obj is SmudgeObject)
+            {
+                p = obj.Tile.Palette;
+                obj.Palette = p;
+            }
+
+            // Starkku: Some fixes to make certain overlays draw with correct palette.
+            if (obj is OverlayObject && (obj as OverlayObject).IsOreOverlay())
+            {
+                p = (obj as OverlayObject).Palette;
+            }
+            else if (obj is OverlayObject && !(obj as OverlayObject).IsWall() && !(obj as OverlayObject).IsHighBridge()) 
+            {
+                p = obj.Tile.Palette;
+            }
 
 			// hacky bridge crap, somehow they have crazy offsets. hopefully this never needs to be touched again.
 			var shadowOffset = offset;
@@ -135,34 +195,27 @@ namespace CNCMaps.MapLogic {
 					}
 				}
 			}
-			file.Draw(Frame, ds, offset, obj.Tile, p ?? Palette, Overrides);
+            if (IsSHPTurret) file.Draw(TurretFrame, ds, offset, obj.Tile, p ?? Palette);
+			else file.Draw(Frame, ds, offset, obj.Tile, p ?? Palette);
 			if (props.hasShadow) {
-				file.DrawShadow(Frame, ds, shadowOffset, obj.Tile);
+                if (IsSHPTurret) file.DrawShadow(TurretFrame, ds, offset, obj.Tile);
+                else file.DrawShadow(Frame, ds, offset, obj.Tile);
 			}
 		}
 
-		public static PaletteCollection Palettes { get; set; }
-		public Palette Palette { get; set; }
-		ShpFile _alphaImage;
-		Point _globalOffset = new Point(0, 0);
-
-		public string Name { get; private set; }
-		public bool Overrides { get; set; }
-		public Size Foundation { get; set; }
-		public int Direction { get; set; } // for voxels
-		public int HeightOffset { get; set; }
-		public int Frame { get; set; } // for shps
-
-		readonly List<DrawableFile<VxlFile>> _voxels = new List<DrawableFile<VxlFile>>();
-		readonly List<HvaFile> _hvas = new List<HvaFile>();
-
-		readonly List<DrawableFile<ShpFile>> _shps = new List<DrawableFile<ShpFile>>();
-		readonly List<DrawableFile<ShpFile>> _fires = new List<DrawableFile<ShpFile>>();
-		readonly List<DrawableFile<ShpFile>> _damagedShps = new List<DrawableFile<ShpFile>>();
-
 		internal void SetAlphaImage(ShpFile shpFile) {
-			_alphaImage = shpFile;
+            _alphaImage = shpFile;
+            // Starkku: Support for multi-framed alpha images.
+            AlphaImgFCount = shpFile.frameCount();
 		}
+
+        // Starkku: Get alpha image frame based on frame count.
+        private int getAlphaFrame()
+        {
+            int frame = 0;
+            if (AlphaImgFCount > 1 && AlphaImgFCount % 8 == 0) frame = (Direction / 8);
+            return frame;
+        }
 
 		internal void SetOffset(int xOffset, int yOffset) {
 			_globalOffset.X = xOffset;
@@ -183,15 +236,20 @@ namespace CNCMaps.MapLogic {
 			_hvas.Add(hvaFile);
 		}
 
-		internal void AddShp(ShpFile shpFile, int xOffset = 0, int yOffset = 0, bool hasShadow = false, int ySort = 0) {
-			_shps.Add(new DrawableFile<ShpFile>(shpFile, new DrawProperties(new Point(xOffset, yOffset), hasShadow, ySort), _shps.Count));
+		internal void AddShp(ShpFile shpFile, int xOffset = 0, int yOffset = 0, bool hasShadow = false, int ySort = 0, bool isSHPTurret = false) {
+            DrawableFile<ShpFile> d = new DrawableFile<ShpFile>(shpFile, new DrawProperties(new Point(xOffset, yOffset), hasShadow, ySort), _shps.Count);
+            if (isSHPTurret) _turret = d;
+            _shps.Add(d);
 		}
 
 		internal void AddDamagedShp(ShpFile shpFile, int xOffset = 0, int yOffset = 0, bool hasShadow = false, int ySort = 0) {
 			_damagedShps.Add(new DrawableFile<ShpFile>(shpFile, new DrawProperties(new Point(xOffset, yOffset), hasShadow, ySort), _damagedShps.Count));
 		}
 
-		internal void AddFire(ShpFile shpFile, int xOffset, int yOffset) {
+        internal void AddFire(ShpFile shpFile, int xOffset, int yOffset, Palette firepalette)
+        {
+            // Starkku: Support for custom-paletted fire animations.
+            firepalettes.Add(firepalette);
 			_fires.Add(new DrawableFile<ShpFile>(shpFile, new DrawProperties(new Point(xOffset, yOffset), false, 0), _fires.Count));
 		}
 
@@ -209,6 +267,38 @@ namespace CNCMaps.MapLogic {
 		public override string ToString() {
 			return Name;
 		}
+
+        // Starkku: Sets correct frame for building turret SHP based on building's direction.
+        private void setTurretFrame(int dir)
+        {
+            switch (dir)
+            {
+                case 0:
+                    TurretFrame = 28;
+                    break;
+                case 32:
+                    TurretFrame = 24;
+                    break;
+                case 64:
+                    TurretFrame = 20;
+                    break;
+                case 96:
+                    TurretFrame = 16;
+                    break;
+                case 128:
+                    TurretFrame = 12;
+                    break;
+                case 160:
+                    TurretFrame = 8;
+                    break;
+                case 192:
+                    TurretFrame = 4;
+                    break;
+                default:
+                    TurretFrame = 0;
+                    break;
+            }
+        }
 	}
 
 	class DrawableFile<T> : System.IComparable where T : VirtualFile {

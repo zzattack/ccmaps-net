@@ -28,7 +28,6 @@ namespace CNCMaps.Utility {
 
 			// encode
 			byte[] image_compressed = Format5.Encode(image, 5);
-			// Format5.DecodeInto(image_compressed, image_decompressed, 5);
 			
 			// base64 encode
 			string image_base64 = Convert.ToBase64String(image_compressed, Base64FormattingOptions.None);
