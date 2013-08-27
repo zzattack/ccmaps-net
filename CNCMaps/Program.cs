@@ -13,11 +13,13 @@ using NLog.Config;
 using NLog.Targets;
 
 namespace CNCMaps {
+
 	class Program {
 		static OptionSet options;
 		public static RenderSettings Settings;
 		static Logger _logger;
 
+		[STAThreadAttribute]
 		public static int Main(string[] args) {
 			InitLoggerConfig();
 			InitSettings(args);
@@ -59,11 +61,11 @@ namespace CNCMaps {
 
 				map.DrawMap();
 
-				/*using (var form = new DebugDrawingSurfaceWindow(map.GetDrawingSurface(), map.GetTiles(), map.GetTheater(), map)) {
+				using (var form = new DebugDrawingSurfaceWindow(map.GetDrawingSurface(), map.GetTiles(), map.GetTheater(), map)) {
 					form.RequestTileEvaluate += tile => map.DebugDrawTile(tile);
 					form.ShowDialog();
-				}*/
-
+				}
+				
 				if (Settings.StartPositionMarking == StartPositionMarking.Squared)
 					map.DrawSquaredStartPositions();
 
@@ -90,7 +92,7 @@ namespace CNCMaps {
 					ds.SavePNG(Path.Combine(Settings.OutputDir, Settings.OutputFile + ".png"), Settings.PNGQuality, saveRect);
 
 				if (Settings.GeneratePreviewPack)
-					for (int i = 0; i < 100; i++) // todo: fix diz
+					for (int i = 0; i < 10; i++) // todo: fix diz
 						map.GeneratePreviewPack(Settings.OmitPreviewPackMarkers);
 			}
 			catch (Exception exc) {

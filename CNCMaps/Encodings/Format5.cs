@@ -13,7 +13,7 @@ namespace CNCMaps.Encodings {
 				while (w < w_end) {
 					ushort size_in = *(ushort*) r;
 					r += 2;
-					ushort size_out = *(ushort*) r;
+					uint size_out = *(ushort*) r;
 					r += 2;
 
 					if (size_in == 0 || size_out == 0)
@@ -22,7 +22,7 @@ namespace CNCMaps.Encodings {
 					if (format == 80)
 						Format80.DecodeInto(r, w);
 					else
-						MiniLZO.Decompress(r, w, size_in, size_out);
+						MiniLZO.Decompress(r, size_in, w, ref size_out);
 					r += size_in;
 					w += size_out;
 				}
@@ -31,9 +31,7 @@ namespace CNCMaps.Encodings {
 		}
 
 		public static byte[] EncodeSection(byte[] s) {
-			byte[] compressed; // 128kb
-			MiniLZO.Compress(s, out compressed);
-			return compressed;
+			return MiniLZO.Compress(s);
 		}
 
 		public static byte[] Encode(byte[] source, int format) {

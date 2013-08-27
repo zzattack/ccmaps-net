@@ -1301,8 +1301,7 @@ namespace CNCMaps.MapLogic {
 
 		public void DrawMap() {
 			Logger.Info("Drawing map");
-			_drawingSurface = new DrawingSurface(FullSize.Width * TileWidth, FullSize.Height * TileHeight,
-												 System.Drawing.Imaging.PixelFormat.Format24bppRgb);
+			_drawingSurface = new DrawingSurface(FullSize.Width * TileWidth, FullSize.Height * TileHeight, PixelFormat.Format24bppRgb);
 			var tileCollection = _theater.GetTileCollection();
 
 			// zig-zag drawing technique explanation: http://stackoverflow.com/questions/892811/drawing-isometric-game-worlds
