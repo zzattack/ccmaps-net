@@ -1,5 +1,5 @@
 namespace CNCMaps.MapLogic {
-	public class StructureObject : NamedObject, DamageableObject {
+	public class StructureObject : NamedObject, OwnableObject {
 
 		public StructureObject(string owner, string name, short health, short direction) {
 			Owner = owner;
@@ -8,12 +8,9 @@ namespace CNCMaps.MapLogic {
 			Direction = direction;
 		}
 		public MapTile DrawTile { get; set; }
+
 		public short Health { get; set; }
-
-		public short Direction { get; private set; }
-
+		public short Direction { get; set; }
 		public string Owner { get; set; }
-
-		public Palette Palette { get; set; }
 	}
 }

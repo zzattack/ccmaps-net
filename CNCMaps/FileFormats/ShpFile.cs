@@ -160,7 +160,7 @@ namespace CNCMaps.FileFormats {
 						*(w + 0) = p.colors[paletteValue].B;
 						*(w + 1) = p.colors[paletteValue].G;
 						*(w + 2) = p.colors[paletteValue].R;
-						zBuffer[zIdx] = zBufVal;
+						// zBuffer[zIdx] = zBufVal;
 					}
 					// Up to the next pixel
 					rIdx++;

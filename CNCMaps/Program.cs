@@ -59,16 +59,16 @@ namespace CNCMaps {
 
 				map.DrawMap();
 
-				/*using (var form = new DebugDrawingSurfaceWindow(map.GetDrawingSurface(), map.GetTiles(), map.GetTheater(), map)) {
+				using (var form = new DebugDrawingSurfaceWindow(map.GetDrawingSurface(), map.GetTiles(), map.GetTheater(), map)) {
 					form.RequestTileEvaluate += tile => map.DebugDrawTile(tile);
 					form.ShowDialog();
-				}*/
+				}
 
 				if (Settings.StartPositionMarking == StartPositionMarking.Squared)
 					map.DrawSquaredStartPositions();
 
 				if (Settings.OutputFile == "")
-					Settings.OutputFile = map.DetermineMapName(map.EngineType);
+					Settings.OutputFile = map.DetermineMapName();
 
 				if (Settings.OutputDir == "")
 					Settings.OutputDir = Path.GetDirectoryName(Settings.InputFile);

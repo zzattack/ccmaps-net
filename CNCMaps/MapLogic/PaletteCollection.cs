@@ -8,20 +8,19 @@ using CNCMaps.Utility;
 using CNCMaps.VirtualFileSystem;
 
 namespace CNCMaps.MapLogic {
-	// Starkku: Changed from struct to class to allow inclusion of methods for custom palette handling.
-	class PaletteCollection : IEnumerable<Palette> {
+	public class PaletteCollection : IEnumerable<Palette> {
 		private TheaterType _theaterType; // needed for custom palettes
 		public List<Palette> CustomPalettes = new List<Palette>();
 		public Palette IsoPalette, OvlPalette, UnitPalette, AnimPalette;
 
-		internal Palette GetPalette(PaletteSettings paletteType) {
+		internal Palette GetPalette(PaletteType paletteType) {
 			switch (paletteType) {
-				case PaletteSettings.Anim: return AnimPalette;
-				case PaletteSettings.Overlay: return OvlPalette;
-				case PaletteSettings.Unit: return UnitPalette;
-				case PaletteSettings.Custom:
+				case PaletteType.Anim: return AnimPalette;
+				case PaletteType.Overlay: return OvlPalette;
+				case PaletteType.Unit: return UnitPalette;
+				case PaletteType.Custom:
 					throw new ArgumentException("GetPalette only works on built-in default palettes");
-				case PaletteSettings.Iso:
+				case PaletteType.Iso:
 				default:
 					return IsoPalette;
 			}

@@ -9,7 +9,7 @@ using CNCMaps.Utility;
 using CNCMaps.VirtualFileSystem;
 
 namespace CNCMaps.MapLogic {
-	class ObjectCollection {
+	public class ObjectCollection {
 		private readonly CollectionType _collectionType;
 		private readonly TheaterType _theaterType;
 		private readonly EngineType _engineType;
@@ -68,6 +68,10 @@ namespace CNCMaps.MapLogic {
 			drawableObject.Rules = rulesSection;
 			drawableObject.Art = artSection;
 
+			drawableObject.PaletteType = TheaterDefaults.GetDefaultPalette(_collectionType, _engineType);
+			drawableObject.LightingType = TheaterDefaults.GetDefaultLighting(_collectionType);
+			drawableObject.IsRemapable = TheaterDefaults.GetDefaultRemappability(_collectionType);
+
 			string imageFileName;
 			if (_collectionType == CollectionType.Building || _collectionType == CollectionType.Overlay)
 				imageFileName = artSection.ReadString("Image", artSectionName);
@@ -80,7 +84,7 @@ namespace CNCMaps.MapLogic {
 			else if (theaterExtension) {
 				imageFileName += TheaterDefaults.GetExtension(_theaterType);
 				if (_collectionType != CollectionType.Overlay || _engineType <= EngineType.FireStorm) {
-					drawableObject.PaletteType = PaletteSettings.Iso;
+					drawableObject.PaletteType = PaletteType.Iso;
 				}
 			}
 			else imageFileName += TheaterDefaults.GetExtension(_theaterType, _collectionType);
@@ -93,48 +97,50 @@ namespace CNCMaps.MapLogic {
 				ApplyNewTheaterIfNeeded(artSectionName, ref imageFileName);
 
 				// Additionaly, this tag means the unit palette is used to draw this image.
-				drawableObject.PaletteType = PaletteSettings.Unit;
+				// TODO: starkku says otherwise! drawableObject.PaletteType = PaletteType.Unit;
 			}
 
-			if (_engineType <= EngineType.FireStorm && artSection.ReadBool("Remapable")) {
-				drawableObject.PaletteType = PaletteSettings.Unit;
+			if (artSection.ReadString("Remapable") != string.Empty) {
+				// todo: gotta test dizz!  drawableObject.PaletteType = PaletteType.Unit;
+				drawableObject.IsRemapable = artSection.ReadBool("Remapable");
 			}
 
 			// Used palet can be overriden
 			bool noUseTileLandType = rulesSection.ReadString("NoUseTileLandType") != "";
 			if (noUseTileLandType) {
-				drawableObject.PaletteType = PaletteSettings.Iso;
+				drawableObject.PaletteType = PaletteType.Iso;
 				drawableObject.LightingType = LightingType.Full;
 			}
 			else if (artSection.ReadBool("TerrainPalette")) {
-				drawableObject.PaletteType = PaletteSettings.Iso;
+				drawableObject.PaletteType = PaletteType.Iso;
 			}
 			else if (artSection.ReadBool("AnimPalette")) {
-				drawableObject.PaletteType = PaletteSettings.Anim;
+				drawableObject.PaletteType = PaletteType.Anim;
+				drawableObject.LightingType = LightingType.None;
 			}
 			else if (rulesSection.ReadBool("Wall")) {
-				drawableObject.PaletteType = PaletteSettings.Unit;
+				drawableObject.IsWall = true;
+				drawableObject.PaletteType = PaletteType.Unit;
 			}
 			else if (artSection.ReadBool("AltPalette")) {
 				// If AltPalette=yes is set on an animation then that animation will use the unit palette instead of the animation palette. 
 				// However, remappable colours are ignored - they will not be remapped. (TODO: make sure this doesn't happen indeed)
-				drawableObject.PaletteType = PaletteSettings.Unit;
+				drawableObject.PaletteType = PaletteType.Unit;
 			}
 			else if (artSection.ReadString("Palette") != string.Empty) {
-				drawableObject.PaletteType = PaletteSettings.Custom;
+				drawableObject.PaletteType = PaletteType.Custom;
 				drawableObject.CustomPaletteName = artSection.ReadString("Palette");
 			}
 
 			if (rulesSection.ReadString("AlphaImage") != "") {
 				string alphaImageFile = rulesSection.ReadString("AlphaImage") + ".shp";
-				if (VFS.Exists(alphaImageFile)) {
+				if (VFS.Exists(alphaImageFile))
 					drawableObject.SetAlphaImage(VFS.Open(alphaImageFile) as ShpFile);
-				}
 			}
 
-			if (drawableObject.PaletteType == PaletteSettings.None)
+			if (drawableObject.PaletteType == PaletteType.None)
 				// Set palette, determined by type of SHP collection
-				drawableObject.PaletteType = TheaterDefaults.GetPaletteType(_collectionType, _engineType);
+				drawableObject.PaletteType = TheaterDefaults.GetDefaultPalette(_collectionType, _engineType);
 
 			bool shadow = TheaterDefaults.GetShadowAssumption(_collectionType);
 			if (artSection.ReadString("Shadow") != "")
@@ -146,7 +152,7 @@ namespace CNCMaps.MapLogic {
 			int xOffset = 0, yOffset = 0;
 
 			if (rulesSection.ReadBool("BridgeRepairHut")) {
-				// xOffset = yOffset = 0;
+				// xOffset = yOffset = 0; // TOOD: check we really don't need this
 			}
 			if (_collectionType == CollectionType.Terrain) {
 				yOffset = Drawable.TileHeight / 2; // trees and such are placed in the middle of their tile
@@ -174,7 +180,7 @@ namespace CNCMaps.MapLogic {
 				// For example on TIBTRE / Ore Poles
 				yOffset = -1;
 				drawableObject.LightingType = LightingType.None;
-				drawableObject.PaletteType = PaletteSettings.Unit;
+				drawableObject.PaletteType = PaletteType.Unit;
 			}
 
 			drawableObject.Overrides = rulesSection.ReadBool("Overrides");
@@ -290,6 +296,7 @@ namespace CNCMaps.MapLogic {
 		}
 
 		// Starkku: Adds fire animations to a building. Supports custom-paletted animations.
+		// TODO: nicefy this
 		private void addFireAnimations(IniFile.IniSection art, IniFile artfile, Drawable drawableObject) {
 			List<string> fireoffsets = new List<string>();
 			string[] fireanims = { "FIRE01", "FIRE02", "FIRE03" };
@@ -317,7 +324,7 @@ namespace CNCMaps.MapLogic {
 					Palette firepalette;
 					firepalette = _palettes.GetCustomPalette(getAnimPalName(fireart), false);
 					if (firepalette == null) firepalette = _palettes.AnimPalette;
-					
+
 					drawableObject.AddFire(VFS.Open(fanim + ".shp") as ShpFile, x, y, firepalette);
 				}
 			}
@@ -328,6 +335,7 @@ namespace CNCMaps.MapLogic {
 		 * use different name for the flag declaring the palette. (NPatch uses 'Palette' whilst Ares uses 'CustomPalette' to make it distinct
 		 * from the custom object palettes).
 		 */
+		// TODO: nicefy this
 		private string getAnimPalName(IniFile.IniSection animation) {
 			String palname = null;
 			if (animation != null && (animation.ReadString("Palette") != "" || animation.ReadString("CustomPalette") != "")) {
@@ -353,8 +361,7 @@ namespace CNCMaps.MapLogic {
 			}
 			else {
 				//  In Yuri's Revenge, the ID can also start with Y."
-				// Starkku: And the theater ID can be N, D or L as well.
-				if (new[] { 'G', 'N', 'C', 'Y' }.Contains(artName[0]) && new[] { 'A', 'T', 'U', 'D', 'L', 'N' }.Contains(artName[1]))
+				if (new[] { 'G', 'N', 'C', 'Y' }.Contains(artName[0]) && new[] { 'A', 'T', 'U' }.Contains(artName[1]))
 					ApplyNewTheater(ref imageFileName);
 			}
 		}
@@ -411,11 +418,10 @@ namespace CNCMaps.MapLogic {
 			throw new ArgumentException();
 		}
 
-		internal void Draw(GameObject o, DrawingSurface drawingSurface) {
-
+		public void Draw(GameObject o, DrawingSurface drawingSurface) {
 			// Starkku: Don't draw objects that have zero hitpoints left.
-			if (o is DamageableObject) {
-				int str = (o as DamageableObject).Health;
+			if (o is OwnableObject) {
+				int str = (o as OwnableObject).Health;
 				if (str < 1) return;
 			}
 
@@ -432,14 +438,5 @@ namespace CNCMaps.MapLogic {
 			var obj = GetDrawable(o);
 			return obj != null && obj.IsValid;
 		}
-
-		internal Size GetFoundation(GameObject v) {
-			return GetDrawable(v).Foundation;
-		}
-
-		internal string GetName(byte p) {
-			return _drawables[p].Name;
-		}
-
 	}
 }

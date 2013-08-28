@@ -158,7 +158,7 @@ namespace CNCMaps.MapLogic {
 			return _palettes;
 		}
 
-		ObjectCollection GetObjectCollection(GameObject o) {
+		public ObjectCollection GetObjectCollection(GameObject o) {
 			if (o is InfantryObject) return _infantryTypes;
 			else if (o is UnitObject) return _vehicleTypes;
 			else if (o is AircraftObject) return _aircraftTypes;
@@ -171,7 +171,7 @@ namespace CNCMaps.MapLogic {
 			else if (o is OverlayObject) return _overlayTypes;
 			else if (o is TerrainObject) return _terrainTypes;
 			else if (o is SmudgeObject) return _smudgeTypes;
-			throw new InvalidOperationException("Invalid object");
+			else return null;
 		}
 
 		internal void DrawObject(GameObject o, DrawingSurface drawingSurface) {
@@ -180,9 +180,9 @@ namespace CNCMaps.MapLogic {
 
 		internal Size GetFoundation(NamedObject v) {
 			if (_buildingTypes.HasObject(v))
-				return _buildingTypes.GetFoundation(v);
+				return _buildingTypes.GetDrawable(v).Foundation;
 			else
-				return _overlayTypes.GetFoundation(v);
+				return _overlayTypes.GetDrawable(v).Foundation;
 		}
 
 		internal ObjectCollection GetCollection(CollectionType t) {
@@ -205,9 +205,6 @@ namespace CNCMaps.MapLogic {
 					throw new ArgumentOutOfRangeException("t");
 			}
 		}
-
-		internal Size GetFoundation(OverlayObject o) {
-			return _overlayTypes.GetFoundation(o);
-		}
+		
 	}
 }

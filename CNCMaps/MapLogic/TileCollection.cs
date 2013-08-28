@@ -18,11 +18,8 @@ namespace CNCMaps.MapLogic {
         List<RandomizedTileSet> Tiles = new List<RandomizedTileSet>();
 
         class TileSet {
-
             public string FileName { get; private set; }
-
             public string SetName { get; private set; }
-
             public int TilesInSet { get; private set; }
 
             public TileSet(string fileName, string setName, int tilesInSet) {

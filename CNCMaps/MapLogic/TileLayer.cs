@@ -15,7 +15,6 @@ namespace CNCMaps.MapLogic {
 
 		rx = (dx + dy) / 2 + 1
 		ry = dy - rx + mapwidth + 1
-
 		*/
 
 		static NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();

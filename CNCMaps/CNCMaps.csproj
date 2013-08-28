@@ -76,7 +76,6 @@
     <Compile Include="FileFormats\ShpFile.cs" />
     <Compile Include="MapLogic\AircraftObject.cs" />
     <Compile Include="MapLogic\CollectionType.cs" />
-    <Compile Include="MapLogic\DamageableObject.cs" />
     <Compile Include="MapLogic\Drawable.cs" />
     <Compile Include="MapLogic\DrawProperties.cs" />
     <Compile Include="MapLogic\InfantryObject.cs" />
@@ -86,10 +85,11 @@
     <Compile Include="MapLogic\NamedObject.cs" />
     <Compile Include="MapLogic\NumberedObject.cs" />
     <Compile Include="MapLogic\OverlayObject.cs" />
+    <Compile Include="MapLogic\OwnableObject.cs" />
     <Compile Include="MapLogic\Palette.cs" />
     <Compile Include="MapLogic\PaletteCollection.cs" />
     <Compile Include="MapLogic\PaletteOwner.cs" />
-    <Compile Include="MapLogic\PaletteSettings.cs" />
+    <Compile Include="MapLogic\PaletteType.cs" />
     <Compile Include="MapLogic\GameObject.cs" />
     <Compile Include="MapLogic\SmudgeObject.cs" />
     <Compile Include="MapLogic\StructureObject.cs" />
@@ -99,6 +99,7 @@
     <Compile Include="FileFormats\VxlFile.cs" />
     <Compile Include="MapLogic\MapTile.cs" />
     <Compile Include="MapLogic\TheaterType.cs" />
+    <Compile Include="MapLogic\SpecialOverlays.cs" />
     <Compile Include="MapLogic\TileDirection.cs" />
     <Compile Include="MapLogic\TileLayer.cs" />
     <Compile Include="MapLogic\UnitObject.cs" />

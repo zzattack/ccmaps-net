@@ -1,6 +1,6 @@
 namespace CNCMaps.MapLogic {
 	public class GameObject : PaletteOwner {
-		public MapTile Tile { get; set; }
+		virtual public MapTile Tile { get; set; }
 
 		public override string ToString() {
 			if (this is NamedObject) return (this as NamedObject).Name;

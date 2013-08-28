@@ -32,18 +32,11 @@ namespace CNCMaps.MapLogic {
 				Name = Path.GetFileNameWithoutExtension(originalPalette.FileName);
 		}
 
-		public void ApplyObjectLighting(Lighting l, int level, bool applyColorLighting = false) {
-			if (applyColorLighting) {
-				redMult = l.Red;
-				greenMult = l.Green;
-				blueMult = l.Blue;
-			}
-			else {
-				redMult = 1.0;
-				greenMult = 1.0;
-				blueMult = 1.0;
-			}
-			ambientMult = (l.Ambient - l.Ground) + l.Level * level;
+		internal Palette Clone() {
+			var p = (Palette)MemberwiseClone();
+			p.colors = new Color[256];
+			p.IsShared = false;
+			return p;
 		}
 
 		public void ApplyLighting(Lighting l, int level = 0, bool ambientOnly = false) {
@@ -53,13 +46,6 @@ namespace CNCMaps.MapLogic {
 				blueMult = l.Blue;
 			}
 			ambientMult = (l.Ambient - l.Ground) + l.Level * level;
-		}
-
-		internal Palette Clone() {
-			var p = (Palette)MemberwiseClone();
-			p.colors = new Color[256];
-			p.IsShared = false;
-			return p;
 		}
 
 		public void ApplyLamp(LightSource lamp, double lsEffect) {
@@ -105,7 +91,7 @@ namespace CNCMaps.MapLogic {
 			return p;
 		}
 
-		public static Palette MergePalettes(Palette A, Palette B, double opacity) {
+		public static Palette Merge(Palette A, Palette B, double opacity) {
 			// make sure recalculate has been called on A and B,
 			// and be sure not to call recalculate on this
 			var p = new Palette(null);

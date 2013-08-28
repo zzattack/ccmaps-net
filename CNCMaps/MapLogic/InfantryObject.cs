@@ -1,5 +1,5 @@
 namespace CNCMaps.MapLogic {
-	public class InfantryObject : NamedObject, DamageableObject {
+	public class InfantryObject : NamedObject, OwnableObject {
 		public InfantryObject(string owner, string name, short health, short direction) {
 			Owner = owner;
 			Name = name;
@@ -8,9 +8,7 @@ namespace CNCMaps.MapLogic {
 		}
 
 		public short Health { get; set; }
-
-		public short Direction { get; private set; }
-
+		public short Direction { get; set; }
 		public string Owner { get; set; }
 	}
 }

@@ -1,16 +1,19 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Drawing2D;
-using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
-using System.Text;
+using System.Security.Permissions;
 using System.Text.RegularExpressions;
 using CNCMaps.Encodings;
 using CNCMaps.FileFormats;
 using CNCMaps.Utility;
 using CNCMaps.VirtualFileSystem;
+using OpenTK.Graphics.ES20;
+using PixelFormat = System.Drawing.Imaging.PixelFormat;
 
 namespace CNCMaps.MapLogic {
 
@@ -54,402 +57,6 @@ namespace CNCMaps.MapLogic {
 			base(baseStream, filename, offset, length, isBuffered) {
 			if (isBuffered)
 				Close(); // we no longer need the file handle anyway
-		}
-
-		/// <summary>Gets the determine map name. </summary>
-		/// <returns>The filename to save the map as</returns>
-		internal string DetermineMapName(EngineType engine) {
-			string fileNameWithoutExtension = Path.GetFileNameWithoutExtension(FileName);
-
-			IniSection basic = GetSection("Basic");
-			if (basic.ReadBool("Official") == false)
-				return StripPlayersFromName(basic.ReadString("Name", fileNameWithoutExtension));
-
-			string mapExt = Path.GetExtension(FileName);
-			string missionName = "";
-			string mapName = "";
-			PktFile.PktMapEntry pktMapEntry = null;
-			MissionsFile.MissionEntry missionEntry = null;
-
-			// campaign mission
-			if (!basic.ReadBool("MultiplayerOnly") && basic.ReadBool("Official")) {
-				string missionsFile;
-				switch (engine) {
-					case EngineType.TiberianSun:
-					case EngineType.RedAlert2:
-						missionsFile = "mission.ini";
-						break;
-					case EngineType.FireStorm:
-						missionsFile = "mission1.ini";
-						break;
-					case EngineType.YurisRevenge:
-						missionsFile = "missionmd.ini";
-						break;
-					default:
-						throw new ArgumentOutOfRangeException("engine");
-				}
-				var mf = VFS.Open<MissionsFile>(missionsFile);
-				missionEntry = mf.GetMissionEntry(Path.GetFileName(FileName));
-				missionName = (engine >= EngineType.RedAlert2) ? missionEntry.UIName : missionEntry.Name;
-			}
-
-			else {
-				// multiplayer map
-				string pktEntryName = fileNameWithoutExtension;
-				PktFile pkt = null;
-
-				if (mapExt == ".mmx" || mapExt == ".yro") {
-					// this is an 'official' map 'archive' containing a PKT file with its name
-					try {
-						var mix = new MixFile(File.Open(FileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite));
-						pkt = mix.OpenFile(fileNameWithoutExtension + ".pkt", FileFormat.Pkt) as PktFile;
-						// pkt file is cached by default, so we can close the handle to the file
-						mix.Close();
-
-						if (pkt != null && pkt.MapEntries.Count > 0)
-							pktEntryName = pkt.MapEntries.First().Key;
-					}
-					catch (ArgumentException) { }
-				}
-
-				else {
-					// determine pkt file based on engine
-					switch (engine) {
-						case EngineType.TiberianSun:
-						case EngineType.RedAlert2:
-							pkt = VFS.Open<PktFile>("missions.pkt");
-							break;
-						case EngineType.FireStorm:
-							pkt = VFS.Open<PktFile>("multi01.pkt");
-							break;
-						case EngineType.YurisRevenge:
-							pkt = VFS.Open<PktFile>("missionsmd.pkt");
-							break;
-						default:
-							throw new ArgumentOutOfRangeException("engine");
-					}
-				}
-
-
-				// fallback for multiplayer maps with, .map extension,
-				// no YR objects so assumed to be ra2, but actually meant to be used on yr
-				if (mapExt == ".map" && pkt != null && !pkt.MapEntries.ContainsKey(pktEntryName) && engine >= EngineType.RedAlert2) {
-					VFS.GetInstance().ScanMixDir(EngineType.YurisRevenge, Program.Settings.MixFilesDirectory);
-					pkt = VFS.Open<PktFile>("missionsmd.pkt");
-				}
-
-				if (pkt != null && !string.IsNullOrEmpty(pktEntryName))
-					pktMapEntry = pkt.GetMapEntry(pktEntryName);
-			}
-
-			// now, if we have a map entry from a PKT file, 
-			// for TS we are done, but for RA2 we need to look in the CSV file for the translated mapname
-			if (engine <= EngineType.FireStorm) {
-				if (pktMapEntry != null)
-					mapName = pktMapEntry.Description;
-				else if (missionEntry != null) {
-					if (engine == EngineType.TiberianSun) {
-						string campaignSide = missionEntry.Briefing.Length >= 3 ? missionEntry.Briefing.Substring(0, 3) : "XXX";
-						string missionNumber = missionEntry.Briefing.Length > 3 ? missionEntry.Briefing.Substring(3) : "";
-						mapName = string.Format("{0} {1} - {2}", campaignSide, missionNumber.TrimEnd('A').PadLeft(2, '0'), missionName);
-					}
-					else {
-						// FS map names are constructed a bit easier
-						mapName = missionName.Replace(":", " - ");
-					}
-				}
-				else if (!string.IsNullOrEmpty(basic.ReadString("Name")))
-					mapName = basic.ReadString("Name", fileNameWithoutExtension);
-			}
-
-				// if this is a RA2/YR mission (csfEntry set) or official map with valid pktMapEntry
-			else if (missionEntry != null || pktMapEntry != null) {
-				string csfEntryName = missionEntry != null ? missionName : pktMapEntry.Description;
-
-				string csfFile = engine == EngineType.YurisRevenge ? "ra2md.csf" : "ra2.csf";
-				Logger.Info("Loading csf file {0}", csfFile);
-				var csf = VFS.Open<CsfFile>(csfFile);
-				mapName = csf.GetValue(csfEntryName.ToLower());
-
-				if (missionEntry != null) {
-					if (mapName.Contains("Operation: ")) {
-						string missionMapName = Path.GetFileName(FileName);
-						if (char.IsDigit(missionMapName[3]) && char.IsDigit(missionMapName[4])) {
-							string missionNr = Path.GetFileName(FileName).Substring(3, 2);
-							mapName = mapName.Substring(0, mapName.IndexOf(":")) + " " + missionNr + " -" +
-									  mapName.Substring(mapName.IndexOf(":") + 1);
-						}
-					}
-				}
-				else {
-					// not standard map
-					if ((pktMapEntry.GameModes & PktFile.GameMode.Standard) == 0) {
-						if ((pktMapEntry.GameModes & PktFile.GameMode.Megawealth) == PktFile.GameMode.Megawealth)
-							mapName += " (Megawealth)";
-						if ((pktMapEntry.GameModes & PktFile.GameMode.Duel) == PktFile.GameMode.Duel)
-							mapName += " (Land Rush)";
-						if ((pktMapEntry.GameModes & PktFile.GameMode.NavalWar) == PktFile.GameMode.NavalWar)
-							mapName += " (Naval War)";
-					}
-				}
-			}
-
-			// not really used, likely empty, but if this is filled in it's probably better than guessing
-			if (mapName == "" && basic.SortedEntries.ContainsKey("Name"))
-				mapName = basic.ReadString("Name");
-
-			if (mapName == "") {
-				Logger.Warn("No valid mapname given or found, reverting to default filename {0}", fileNameWithoutExtension);
-				mapName = fileNameWithoutExtension;
-			}
-			else {
-				Logger.Info("Mapname found: {0}", mapName);
-			}
-
-			mapName = StripPlayersFromName(MakeValidFileName(mapName));
-			return mapName;
-		}
-
-		private static string StripPlayersFromName(string mapName) {
-			if (mapName.IndexOf(" (") != -1)
-				mapName = mapName.Substring(0, mapName.IndexOf(" ("));
-			return mapName;
-		}
-
-		/// <summary>Makes a valid file name.</summary>
-		/// <param name="name">The filename to be made valid.</param>
-		/// <returns>The valid file name.</returns>
-		private static string MakeValidFileName(string name) {
-			string invalidChars = Regex.Escape(new string(Path.GetInvalidFileNameChars()));
-			string invalidReStr = string.Format(@"[{0}]+", invalidChars);
-			return Regex.Replace(name, invalidReStr, "_");
-		}
-
-		/// <summary>Loads a map. </summary>
-		/// <param name="et">The engine type to be forced, or autodetect.</param>
-		public bool LoadMap(EngineType et = EngineType.AutoDetect) {
-			var map = GetSection("Map");
-			string[] size = map.ReadString("Size").Split(',');
-			FullSize = new Rectangle(int.Parse(size[0]), int.Parse(size[1]), int.Parse(size[2]), int.Parse(size[3]));
-			size = map.ReadString("LocalSize").Split(',');
-			LocalSize = new Rectangle(int.Parse(size[0]), int.Parse(size[1]), int.Parse(size[2]), int.Parse(size[3]));
-			EngineType = et;
-			ReadAllObjects();
-
-			// if we have to autodetect, we need to load rules.ini,
-			// and we don't want to parse it again when constructing the theater
-			if (et == EngineType.AutoDetect) {
-				_rules = VFS.Open<IniFile>("rules.ini");
-				EngineType = DetectMapType(_rules);
-
-				if (EngineType == EngineType.YurisRevenge) {
-					// add YR mixes to VFS
-					VFS.GetInstance().Clear();
-					VFS.GetInstance().ScanMixDir(EngineType.YurisRevenge);
-
-					var rulesmd = VFS.Open<IniFile>("rulesmd.ini");
-					var artmd = VFS.Open<IniFile>("artmd.ini");
-
-					if (rulesmd == null) {
-						Logger.Error("rulesmd.ini or artmd.ini could not be loaded! You cannot render a YR/FS map " +
-									 "without the expansion installed. Unavailable objects will not be rendered, reverting to rules.ini.");
-						RemoveYRObjects();
-
-						_art = VFS.Open<IniFile>("art.ini");
-					}
-					else {
-						_rules = rulesmd;
-						_art = artmd;
-					}
-				}
-				else _art = VFS.Open<IniFile>("art.ini"); // rules is already loaded
-			}
-			else if (EngineType == EngineType.YurisRevenge) {
-				_rules = VFS.Open("rulesmd.ini") as IniFile;
-				_art = VFS.Open("artmd.ini") as IniFile;
-			}
-			else if (EngineType == EngineType.FireStorm) {
-				_rules = VFS.Open("rules.ini") as IniFile;
-				_art = VFS.Open("art.ini") as IniFile;
-
-				Logger.Info("Merging Firestorm rules with TS rules");
-				_rules.MergeWith(VFS.Open<IniFile>("firestrm.ini"));
-				_art.MergeWith(VFS.Open<IniFile>("artfs.ini"));
-
-			}
-			else {
-				_rules = VFS.Open("rules.ini") as IniFile;
-				_art = VFS.Open("art.ini") as IniFile;
-			}
-
-			if (_rules == null || _art == null) {
-				Logger.Fatal("Rules or art config file could not be loaded! You cannot render a YR/FS map" +
-							 " without the expansion installed");
-				return false;
-			}
-
-			Drawable.TileWidth = (ushort)TileWidth;
-			Drawable.TileHeight = (ushort)TileHeight;
-
-			_theater = new Theater(ReadString("Map", "Theater"), EngineType, _rules, _art);
-			_theater.Initialize();
-			RemoveUnknownObjects();
-
-			Logger.Info("Overriding rules.ini with map INI entries");
-			_rules.MergeWith(this);
-
-			// turns out this probably wasn't ever needed
-			// MoveStructuresToBaseTile();
-
-			_palettesToBeRecalculated.AddRange(_theater.GetPalettes());
-
-			LoadColors();
-			if (EngineType == EngineType.RedAlert2 || EngineType == EngineType.YurisRevenge)
-				LoadCountries();
-			LoadHouses();
-
-			if (EngineType == EngineType.RedAlert2 || EngineType == EngineType.YurisRevenge)
-				_theater.GetTileCollection().RecalculateTileSystem(_tiles);
-
-			if (EngineType == EngineType.RedAlert2 || EngineType == EngineType.YurisRevenge)
-				RecalculateOreSpread();
-
-			LoadLighting();
-			CreateLevelPalettes();
-			LoadLightSources();
-			LoadPalettes();
-			ApplyLightSources();
-			// now everything is loaded and we can prepare the palettes before using them to draw
-			RecalculatePalettes();
-
-			return true;
-		}
-
-		private void MoveStructuresToBaseTile() {
-			// we need foundations from the theater to place the structures at the correct tile,
-			for (int y = 0; y < _structureObjects.GetLength(1); y++) {
-				for (int x = 0; x < _structureObjects.GetLength(0); x++) {
-					StructureObject s = _structureObjects[x, y];
-					if (s == null || s.DrawTile != null) continue; // s.DrawTile set means we've already moved it
-
-					Size foundation = _theater.GetFoundation(s);
-					if (foundation == Size.Empty) continue;
-					s.DrawTile = _tiles.GetTileR(s.Tile.Rx - foundation.Width + 1, s.Tile.Ry - foundation.Height + 1);
-
-					// move structure
-					_structureObjects[x, y] = null;
-					s.Tile.AllObjects.Remove(s);
-					_structureObjects[s.DrawTile.Dx, s.DrawTile.Dy / 2] = s;
-					s.DrawTile.AllObjects.Add(s);
-				}
-			}
-
-			// bridges too
-			for (int y = 0; y < _overlayObjects.GetLength(1); y++) {
-				for (int x = 0; x < _overlayObjects.GetLength(0); x++) {
-					OverlayObject o = _overlayObjects[x, y];
-					if (o == null || o.DrawTile != null) continue; // DrawTile set means we've already moved it
-
-					Size foundation = _theater.GetFoundation(o);
-					if (foundation == Size.Empty) continue;
-					o.DrawTile = _tiles.GetTileR(o.Tile.Rx - 2, o.Tile.Ry - 2);
-
-					if (o.DrawTile != null) {
-						// move structure
-						_overlayObjects[x, y] = null;
-						_overlayObjects[o.DrawTile.Dx, o.DrawTile.Dy / 2] = o;
-					}
-				}
-			}
-		}
-
-		/// <summary>Loads the countries. </summary>
-		private void LoadCountries() {
-			Logger.Info("Loading countries");
-
-			var countriesSection = _rules.GetSection(EngineType >= EngineType.RedAlert2 ? "Countries" : "Houses");
-			foreach (var entry in countriesSection.OrderedEntries) {
-				IniSection countrySection = _rules.GetSection(entry.Value);
-				if (countrySection == null) continue;
-				Color c;
-				if (!_namedColors.TryGetValue(countrySection.ReadString("Color"), out c))
-					c = _namedColors.Values.First();
-				_countryColors[entry.Value] = c;
-			}
-		}
-
-		/// <summary>Loads the colors. </summary>
-		private void LoadColors() {
-			var colorsSection = _rules.GetSection("Colors");
-			foreach (var entry in colorsSection.OrderedEntries) {
-				string[] colorComponents = ((string)entry.Value).Split(',');
-				var h = new HsvColor(int.Parse(colorComponents[0]),
-									 int.Parse(colorComponents[1]),
-									 int.Parse(colorComponents[2]));
-				_namedColors[entry.Key] = h.ToRGB();
-			}
-		}
-
-		/// <summary>Loads the houses. </summary>
-		private void LoadHouses() {
-			Logger.Info("Loading houses");
-			IniSection housesSection = GetSection("Houses");
-			LoadHousesFromIniSection(housesSection, this);
-			housesSection = _rules.GetSection("Houses");
-			LoadHousesFromIniSection(housesSection, _rules);
-		}
-
-		private void LoadHousesFromIniSection(IniSection housesSection, IniFile ini) {
-			if (housesSection == null) return;
-			foreach (var v in housesSection.OrderedEntries) {
-				var houseSection = ini.GetSection(v.Value);
-				if (houseSection == null) continue;
-				string color;
-				if (v.Value == "Neutral" || v.Value == "Special")
-					color = "LightGrey"; // this is hardcoded in the game
-				else
-					color = houseSection.ReadString("Color");
-				if (!string.IsNullOrEmpty(color) && !string.IsNullOrEmpty(v.Value))
-					_countryColors[v.Value] = _namedColors[color];
-			}
-		}
-
-		/// <summary>Detect map type.</summary>
-		/// <param name="rules">The rules.ini file to be used.</param>
-		/// <returns>The engine to be used to render this map.</returns>
-		private EngineType DetectMapType(IniFile rules) {
-			Logger.Info("Determining map type");
-
-			if (ReadBool("Basic", "RequiredAddon"))
-				return EngineType.YurisRevenge;
-
-			string theater = ReadString("Map", "Theater").ToLower();
-			// decision based on theatre
-			if (theater == "lunar" || theater == "newurban" || theater == "desert")
-				return EngineType.YurisRevenge;
-
-			// decision based on overlay/trees/structs
-			if (!AllObjectsFromRA2(rules))
-				return EngineType.YurisRevenge;
-
-			// decision based on max tile/threatre
-			int maxTileNum = _tiles.Where(t => t != null).Aggregate(int.MinValue, (current, t) => Math.Max(t.TileNum, current));
-
-			if (theater == "temperate") {
-				if (maxTileNum > 838) return EngineType.YurisRevenge;
-				return EngineType.RedAlert2;
-			}
-			else if (theater == "urban") {
-				if (maxTileNum > 1077) return EngineType.YurisRevenge;
-				return EngineType.RedAlert2;
-			}
-			else if (theater == "snow") {
-				if (maxTileNum > 798) return EngineType.YurisRevenge;
-				return EngineType.RedAlert2;
-			}
-			// decision based on extension
-			else if (Path.GetExtension(FileName) == ".yrm") return EngineType.YurisRevenge;
-			else return EngineType.RedAlert2;
 		}
 
 		/// <summary>Tests whether all objects on the map are present in RA2</summary>
@@ -651,6 +258,235 @@ namespace CNCMaps.MapLogic {
 				}
 			}
 
+		}
+
+		/// <summary>Detect map type.</summary>
+		/// <param name="rules">The rules.ini file to be used.</param>
+		/// <returns>The engine to be used to render this map.</returns>
+		private EngineType DetectMapType(IniFile rules) {
+			Logger.Info("Determining map type");
+
+			if (ReadBool("Basic", "RequiredAddon"))
+				return EngineType.YurisRevenge;
+
+			string theater = ReadString("Map", "Theater").ToLower();
+			// decision based on theatre
+			if (theater == "lunar" || theater == "newurban" || theater == "desert")
+				return EngineType.YurisRevenge;
+
+			// decision based on overlay/trees/structs
+			if (!AllObjectsFromRA2(rules))
+				return EngineType.YurisRevenge;
+
+			// decision based on max tile/threatre
+			int maxTileNum = _tiles.Where(t => t != null).Aggregate(int.MinValue, (current, t) => Math.Max(t.TileNum, current));
+
+			if (theater == "temperate") {
+				if (maxTileNum > 838) return EngineType.YurisRevenge;
+				return EngineType.RedAlert2;
+			}
+			else if (theater == "urban") {
+				if (maxTileNum > 1077) return EngineType.YurisRevenge;
+				return EngineType.RedAlert2;
+			}
+			else if (theater == "snow") {
+				if (maxTileNum > 798) return EngineType.YurisRevenge;
+				return EngineType.RedAlert2;
+			}
+			// decision based on extension
+			else if (Path.GetExtension(FileName) == ".yrm") return EngineType.YurisRevenge;
+			else return EngineType.RedAlert2;
+		}
+
+		/// <summary>Loads a map. </summary>
+		/// <param name="et">The engine type to be forced, or autodetect.</param>
+		public bool LoadMap(EngineType et = EngineType.AutoDetect) {
+			var map = GetSection("Map");
+			string[] size = map.ReadString("Size").Split(',');
+			FullSize = new Rectangle(int.Parse(size[0]), int.Parse(size[1]), int.Parse(size[2]), int.Parse(size[3]));
+			size = map.ReadString("LocalSize").Split(',');
+			LocalSize = new Rectangle(int.Parse(size[0]), int.Parse(size[1]), int.Parse(size[2]), int.Parse(size[3]));
+			EngineType = et;
+			ReadAllObjects();
+
+			// if we have to autodetect, we need to load rules.ini,
+			// and we don't want to parse it again when constructing the theater
+			if (et == EngineType.AutoDetect) {
+				_rules = VFS.Open<IniFile>("rules.ini");
+				EngineType = DetectMapType(_rules);
+
+				if (EngineType == EngineType.YurisRevenge) {
+					// add YR mixes to VFS
+					VFS.GetInstance().Clear();
+					VFS.GetInstance().ScanMixDir(EngineType.YurisRevenge);
+
+					var rulesmd = VFS.Open<IniFile>("rulesmd.ini");
+					var artmd = VFS.Open<IniFile>("artmd.ini");
+
+					if (rulesmd == null) {
+						Logger.Error("rulesmd.ini or artmd.ini could not be loaded! You cannot render a YR/FS map " +
+									 "without the expansion installed. Unavailable objects will not be rendered, reverting to rules.ini.");
+						RemoveYRObjects();
+
+						_art = VFS.Open<IniFile>("art.ini");
+					}
+					else {
+						_rules = rulesmd;
+						_art = artmd;
+					}
+				}
+				else _art = VFS.Open<IniFile>("art.ini"); // rules is already loaded
+			}
+			else if (EngineType == EngineType.YurisRevenge) {
+				_rules = VFS.Open("rulesmd.ini") as IniFile;
+				_art = VFS.Open("artmd.ini") as IniFile;
+			}
+			else if (EngineType == EngineType.FireStorm) {
+				_rules = VFS.Open("rules.ini") as IniFile;
+				_art = VFS.Open("art.ini") as IniFile;
+
+				Logger.Info("Merging Firestorm rules with TS rules");
+				_rules.MergeWith(VFS.Open<IniFile>("firestrm.ini"));
+				_art.MergeWith(VFS.Open<IniFile>("artfs.ini"));
+
+			}
+			else {
+				_rules = VFS.Open("rules.ini") as IniFile;
+				_art = VFS.Open("art.ini") as IniFile;
+			}
+
+			if (_rules == null || _art == null) {
+				Logger.Fatal("Rules or art config file could not be loaded! You cannot render a YR/FS map" +
+							 " without the expansion installed");
+				return false;
+			}
+
+			Drawable.TileWidth = (ushort)TileWidth;
+			Drawable.TileHeight = (ushort)TileHeight;
+
+			_theater = new Theater(ReadString("Map", "Theater"), EngineType, _rules, _art);
+			_theater.Initialize();
+			RemoveUnknownObjects();
+
+			Logger.Info("Overriding rules.ini with map INI entries");
+			_rules.MergeWith(this);
+
+			// turns out this probably wasn't ever needed
+			// MoveStructuresToBaseTile();
+
+			_palettesToBeRecalculated.AddRange(_theater.GetPalettes());
+
+			LoadColors();
+			if (EngineType >= EngineType.RedAlert2)
+				LoadCountries();
+			LoadHouses();
+
+			if (EngineType >= EngineType.RedAlert2) {
+				_theater.GetTileCollection().RecalculateTileSystem(_tiles);
+			}
+			RecalculateOreSpread(); // is this really used on TS?
+
+			LoadLighting();
+			CreateLevelPalettes();
+			LoadPalettes();
+			ApplyRemappables();
+			LoadLightSources();
+			ApplyLightSources();
+
+			// first preparing all palettes as above, and only now recalculating them 
+			// could save a large amount of work in total
+			RecalculatePalettes();
+
+			return true;
+		}
+
+		/// <summary>Loads the countries. </summary>
+		private void LoadCountries() {
+			Logger.Info("Loading countries");
+
+			var countriesSection = _rules.GetSection(EngineType >= EngineType.RedAlert2 ? "Countries" : "Houses");
+			foreach (var entry in countriesSection.OrderedEntries) {
+				IniSection countrySection = _rules.GetSection(entry.Value);
+				if (countrySection == null) continue;
+				Color c;
+				if (!_namedColors.TryGetValue(countrySection.ReadString("Color"), out c))
+					c = _namedColors.Values.First();
+				_countryColors[entry.Value] = c;
+			}
+		}
+
+		/// <summary>Loads the colors. </summary>
+		private void LoadColors() {
+			var colorsSection = _rules.GetSection("Colors");
+			foreach (var entry in colorsSection.OrderedEntries) {
+				string[] colorComponents = ((string)entry.Value).Split(',');
+				var h = new HsvColor(int.Parse(colorComponents[0]),
+									 int.Parse(colorComponents[1]),
+									 int.Parse(colorComponents[2]));
+				_namedColors[entry.Key] = h.ToRGB();
+			}
+		}
+
+		/// <summary>Loads the houses. </summary>
+		private void LoadHouses() {
+			Logger.Info("Loading houses");
+			IniSection housesSection = GetSection("Houses");
+			LoadHousesFromIniSection(housesSection, this);
+			housesSection = _rules.GetSection("Houses");
+			LoadHousesFromIniSection(housesSection, _rules);
+		}
+
+		private void LoadHousesFromIniSection(IniSection housesSection, IniFile ini) {
+			if (housesSection == null) return;
+			foreach (var v in housesSection.OrderedEntries) {
+				var houseSection = ini.GetSection(v.Value);
+				if (houseSection == null) continue;
+				string color;
+				if (v.Value == "Neutral" || v.Value == "Special")
+					color = "LightGrey"; // this is hardcoded in the game
+				else
+					color = houseSection.ReadString("Color");
+				if (!string.IsNullOrEmpty(color) && !string.IsNullOrEmpty(v.Value))
+					_countryColors[v.Value] = _namedColors[color];
+			}
+		}
+
+		private void MoveStructuresToBaseTile() {
+			// we need foundations from the theater to place the structures at the correct tile,
+			for (int y = 0; y < _structureObjects.GetLength(1); y++) {
+				for (int x = 0; x < _structureObjects.GetLength(0); x++) {
+					StructureObject s = _structureObjects[x, y];
+					if (s == null || s.DrawTile != null) continue; // s.DrawTile set means we've already moved it
+
+					Size foundation = _theater.GetFoundation(s);
+					if (foundation == Size.Empty) continue;
+					s.DrawTile = _tiles.GetTileR(s.Tile.Rx - foundation.Width + 1, s.Tile.Ry - foundation.Height + 1);
+
+					// move structure
+					_structureObjects[x, y] = null;
+					s.Tile.AllObjects.Remove(s);
+					_structureObjects[s.DrawTile.Dx, s.DrawTile.Dy / 2] = s;
+					s.DrawTile.AllObjects.Add(s);
+				}
+			}
+
+			// bridges too
+			for (int y = 0; y < _overlayObjects.GetLength(1); y++) {
+				for (int x = 0; x < _overlayObjects.GetLength(0); x++) {
+					OverlayObject o = _overlayObjects[x, y];
+					if (o == null || o.DrawTile != null) continue; // DrawTile set means we've already moved it
+
+					Size foundation = _theater.GetObjectCollection(o).GetDrawable(o).Foundation;
+					if (foundation == Size.Empty) continue;
+					o.DrawTile = _tiles.GetTileR(o.Tile.Rx - 2, o.Tile.Ry - 2);
+
+					if (o.DrawTile != null) {
+						// move structure
+						_overlayObjects[x, y] = null;
+						_overlayObjects[o.DrawTile.Dx, o.DrawTile.Dy / 2] = o;
+					}
+				}
+			}
 		}
 
 		/// <summary>Reads all objects. </summary>
@@ -907,7 +743,7 @@ namespace CNCMaps.MapLogic {
 				// The value consists of the sum of all dx's with a little magic offsets
 				// plus the sum of all dy's with also a little magic offset, and also
 				// everything is calculated modulo 12
-				if (o.IsOre_Riparius || o.IsOre_Vinifera || o.IsOre_Aboreus) {
+				if (SpecialOverlays.IsOre(o)) {
 					int x = o.Tile.Dx;
 					int y = o.Tile.Dy;
 					double yInc = ((((y - 9) / 2) % 12) * (((y - 8) / 2) % 12)) % 12;
@@ -919,10 +755,10 @@ namespace CNCMaps.MapLogic {
 					num %= 12;
 
 					// replace ore
-					o.OverlayID = (byte)(OverlayObject.Min_ID_Riparius + num);
+					o.OverlayID = (byte)(SpecialOverlays.Min_ID_Riparius + num);
 				}
 
-				else if (o.IsOre_Cruentus) {
+				else if (SpecialOverlays.IsGem(o)) {
 					int x = o.Tile.Dx;
 					int y = o.Tile.Dy;
 					double yInc = ((((y - 9) / 2) % 12) * (((y - 8) / 2) % 12)) % 12;
@@ -934,7 +770,7 @@ namespace CNCMaps.MapLogic {
 					num %= 12;
 
 					// replace gems
-					o.OverlayID = (byte)(OverlayObject.Min_ID_Cruentus + num);
+					o.OverlayID = (byte)(SpecialOverlays.Min_ID_Cruentus + num);
 				}
 			}
 		}
@@ -946,7 +782,6 @@ namespace CNCMaps.MapLogic {
 
 		// Starkku: Large-degree changes to make the lighting better mimic the way it is in the game.
 		private void CreateLevelPalettes() {
-
 			Logger.Info("Creating per-height palettes");
 			PaletteCollection palettes = _theater.GetPalettes();
 			for (int i = 0; i < 19; i++) {
@@ -959,29 +794,6 @@ namespace CNCMaps.MapLogic {
 			}
 		}
 
-		// Starkku: Applies lighting to game objects (non-terrain) based on what level of map they are on.
-		// Returns the new palette with applied lighting.
-		private Palette applyObjectLighting(GameObject obj, int level) {
-			Palette np = null;
-			if (obj is StructureObject)
-				np = (obj as StructureObject).Palette.Clone();
-			else if (obj is UnitObject)
-				np = (obj as UnitObject).Palette.Clone();
-			else if (obj is InfantryObject)
-				np = (obj as InfantryObject).Palette.Clone();
-			else if (obj is AircraftObject)
-				np = (obj as AircraftObject).Palette.Clone();
-			else if (obj is TerrainObject)
-				np = (obj as TerrainObject).Palette.Clone();
-			else if (obj is OverlayObject)
-				np = (obj as OverlayObject).Palette.Clone();
-			if (np == null) np = _theater.GetPalettes().UnitPalette.Clone();
-			np.Name = np.Name + "_" + level.ToString();
-			np.ApplyObjectLighting(_lighting, level, false);
-			_palettesToBeRecalculated.Add(np);
-			return np;
-		}
-
 		private static readonly string[] LampNames = new[] {
 			"REDLAMP", "BLUELAMP", "GRENLAMP", "YELWLAMP", "PURPLAMP", "INORANLAMP", "INGRNLMP", "INREDLMP", "INBLULMP",
 			"INGALITE", "GALITE",
@@ -989,6 +801,92 @@ namespace CNCMaps.MapLogic {
 			"TEMNITLAMP", "SNOMORLAMP",
 			"SNODAYLAMP", "SNODUSLAMP", "SNONITLAMP"
 		};
+
+		private void LoadPalettes() {
+			int before = _palettesToBeRecalculated.Count;
+
+			// get the default palettes
+			var pc = _theater.GetPalettes();
+			_palettesToBeRecalculated.AddRange(pc); 
+			
+			foreach (GameObject obj in
+				(from MapTile m in _tiles select m).Union
+				(from GameObject o in _overlayObjects select o).Union
+				(from GameObject o in _structureObjects select o).Union
+				(from GameObject o in _unitObjects select o).Union
+				(from GameObject o in _aircraftObjects select o).Union(
+				(from GameObject o in _infantryObjects.Cast<InfantryObject>() select o))) {
+				if (obj == null) continue;
+
+				Palette p;
+				LightingType lt;
+				PaletteType pt;
+
+				if (obj is MapTile) {
+					lt = LightingType.Level;
+					pt = PaletteType.Iso;
+				}
+				else {
+					var collection = _theater.GetObjectCollection(obj);
+					var drawable = collection.GetDrawable(obj);
+					pt = drawable.PaletteType;
+					lt = drawable.LightingType;
+				}
+
+				if (lt == LightingType.None)
+					p = pc.GetPalette(pt);
+				else if (lt == LightingType.Global)
+					p = _palettePerLevel[0];
+				else {
+					// level, ambient or full setting all rely on the global lighting first, 
+					// lightsources are then applied in the next step
+					if (pt == PaletteType.Iso)
+						p = _palettePerLevel[obj.Tile.Z];
+					else {
+						p = _theater.GetPalettes().GetPalette(pt).Clone();
+						p.ApplyLighting(_lighting, obj.Tile.Z);
+						_palettesToBeRecalculated.Add(p);
+					}
+				}
+				obj.Palette = p;
+			}
+			
+			Logger.Debug("Loaded {0} different palettes", _palettesToBeRecalculated.Count - before);
+		}
+
+		private void ApplyRemappables() {
+			int before = _palettesToBeRecalculated.Count;
+
+			foreach (var obj in
+				(from OwnableObject o in _structureObjects select o).Union
+				(from OwnableObject o in _unitObjects select o).Union
+				(from OwnableObject o in _aircraftObjects select o).Union(
+				(from OwnableObject o in _infantryObjects.Cast<InfantryObject>() select o))) {
+				if (obj == null) continue;
+
+				var g = obj as GameObject;
+				g.Palette.Remap(_countryColors[obj.Owner]);
+				_palettesToBeRecalculated.Add(g.Palette);
+			}
+
+			// TS needs tiberium remapped
+			if (EngineType <= EngineType.FireStorm) {
+				var tiberiums = _rules.GetSection("Tiberiums").OrderedEntries.Select(tib => (OverlayType)Enum.Parse(typeof(OverlayType), tib.Value));
+				var remaps = tiberiums.Select(tib => _rules.GetSection(tib.ToString()).ReadString("Color"));
+				var tibRemaps = tiberiums.Zip(remaps, (key, value) => new { key, value }).ToDictionary(x => x.key, x => x.value);
+
+				foreach (var ovl in _overlayObjects) {
+					if (ovl == null) continue;
+					if (SpecialOverlays.IsTib(ovl)) {
+						ovl.Palette = ovl.Palette.Clone();
+						ovl.Palette.Remap(_namedColors[tibRemaps[SpecialOverlays.GetOverlayType(ovl)]]);
+						_palettesToBeRecalculated.Add(ovl.Palette);
+					}
+				}
+			}
+			Logger.Debug("Determined palettes to be recalculated due to remappables ({0})",
+						 _palettesToBeRecalculated.Count - before);
+		}
 
 		private void LoadLightSources() {
 			Logger.Info("Loading light sources");
@@ -1012,94 +910,30 @@ namespace CNCMaps.MapLogic {
 			int before = _palettesToBeRecalculated.Count;
 			foreach (LightSource s in _lightSources) {
 				foreach (MapTile t in _tiles) {
-					if (t == null || t.Palette == null) continue;
+					if (t == null) continue;
 
 					bool wasShared = t.Palette.IsShared;
 					// make sure this tile can only end up in the "to-be-recalculated list" once
-					if (LightSource.ApplyLamp(t, t, s))
-						// if this lamp caused a new unshared palette to be created
-						if (wasShared && !t.Palette.IsShared)
-							_palettesToBeRecalculated.Add(t.Palette);
-				}
-				foreach (var ovl in _overlayObjects) {
-					if (ovl == null || ovl.Palette == null) continue;
+					if (!LightSource.ApplyLamp(t, t, s)) continue;
 
-					LightSource.ApplyLamp(ovl, ovl.Tile, s);
-					// this is already added to the PalettesToBeRecalculated list
+					// this lamp caused a new unshared palette to be created
+					if (wasShared && !t.Palette.IsShared)
+						_palettesToBeRecalculated.Add(t.Palette);
+
+					foreach (var obj in t.AllObjects) {
+						wasShared = obj.Palette.IsShared;
+						// TODO: apply lighting only if needed
+					}
 				}
 			}
 			Logger.Debug("Determined palettes to be recalculated due to lightsources ({0})",
 						 _palettesToBeRecalculated.Count - before);
 		}
 
-		private void LoadPalettes() {
-			int before = _palettesToBeRecalculated.Count;
-			foreach (var s in _structureObjects) {
-				if (s == null) continue;
-				s.Palette.Remap(_countryColors[s.Owner]);
-				//s.Palette.ApplyLighting(s.Tile.Palette.GetLighting());
-				_palettesToBeRecalculated.Add(s.Palette);
-			}
-			foreach (var u in _unitObjects) {
-				if (u == null) continue;
-				u.Palette.Remap(_countryColors[u.Owner]);
-				//u.Palette.ApplyLighting(u.Tile.Palette.GetLighting(true));
-				_palettesToBeRecalculated.Add(u.Palette);
-			}
-			foreach (var a in _aircraftObjects) {
-				if (a == null) continue;
-				a.Palette.Remap(_countryColors[a.Owner]);
-				//a.Palette.ApplyLighting(a.Tile.Palette.GetLighting(true));
-				_palettesToBeRecalculated.Add(a.Palette);
-			}
-			foreach (var il in _infantryObjects) {
-				if (il == null) continue;
-				foreach (InfantryObject i in il) {
-					if (i == null) continue;
-					i.Palette.Remap(_countryColors[i.Owner]);
-					//i.Palette.ApplyLighting(i.Tile.Palette.GetLighting(true));
-					_palettesToBeRecalculated.Add(i.Palette);
-				}
-			}
-
-			// TS needs tiberium remapped
-			if (EngineType == EngineType.TiberianSun || EngineType == EngineType.FireStorm) {
-				var collection = _theater.GetCollection(CollectionType.Overlay);
-				var tiberiumsSections = _rules.GetSection("Tiberiums");
-				var tiberiumRemaps =
-					tiberiumsSections.OrderedEntries.Select(v => _rules.GetSection(v.Value).ReadString("Color")).ToList();
-
-				string pname = _theater.GetPalettes().UnitPalette.Name;
-				Palette p = _theater.GetPalettes().GetCustomPalette(pname, false);
-				p.Name = pname + "_tiberium_unlighted";
-
-				foreach (var ovl in _overlayObjects) {
-					if (ovl == null) continue;
-					// Starkku: Use a unlighted version of unit palette for tiberium, which is how it works in the game.
-					ovl.Palette = p;
-					string name = collection.GetName(ovl.OverlayID);
-
-					if (name.StartsWith("TIB")) {
-						int tiberiumType;
-						// Starkku: Better idea to actually use all 4 ore ore/tiberium types, not just 2.
-						if (ovl.IsOre_Aboreus) tiberiumType = 4;
-						else if (ovl.IsOre_Vinifera) tiberiumType = 3;
-						else if (ovl.IsOre_Cruentus) tiberiumType = 2;
-						else tiberiumType = 1;
-						ovl.Palette = ovl.Palette.Clone();
-						ovl.Palette.Remap(_namedColors[tiberiumRemaps[tiberiumType - 1]]);
-						_palettesToBeRecalculated.Add(ovl.Palette);
-					}
-				}
-			}
-			Logger.Debug("Determined palettes to be recalculated due to remappables ({0})",
-						 _palettesToBeRecalculated.Count - before);
-		}
-
 		private void RecalculatePalettes() {
 			Logger.Info("Calculating palette-values for all objects");
 			foreach (Palette p in _palettesToBeRecalculated)
-				if (p != null) p.Recalculate();
+				p.Recalculate();
 		}
 
 		public void DrawTiledStartPositions() {
@@ -1121,7 +955,7 @@ namespace CNCMaps.MapLogic {
 					for (int y = wy - 2; y < wy + 2; y++) {
 						MapTile t = _tiles.GetTileR(x, y);
 						if (t != null) {
-							t.Palette = Palette.MergePalettes(t.Palette, red, 0.4);
+							t.Palette = Palette.Merge(t.Palette, red, 0.4);
 						}
 					}
 				}
@@ -1204,7 +1038,6 @@ namespace CNCMaps.MapLogic {
 			}
 		}
 
-
 		public int FindCutoffHeight() {
 			// searches in 10 rows, starting from the bottom up, for the first fully tiled row
 			int y;
@@ -1261,73 +1094,50 @@ namespace CNCMaps.MapLogic {
 			return Rectangle.FromLTRB(left, top, right, bottom);
 		}
 
-		// Starkku: Changed to make it so that instead of using yellow/purple for TS/FS as well, it marks tiberiums using their 'remap' color.
 		public void MarkOreAndGems() {
-
-			var tiberiumsSections = _rules.GetSection("Tiberiums");
-			var tiberiumRemaps = tiberiumsSections.OrderedEntries.Select(v => _rules.GetSection(v.Value).ReadString("Color")).ToList();
-
 			Logger.Info("Marking ore and gems");
-			Palette orepal;
-			Palette ore1p, ore2p, ore3p, ore4p;
-			double ore1op, ore2op, ore3op, ore4op;
-			if (EngineType == EngineType.RedAlert2 || EngineType == EngineType.YurisRevenge) {
-				ore1p = Palette.MakePalette(Color.Yellow);
-				ore1p.Name = "ore_marked_riparius";
-				ore2p = Palette.MakePalette(Color.Yellow);
-				ore2p.Name = "ore_marked_vinifera";
-				ore3p = Palette.MakePalette(Color.Purple);
-				ore3p.Name = "ore_marked_cruentus";
-				ore4p = Palette.MakePalette(Color.Yellow);
-				ore4p.Name = "ore_marked_aboreus";
+			Dictionary<OverlayType, Palette> markerPalettes;
+
+			// TS needs tiberium remapped
+			if (EngineType <= EngineType.FireStorm) {
+				var tiberiums = _rules.GetSection("Tiberiums").OrderedEntries.
+					Select(tib => (OverlayType)Enum.Parse(typeof(OverlayType), tib.Value));
+				var remaps = tiberiums.Select(tib => _rules.GetSection(tib.ToString()).ReadString("Color"));
+				markerPalettes = tiberiums.Zip(remaps, (key, value) => new { key, value }).ToDictionary(
+					x => x.key, x => Palette.MakePalette(_namedColors[x.value]));
 			}
 			else {
-				ore1p = Palette.MakePalette(_namedColors[tiberiumRemaps[0]]);
-				ore1p.Name = "tiberium_marked_riparius";
-				ore2p = Palette.MakePalette(_namedColors[tiberiumRemaps[1]]);
-				ore2p.Name = "tiberium_marked_vinifera";
-				ore3p = Palette.MakePalette(_namedColors[tiberiumRemaps[2]]);
-				ore3p.Name = "tiberium_marked_cruentus";
-				ore4p = Palette.MakePalette(_namedColors[tiberiumRemaps[3]]);
-				ore4p.Name = "tiberium_marked_aboreus";
+				markerPalettes = new Dictionary<OverlayType, Palette>();
+				markerPalettes[OverlayType.Ore] = Palette.MakePalette(Color.Yellow);
+				markerPalettes[OverlayType.Gems] = Palette.MakePalette(Color.Purple);
 			}
+
 
 			foreach (var o in _overlayObjects) {
 				if (o == null) continue;
+				var ovlType = SpecialOverlays.GetOverlayType(o);
+				if (!markerPalettes.ContainsKey(ovlType)) continue;
 
-				ore1op = ore2op = ore4op = Math.Min((byte)11, o.OverlayValue) / 11.0 * 0.6 + 0.1;
-				ore3op = Math.Min((byte)11, o.OverlayValue) / 11.0 * 0.6 + 0.25;
-
-				if (o.IsOre_Riparius) {
-					o.Tile.Palette = Palette.MergePalettes(o.Tile.Palette, ore1p, ore1op);
-					o.Palette = Palette.MergePalettes(o.Palette, ore1p, ore1op);
-				}
-				else if (o.IsOre_Vinifera) {
-					o.Tile.Palette = Palette.MergePalettes(o.Tile.Palette, ore2p, ore2op);
-					o.Palette = Palette.MergePalettes(o.Palette, ore2p, ore2op);
-				}
-				else if (o.IsOre_Cruentus) {
-					o.Tile.Palette = Palette.MergePalettes(o.Tile.Palette, ore3p, ore3op);
-					o.Palette = Palette.MergePalettes(o.Palette, ore3p, ore3op);
-				}
-				else if (o.IsOre_Aboreus) {
-					o.Tile.Palette = Palette.MergePalettes(o.Tile.Palette, ore4p, ore4op);
-					o.Palette = Palette.MergePalettes(o.Palette, ore4p, ore4op);
-				}
+				double opacityBase = ovlType == OverlayType.Cruentus || ovlType == OverlayType.Gems ? 0.25 : 0.1;
+				double opacity = Math.Min((byte)11, o.OverlayValue) / 11.0 * 0.6 + opacityBase;
+				o.Tile.Palette = Palette.Merge(o.Tile.Palette, markerPalettes[ovlType], opacity);
+				o.Palette = Palette.Merge(o.Palette, markerPalettes[ovlType], opacity);
 			}
 		}
 
 		public void RedrawOreAndGems() {
 			var tileCollection = _theater.GetTileCollection();
+			var checkFunc = EngineType >= EngineType.RedAlert2
+				? (Func<OverlayObject, bool>)SpecialOverlays.IsOreOrGem : SpecialOverlays.IsTib;
 
 			// first redraw all required tiles (zigzag method)
 			for (int y = 0; y < FullSize.Height; y++) {
 				for (int x = FullSize.Width * 2 - 2; x >= 0; x -= 2) {
-					if (_overlayObjects[x, y] == null || !_overlayObjects[x, y].IsOreOverlay) continue;
+					if (_overlayObjects[x, y] == null || !checkFunc(_overlayObjects[x, y])) continue;
 					tileCollection.DrawTile(_tiles.GetTile(x, y), _drawingSurface);
 				}
 				for (int x = FullSize.Width * 2 - 3; x >= 0; x -= 2) {
-					if (_overlayObjects[x, y] == null || !_overlayObjects[x, y].IsOreOverlay) continue;
+					if (_overlayObjects[x, y] == null || !checkFunc(_overlayObjects[x, y])) continue;
 					tileCollection.DrawTile(_tiles.GetTile(x, y), _drawingSurface);
 				}
 			}
@@ -1335,13 +1145,13 @@ namespace CNCMaps.MapLogic {
 			// then the objects on these ore positions
 			for (int y = 0; y < FullSize.Height; y++) {
 				for (int x = FullSize.Width * 2 - 2; x >= 0; x -= 2) {
-					if (_overlayObjects[x, y] == null || !_overlayObjects[x, y].IsOreOverlay) continue;
+					if (_overlayObjects[x, y] == null || !checkFunc(_overlayObjects[x, y])) continue;
 					List<GameObject> objs = GetObjectsAt(x, y);
 					foreach (GameObject o in objs)
 						_theater.DrawObject(o, _drawingSurface);
 				}
 				for (int x = FullSize.Width * 2 - 3; x >= 0; x -= 2) {
-					if (_overlayObjects[x, y] == null || !_overlayObjects[x, y].IsOreOverlay) continue;
+					if (_overlayObjects[x, y] == null || !checkFunc(_overlayObjects[x, y])) continue;
 					List<GameObject> objs = GetObjectsAt(x, y);
 					foreach (GameObject o in objs)
 						_theater.DrawObject(o, _drawingSurface);
@@ -1462,6 +1272,175 @@ namespace CNCMaps.MapLogic {
 
 			Logger.Info("Saving map");
 			this.Save(FileName);
+		}
+
+		/// <summary>Gets the determine map name. </summary>
+		/// <returns>The filename to save the map as</returns>
+		public string DetermineMapName() {
+			string fileNameWithoutExtension = Path.GetFileNameWithoutExtension(FileName);
+
+			IniSection basic = GetSection("Basic");
+			if (basic.ReadBool("Official") == false)
+				return StripPlayersFromName(basic.ReadString("Name", fileNameWithoutExtension));
+
+			string mapExt = Path.GetExtension(FileName);
+			string missionName = "";
+			string mapName = "";
+			PktFile.PktMapEntry pktMapEntry = null;
+			MissionsFile.MissionEntry missionEntry = null;
+
+			// campaign mission
+			if (!basic.ReadBool("MultiplayerOnly") && basic.ReadBool("Official")) {
+				string missionsFile;
+				switch (EngineType) {
+					case EngineType.TiberianSun:
+					case EngineType.RedAlert2:
+						missionsFile = "mission.ini";
+						break;
+					case EngineType.FireStorm:
+						missionsFile = "mission1.ini";
+						break;
+					case EngineType.YurisRevenge:
+						missionsFile = "missionmd.ini";
+						break;
+					default:
+						throw new ArgumentOutOfRangeException("engine");
+				}
+				var mf = VFS.Open<MissionsFile>(missionsFile);
+				missionEntry = mf.GetMissionEntry(Path.GetFileName(FileName));
+				missionName = (EngineType >= EngineType.RedAlert2) ? missionEntry.UIName : missionEntry.Name;
+			}
+
+			else {
+				// multiplayer map
+				string pktEntryName = fileNameWithoutExtension;
+				PktFile pkt = null;
+
+				if (mapExt == ".mmx" || mapExt == ".yro") {
+					// this is an 'official' map 'archive' containing a PKT file with its name
+					try {
+						var mix = new MixFile(File.Open(FileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite));
+						pkt = mix.OpenFile(fileNameWithoutExtension + ".pkt", FileFormat.Pkt) as PktFile;
+						// pkt file is cached by default, so we can close the handle to the file
+						mix.Close();
+
+						if (pkt != null && pkt.MapEntries.Count > 0)
+							pktEntryName = pkt.MapEntries.First().Key;
+					}
+					catch (ArgumentException) { }
+				}
+
+				else {
+					// determine pkt file based on engine
+					switch (EngineType) {
+						case EngineType.TiberianSun:
+						case EngineType.RedAlert2:
+							pkt = VFS.Open<PktFile>("missions.pkt");
+							break;
+						case EngineType.FireStorm:
+							pkt = VFS.Open<PktFile>("multi01.pkt");
+							break;
+						case EngineType.YurisRevenge:
+							pkt = VFS.Open<PktFile>("missionsmd.pkt");
+							break;
+						default:
+							throw new ArgumentOutOfRangeException("engine");
+					}
+				}
+
+
+				// fallback for multiplayer maps with, .map extension,
+				// no YR objects so assumed to be ra2, but actually meant to be used on yr
+				if (mapExt == ".map" && pkt != null && !pkt.MapEntries.ContainsKey(pktEntryName) && EngineType >= EngineType.RedAlert2) {
+					VFS.GetInstance().ScanMixDir(EngineType.YurisRevenge, Program.Settings.MixFilesDirectory);
+					pkt = VFS.Open<PktFile>("missionsmd.pkt");
+				}
+
+				if (pkt != null && !string.IsNullOrEmpty(pktEntryName))
+					pktMapEntry = pkt.GetMapEntry(pktEntryName);
+			}
+
+			// now, if we have a map entry from a PKT file, 
+			// for TS we are done, but for RA2 we need to look in the CSV file for the translated mapname
+			if (EngineType <= EngineType.FireStorm) {
+				if (pktMapEntry != null)
+					mapName = pktMapEntry.Description;
+				else if (missionEntry != null) {
+					if (EngineType == EngineType.TiberianSun) {
+						string campaignSide = missionEntry.Briefing.Length >= 3 ? missionEntry.Briefing.Substring(0, 3) : "XXX";
+						string missionNumber = missionEntry.Briefing.Length > 3 ? missionEntry.Briefing.Substring(3) : "";
+						mapName = string.Format("{0} {1} - {2}", campaignSide, missionNumber.TrimEnd('A').PadLeft(2, '0'), missionName);
+					}
+					else {
+						// FS map names are constructed a bit easier
+						mapName = missionName.Replace(":", " - ");
+					}
+				}
+				else if (!string.IsNullOrEmpty(basic.ReadString("Name")))
+					mapName = basic.ReadString("Name", fileNameWithoutExtension);
+			}
+
+				// if this is a RA2/YR mission (csfEntry set) or official map with valid pktMapEntry
+			else if (missionEntry != null || pktMapEntry != null) {
+				string csfEntryName = missionEntry != null ? missionName : pktMapEntry.Description;
+
+				string csfFile = EngineType == EngineType.YurisRevenge ? "ra2md.csf" : "ra2.csf";
+				Logger.Info("Loading csf file {0}", csfFile);
+				var csf = VFS.Open<CsfFile>(csfFile);
+				mapName = csf.GetValue(csfEntryName.ToLower());
+
+				if (missionEntry != null) {
+					if (mapName.Contains("Operation: ")) {
+						string missionMapName = Path.GetFileName(FileName);
+						if (char.IsDigit(missionMapName[3]) && char.IsDigit(missionMapName[4])) {
+							string missionNr = Path.GetFileName(FileName).Substring(3, 2);
+							mapName = mapName.Substring(0, mapName.IndexOf(":")) + " " + missionNr + " -" +
+									  mapName.Substring(mapName.IndexOf(":") + 1);
+						}
+					}
+				}
+				else {
+					// not standard map
+					if ((pktMapEntry.GameModes & PktFile.GameMode.Standard) == 0) {
+						if ((pktMapEntry.GameModes & PktFile.GameMode.Megawealth) == PktFile.GameMode.Megawealth)
+							mapName += " (Megawealth)";
+						if ((pktMapEntry.GameModes & PktFile.GameMode.Duel) == PktFile.GameMode.Duel)
+							mapName += " (Land Rush)";
+						if ((pktMapEntry.GameModes & PktFile.GameMode.NavalWar) == PktFile.GameMode.NavalWar)
+							mapName += " (Naval War)";
+					}
+				}
+			}
+
+			// not really used, likely empty, but if this is filled in it's probably better than guessing
+			if (mapName == "" && basic.SortedEntries.ContainsKey("Name"))
+				mapName = basic.ReadString("Name");
+
+			if (mapName == "") {
+				Logger.Warn("No valid mapname given or found, reverting to default filename {0}", fileNameWithoutExtension);
+				mapName = fileNameWithoutExtension;
+			}
+			else {
+				Logger.Info("Mapname found: {0}", mapName);
+			}
+
+			mapName = StripPlayersFromName(MakeValidFileName(mapName));
+			return mapName;
+		}
+
+		private static string StripPlayersFromName(string mapName) {
+			if (mapName.IndexOf(" (") != -1)
+				mapName = mapName.Substring(0, mapName.IndexOf(" ("));
+			return mapName;
+		}
+
+		/// <summary>Makes a valid file name.</summary>
+		/// <param name="name">The filename to be made valid.</param>
+		/// <returns>The valid file name.</returns>
+		private static string MakeValidFileName(string name) {
+			string invalidChars = Regex.Escape(new string(Path.GetInvalidFileNameChars()));
+			string invalidReStr = string.Format(@"[{0}]+", invalidChars);
+			return Regex.Replace(name, invalidReStr, "_");
 		}
 
 		internal void DebugDrawTile(MapTile tile) {

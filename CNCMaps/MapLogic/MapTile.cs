@@ -1,8 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace CNCMaps.MapLogic {
 
-	public class MapTile : PaletteOwner {
+	public class MapTile : GameObject { // inherit from gameobject to receive palette properties and such
 
 		public ushort Dx { get; private set; }
 		public ushort Dy { get; private set; }
@@ -18,8 +19,6 @@ namespace CNCMaps.MapLogic {
 		internal bool ExtraDataAffected { get; set; }
 		internal readonly List<GameObject> AllObjects = new List<GameObject>();
 
-		public Palette Palette { get; set; }
-
 		public MapTile(ushort dx, ushort dy, ushort rx, ushort ry, short rz, short tilenum, ushort subtile, TileLayer layer, short setnum = 0) {
 			Dx = dx;
 			Dy = dy;
@@ -30,6 +29,8 @@ namespace CNCMaps.MapLogic {
 			SetNum = setnum;
 			SubTile = subtile;
 			Layer = layer;
+			PaletteType = PaletteType.Iso;
+			Lighting = LightingType.Full;
 		}
 
 		internal void AddObject(GameObject obj) {
@@ -41,5 +42,9 @@ namespace CNCMaps.MapLogic {
 			return string.Format("d({0},{1}),r({2},{3})", Dx, Dy, Rx, Ry);
 		}
 
+		public override MapTile Tile {
+			get { return this; }
+			set { throw new InvalidOperationException("lol wat u tryin bra"); }
+		}
 	}
 }

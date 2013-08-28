@@ -23,24 +23,51 @@ namespace CNCMaps.MapLogic {
 			}
 		}
 
-		public static PaletteSettings GetPaletteType(CollectionType t, EngineType engine) {
+		public static PaletteType GetDefaultPalette(CollectionType t, EngineType engine) {
 			switch (t) {
 				case CollectionType.Building:
-					return engine == EngineType.TiberianSun || engine == EngineType.FireStorm ?
-						PaletteSettings.Iso : PaletteSettings.Unit;
-
 				case CollectionType.Aircraft:
 				case CollectionType.Infantry:
 				case CollectionType.Vehicle:
-					return PaletteSettings.Unit;
-
+					return PaletteType.Unit;
 				case CollectionType.Overlay:
-					return PaletteSettings.Overlay;
-
+					return PaletteType.Overlay;
 				case CollectionType.Smudge:
 				case CollectionType.Terrain:
 				default:
-					return PaletteSettings.Iso;
+					return PaletteType.Iso;
+			}
+		}
+
+		internal static LightingType GetDefaultLighting(CollectionType type) {
+			switch (type) {
+				case CollectionType.Aircraft:
+				case CollectionType.Building:
+				case CollectionType.Infantry:
+				case CollectionType.Vehicle:
+					return LightingType.Ambient;
+				case CollectionType.Overlay:
+				case CollectionType.Smudge:
+				case CollectionType.Terrain:
+					return LightingType.Full;
+				default:
+					throw new ArgumentOutOfRangeException("type");
+			}
+		}
+
+		public static bool GetDefaultRemappability(CollectionType type) {
+			switch (type) {
+				case CollectionType.Aircraft:
+				case CollectionType.Building:
+				case CollectionType.Infantry:
+				case CollectionType.Vehicle:
+					return true;
+				case CollectionType.Overlay:
+				case CollectionType.Smudge:
+				case CollectionType.Terrain:
+					return false;
+				default:
+					throw new ArgumentOutOfRangeException("type");
 			}
 		}
 
@@ -57,7 +84,7 @@ namespace CNCMaps.MapLogic {
 					return ".sno";
 				case TheaterType.Lunar: return ".lun";
 				case TheaterType.Desert: return ".des";
-                case TheaterType.NewUrban: return ".ubn";
+				case TheaterType.NewUrban: return ".ubn";
 				default: return "";
 			}
 		}
@@ -88,7 +115,7 @@ namespace CNCMaps.MapLogic {
 				case CollectionType.Infantry:
 					return true;
 				case CollectionType.Terrain:
-					return true; 
+					return true;
 				case CollectionType.Vehicle:
 					return false;
 				default:
@@ -223,5 +250,7 @@ namespace CNCMaps.MapLogic {
 					throw new InvalidOperationException("invalid theater");
 			}
 		}
+
+
 	}
 }
