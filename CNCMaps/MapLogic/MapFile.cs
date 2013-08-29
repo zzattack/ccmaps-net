@@ -373,9 +373,6 @@ namespace CNCMaps.MapLogic {
 
 			// turns out this probably wasn't ever needed
 			// MoveStructuresToBaseTile();
-
-			_palettesToBeRecalculated.AddRange(_theater.GetPalettes());
-
 			LoadColors();
 			if (EngineType >= EngineType.RedAlert2)
 				LoadCountries();

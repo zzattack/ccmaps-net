@@ -54,7 +54,7 @@ namespace CNCMaps.MapLogic {
 		/// <returns>The correct custom palette.</returns>
 		public Palette GetCustomPalette(string paletteName, bool isTheaterSpecific) {
 			string paletteFileName = paletteName.ToLower() + (isTheaterSpecific ? TheaterDefaults.GetExtension(_theaterType) : ".pal");
-			var pal = CustomPalettes.FirstOrDefault(p => p.Name == paletteFileName);
+			var pal = CustomPalettes.FirstOrDefault(p => p.Name == paletteName);
 
 			if (pal == null) {
 				// palette hasn't been loaded yet

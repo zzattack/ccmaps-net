@@ -19,6 +19,10 @@ namespace CNCMaps.MapLogic {
 			blueMult = 1.0,
 			ambientMult = 1.0;
 
+		public Palette() {
+			Name = "wtF?";
+		}
+
 		/// <summary>
 		/// Starkku: Creates a palette out of already existing palette file.
 		/// </summary>
@@ -84,7 +88,7 @@ namespace CNCMaps.MapLogic {
 
 		public static Palette MakePalette(Color c) {
 			// be sure not to call recalculate on this
-			var p = new Palette(null);
+			var p = new Palette();
 			for (int i = 0; i < 256; i++)
 				p.colors[i] = c;
 			p.originalColorsLoaded = true;

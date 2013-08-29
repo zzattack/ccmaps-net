@@ -43,9 +43,7 @@ namespace CNCMaps.MapLogic {
 		public bool IsWall { get; set; }
 		public bool IsVeins { get; set; }
 		public int HeightOffset { get; set; }
-
-		private int Direction { get; set; } // for voxels
-		private int Frame { get; set; } // for shps
+		int Frame { get; set; } // for shps
 
 		// below are all the different kinds of drawables that a Drawable can consist of
 		readonly List<DrawableFile<VxlFile>> _voxels = new List<DrawableFile<VxlFile>>();
@@ -62,8 +60,10 @@ namespace CNCMaps.MapLogic {
 		public virtual void Draw(GameObject obj, DrawingSurface ds) {
 			logger.Trace("Drawing object {0} (type {1})", obj, obj.GetType());
 
-			if (obj is UnitObject) Direction = (obj as UnitObject).Direction;
-			else if (obj is StructureObject) Direction = (obj as StructureObject).Direction;
+			int direction = 0;
+
+			if (obj is UnitObject) direction = (obj as UnitObject).Direction;
+			else if (obj is StructureObject) direction = (obj as StructureObject).Direction;
 
 			if (!sorted) Sort();
 
@@ -88,17 +88,16 @@ namespace CNCMaps.MapLogic {
 				dx += _globalOffset.X;
 				dy += _globalOffset.Y;
 				dy += 15;
-				_alphaImage.File.DrawAlpha(_alphaImage.FrameIndex, ds, dx, dy);
+				_alphaImage.File.DrawAlpha(direction, ds, dx, dy);
 			}
 
 			for (int i = 0; i < _voxels.Count; i++) {
-				if (obj is UnitObject) Direction = (obj as UnitObject).Direction;
-				else if (obj is StructureObject) Direction = (obj as StructureObject).Direction;
+				if (obj is UnitObject) direction = (obj as UnitObject).Direction;
+				else if (obj is StructureObject) direction = (obj as StructureObject).Direction;
 
 				// render voxel
-				DrawingSurface vxl_ds = VoxelRenderer.Render(_voxels[i].File, _hvas[i], -(double)Direction / 256.0 * 360 + 45, obj.Palette);
-				if (vxl_ds == null)
-					continue;
+				DrawingSurface vxl_ds = VoxelRenderer.Render(_voxels[i].File, _hvas[i], -(double)direction / 256.0 * 360 + 45, obj.Palette);
+				if (vxl_ds == null) continue;
 
 				int dx = obj.Tile.Dx * TileWidth / 2;
 				int dy = (obj.Tile.Dy - obj.Tile.Z) * TileHeight / 2;
@@ -136,13 +135,13 @@ namespace CNCMaps.MapLogic {
 			}
 		}
 
-		private void DrawFile(GameObject obj, DrawingSurface ds, ShpFile file, DrawProperties props, Palette p = null) {
+		private void DrawFile(GameObject obj, DrawingSurface ds, ShpFile file, DrawProperties props, Palette customPalette = null) {
 			if (file == null || obj == null || obj.Tile == null) return;
 
 			Point offset = _globalOffset;
 			offset.Offset(props.offset);
 
-			file.Draw(Frame, ds, offset, obj.Tile, p);
+			file.Draw(Frame, ds, offset, obj.Tile, customPalette ?? obj.Palette);
 			if (props.hasShadow) {
 				Point shadowOffset = _globalOffset;
 				offset.Offset(props.shadowOffset);
