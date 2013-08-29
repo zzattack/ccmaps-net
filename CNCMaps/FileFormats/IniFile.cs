@@ -11,13 +11,9 @@ namespace CNCMaps.FileFormats {
 	public class IniFile : VirtualTextFile {
 
 		public List<IniSection> Sections { get; set; }
+		public IniSection CurrentSection { get; set; }
 
 		static NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
-
-		public IniSection CurrentSection {
-			get;
-			set;
-		}
 
 		public IniFile(Stream baseStream, string filename, int baseOffset, long fileSize, bool isBuffered = true)
 			: base(baseStream, filename, baseOffset, fileSize, isBuffered) {
@@ -29,11 +25,16 @@ namespace CNCMaps.FileFormats {
 			return Sections.Find(x => x.Name == sectionName);
 		}
 
-		public IniSection GetOrCreateSection(string sectionName) {
+		public IniSection GetOrCreateSection(string sectionName, string insertAfter = null) {
 			var ret = Sections.Find(x => x.Name == sectionName);
 			if (ret == null) {
 				ret = new IniSection(sectionName);
-				Sections.Add(ret);
+				int insertIdx = (insertAfter != null) ? Sections.FindIndex(section => section.Name == insertAfter) : -1;
+				
+				if (insertIdx != -1)
+					Sections.Insert(insertIdx, ret);
+				else
+					Sections.Add(ret);
 			}
 			return ret;
 		}

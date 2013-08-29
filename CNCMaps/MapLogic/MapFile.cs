@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.IO;
+using System.IO.Pipes;
 using System.Linq;
 using System.Security.Permissions;
 using System.Text.RegularExpressions;
@@ -40,8 +41,8 @@ namespace CNCMaps.MapLogic {
 
 		private Lighting _lighting;
 		private readonly List<LightSource> _lightSources = new List<LightSource>();
-		private readonly List<Palette> _palettePerLevel = new List<Palette>(15);
-		private readonly List<Palette> _palettesToBeRecalculated = new List<Palette>(15);
+		private readonly List<Palette> _palettePerLevel = new List<Palette>(19);
+		private readonly HashSet<Palette> _palettesToBeRecalculated = new HashSet<Palette>();
 
 		private DrawingSurface _drawingSurface;
 
@@ -804,15 +805,18 @@ namespace CNCMaps.MapLogic {
 
 			// get the default palettes
 			var pc = _theater.GetPalettes();
-			_palettesToBeRecalculated.AddRange(pc); 
-			
+			foreach (var p in pc) _palettesToBeRecalculated.Add(p);
+
 			foreach (GameObject obj in
 				(from MapTile m in _tiles select m).Union
 				(from GameObject o in _overlayObjects select o).Union
 				(from GameObject o in _structureObjects select o).Union
 				(from GameObject o in _unitObjects select o).Union
-				(from GameObject o in _aircraftObjects select o).Union(
-				(from GameObject o in _infantryObjects.Cast<InfantryObject>() select o))) {
+				(from GameObject o in _aircraftObjects select o).Union
+				(from GameObject o in _smudgeObjects select o).Union
+				(from GameObject o in _terrainObjects select o).Union
+				(_infantryObjects.Cast<List<InfantryObject>>().Where(o=>o!=null).SelectMany(o=>o))) {
+				
 				if (obj == null) continue;
 
 				Palette p;
@@ -847,7 +851,7 @@ namespace CNCMaps.MapLogic {
 				}
 				obj.Palette = p;
 			}
-			
+
 			Logger.Debug("Loaded {0} different palettes", _palettesToBeRecalculated.Count - before);
 		}
 
@@ -858,7 +862,8 @@ namespace CNCMaps.MapLogic {
 				(from OwnableObject o in _structureObjects select o).Union
 				(from OwnableObject o in _unitObjects select o).Union
 				(from OwnableObject o in _aircraftObjects select o).Union(
-				(from OwnableObject o in _infantryObjects.Cast<InfantryObject>() select o))) {
+				(_infantryObjects.Cast<List<InfantryObject>>().Where(o => o != null).SelectMany(o => o)))) {
+				
 				if (obj == null) continue;
 
 				var g = obj as GameObject;
@@ -870,7 +875,7 @@ namespace CNCMaps.MapLogic {
 			if (EngineType <= EngineType.FireStorm) {
 				var tiberiums = _rules.GetSection("Tiberiums").OrderedEntries.Select(tib => (OverlayType)Enum.Parse(typeof(OverlayType), tib.Value));
 				var remaps = tiberiums.Select(tib => _rules.GetSection(tib.ToString()).ReadString("Color"));
-				var tibRemaps = tiberiums.Zip(remaps, (key, value) => new { key, value }).ToDictionary(x => x.key, x => x.value);
+				var tibRemaps = tiberiums.Zip(remaps, (k,v) => new {k,v}).ToDictionary(x => x.k, x => x.v);
 
 				foreach (var ovl in _overlayObjects) {
 					if (ovl == null) continue;
@@ -905,21 +910,24 @@ namespace CNCMaps.MapLogic {
 
 		private void ApplyLightSources() {
 			int before = _palettesToBeRecalculated.Count;
-			foreach (LightSource s in _lightSources) {
+			foreach (LightSource lamp in _lightSources) {
 				foreach (MapTile t in _tiles) {
 					if (t == null) continue;
 
 					bool wasShared = t.Palette.IsShared;
 					// make sure this tile can only end up in the "to-be-recalculated list" once
-					if (!LightSource.ApplyLamp(t, t, s)) continue;
+					if (!lamp.ApplyLamp(t)) continue;
 
 					// this lamp caused a new unshared palette to be created
 					if (wasShared && !t.Palette.IsShared)
 						_palettesToBeRecalculated.Add(t.Palette);
 
-					foreach (var obj in t.AllObjects) {
+					foreach (var obj in t.AllObjects.Where(o => o.Lighting == LightingType.Full || o.Lighting == LightingType.Ambient)) {
 						wasShared = obj.Palette.IsShared;
-						// TODO: apply lighting only if needed
+						lamp.ApplyLamp(obj, obj.Lighting == LightingType.Ambient);
+						_palettesToBeRecalculated.Add(obj.Palette);
+						if (wasShared && !obj.Palette.IsShared)
+							_palettesToBeRecalculated.Add(obj.Palette);
 					}
 				}
 			}

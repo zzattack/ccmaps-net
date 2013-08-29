@@ -4,6 +4,8 @@ using System.Collections.Generic;
 namespace CNCMaps.MapLogic {
 
 	public static class TheaterDefaults {
+		// Managed at:
+		// https://docs.google.com/spreadsheet/ccc?key=0AiVQdoAJ4w7bdE9ILUpvNVVDa2J2MG04RnBURU96VUE#gid=0
 
 		public static char GetTheaterPrefix(TheaterType T) {
 			switch (T) {

@@ -44,19 +44,21 @@ namespace CNCMaps.MapLogic {
 		}
 
 		public void ApplyLighting(Lighting l, int level = 0, bool ambientOnly = false) {
+			ambientMult = (l.Ambient - l.Ground) + l.Level * level;
 			if (!ambientOnly) {
 				redMult = l.Red;
 				greenMult = l.Green;
 				blueMult = l.Blue;
 			}
-			ambientMult = (l.Ambient - l.Ground) + l.Level * level;
 		}
 
-		public void ApplyLamp(LightSource lamp, double lsEffect) {
+		public void ApplyLamp(LightSource lamp, double lsEffect, bool ambientOnly = false) {
 			ambientMult += lsEffect * lamp.LightIntensity;
-			redMult += lsEffect * lamp.LightRedTint;
-			greenMult += lsEffect * lamp.LightGreenTint;
-			blueMult += lsEffect * lamp.LightBlueTint;
+			if (!ambientOnly) {
+				redMult += lsEffect * lamp.LightRedTint;
+				greenMult += lsEffect * lamp.LightGreenTint;
+				blueMult += lsEffect * lamp.LightBlueTint;
+			}
 		}
 
 
@@ -98,7 +100,7 @@ namespace CNCMaps.MapLogic {
 		public static Palette Merge(Palette A, Palette B, double opacity) {
 			// make sure recalculate has been called on A and B,
 			// and be sure not to call recalculate on this
-			var p = new Palette(null);
+			var p = new Palette();
 			for (int i = 0; i < 256; i++)
 				p.colors[i] = Color.FromArgb(
 					(int)(A.colors[i].R * opacity + B.colors[i].R * (1.0 - opacity)),

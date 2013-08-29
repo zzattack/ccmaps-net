@@ -32,8 +32,10 @@ namespace CNCMaps.Utility {
 			// base64 encode
 			string image_base64 = Convert.ToBase64String(image_compressed, Base64FormattingOptions.None);
 
-			// now overwrite [PreviewPack]
-			var section = map.GetOrCreateSection("PreviewPack");
+			// now overwrite [Preview] and [PreviewPack], inserting them directly after [Basic] if not yet existing
+			map.GetOrCreateSection("Preview").SetValue("Size", string.Format("0,0,{0},{1}", preview.Width, preview.Height));
+
+			var section = map.GetOrCreateSection("PreviewPack", "Preview");
 			section.Clear();
 
 			int rowNum = 1;
@@ -41,7 +43,6 @@ namespace CNCMaps.Utility {
 				section.SetValue(rowNum++.ToString(CultureInfo.InvariantCulture), image_base64.Substring(i, Math.Min(70, image_base64.Length - i)));
 			}
 
-			map.GetOrCreateSection("Preview").SetValue("Size", string.Format("0,0,{0},{1}", preview.Width, preview.Height));
 		}
 
 		public static unsafe Bitmap ExtractThumb(IniFile map) {
