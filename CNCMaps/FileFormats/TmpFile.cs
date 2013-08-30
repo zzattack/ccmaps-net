@@ -196,8 +196,8 @@ namespace CNCMaps.FileFormats {
 			}
 
 			if (!img.header.HasExtraData) return; // we're done now
-
-			int dx = xOffset + img.header.x_extra - img.header.x;
+			
+			 int dx = xOffset + img.header.x_extra - img.header.x;
 			int dy = yOffset + img.header.y_extra - img.header.y;
 			w = w_low + stride * dy + 3 * dx;
 			zIdx = dx + dy * ds.Width;
@@ -224,7 +224,7 @@ namespace CNCMaps.FileFormats {
 					byte paletteValue = img.extraData[rIdx];
 					// short z = (img.extraZData != null) ? (short)(zBufVal - img.extraZData[rIdx]) : short.MaxValue;
 
-					if (paletteValue != 0 && w_low <= w && w < w_high && zBufVal > zBuffer[zIdx]) {
+					if (paletteValue != 0 && w_low <= w && w < w_high) {
 						*w++ = p.colors[paletteValue].B;
 						*w++ = p.colors[paletteValue].G;
 						*w++ = p.colors[paletteValue].R;

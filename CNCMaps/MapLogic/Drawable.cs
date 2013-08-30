@@ -25,10 +25,10 @@ namespace CNCMaps.MapLogic {
 
 		bool sorted;
 		void Sort() {
-			_fires.Sort();
+			// _fires.Sort();
 			_shps.Sort();
 			_damagedShps.Sort();
-			_voxels.Sort();
+			// _voxels.Sort();
 			sorted = true;
 		}
 

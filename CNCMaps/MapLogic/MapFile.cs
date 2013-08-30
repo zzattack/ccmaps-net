@@ -203,8 +203,10 @@ namespace CNCMaps.MapLogic {
 				for (int x = 0; x < FullSize.Width * 2 - 1; x++) {
 					var obj = _terrainObjects[x, y];
 					if (obj == null) continue;
-					if (!c.HasObject(obj))
+					if (!c.HasObject(obj)) {
 						_terrainObjects[x, y] = null;
+						obj.Tile.AllObjects.Remove(obj);
+					}
 				}
 			}
 
@@ -222,8 +224,10 @@ namespace CNCMaps.MapLogic {
 				for (int x = 0; x < FullSize.Width * 2 - 1; x++) {
 					var obj = _unitObjects[x, y];
 					if (obj == null) continue;
-					if (!c.HasObject(obj))
+					if (!c.HasObject(obj)) {
 						_unitObjects[x, y] = null;
+						obj.Tile.AllObjects.Remove(obj);
+					}
 				}
 			}
 
@@ -232,8 +236,10 @@ namespace CNCMaps.MapLogic {
 				for (int x = 0; x < FullSize.Width * 2 - 1; x++) {
 					var obj = _aircraftObjects[x, y];
 					if (obj == null) continue;
-					if (!c.HasObject(obj))
+					if (!c.HasObject(obj)) {
 						_aircraftObjects[x, y] = null;
+						obj.Tile.AllObjects.Remove(obj);
+					}
 				}
 			}
 
@@ -242,8 +248,10 @@ namespace CNCMaps.MapLogic {
 				for (int x = 0; x < FullSize.Width * 2 - 1; x++) {
 					var obj = _smudgeObjects[x, y];
 					if (obj == null) continue;
-					if (!c.HasObject(obj))
+					if (!c.HasObject(obj)) {
+						obj.Tile.AllObjects.Remove(obj);
 						_smudgeObjects[x, y] = null;
+					}
 				}
 			}
 
@@ -254,8 +262,10 @@ namespace CNCMaps.MapLogic {
 				for (int x = 0; x < FullSize.Width * 2 - 1; x++) {
 					var obj = _structureObjects[x, y];
 					if (obj == null) continue;
-					if (!c.HasObject(obj) && !cAlt.HasObject(obj))
+					if (!c.HasObject(obj) && !cAlt.HasObject(obj)) {
+						obj.Tile.AllObjects.Remove(obj);
 						_structureObjects[x, y] = null;
+					}
 				}
 			}
 

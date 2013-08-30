@@ -207,7 +207,7 @@ namespace CNCMaps.MapLogic {
 					else if (SpecialOverlays.IsHighBridge(ovl)) {
 						offsetHack = OffsetHacks.RA2BridgeOffsets;
 						shadowOffsetHack = OffsetHacks.RA2BridgeShadowOffsets;
-						drawable.HeightOffset = 4;
+						drawable.HeightOffset = 3;
 					}
 				}
 				else if (_engine <= EngineType.FireStorm) {
@@ -221,7 +221,7 @@ namespace CNCMaps.MapLogic {
 					else if (SpecialOverlays.IsHighBridge(ovl)) {
 						offsetHack = OffsetHacks.TSBridgeOffsets;
 						shadowOffsetHack = OffsetHacks.TSBridgeShadowOffsets;
-						drawable.HeightOffset = 2;
+						drawable.HeightOffset = 1;
 					}
 				}
 			}
@@ -327,6 +327,7 @@ namespace CNCMaps.MapLogic {
 						Offset = turretOffset,
 						ShadowOffset = turretOffset,
 						HasShadow = true,
+						FrameDecider = FrameDeciders.TurretFrameDecider,
 					};
 					AddImageToObject(drawable, img, props);
 
