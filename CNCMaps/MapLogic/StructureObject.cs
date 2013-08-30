@@ -7,8 +7,8 @@ namespace CNCMaps.MapLogic {
 			Health = health;
 			Direction = direction;
 		}
-		public MapTile DrawTile { get; set; }
 
+		public override MapTile BaseTile { get; set; }
 		public short Health { get; set; }
 		public short Direction { get; set; }
 		public string Owner { get; set; }

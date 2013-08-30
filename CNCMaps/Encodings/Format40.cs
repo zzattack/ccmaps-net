@@ -91,7 +91,7 @@ namespace CNCMaps.Encodings {
 				else {
 					int count = i & 0x7F;
 					if (count == 0) {
-						count = (*src << 8) + *(src + 1); // read int16 todo, check
+						count = (*src << 8) + *(src + 1);
 						src += 2;
 						if (count == 0)
 							return destIndex;

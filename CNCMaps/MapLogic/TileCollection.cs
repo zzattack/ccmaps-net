@@ -70,8 +70,8 @@ namespace CNCMaps.MapLogic {
 
         public TileCollection(TheaterType theaterType) {
             this.theaterType = theaterType;
-            tileExtension = TheaterDefaults.GetTileExtension(theaterType);
-            theaterIni = VFS.Open(TheaterDefaults.GetTheaterIni(theaterType)) as IniFile;
+            tileExtension = Defaults.GetTileExtension(theaterType);
+            theaterIni = VFS.Open(Defaults.GetTheaterIni(theaterType)) as IniFile;
 
             #region Set numbers
 

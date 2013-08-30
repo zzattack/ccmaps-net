@@ -52,13 +52,17 @@ namespace CNCMaps.MapLogic {
 		/// <param name="PaletteName">Name of the palette to find, without theater or .pal extension.</param>
 		/// <param name="IsTheaterSpecific">Whether or not this palette is theater specific.</param>
 		/// <returns>The correct custom palette.</returns>
-		public Palette GetCustomPalette(string paletteName, bool isTheaterSpecific) {
-			string paletteFileName = paletteName.ToLower() + (isTheaterSpecific ? TheaterDefaults.GetExtension(_theaterType) : ".pal");
-			var pal = CustomPalettes.FirstOrDefault(p => p.Name == paletteName);
+		public Palette GetCustomPalette(string paletteName) {
+			string fileName;
+			if (paletteName.ToLower().EndsWith(".pal")) // full name already given
+				fileName = paletteName; 
+			else // filename = <paletteName><theaterExtension>.pal (e.g. lib<tem/sno/urb>.pal)
+				fileName = paletteName + Defaults.GetExtension(_theaterType).Substring(1) + ".pal";
 
+			var pal = CustomPalettes.FirstOrDefault(p => p.Name == paletteName);
 			if (pal == null) {
 				// palette hasn't been loaded yet
-				pal = new Palette(VFS.Open<PalFile>(paletteFileName), paletteName);
+				pal = new Palette(VFS.Open<PalFile>(fileName), paletteName);
 				CustomPalettes.Add(pal);
 			}
 			return pal;

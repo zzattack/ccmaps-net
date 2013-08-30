@@ -29,8 +29,6 @@ namespace CNCMaps.MapLogic {
 			SetNum = setnum;
 			SubTile = subtile;
 			Layer = layer;
-			PaletteType = PaletteType.Iso;
-			Lighting = LightingType.Full;
 		}
 
 		internal void AddObject(GameObject obj) {

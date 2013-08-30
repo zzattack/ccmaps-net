@@ -12,13 +12,16 @@ namespace CNCMaps.MapLogic {
 	public class ObjectCollection {
 		private readonly CollectionType _collectionType;
 		private readonly TheaterType _theaterType;
-		private readonly EngineType _engineType;
+		private readonly EngineType _engine;
 		private readonly IniFile _rules;
 		private readonly IniFile _art;
 		private PaletteCollection _palettes;
 		private readonly List<Drawable> _drawables = new List<Drawable>();
 		private readonly Dictionary<string, Drawable> _drawablesDict = new Dictionary<string, Drawable>();
 
+		#region cached stuff
+		private static string[] _fires;
+		private static readonly Random R = new Random();
 		static readonly string[] ExtraBuildingImages = {
 			// "ProductionAnim", // you don't want ProductionAnims on map renders
 			"SuperAnim",
@@ -33,17 +36,25 @@ namespace CNCMaps.MapLogic {
 			"ActiveAnimTwo",
 			"ActiveAnim"
 		};
+		#endregion
 
 		static NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
 		public ObjectCollection(IniFile.IniSection objectSection, CollectionType collectionType,
-			TheaterType theaterType, EngineType engineType, IniFile rules, IniFile art, PaletteCollection palettes) {
+			TheaterType theaterType, EngineType engine, IniFile rules, IniFile art, PaletteCollection palettes) {
 			this._theaterType = theaterType;
-			this._engineType = engineType;
+			this._engine = engine;
 			this._collectionType = collectionType;
 			this._rules = rules;
 			this._art = art;
 			this._palettes = palettes;
+
+			if (engine >= EngineType.RedAlert2) {
+				string fireNames = _rules.ReadString(_engine == EngineType.RedAlert2 ? "AudioVisual" : "General",
+					"DamageFireTypes", "FIRE01,FIRE02,FIRE03");
+				_fires = fireNames.Split(new[] { ',', '.' }, StringSplitOptions.RemoveEmptyEntries);
+			}
+
 			foreach (var entry in objectSection.OrderedEntries) {
 				logger.Trace("Loading object {0}.{0}", objectSection.Name, entry.Value);
 				LoadObject(entry.Value);
@@ -52,158 +63,196 @@ namespace CNCMaps.MapLogic {
 
 		private void LoadObject(string objName) {
 			IniFile.IniSection rulesSection = _rules.GetSection(objName);
-			var drawableObject = new Drawable(objName);
-			_drawables.Add(drawableObject);
-			_drawablesDict[objName] = drawableObject;
+			var drawable = new Drawable(objName);
+			_drawables.Add(drawable);
+			_drawablesDict[objName] = drawable;
 
 			if (rulesSection == null || rulesSection.ReadBool("IsRubble"))
 				return;
 
-			drawableObject.IsValid = true;
+			drawable.IsValid = true;
 			string artSectionName = rulesSection.ReadString("Image", objName);
 			IniFile.IniSection artSection = _art.GetSection(artSectionName);
 			if (artSection == null)
 				artSection = rulesSection;
 
-			drawableObject.Rules = rulesSection;
-			drawableObject.Art = artSection;
+			drawable.Rules = rulesSection;
+			drawable.Art = artSection;
 
-			drawableObject.PaletteType = TheaterDefaults.GetDefaultPalette(_collectionType, _engineType);
-			drawableObject.LightingType = TheaterDefaults.GetDefaultLighting(_collectionType);
-			drawableObject.IsRemapable = TheaterDefaults.GetDefaultRemappability(_collectionType);
+			drawable.PaletteType = Defaults.GetDefaultPalette(_collectionType, _engine);
+			drawable.LightingType = Defaults.GetDefaultLighting(_collectionType);
+			drawable.IsRemapable = Defaults.GetDefaultRemappability(_collectionType);
+			var frameDecider = Defaults.GetDefaultFrameDecider(_collectionType);
 
-			string imageFileName;
-			if (_collectionType == CollectionType.Building || _collectionType == CollectionType.Overlay)
-				imageFileName = artSection.ReadString("Image", artSectionName);
-			else
-				imageFileName = artSectionName;
+			Point offset = new Point();
+			Func<GameObject, Point> offsetHack = null;
+			Func<GameObject, Point> shadowOffsetHack = null;
 
+			string imageFileName = artSection.ReadString("Image", artSectionName);
 			bool isVoxel = artSection.ReadBool("Voxel");
 			bool theaterExtension = artSection.ReadBool("Theater");
-			if (isVoxel) imageFileName += ".vxl";
-			else if (theaterExtension) {
-				imageFileName += TheaterDefaults.GetExtension(_theaterType);
-				if (_collectionType != CollectionType.Overlay || _engineType <= EngineType.FireStorm) {
-					drawableObject.PaletteType = PaletteType.Iso;
+			if (isVoxel) {
+				imageFileName += ".vxl";
+				if (_collectionType == CollectionType.Building) {
+					// half tile to the left
+					offset.X += Drawable.TileWidth / 2;
+				}
+				else if (_collectionType == CollectionType.Vehicle) {
+					// also vertical tile center
+					offset.X += Drawable.TileWidth / 2;
+					offset.Y += Drawable.TileHeight / 2;
 				}
 			}
-			else imageFileName += TheaterDefaults.GetExtension(_theaterType, _collectionType);
+			else if (theaterExtension) {
+				imageFileName += Defaults.GetExtension(_theaterType);
+				if (_collectionType != CollectionType.Overlay || _engine <= EngineType.FireStorm) {
+					drawable.PaletteType = PaletteType.Iso;
+				}
+			}
+			else imageFileName += Defaults.GetExtension(_theaterType, _collectionType);
 
+			bool newTheater = artSection.ReadBool("NewTheater");
 			// See if a theater-specific image is used
-			bool NewTheater = artSection.ReadBool("NewTheater");
-			if (NewTheater) {
+			if (newTheater) {
 				// http://modenc.renegadeprojects.com/NewTheater
-
 				ApplyNewTheaterIfNeeded(artSectionName, ref imageFileName);
-
-				// Additionaly, this tag means the unit palette is used to draw this image.
-				// TODO: starkku says otherwise! drawableObject.PaletteType = PaletteType.Unit;
 			}
 
 			if (artSection.ReadString("Remapable") != string.Empty) {
-				// todo: gotta test dizz!  drawableObject.PaletteType = PaletteType.Unit;
-				drawableObject.IsRemapable = artSection.ReadBool("Remapable");
+				drawable.IsRemapable = artSection.ReadBool("Remapable");
 			}
 
 			// Used palet can be overriden
 			bool noUseTileLandType = rulesSection.ReadString("NoUseTileLandType") != "";
 			if (noUseTileLandType) {
-				drawableObject.PaletteType = PaletteType.Iso;
-				drawableObject.LightingType = LightingType.Full;
+				drawable.PaletteType = PaletteType.Iso;
+				drawable.LightingType = LightingType.Full;
 			}
 			else if (artSection.ReadBool("TerrainPalette")) {
-				drawableObject.PaletteType = PaletteType.Iso;
+				drawable.PaletteType = PaletteType.Iso;
 			}
 			else if (artSection.ReadBool("AnimPalette")) {
-				drawableObject.PaletteType = PaletteType.Anim;
-				drawableObject.LightingType = LightingType.None;
-			}
-			else if (rulesSection.ReadBool("Wall")) {
-				drawableObject.IsWall = true;
-				drawableObject.PaletteType = PaletteType.Unit;
+				drawable.PaletteType = PaletteType.Anim;
+				drawable.LightingType = LightingType.None;
 			}
 			else if (artSection.ReadBool("AltPalette")) {
 				// If AltPalette=yes is set on an animation then that animation will use the unit palette instead of the animation palette. 
-				// However, remappable colours are ignored - they will not be remapped. (TODO: make sure this doesn't happen indeed)
-				drawableObject.PaletteType = PaletteType.Unit;
+				// However, remappable colours are ignored - they will not be remapped.
+				drawable.PaletteType = PaletteType.Unit;
+				drawable.IsRemapable = false;
 			}
 			else if (artSection.ReadString("Palette") != string.Empty) {
-				drawableObject.PaletteType = PaletteType.Custom;
-				drawableObject.CustomPaletteName = artSection.ReadString("Palette");
+				drawable.PaletteType = PaletteType.Custom;
+				drawable.CustomPaletteName = artSection.ReadString("Palette");
 			}
 
 			if (rulesSection.ReadString("AlphaImage") != "") {
 				string alphaImageFile = rulesSection.ReadString("AlphaImage") + ".shp";
 				if (VFS.Exists(alphaImageFile))
-					drawableObject.SetAlphaImage(VFS.Open(alphaImageFile) as ShpFile);
+					drawable.SetAlphaImage(VFS.Open(alphaImageFile) as ShpFile);
 			}
 
-			if (drawableObject.PaletteType == PaletteType.None)
-				// Set palette, determined by type of SHP collection
-				drawableObject.PaletteType = TheaterDefaults.GetDefaultPalette(_collectionType, _engineType);
+			if (rulesSection.ReadBool("Wall")) {
+				drawable.IsWall = true;
+				drawable.PaletteType = PaletteType.Unit;
+				frameDecider = FrameDeciders.OverlayValueFrameDecider;
+			}
 
-			bool shadow = TheaterDefaults.GetShadowAssumption(_collectionType);
-			if (artSection.ReadString("Shadow") != "")
-				shadow = artSection.ReadBool("Shadow");
+			if (rulesSection.ReadBool("Gate")) {
+				drawable.IsGate = true;
+				drawable.PaletteType = PaletteType.Unit;
+				frameDecider = FrameDeciders.HealthBasedFrameDecider;
+			}
 
+			bool shadow = artSection.ReadBool("Shadow", Defaults.GetShadowAssumption(_collectionType));
 			if (!rulesSection.ReadBool("DrawFlat", true))
 				shadow = true;
-
-			int xOffset = 0, yOffset = 0;
 
 			if (rulesSection.ReadBool("BridgeRepairHut")) {
 				// xOffset = yOffset = 0; // TOOD: check we really don't need this
 			}
-			if (_collectionType == CollectionType.Terrain) {
-				yOffset = Drawable.TileHeight / 2; // trees and such are placed in the middle of their tile
-				drawableObject.LightingType = LightingType.Full;
-			}
-
 			if (rulesSection.ReadBool("IsVeins")) {
-				yOffset = -36;
-				drawableObject.LightingType = LightingType.None;
+				offset.Y = -36;
+				drawable.LightingType = LightingType.None;
+				drawable.IsValid = true;
 			}
-
+			if (_collectionType == CollectionType.Terrain) {
+				offset.Y = Drawable.TileHeight / 2; // trees and such are placed in the middle of their tile
+			}
 			if (rulesSection.ReadString("Land") == "Rock") {
-				yOffset = Drawable.TileHeight / 2;
+				offset.Y = Drawable.TileHeight / 2;
 			}
 			else if (rulesSection.ReadString("Land") == "Road") {
-				yOffset = Drawable.TileHeight / 2;
+				offset.Y = Drawable.TileHeight / 2;
 			}
-			// Starkku: Railroad track fixes.
 			else if (rulesSection.ReadString("Land") == "Railroad") {
-				yOffset = 14;
-				drawableObject.LightingType = LightingType.Full;
+				offset.Y = 14;
+				drawable.LightingType = LightingType.Full;
 			}
-			// Starkku: Use of flag 'Immune' to distinguish ore spawner objects from rest of the things was stupid when SpawnsTiberium exists.
 			if (rulesSection.ReadBool("SpawnsTiberium")) {
 				// For example on TIBTRE / Ore Poles
-				yOffset = -1;
-				drawableObject.LightingType = LightingType.None;
-				drawableObject.PaletteType = PaletteType.Unit;
+				offset.Y = -1;
+				drawable.LightingType = LightingType.None;
+				drawable.PaletteType = PaletteType.Unit;
 			}
 
-			drawableObject.Overrides = rulesSection.ReadBool("Overrides");
+			if (_collectionType == CollectionType.Overlay) {
+				int objIdx = _drawables.Count - 1;
+				var ovl = new OverlayObject((byte)objIdx, 0);
+				if (_engine >= EngineType.RedAlert2) {
+					if (SpecialOverlays.IsOreOrGem(ovl)) {
+						drawable.PaletteType = PaletteType.Overlay;
+						drawable.LightingType = LightingType.None;
+					}
+					else if (SpecialOverlays.IsHighBridge(ovl)) {
+						offsetHack = OffsetHacks.RA2BridgeOffsets;
+						shadowOffsetHack = OffsetHacks.RA2BridgeShadowOffsets;
+						drawable.HeightOffset = 4;
+					}
+				}
+				else if (_engine <= EngineType.FireStorm) {
+					if (SpecialOverlays.IsTib(ovl)) {
+						drawable.PaletteType = PaletteType.Unit;
+						drawable.LightingType = LightingType.None;
+						drawable.IsRemapable = true;
+					}
+					else if (SpecialOverlays.IsTSRails(ovl))
+						offset.Y += 11;
+					else if (SpecialOverlays.IsHighBridge(ovl)) {
+						offsetHack = OffsetHacks.TSBridgeOffsets;
+						shadowOffsetHack = OffsetHacks.TSBridgeShadowOffsets;
+						drawable.HeightOffset = 2;
+					}
+				}
+			}
 
-			// Find out foundation
-			// Starkku: Now with custom foundation support (Ares feature).
+			drawable.Overrides = rulesSection.ReadBool("Overrides");
+
+			// Find out foundation, now with custom foundation support (Ares feature).
 			string foundation = artSection.ReadString("Foundation", "1x1");
-			if (!foundation.Equals("custom", System.StringComparison.InvariantCultureIgnoreCase)) {
+			if (!foundation.Equals("custom", StringComparison.InvariantCultureIgnoreCase)) {
 				int fx = foundation[0] - '0';
 				int fy = foundation[2] - '0';
-				drawableObject.Foundation = new Size(fx, fy);
+				drawable.Foundation = new Size(fx, fy);
 			}
 			else {
 				int fx = artSection.ReadInt("Foundation.X", 1);
 				int fy = artSection.ReadInt("Foundation.Y", 1);
-				drawableObject.Foundation = new Size(fx, fy);
+				drawable.Foundation = new Size(fx, fy);
 			}
 
-			AddImageToObject(drawableObject, imageFileName, xOffset, yOffset, shadow);
+			AddImageToObject(drawable, imageFileName,
+				new DrawProperties {
+					Offset = offset,
+					HasShadow = shadow,
+					FrameDecider = frameDecider,
+					OffsetHack = offsetHack,
+					ShadowOffsetHack = shadowOffsetHack,
+				});
 
 			// Buildings often consist of multiple SHP files
 			if (_collectionType == CollectionType.Building) {
-				drawableObject.AddDamagedShp(VFS.Open(imageFileName) as ShpFile, 0, 0, shadow, 0);
+				drawable.AddDamagedShp(VFS.Open<ShpFile>(imageFileName), new DrawProperties { HasShadow = shadow, FrameDecider = FrameDeciders.HealthBasedFrameDecider });
 
 				foreach (string extraImage in ExtraBuildingImages) {
 					string extraImageDamaged = extraImage + "Damaged";
@@ -219,64 +268,73 @@ namespace CNCMaps.MapLogic {
 
 						if (extraArtSection != null) {
 							ySort = extraArtSection.ReadInt("YSort", artSection.ReadInt(extraImage + "YSort"));
-							// Starkku: Art.ini flag 'Shadow' defaults to true for building animations. Changed code below to match that.
-							extraShadow = extraArtSection.ReadBool("Shadow", true); // additional building need shadows listed explicitly
+							extraShadow = extraArtSection.ReadBool("Shadow");
 							extraImageFileName = extraArtSection.ReadString("Image", extraImageSectionName);
 						}
 						if (theaterExtension)
-							extraImageFileName += TheaterDefaults.GetExtension(_theaterType);
+							extraImageFileName += Defaults.GetExtension(_theaterType);
 						else
-							extraImageFileName += TheaterDefaults.GetExtension(_theaterType, _collectionType);
+							extraImageFileName += Defaults.GetExtension(_theaterType, _collectionType);
 
-						if (NewTheater)
+						if (newTheater)
 							ApplyNewTheaterIfNeeded(artSectionName, ref extraImageFileName);
 
-						AddImageToObject(drawableObject, extraImageFileName, 0, 0, extraShadow, ySort);
+						var props = new DrawProperties { HasShadow = extraShadow, Offset = offset, ShadowOffset = offset, SortIndex = ySort };
+						AddImageToObject(drawable, extraImageFileName, props);
 					}
 
 					if (extraImageDamagedSectionName != "") {
 						IniFile.IniSection extraArtDamagedSection = _art.GetSection(extraImageDamagedSectionName);
 
 						int ySort = 0;
-						bool extraShadow = false;
+						bool extraShadow = Defaults.GetShadowAssumption(_collectionType);
 						string extraImageDamagedFileName = extraImageDamagedSectionName;
 						if (extraArtDamagedSection != null) {
 							ySort = extraArtDamagedSection.ReadInt("YSort", artSection.ReadInt(extraImage + "YSort"));
-							// Starkku: Art.ini flag 'Shadow' defaults to true for building animations. Changed code below to match that.
-							extraShadow = extraArtDamagedSection.ReadBool("Shadow", true); // additional building need shadows listed explicitly
+							extraShadow = extraArtDamagedSection.ReadBool("Shadow", extraShadow);
 							extraImageDamagedFileName = extraArtDamagedSection.ReadString("Image", extraImageDamagedSectionName);
 						}
 						if (theaterExtension)
-							extraImageDamagedFileName += TheaterDefaults.GetExtension(_theaterType);
+							extraImageDamagedFileName += Defaults.GetExtension(_theaterType);
 						else
-							extraImageDamagedFileName += TheaterDefaults.GetExtension(_theaterType, _collectionType);
+							extraImageDamagedFileName += Defaults.GetExtension(_theaterType, _collectionType);
 
-						if (NewTheater)
+						if (newTheater)
 							ApplyNewTheaterIfNeeded(artSectionName, ref extraImageDamagedFileName);
 
-						drawableObject.AddDamagedShp(VFS.Open(extraImageDamagedFileName) as ShpFile, 0, 0, extraShadow, ySort);
+						drawable.AddDamagedShp(VFS.Open(extraImageDamagedFileName) as ShpFile, new DrawProperties { HasShadow = extraShadow, SortIndex = ySort, });
 					}
 				}
 
 				// Starkku: New code for adding fire animations to buildings, supports custom-paletted animations.
-				addFireAnimations(artSection, _art, drawableObject);
+				if (_engine >= EngineType.RedAlert2)
+					LoadFireAnimations(artSection, drawable);
 
 				// Add turrets
-				// Starkku: Added better support for building SHP turrets.
 				if (rulesSection.ReadBool("Turret")) {
 					string img = rulesSection.ReadString("TurretAnim");
 					IniFile.IniSection turretart = _art.GetSection(img);
-					img += rulesSection.ReadBool("TurretAnimIsVoxel") ? ".vxl" : ".shp";
+					bool voxel = rulesSection.ReadBool("TurretAnimIsVoxel");
+					img += voxel ? ".vxl" : ".shp";
 					if (turretart != null && turretart.ReadBool("NewTheater") && img.EndsWith(".shp")) {
 						ApplyNewTheaterIfNeeded(img, ref img);
 					}
-					int m_x = rulesSection.ReadInt("TurretAnimX"),
-						m_y = rulesSection.ReadInt("TurretAnimY");
-					AddImageToObject(drawableObject, img, m_x, m_y, true, 0);
+					var turretOffset = new Point(rulesSection.ReadInt("TurretAnimX"), rulesSection.ReadInt("TurretAnimY"));
+					if (voxel)
+						turretOffset.Offset(Drawable.TileWidth / 2, 0);
+
+					var props = new DrawProperties {
+						Offset = turretOffset,
+						ShadowOffset = turretOffset,
+						HasShadow = true,
+					};
+					AddImageToObject(drawable, img, props);
 
 					string barrelFile = img.Replace("TUR", "BARL");
-					if (img.EndsWith("TUR.vxl") && VFS.Exists(barrelFile))
-						AddImageToObject(drawableObject, barrelFile, m_x, m_y);
+					if (VFS.Exists(barrelFile)) {
+						AddImageToObject(drawable, barrelFile, props);
+					}
+
 				}
 			}
 
@@ -284,77 +342,67 @@ namespace CNCMaps.MapLogic {
 				// Add turrets
 				if (rulesSection.ReadBool("Turret") && artSection.ReadBool("Voxel")) {
 					string turretFile = Path.GetFileNameWithoutExtension(imageFileName) + "TUR.vxl";
-					int m_x = rulesSection.ReadInt("TurretAnimX"),
-						m_y = rulesSection.ReadInt("TurretAnimY");
-					AddImageToObject(drawableObject, turretFile, m_x, m_y);
+					Point voxelOffset = new Point(rulesSection.ReadInt("TurretAnimX"), rulesSection.ReadInt("TurretAnimY"));
+					voxelOffset.Offset(offset);
+					var props = new DrawProperties {
+						Offset = voxelOffset,
+					};
+					AddImageToObject(drawable, turretFile, props);
 
 					string barrelFile = turretFile.Replace("TUR", "BARL");
 					if (VFS.Exists(barrelFile))
-						AddImageToObject(drawableObject, barrelFile, m_x, m_y);
+						AddImageToObject(drawable, barrelFile, props);
+
 				}
 			}
 		}
 
-		// Starkku: Adds fire animations to a building. Supports custom-paletted animations.
-		// TODO: nicefy this
-		private void addFireAnimations(IniFile.IniSection art, IniFile artfile, Drawable drawableObject) {
-			List<string> fireoffsets = new List<string>();
-			string[] fireanims = { "FIRE01", "FIRE02", "FIRE03" };
-			int count = 0;
-			string dfo = null;
-			while (true) {
-				dfo = art.ReadString("DamageFireOffset" + count.ToString());
-				if (dfo == null || dfo == "") break;
-				fireoffsets.Add(dfo);
-				count++;
-			}
-			string fanim;
-			if (fireanims.Length > 0) {
-				for (int i = 0; i < count; i++) {
-					dfo = fireoffsets[i];
-					int x = int.Parse(dfo.Substring(0, dfo.IndexOf(',')));
-					int y = int.Parse(dfo.Substring(dfo.IndexOf(',') + 1));
-					try {
-						fanim = fireanims[i % 3];
-					}
-					catch (Exception) {
-						fanim = fireanims[0];
-					}
-					IniFile.IniSection fireart = artfile.GetSection(fanim);
-					Palette firepalette;
-					firepalette = _palettes.GetCustomPalette(getAnimPalName(fireart), false);
-					if (firepalette == null) firepalette = _palettes.AnimPalette;
+		// Adds fire animations to a building. Supports custom-paletted animations.
+		private void LoadFireAnimations(IniFile.IniSection artSection, Drawable drawableObject) {
+			// http://modenc.renegadeprojects.com/DamageFireTypes
+			int f = 0;
+			while (true) { // enumerate as many fires as are existing
+				string dfo = artSection.ReadString("DamageFireOffset" + f++);
+				if (dfo == "")
+					break;
 
-					drawableObject.AddFire(VFS.Open(fanim + ".shp") as ShpFile, x, y, firepalette);
-				}
+				string[] coords = dfo.Split(new[] { ',', '.' }, StringSplitOptions.RemoveEmptyEntries);
+				string fireAnim = _fires[R.Next(_fires.Length)];
+				IniFile.IniSection fireArt = _art.GetOrCreateSection(fireAnim);
+
+				var props = new DrawProperties {
+					PaletteOverride = GetFireAnimPalette(fireArt),
+					Offset = new Point(int.Parse(coords[0]), int.Parse(coords[1])),
+					FrameDecider = FrameDeciders.RandomFrameDecider,
+					OverridesZbuffer = true,
+				};
+				drawableObject.AddFire(VFS.Open<ShpFile>(fireAnim + ".shp"), props);
 			}
 		}
 
-		/* Starkku: Finds out the correct name for an animation palette to use with fire animations.
+		/* Finds out the correct name for an animation palette to use with fire animations.
 		 * Reason why this is so complicated is because NPatch & Ares, the YR logic extensions that support custom animation palettes
 		 * use different name for the flag declaring the palette. (NPatch uses 'Palette' whilst Ares uses 'CustomPalette' to make it distinct
 		 * from the custom object palettes).
 		 */
-		// TODO: nicefy this
-		private string getAnimPalName(IniFile.IniSection animation) {
-			String palname = null;
-			if (animation != null && (animation.ReadString("Palette") != "" || animation.ReadString("CustomPalette") != "")) {
-				palname = animation.ReadString("Palette");
-				if (palname == null || palname == "") palname = animation.ReadString("CustomPalette");
-				palname = palname.Substring(0, palname.LastIndexOf('.'));
-			}
-			else if (animation != null && animation.ReadBool("AltPalette") == true) return _palettes.UnitPalette.Name;
-			if (palname == null || palname == "") return _palettes.AnimPalette.Name;
-			return palname;
+		private Palette GetFireAnimPalette(IniFile.IniSection animation) {
+			if (animation.ReadString("Palette") != "")
+				return _palettes.GetCustomPalette(animation.ReadString("Palette"));
+			else if (animation.ReadString("CustomPalette") != "")
+				return _palettes.GetCustomPalette(animation.ReadString("CustomPalette"));
+			else if (animation.ReadString("AltPalette") != "")
+				return _palettes.UnitPalette;
+			else
+				return _palettes.AnimPalette;
 		}
 
 		private void ApplyNewTheaterIfNeeded(string artName, ref string imageFileName) {
-			if (_engineType <= EngineType.FireStorm) {
+			if (_engine <= EngineType.FireStorm) {
 				// the tag will only work if the ID for the object starts with either G, N or C and its second letter is A (for Arctic/Snow theater) or T (for Temperate theater)
 				if (new[] { 'G', 'N', 'C' }.Contains(artName[0]) && new[] { 'A', 'T' }.Contains(artName[1]))
 					ApplyNewTheater(ref imageFileName);
 			}
-			else if (_engineType == EngineType.RedAlert2) {
+			else if (_engine == EngineType.RedAlert2) {
 				// In RA2, for the tag to work, it must start with either G, N or C, and its second letter must be A, T or U (Urban theater). 
 				if (new[] { 'G', 'N', 'C' }.Contains(artName[0]) && new[] { 'A', 'T', 'U' }.Contains(artName[1]))
 					ApplyNewTheater(ref imageFileName);
@@ -366,36 +414,25 @@ namespace CNCMaps.MapLogic {
 			}
 		}
 
-		private void AddImageToObject(Drawable drawableObject, string fileName, int xOffset = 0, int yOffset = 0, bool hasShadow = false, int ySort = 0) {
-
+		private void AddImageToObject(Drawable drawableObject, string fileName, DrawProperties drawProps) {
 			if (fileName.EndsWith(".vxl")) {
 				var vxl = VFS.Open<VxlFile>(fileName, FileFormat.Vxl);
 				if (vxl != null) {
 					string hvaFileName = Path.ChangeExtension(fileName, ".hva");
 					var hva = VFS.Open(hvaFileName) as HvaFile;
-
-					if (_collectionType == CollectionType.Building) {
-						// half tile to the left
-						xOffset += 30;
-					}
-					else if (_collectionType == CollectionType.Vehicle) {
-						// also vertical tile center
-						xOffset += 30;
-						yOffset += 15;
-					}
-					drawableObject.AddVoxel(vxl, hva, xOffset, yOffset, hasShadow, ySort);
+					drawableObject.AddVoxel(vxl, hva, drawProps);
 				}
 			}
 			else {
 				var shp = VFS.Open<ShpFile>(fileName, FileFormat.Shp);
 				if (shp != null)
-					drawableObject.AddShp(shp, xOffset, yOffset, hasShadow, ySort);
+					drawableObject.AddShp(shp, drawProps);
 			}
 		}
 
 		private void ApplyNewTheater(ref string imageFileName) {
 			var sb = new StringBuilder(imageFileName);
-			sb[1] = TheaterDefaults.GetTheaterPrefix(_theaterType);
+			sb[1] = Defaults.GetTheaterPrefix(_theaterType);
 			if (!VFS.Exists(sb.ToString())) {
 				sb[1] = 'G'; // generic
 			}
@@ -419,18 +456,7 @@ namespace CNCMaps.MapLogic {
 		}
 
 		public void Draw(GameObject o, DrawingSurface drawingSurface) {
-			// Starkku: Don't draw objects that have zero hitpoints left.
-			if (o is OwnableObject) {
-				int str = (o as OwnableObject).Health;
-				if (str < 1) return;
-			}
-
 			Drawable d = GetDrawable(o);
-			// Starkku: Frame to display for infantry depends on their direction.
-			if (o is InfantryObject)
-				d.SetFrame((o as InfantryObject).Direction / 32);
-			if (o is OverlayObject)
-				d.SetFrame((o as OverlayObject).OverlayValue);
 			d.Draw(o, drawingSurface);
 		}
 

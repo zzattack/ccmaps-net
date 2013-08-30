@@ -10,7 +10,7 @@ namespace CNCMaps.MapLogic {
 	
 	public enum LightingType {
 		None, // No special lighting (ore/gems).
-		Global, // Global would get the lighting of the map as specified in [Lighting] but nothing else. NOT USED.
+		// Global, // Global would get the lighting of the map as specified in [Lighting] but nothing else. NOT USED.
 		Level, // as above, adjusts per z-level of the map
 		Ambient, // as above, + affected by lamps, but only the ambient color
 		Full, // as above, + affected by lamps including r/g/b tints

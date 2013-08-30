@@ -94,7 +94,7 @@
     <Compile Include="MapLogic\SmudgeObject.cs" />
     <Compile Include="MapLogic\StructureObject.cs" />
     <Compile Include="MapLogic\TerrainObject.cs" />
-    <Compile Include="MapLogic\TheaterDefaults.cs" />
+    <Compile Include="MapLogic\Defaults.cs" />
     <Compile Include="FileFormats\TmpFile.cs" />
     <Compile Include="FileFormats\VxlFile.cs" />
     <Compile Include="MapLogic\MapTile.cs" />

@@ -109,7 +109,7 @@ namespace CNCMaps.MapLogic {
 					break;
 			}
 
-			foreach (string mix in TheaterDefaults.GetTheaterMixes(_theaterType))
+			foreach (string mix in Defaults.GetTheaterMixes(_theaterType))
 				VFS.Add(mix);
 
 			_palettes.AnimPalette = new Palette(VFS.Open<PalFile>("anim.pal"));
@@ -156,6 +156,13 @@ namespace CNCMaps.MapLogic {
 
 		internal PaletteCollection GetPalettes() {
 			return _palettes;
+		}
+
+		internal Palette GetPalette(Drawable drawable) {
+			if (drawable.PaletteType == PaletteType.Custom)
+				return _palettes.GetCustomPalette(drawable.CustomPaletteName);
+			else
+				return _palettes.GetPalette(drawable.PaletteType);
 		}
 
 		public ObjectCollection GetObjectCollection(GameObject o) {

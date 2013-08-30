@@ -23,11 +23,6 @@ namespace CNCMaps.MapLogic {
 			Name = "wtF?";
 		}
 
-		/// <summary>
-		/// Starkku: Creates a palette out of already existing palette file.
-		/// </summary>
-		/// <param name="originalPalette">Original palette file.</param>
-		/// <param name="name">An optional custom name for the palette. Defaults to the filename of the palette without file extension.</param>
 		public Palette(PalFile originalPalette, string name = "") {
 			this.originalPalette = originalPalette;
 			if (!string.IsNullOrEmpty(name))

@@ -126,7 +126,8 @@ namespace CNCMaps.FileFormats {
 			Palette p = tile.Palette;
 
 			// calculate tile index -> pixel index
-			short zBufVal = (short)((tile.Rx + tile.Ry) * fileHeader.cy / 2);
+			// short zBufVal = (short)((tile.Rx + tile.Ry) * fileHeader.cy / 2);
+			short zBufVal = (short)(tile.Rx + tile.Ry + img.header.height);
 			int xOffset = tile.Dx * fileHeader.cx / 2;
 			int yOffset = (tile.Dy - tile.Z) * fileHeader.cy / 2;
 
@@ -157,12 +158,13 @@ namespace CNCMaps.FileFormats {
 				cx += 4;
 				for (ushort c = 0; c < cx; c++) {
 					byte paletteValue = img.tileData[rIdx];
-					short z = (img.zData != null) ? (short)(zBufVal - img.zData[rIdx]) : short.MaxValue;
-					if (w_low <= w && w < w_high && z >= zBuffer[zIdx]) {
+					// short z = (img.zData != null) ? (short)(zBufVal - img.zData[rIdx]) : short.MaxValue;
+					
+					if (w_low <= w && w < w_high) {
 						*(w + 0) = p.colors[paletteValue].B;
 						*(w + 1) = p.colors[paletteValue].G;
 						*(w + 2) = p.colors[paletteValue].R;
-						zBuffer[zIdx] = z;
+						zBuffer[zIdx] = zBufVal;
 					}
 					w += 3;
 					zIdx++;
@@ -178,12 +180,12 @@ namespace CNCMaps.FileFormats {
 				cx -= 4;
 				for (ushort c = 0; c < cx; c++) {
 					byte paletteValue = img.tileData[rIdx];
-					short z = (img.zData != null) ? (short)(zBufVal - img.zData[rIdx]) : short.MaxValue;
-					if (w_low <= w && w < w_high && z >= zBuffer[zIdx]) {
+					// short z = (img.zData != null) ? (short)(zBufVal - img.zData[rIdx]) : short.MaxValue;
+					if (w_low <= w && w < w_high) {
 						*(w + 0) = p.colors[paletteValue].B;
 						*(w + 1) = p.colors[paletteValue].G;
 						*(w + 2) = p.colors[paletteValue].R;
-						zBuffer[zIdx] = z;
+						zBuffer[zIdx] = zBufVal;
 					}
 					w += 3;
 					zIdx++;
@@ -220,13 +222,13 @@ namespace CNCMaps.FileFormats {
 				for (x = 0; x < img.header.cx_extra; x++) {
 					// Checking per line is required because v needs to be checked every time
 					byte paletteValue = img.extraData[rIdx];
-					short z = (img.extraZData != null) ? (short)(zBufVal - img.extraZData[rIdx]) : short.MaxValue;
+					// short z = (img.extraZData != null) ? (short)(zBufVal - img.extraZData[rIdx]) : short.MaxValue;
 
-					if (paletteValue != 0 && w_low <= w && w < w_high && z > zBuffer[zIdx]) {
+					if (paletteValue != 0 && w_low <= w && w < w_high && zBufVal > zBuffer[zIdx]) {
 						*w++ = p.colors[paletteValue].B;
 						*w++ = p.colors[paletteValue].G;
 						*w++ = p.colors[paletteValue].R;
-						zBuffer[zIdx] = z;
+						zBuffer[zIdx] = zBufVal;
 					}
 					else
 						w += 3;

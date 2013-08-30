@@ -3,8 +3,5 @@ namespace CNCMaps.MapLogic {
 		public TerrainObject(string name) {
 			Name = name;
 		}
-
-        // Starkku: They have a palette as well.
-        public Palette Palette { get; set; }
 	}
 }

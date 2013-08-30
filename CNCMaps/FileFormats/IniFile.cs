@@ -30,7 +30,7 @@ namespace CNCMaps.FileFormats {
 			if (ret == null) {
 				ret = new IniSection(sectionName);
 				int insertIdx = (insertAfter != null) ? Sections.FindIndex(section => section.Name == insertAfter) : -1;
-				
+
 				if (insertIdx != -1)
 					Sections.Insert(insertIdx, ret);
 				else
@@ -76,14 +76,10 @@ namespace CNCMaps.FileFormats {
 				throw new InvalidOperationException("Invalid section");
 		}
 
-		public string ReadString(string key) {
-			return CurrentSection.ReadString(key);
-		}
-
-		public string ReadString(string section, string key) {
-			if (CurrentSection.Name != section)
+		public string ReadString(string section, string key, string @default = "") {
+			if (CurrentSection == null || CurrentSection.Name != section)
 				SetCurrentSection(section);
-			return ReadString(key);
+			return CurrentSection.ReadString(key, @default);
 		}
 
 		public bool ReadBool(string key) {
@@ -293,9 +289,28 @@ namespace CNCMaps.FileFormats {
 		public void MergeWith(IniFile ini) {
 			foreach (var v in ini.Sections) {
 				var ownSection = GetOrCreateSection(v.Name);
-				foreach (var kvp in v.OrderedEntries)
-					ownSection.SetValue(kvp.Key, kvp.Value);
+				// numbered arrays are 'appended' instead of overwritten
+				if (IsObjectArray(v.Name)) {
+					int number = 1 + int.Parse(ownSection.OrderedEntries.Last().Key);
+					foreach (var kvp in v.OrderedEntries)
+						ownSection.SetValue(number++.ToString(), kvp.Value);
+				}
+				else
+					foreach (var kvp in v.OrderedEntries)
+						ownSection.SetValue(kvp.Key, kvp.Value);
 			}
+		}
+
+		private bool IsObjectArray(string p) {
+			return new[] {
+				"BuildingTypes",
+				"AircraftTypes",
+				"InfantryTypes",
+				"OverlayTypes",
+				"TerrainTypes",
+				"SmudgeTypes",
+				"VehicleTypes",
+			}.Contains(p);
 		}
 
 	}

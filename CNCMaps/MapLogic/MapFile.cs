@@ -373,7 +373,7 @@ namespace CNCMaps.MapLogic {
 			_rules.MergeWith(this);
 
 			// turns out this probably wasn't ever needed
-			// MoveStructuresToBaseTile();
+			SetStructuresBaseTile();
 			LoadColors();
 			if (EngineType >= EngineType.RedAlert2)
 				LoadCountries();
@@ -381,8 +381,8 @@ namespace CNCMaps.MapLogic {
 
 			if (EngineType >= EngineType.RedAlert2) {
 				_theater.GetTileCollection().RecalculateTileSystem(_tiles);
+				RecalculateOreSpread(); // is this really used on TS?
 			}
-			RecalculateOreSpread(); // is this really used on TS?
 
 			LoadLighting();
 			CreateLevelPalettes();
@@ -449,22 +449,22 @@ namespace CNCMaps.MapLogic {
 			}
 		}
 
-		private void MoveStructuresToBaseTile() {
+		private void SetStructuresBaseTile() {
 			// we need foundations from the theater to place the structures at the correct tile,
 			for (int y = 0; y < _structureObjects.GetLength(1); y++) {
 				for (int x = 0; x < _structureObjects.GetLength(0); x++) {
 					StructureObject s = _structureObjects[x, y];
-					if (s == null || s.DrawTile != null) continue; // s.DrawTile set means we've already moved it
+					if (s == null || s.BaseTile != null) continue; // s.BaseTile set means we've already moved it
 
 					Size foundation = _theater.GetFoundation(s);
 					if (foundation == Size.Empty) continue;
-					s.DrawTile = _tiles.GetTileR(s.Tile.Rx - foundation.Width + 1, s.Tile.Ry - foundation.Height + 1);
+					s.BaseTile = _tiles.GetTileR(s.Tile.Rx + foundation.Width - 1, s.Tile.Ry + foundation.Height - 1);
 
 					// move structure
-					_structureObjects[x, y] = null;
-					s.Tile.AllObjects.Remove(s);
-					_structureObjects[s.DrawTile.Dx, s.DrawTile.Dy / 2] = s;
-					s.DrawTile.AllObjects.Add(s);
+					//_structureObjects[x, y] = null;
+					//s.Tile.AllObjects.Remove(s);
+					//_structureObjects[s.BaseTile.Dx, s.BaseTile.Dy / 2] = s;
+					//s.BaseTile.AllObjects.Add(s);
 				}
 			}
 
@@ -472,7 +472,7 @@ namespace CNCMaps.MapLogic {
 			for (int y = 0; y < _overlayObjects.GetLength(1); y++) {
 				for (int x = 0; x < _overlayObjects.GetLength(0); x++) {
 					OverlayObject o = _overlayObjects[x, y];
-					if (o == null || o.DrawTile != null) continue; // DrawTile set means we've already moved it
+					if (o == null || o.DrawTile != null) continue; // BaseTile set means we've already moved it
 
 					Size foundation = _theater.GetObjectCollection(o).GetDrawable(o).Foundation;
 					if (foundation == Size.Empty) continue;
@@ -753,7 +753,7 @@ namespace CNCMaps.MapLogic {
 					num %= 12;
 
 					// replace ore
-					o.OverlayID = (byte)(SpecialOverlays.Min_ID_Riparius + num);
+					o.OverlayID = (byte)(SpecialOverlays.MinOreID + num);
 				}
 
 				else if (SpecialOverlays.IsGem(o)) {
@@ -768,7 +768,7 @@ namespace CNCMaps.MapLogic {
 					num %= 12;
 
 					// replace gems
-					o.OverlayID = (byte)(SpecialOverlays.Min_ID_Cruentus + num);
+					o.OverlayID = (byte)(SpecialOverlays.MinGemsID + num);
 				}
 			}
 		}
@@ -778,7 +778,7 @@ namespace CNCMaps.MapLogic {
 			_lighting = new Lighting(GetOrCreateSection("Lighting"));
 		}
 
-		// Starkku: Large-degree changes to make the lighting better mimic the way it is in the game.
+		// Large-degree changes to make the lighting better mimic the way it is in the game.
 		private void CreateLevelPalettes() {
 			Logger.Info("Creating per-height palettes");
 			PaletteCollection palettes = _theater.GetPalettes();
@@ -828,27 +828,23 @@ namespace CNCMaps.MapLogic {
 					pt = PaletteType.Iso;
 				}
 				else {
-					var collection = _theater.GetObjectCollection(obj);
-					var drawable = collection.GetDrawable(obj);
-					pt = drawable.PaletteType;
-					lt = drawable.LightingType;
+					obj.Collection = _theater.GetObjectCollection(obj);
+					obj.Drawable = obj.Collection.GetDrawable(obj); // quite a wrong place to set something this important..
+					pt = obj.Drawable.PaletteType;
+					lt = obj.Drawable.LightingType;
 				}
 
-				if (lt == LightingType.None)
-					p = pc.GetPalette(pt);
-				else if (lt == LightingType.Global)
-					p = _palettePerLevel[0];
-				else {
-					// level, ambient or full setting all rely on the global lighting first, 
-					// lightsources are then applied in the next step
-					if (pt == PaletteType.Iso)
-						p = _palettePerLevel[obj.Tile.Z];
-					else {
-						p = _theater.GetPalettes().GetPalette(pt).Clone();
-						p.ApplyLighting(_lighting, obj.Tile.Z);
-						_palettesToBeRecalculated.Add(p);
-					}
-				}
+				// level, ambient and full benefit from sharing
+				if (lt >= LightingType.Level && pt == PaletteType.Iso)
+					p = _palettePerLevel[obj.Tile.Z];
+				else
+					p = _theater.GetPalette(obj.Drawable).Clone();
+
+				if (lt == LightingType.Ambient || lt == LightingType.Full)
+					p.ApplyLighting(_lighting, obj.Tile.Z, lt == LightingType.Ambient);
+
+				_palettesToBeRecalculated.Add(p);
+
 				obj.Palette = p;
 			}
 
@@ -865,7 +861,6 @@ namespace CNCMaps.MapLogic {
 				(_infantryObjects.Cast<List<InfantryObject>>().Where(o => o != null).SelectMany(o => o)))) {
 				
 				if (obj == null) continue;
-
 				var g = obj as GameObject;
 				g.Palette.Remap(_countryColors[obj.Owner]);
 				_palettesToBeRecalculated.Add(g.Palette);

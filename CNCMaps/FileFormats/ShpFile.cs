@@ -65,10 +65,10 @@ namespace CNCMaps.FileFormats {
 			}
 		}
 
+		private static Random R = new Random();
 		private ShpImage GetImage(int imageIndex) {
-			if (imageIndex >= images.Count) return new ShpImage();
-
 			ShpImage img = images[imageIndex];
+			if (imageIndex >= images.Count) return new ShpImage();
 
 			// make sure imageData is present/decoded if needed
 			if (img.imageData == null) {
@@ -108,19 +108,20 @@ namespace CNCMaps.FileFormats {
 			return img;
 		}
 
-		/// <summary>
-		/// Draws a SHP image 
-		/// </summary>
-		/// <param name="frameIndex">Frame of SHP image</param>
-		/// <param name="ds">Drawing surface buffer</param>
-		/// <param name="offset">Offset from tile where object is stored</param>
-		/// <param name="tile">Tile used to </param>
-		/// <param name="p">Pallette used to draw this object</param>
-		/// <param name="overrides">Whether z-buffer should be ignored</param>
-		unsafe public void Draw(int frameIndex, DrawingSurface ds, Point offset, MapTile tile, Palette p, bool overrides = false) {
+		unsafe public void Draw(GameObject obj, DrawProperties props, DrawingSurface ds, Point drawableOffset) {
 			if (!initialized) Initialize();
 
-			logger.Trace("Drawing SHP file {0} (Frame {1}) at ({2},{3})", FileName, frameIndex, offset.X, offset.Y);
+			int frameIndex = props.FrameDecider(obj);
+			drawableOffset.Offset(props.GetOffset(obj));
+			Palette p = props.PaletteOverride ?? obj.Palette;
+
+			DrawFrame f = (DrawFrame)frameIndex;
+			if (f == DrawFrame.Random)
+				frameIndex = R.Next(images.Count);
+			else if (frameIndex >= images.Count)
+				return;
+
+			logger.Trace("Drawing SHP file {0} (Frame {1}) at ({2},{3})", FileName, frameIndex, drawableOffset.X, drawableOffset.Y);
 
 			var image = GetImage(frameIndex);
 			if (image.imageData == null || image.header.cx * image.header.cy != image.imageData.Length)
@@ -134,16 +135,19 @@ namespace CNCMaps.FileFormats {
 			if (c_px <= 0 || h.cx < 0 || h.cy < 0 || frameIndex > fileHeader.c_images)
 				return;
 
-			short zBufVal = (short)((tile.Rx + tile.Ry + tile.Z) * Drawable.TileHeight / 2 - fileHeader.cy / 2 + h.y + offset.Y);
 
 			var w_low = (byte*)ds.bmd.Scan0;
 			byte* w_high = (byte*)ds.bmd.Scan0 + stride * ds.bmd.Height;
 
-			int dx = offset.X + tile.Dx * Drawable.TileWidth / 2 + Drawable.TileWidth / 2 - fileHeader.cx / 2 + h.x,
-				dy = offset.Y + (tile.Dy - tile.Z) * Drawable.TileHeight / 2 - fileHeader.cy / 2 + h.y;
+			var tile = obj.Tile;
+			int dx = drawableOffset.X + tile.Dx * Drawable.TileWidth / 2 + Drawable.TileWidth / 2 - fileHeader.cx / 2 + h.x,
+				dy = drawableOffset.Y + (tile.Dy - tile.Z) * Drawable.TileHeight / 2 - fileHeader.cy / 2 + h.y;
 			byte* w = (byte*)ds.bmd.Scan0 + dx * 3 + stride * dy;
 			int zIdx = dx + dy * ds.Width;
 			int rIdx = 0;
+
+			// short zBufVal = (short)(drawableOffset.Y + tile.Dy * Drawable.TileHeight / 2 + fileHeader.cy);
+			short zBufVal = (short)(obj.BaseTile.Rx + obj.BaseTile.Ry + obj.Drawable.HeightOffset);
 
 			for (int y = 0; y < h.cy; y++) {
 				if (dy + y < 0) {
@@ -152,15 +156,14 @@ namespace CNCMaps.FileFormats {
 					zIdx += ds.Width;
 					continue; // out of bounds
 				}
-				short z = (short)(zBufVal + y + 2); // why the +2? oh well
 
 				for (int x = 0; x < h.cx; x++) {
 					byte paletteValue = image.imageData[rIdx];
-					if (paletteValue != 0 && w_low <= w && w < w_high && (overrides || z >= zBuffer[zIdx])) {
+					if (paletteValue != 0 && w_low <= w && w < w_high && (props.OverridesZbuffer || zBufVal >= zBuffer[zIdx])) {
 						*(w + 0) = p.colors[paletteValue].B;
 						*(w + 1) = p.colors[paletteValue].G;
 						*(w + 2) = p.colors[paletteValue].R;
-						// zBuffer[zIdx] = zBufVal;
+						zBuffer[zIdx] = Math.Max(zBufVal, zBuffer[zIdx]);
 					}
 					// Up to the next pixel
 					rIdx++;
@@ -172,8 +175,12 @@ namespace CNCMaps.FileFormats {
 			}
 		}
 
-		unsafe public void DrawShadow(int frameIndex, DrawingSurface ds, Point offset, MapTile tile) {
-			if (frameIndex >= images.Count / 2) return;
+		unsafe public void DrawShadow(int frameIndex, GameObject obj, DrawingSurface ds, Point offset) {
+			DrawFrame f = (DrawFrame)frameIndex;
+			if (f == DrawFrame.Random)
+				frameIndex = R.Next(images.Count / 2);
+			else if (frameIndex >= images.Count / 2)
+				return;
 
 			logger.Trace("Drawing SHP shadow {0} (frame {1}) at ({2},{3})", FileName, frameIndex, offset.X, offset.Y);
 
@@ -190,21 +197,20 @@ namespace CNCMaps.FileFormats {
 			if (c_px <= 0 || h.cx < 0 || h.cy < 0 || frameIndex > fileHeader.c_images)
 				return;
 
-			short zBufVal = (short)((tile.Rx + tile.Ry) * Drawable.TileHeight / 2 - fileHeader.cy / 2 + h.y + offset.Y);
 
 			var w_low = (byte*)ds.bmd.Scan0;
 			byte* w_high = (byte*)ds.bmd.Scan0 + stride * ds.bmd.Height;
 
-			int dx = offset.X + tile.Dx * Drawable.TileWidth / 2 + Drawable.TileWidth / 2 - fileHeader.cx / 2 + h.x,
-				dy = offset.Y + (tile.Dy - tile.Z) * Drawable.TileHeight / 2 - fileHeader.cy / 2 + h.y;
+			int dx = offset.X + obj.Tile.Dx * Drawable.TileWidth / 2 + Drawable.TileWidth / 2 - fileHeader.cx / 2 + h.x,
+				dy = offset.Y + (obj.Tile.Dy - obj.Tile.Z) * Drawable.TileHeight / 2 - fileHeader.cy / 2 + h.y;
 			byte* w = (byte*)ds.bmd.Scan0 + dx * 3 + stride * dy;
 			int zIdx = dx + dy * ds.Width;
 			int rIdx = 0;
+			short zBufVal = (short)(obj.BaseTile.Rx + obj.BaseTile.Ry + obj.Drawable.HeightOffset);
 
 			for (int y = 0; y < h.cy; y++) {
-				short z = (short)(zBufVal + y + 2); // why the +2? oh well
 				for (int x = 0; x < h.cx; x++) {
-					if (w_low <= w && w < w_high && image.imageData[rIdx] != 0 && !shadows[zIdx] && z >= zBuffer[zIdx]) {
+					if (w_low <= w && w < w_high && image.imageData[rIdx] != 0 && !shadows[zIdx] && zBufVal >= zBuffer[zIdx]) {
 						*(w + 0) /= 2;
 						*(w + 1) /= 2;
 						*(w + 2) /= 2;
@@ -228,7 +234,7 @@ namespace CNCMaps.FileFormats {
 		/// <param name="ds"></param>
 		/// <param name="xOffset"></param>
 		/// <param name="yOffset"></param>
-		public unsafe void DrawAlpha(int unitDirectionFacing, DrawingSurface ds, int xOffset, int yOffset) {
+		public unsafe void DrawAlpha(int unitDirectionFacing, DrawingSurface ds, Point offset) {
 			if (!initialized) Initialize();
 
 			// Change originally implemented by Starkku: Ares supports multiframe AlphaImages, based on frame count 
@@ -238,7 +244,7 @@ namespace CNCMaps.FileFormats {
 				? unitDirectionFacing / 8
 				: 0;
 
-			logger.Trace("Drawing AlphaImage SHP file {0} (frame {1}) at ({2},{3})", FileName, frameIndex, xOffset, yOffset);
+			logger.Trace("Drawing AlphaImage SHP file {0} (frame {1}) at ({2},{3})", FileName, frameIndex, offset.X, offset.Y);
 
 			var image = GetImage(frameIndex);
 			//var image = GetImage(frameIndex + images.Count / 2);
@@ -252,8 +258,8 @@ namespace CNCMaps.FileFormats {
 			var w_low = (byte*)ds.bmd.Scan0;
 			byte* w_high = (byte*)ds.bmd.Scan0 + stride * ds.bmd.Height;
 
-			int dx = xOffset + 30 - fileHeader.cx / 2 + h.x,
-				dy = yOffset - fileHeader.cy / 2 + h.y;
+			int dx = offset.X + Drawable.TileWidth / 2 - fileHeader.cx / 2 + h.x,
+				dy = offset.Y - fileHeader.cy / 2 + h.y;
 			byte* w = (byte*)ds.bmd.Scan0 + dx * 3 + stride * dy;
 
 			int rIdx = 0;
@@ -278,6 +284,7 @@ namespace CNCMaps.FileFormats {
 		private static byte limit(float mult, byte p) {
 			return (byte)Math.Max(0f, Math.Min(255f, mult * p));
 		}
+
 
 	}
 }

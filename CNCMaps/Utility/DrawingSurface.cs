@@ -47,11 +47,7 @@ namespace CNCMaps.Utility {
 		public bool[] GetShadows() {
 			return shadowBuffer;
 		}
-
-		public void SetZ(int x, int y, short z) {
-			zBuffer[x + y * Width] = z;
-		}
-
+		
 		public short[] GetZBuffer() {
 			return zBuffer;
 		}
