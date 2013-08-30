@@ -159,10 +159,14 @@ namespace CNCMaps.GUI {
 			ofd.CheckFileExists = true;
 			ofd.Multiselect = false;
 			ofd.Filter = "RA2/TS map files (*.map, *.mpr, *.mmx, *.yrm, *.yro)|*.mpr;*.map;*.mmx;*.yrm;*.yro|All files (*.*)|*";
-			ofd.InitialDirectory = FindMixDir(rbEngineAuto.Checked || rbEngineRA2.Checked || rbEngineYR.Checked);
+			if (string.IsNullOrEmpty(ofd.InitialDirectory))
+				ofd.InitialDirectory = FindMixDir(rbEngineAuto.Checked || rbEngineRA2.Checked || rbEngineYR.Checked);
+
 			ofd.FileName = "";
-			if (ofd.ShowDialog() == DialogResult.OK)
+			if (ofd.ShowDialog() == DialogResult.OK) {
 				tbInput.Text = ofd.FileName;
+				ofd.InitialDirectory = Path.GetDirectoryName(ofd.FileName);
+			}
 		}
 
 		private void SquaredStartPosCheckedChanged(object sender, EventArgs e) {
