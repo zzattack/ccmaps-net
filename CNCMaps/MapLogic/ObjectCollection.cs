@@ -170,6 +170,7 @@ namespace CNCMaps.MapLogic {
 			if (rulesSection.ReadBool("Wall")) {
 				drawable.IsWall = true;
 				drawable.PaletteType = PaletteType.Unit;
+				drawable.LightingType = LightingType.Ambient;
 				frameDecider = FrameDeciders.OverlayValueFrameDecider;
 			}
 
