@@ -6,6 +6,8 @@ namespace CNCMaps.MapLogic {
 	public enum DrawFrame : int {
 		DirectionBased = -1,
 		Random = -2,
+		//RandomHealthy = -3,
+		//Damaged = -4,
 	};
 
 	public class DrawProperties {
@@ -16,7 +18,9 @@ namespace CNCMaps.MapLogic {
 		public Func<GameObject, Point> ShadowOffsetHack { get; set; } // used to reposition bridges based on their overlay value
 		public Point Offset { private get; set; }
 		public Point ShadowOffset { private get; set; }
-		
+		public int FirstFrame { get; set; } // for animations
+		public int LastFrame { get; set; }
+
 		public Point GetOffset(GameObject obj) {
 			var ret = Offset;
 			if (OffsetHack != null)
@@ -34,7 +38,7 @@ namespace CNCMaps.MapLogic {
 		public bool OverridesZbuffer { get; set; }
 
 		public DrawProperties() {
-			FrameDecider = FrameDeciders.NullFrameDecider;
+			// FrameDecider = FrameDeciders.NullFrameDecider;
 		}
 
 	}
@@ -62,16 +66,31 @@ namespace CNCMaps.MapLogic {
 			}
 		};
 
+		/// <summary>
+		/// Use this for non-animated building parts that show frame 0 for healthy and frame 1 for damaged buildings
+		/// </summary>
 		public static Func<GameObject, int> HealthBasedFrameDecider = delegate(GameObject obj) {
 			int health = (obj is OwnableObject) ? (obj as OwnableObject).Health : 255;
 			if (health >= 128) return 0;
 			else return 1;
 		};
 
+		/// <summary>
+		/// Use this for animations that have a loopstart and loopend
+		/// </summary>
+		/// <returns>A framedecider between loopend and loopstart</returns>
+		public static Func<GameObject, int> LoopFrameDecider(int loopstart, int loopend) {
+			return delegate(GameObject obj) {
+				return loopstart + R.Next(loopend - loopstart);
+			};
+		}
+		public static Random R = new Random();
+
 		public static Func<GameObject, int> RandomFrameDecider = delegate(GameObject obj) {
-			return (int) DrawFrame.Random; // this is delegated to SHP drawing level
+			return (int)DrawFrame.Random;
 		};
 
+		
 		public static Func<GameObject, int> DirectionBasedFrameDecider = delegate(GameObject obj) {
 			int direction = (obj as OwnableObject).Direction;
 			return direction / 32;
@@ -94,13 +113,13 @@ namespace CNCMaps.MapLogic {
 			else
 				return new Point(0, -16);
 		};
-		
+
 		public static Func<GameObject, Point> RA2BridgeShadowOffsets = delegate(GameObject obj) {
 			var bridgeOvl = obj as OverlayObject;
 			if (bridgeOvl.OverlayValue <= 8)
-				return new Point(0, -15);
+				return new Point(0, -1);
 			else
-				return new Point(-1, -9);
+				return new Point(-15, -9);
 		};
 
 		public static Func<GameObject, Point> TSBridgeOffsets = delegate(GameObject obj) {
@@ -110,7 +129,7 @@ namespace CNCMaps.MapLogic {
 			else
 				return new Point(0, -13);
 		};
-		
+
 		public static Func<GameObject, Point> TSBridgeShadowOffsets = delegate(GameObject obj) {
 			var bridgeOvl = obj as OverlayObject;
 			if (bridgeOvl.OverlayValue <= 8)
@@ -118,6 +137,6 @@ namespace CNCMaps.MapLogic {
 			else
 				return new Point(-15, -9);
 		};
-		
+
 	}
 }

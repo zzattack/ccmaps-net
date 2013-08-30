@@ -67,9 +67,9 @@ namespace CNCMaps.FileFormats {
 
 		private static Random R = new Random();
 		private ShpImage GetImage(int imageIndex) {
-			ShpImage img = images[imageIndex];
 			if (imageIndex >= images.Count) return new ShpImage();
 
+			ShpImage img = images[imageIndex];
 			// make sure imageData is present/decoded if needed
 			if (img.imageData == null) {
 				Position = img.header.offset;
@@ -115,10 +115,8 @@ namespace CNCMaps.FileFormats {
 			drawableOffset.Offset(props.GetOffset(obj));
 			Palette p = props.PaletteOverride ?? obj.Palette;
 
-			DrawFrame f = (DrawFrame)frameIndex;
-			if (f == DrawFrame.Random)
-				frameIndex = R.Next(images.Count);
-			else if (frameIndex >= images.Count)
+			frameIndex = DecideFrameIndex(frameIndex);
+			if (frameIndex >= images.Count)
 				return;
 
 			logger.Trace("Drawing SHP file {0} (Frame {1}) at ({2},{3})", FileName, frameIndex, drawableOffset.X, drawableOffset.Y);
@@ -147,7 +145,7 @@ namespace CNCMaps.FileFormats {
 			int rIdx = 0;
 
 			// short zBufVal = (short)(drawableOffset.Y + tile.Dy * Drawable.TileHeight / 2 + fileHeader.cy);
-			short zBufVal = (short)(obj.BaseTile.Rx + obj.BaseTile.Ry + obj.Drawable.HeightOffset);
+			short zBufVal = (short)(obj.BaseTile.Rx + obj.BaseTile.Ry + obj.BaseTile.Z + obj.Drawable.HeightOffset);
 
 			for (int y = 0; y < h.cy; y++) {
 				if (dy + y < 0) {
@@ -175,16 +173,19 @@ namespace CNCMaps.FileFormats {
 			}
 		}
 
-		unsafe public void DrawShadow(int frameIndex, GameObject obj, DrawingSurface ds, Point offset) {
-			DrawFrame f = (DrawFrame)frameIndex;
-			if (f == DrawFrame.Random)
-				frameIndex = R.Next(images.Count / 2);
-			else if (frameIndex >= images.Count / 2)
+		unsafe public void DrawShadow(GameObject obj, DrawProperties props, DrawingSurface ds, Point drawableOffset) {
+			int frameIndex = props.FrameDecider(obj);
+			drawableOffset.Offset(props.GetShadowOffset(obj));
+			Palette p = props.PaletteOverride ?? obj.Palette;
+
+			frameIndex = DecideFrameIndex(frameIndex);
+			frameIndex += images.Count / 2; // latter half are shadow images
+			if (frameIndex >= images.Count)
 				return;
 
-			logger.Trace("Drawing SHP shadow {0} (frame {1}) at ({2},{3})", FileName, frameIndex, offset.X, offset.Y);
+			logger.Trace("Drawing SHP shadow {0} (frame {1}) at ({2},{3})", FileName, frameIndex, drawableOffset.X, drawableOffset.Y);
 
-			var image = GetImage(frameIndex + images.Count / 2);
+			var image = GetImage(frameIndex);
 			if (image.imageData == null || image.header.cx * image.header.cy != image.imageData.Length)
 				return;
 
@@ -201,13 +202,13 @@ namespace CNCMaps.FileFormats {
 			var w_low = (byte*)ds.bmd.Scan0;
 			byte* w_high = (byte*)ds.bmd.Scan0 + stride * ds.bmd.Height;
 
-			int dx = offset.X + obj.Tile.Dx * Drawable.TileWidth / 2 + Drawable.TileWidth / 2 - fileHeader.cx / 2 + h.x,
-				dy = offset.Y + (obj.Tile.Dy - obj.Tile.Z) * Drawable.TileHeight / 2 - fileHeader.cy / 2 + h.y;
+			int dx = drawableOffset.X + obj.Tile.Dx * Drawable.TileWidth / 2 + Drawable.TileWidth / 2 - fileHeader.cx / 2 + h.x,
+				dy = drawableOffset.Y + (obj.Tile.Dy - obj.Tile.Z) * Drawable.TileHeight / 2 - fileHeader.cy / 2 + h.y;
 			byte* w = (byte*)ds.bmd.Scan0 + dx * 3 + stride * dy;
 			int zIdx = dx + dy * ds.Width;
 			int rIdx = 0;
-			short zBufVal = (short)(obj.BaseTile.Rx + obj.BaseTile.Ry + obj.Drawable.HeightOffset);
-
+			short zBufVal = (short)(obj.BaseTile.Rx + obj.BaseTile.Ry + obj.BaseTile.Z + obj.Drawable.HeightOffset);
+			
 			for (int y = 0; y < h.cy; y++) {
 				for (int x = 0; x < h.cx; x++) {
 					if (w_low <= w && w < w_high && image.imageData[rIdx] != 0 && !shadows[zIdx] && zBufVal >= zBuffer[zIdx]) {
@@ -225,6 +226,21 @@ namespace CNCMaps.FileFormats {
 				zIdx += ds.Width - h.cx;
 				// adjust the writing pointer accordingy
 			}
+		}
+
+		private int DecideFrameIndex(int frameIndex) {
+			DrawFrame f = (DrawFrame) frameIndex;
+			if (f == DrawFrame.Random)
+				frameIndex = R.Next(images.Count);
+			//else if (f == DrawFrame.RandomHealthy) {
+			//	// pick from the 1st 25% of the the images
+			//	frameIndex = R.Next(images.Count / 4);
+			//}
+			//else if (f == DrawFrame.Damaged) {
+			//	// first image of the 2nd half
+			//	frameIndex = images.Count / 4;
+			//}
+			return frameIndex;
 		}
 
 		/// <summary>

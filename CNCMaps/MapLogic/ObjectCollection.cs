@@ -23,7 +23,7 @@ namespace CNCMaps.MapLogic {
 		private static string[] _fires;
 		private static readonly Random R = new Random();
 		static readonly string[] ExtraBuildingImages = {
-			// "ProductionAnim", // you don't want ProductionAnims on map renders
+			"ProductionAnim", // you don't want ProductionAnims on map renders // Why not? look at NACNST, the crane is missing!
 			"SuperAnim",
 			"Turret",
 			"BibShape",
@@ -111,6 +111,19 @@ namespace CNCMaps.MapLogic {
 			}
 			else imageFileName += Defaults.GetExtension(_theaterType, _collectionType);
 
+			// Find out foundation, now with custom foundation support (Ares feature).
+			string foundation = artSection.ReadString("Foundation", "1x1");
+			if (!foundation.Equals("custom", StringComparison.InvariantCultureIgnoreCase)) {
+				int fx = foundation[0] - '0';
+				int fy = foundation[2] - '0';
+				drawable.Foundation = new Size(fx, fy);
+			}
+			else {
+				int fx = artSection.ReadInt("Foundation.X", 1);
+				int fy = artSection.ReadInt("Foundation.Y", 1);
+				drawable.Foundation = new Size(fx, fy);
+			}
+
 			bool newTheater = artSection.ReadBool("NewTheater");
 			// See if a theater-specific image is used
 			if (newTheater) {
@@ -119,7 +132,9 @@ namespace CNCMaps.MapLogic {
 			}
 
 			if (artSection.ReadString("Remapable") != string.Empty) {
-				drawable.IsRemapable = artSection.ReadBool("Remapable");
+				// does NOT work in RA2
+				if (_engine <= EngineType.FireStorm)
+					drawable.IsRemapable = artSection.ReadBool("Remapable");
 			}
 
 			// Used palet can be overriden
@@ -161,7 +176,7 @@ namespace CNCMaps.MapLogic {
 			if (rulesSection.ReadBool("Gate")) {
 				drawable.IsGate = true;
 				drawable.PaletteType = PaletteType.Unit;
-				frameDecider = FrameDeciders.HealthBasedFrameDecider;
+				frameDecider = FrameDeciders.NullFrameDecider;
 			}
 
 			bool shadow = artSection.ReadBool("Shadow", Defaults.GetShadowAssumption(_collectionType));
@@ -184,6 +199,7 @@ namespace CNCMaps.MapLogic {
 			}
 			else if (rulesSection.ReadString("Land") == "Road") {
 				offset.Y = Drawable.TileHeight / 2;
+				drawable.Foundation = new Size(3, 1); // ensures bridges are drawn a bit lower than where they're stored
 			}
 			else if (rulesSection.ReadString("Land") == "Railroad") {
 				offset.Y = 14;
@@ -207,7 +223,8 @@ namespace CNCMaps.MapLogic {
 					else if (SpecialOverlays.IsHighBridge(ovl)) {
 						offsetHack = OffsetHacks.RA2BridgeOffsets;
 						shadowOffsetHack = OffsetHacks.RA2BridgeShadowOffsets;
-						drawable.HeightOffset = 3;
+						drawable.HeightOffset = 2;
+						//drawable.Foundation = new Size(3, 1);
 					}
 				}
 				else if (_engine <= EngineType.FireStorm) {
@@ -228,19 +245,6 @@ namespace CNCMaps.MapLogic {
 
 			drawable.Overrides = rulesSection.ReadBool("Overrides");
 
-			// Find out foundation, now with custom foundation support (Ares feature).
-			string foundation = artSection.ReadString("Foundation", "1x1");
-			if (!foundation.Equals("custom", StringComparison.InvariantCultureIgnoreCase)) {
-				int fx = foundation[0] - '0';
-				int fy = foundation[2] - '0';
-				drawable.Foundation = new Size(fx, fy);
-			}
-			else {
-				int fx = artSection.ReadInt("Foundation.X", 1);
-				int fy = artSection.ReadInt("Foundation.Y", 1);
-				drawable.Foundation = new Size(fx, fy);
-			}
-
 			AddImageToObject(drawable, imageFileName,
 				new DrawProperties {
 					Offset = offset,
@@ -252,7 +256,11 @@ namespace CNCMaps.MapLogic {
 
 			// Buildings often consist of multiple SHP files
 			if (_collectionType == CollectionType.Building) {
-				drawable.AddDamagedShp(VFS.Open<ShpFile>(imageFileName), new DrawProperties { HasShadow = shadow, FrameDecider = FrameDeciders.HealthBasedFrameDecider });
+				var damagedProps = new DrawProperties {
+					HasShadow = shadow,
+					FrameDecider = frameDecider, // this is not an animation with loopstart/loopend yet
+				};
+				drawable.AddDamagedShp(VFS.Open<ShpFile>(imageFileName), damagedProps);
 
 				foreach (string extraImage in ExtraBuildingImages) {
 					string extraImageDamaged = extraImage + "Damaged";
@@ -260,7 +268,7 @@ namespace CNCMaps.MapLogic {
 					string extraImageDamagedSectionName = artSection.ReadString(extraImageDamaged, extraImageSectionName);
 
 					if (extraImageSectionName != "") {
-						IniFile.IniSection extraArtSection = _art.GetSection(extraImageSectionName);
+						IniFile.IniSection extraArtSection = _art.GetOrCreateSection(extraImageSectionName);
 
 						int ySort = 0;
 						bool extraShadow = false;
@@ -268,8 +276,11 @@ namespace CNCMaps.MapLogic {
 
 						if (extraArtSection != null) {
 							ySort = extraArtSection.ReadInt("YSort", artSection.ReadInt(extraImage + "YSort"));
-							extraShadow = extraArtSection.ReadBool("Shadow");
+							extraShadow = extraArtSection.ReadBool("Shadow", extraShadow);
 							extraImageFileName = extraArtSection.ReadString("Image", extraImageSectionName);
+							frameDecider = FrameDeciders.LoopFrameDecider(
+								extraArtSection.ReadInt("LoopStart"),
+								extraArtSection.ReadInt("LoopEnd", 1));
 						}
 						if (theaterExtension)
 							extraImageFileName += Defaults.GetExtension(_theaterType);
@@ -279,7 +290,13 @@ namespace CNCMaps.MapLogic {
 						if (newTheater)
 							ApplyNewTheaterIfNeeded(artSectionName, ref extraImageFileName);
 
-						var props = new DrawProperties { HasShadow = extraShadow, Offset = offset, ShadowOffset = offset, SortIndex = ySort };
+						var props = new DrawProperties {
+							HasShadow = extraShadow,
+							Offset = offset,
+							ShadowOffset = offset,
+							SortIndex = ySort,
+							FrameDecider = frameDecider,
+						};
 						AddImageToObject(drawable, extraImageFileName, props);
 					}
 
@@ -287,12 +304,15 @@ namespace CNCMaps.MapLogic {
 						IniFile.IniSection extraArtDamagedSection = _art.GetSection(extraImageDamagedSectionName);
 
 						int ySort = 0;
-						bool extraShadow = Defaults.GetShadowAssumption(_collectionType);
+						bool extraShadow = false;
 						string extraImageDamagedFileName = extraImageDamagedSectionName;
 						if (extraArtDamagedSection != null) {
 							ySort = extraArtDamagedSection.ReadInt("YSort", artSection.ReadInt(extraImage + "YSort"));
 							extraShadow = extraArtDamagedSection.ReadBool("Shadow", extraShadow);
 							extraImageDamagedFileName = extraArtDamagedSection.ReadString("Image", extraImageDamagedSectionName);
+							frameDecider = FrameDeciders.LoopFrameDecider(
+								extraArtDamagedSection.ReadInt("LoopStart"),
+								extraArtDamagedSection.ReadInt("LoopEnd", 1));
 						}
 						if (theaterExtension)
 							extraImageDamagedFileName += Defaults.GetExtension(_theaterType);
@@ -302,7 +322,14 @@ namespace CNCMaps.MapLogic {
 						if (newTheater)
 							ApplyNewTheaterIfNeeded(artSectionName, ref extraImageDamagedFileName);
 
-						drawable.AddDamagedShp(VFS.Open(extraImageDamagedFileName) as ShpFile, new DrawProperties { HasShadow = extraShadow, SortIndex = ySort, });
+						var props = new DrawProperties {
+							HasShadow = extraShadow,
+							SortIndex = ySort,
+							Offset = offset,
+							ShadowOffset = offset,
+							FrameDecider = frameDecider,
+						};
+						drawable.AddDamagedShp(VFS.Open(extraImageDamagedFileName) as ShpFile, props);
 					}
 				}
 

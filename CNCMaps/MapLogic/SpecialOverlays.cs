@@ -66,7 +66,7 @@ namespace CNCMaps.MapLogic {
 			return IsOre(o) || IsGem(o) || IsTib(o);
 		}
 
-		public static OverlayType GetOverlayType(OverlayObject o, EngineType engine = EngineType.FireStorm) {
+		public static OverlayType GetOverlayType(OverlayObject o, EngineType engine) {
 			if (engine <= EngineType.FireStorm) {
 				if (IsTib_Riparius(o)) return OverlayType.Riparius;
 				else if (IsTib_Cruentus(o)) return OverlayType.Cruentus;

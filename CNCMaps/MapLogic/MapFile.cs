@@ -482,17 +482,23 @@ namespace CNCMaps.MapLogic {
 			for (int y = 0; y < _overlayObjects.GetLength(1); y++) {
 				for (int x = 0; x < _overlayObjects.GetLength(0); x++) {
 					OverlayObject o = _overlayObjects[x, y];
-					if (o == null || o.DrawTile != null) continue; // BaseTile set means we've already moved it
+					if (o == null || o.BaseTile != null) continue; // BaseTile set means we've already moved it
 
 					Size foundation = _theater.GetObjectCollection(o).GetDrawable(o).Foundation;
 					if (foundation == Size.Empty) continue;
-					o.DrawTile = _tiles.GetTileR(o.Tile.Rx - 2, o.Tile.Ry - 2);
+					o.BaseTile = _tiles.GetTileR(o.Tile.Rx + foundation.Width - 1, o.Tile.Ry + foundation.Height - 1);
 
-					if (o.DrawTile != null) {
-						// move structure
-						_overlayObjects[x, y] = null;
-						_overlayObjects[o.DrawTile.Dx, o.DrawTile.Dy / 2] = o;
-					}
+					if (o.BaseTile == null)
+						o.BaseTile = new MapTile(0, 0,
+							(ushort)(o.Tile.Rx + foundation.Width - 1),
+							(ushort)(o.Tile.Ry + foundation.Height - 1),
+							o.Tile.Z, 0, 0, _tiles);
+
+					//if (o.BaseTile != null) {
+					//	// move structure
+					//	_overlayObjects[x, y] = null;
+					//	_overlayObjects[o.BaseTile.Dx, o.BaseTile.Dy / 2] = o;
+					//}
 				}
 			}
 		}
@@ -825,8 +831,8 @@ namespace CNCMaps.MapLogic {
 				(from GameObject o in _aircraftObjects select o).Union
 				(from GameObject o in _smudgeObjects select o).Union
 				(from GameObject o in _terrainObjects select o).Union
-				(_infantryObjects.Cast<List<InfantryObject>>().Where(o=>o!=null).SelectMany(o=>o))) {
-				
+				(_infantryObjects.Cast<List<InfantryObject>>().Where(o => o != null).SelectMany(o => o))) {
+
 				if (obj == null) continue;
 
 				Palette p;
@@ -834,7 +840,7 @@ namespace CNCMaps.MapLogic {
 				PaletteType pt;
 
 				if (obj is MapTile) {
-					lt = LightingType.Level;
+					lt = LightingType.Full;
 					pt = PaletteType.Iso;
 				}
 				else {
@@ -850,8 +856,12 @@ namespace CNCMaps.MapLogic {
 				else
 					p = _theater.GetPalette(obj.Drawable).Clone();
 
-				if (lt == LightingType.Ambient || lt == LightingType.Full)
-					p.ApplyLighting(_lighting, obj.Tile.Z, lt == LightingType.Ambient);
+				if (lt == LightingType.Ambient || lt == LightingType.Full) {
+					// bridges are attached to a low tile, but their height-offset should be taken into account 
+					// when applying lighting to its palette
+					int z = obj.Tile.Z + (obj.Drawable != null ? obj.Drawable.HeightOffset : 0);
+					p.ApplyLighting(_lighting, z, lt == LightingType.Ambient);
+				}
 
 				_palettesToBeRecalculated.Add(p);
 
@@ -869,24 +879,28 @@ namespace CNCMaps.MapLogic {
 				(from OwnableObject o in _unitObjects select o).Union
 				(from OwnableObject o in _aircraftObjects select o).Union(
 				(_infantryObjects.Cast<List<InfantryObject>>().Where(o => o != null).SelectMany(o => o)))) {
-				
+
 				if (obj == null) continue;
 				var g = obj as GameObject;
-				g.Palette.Remap(_countryColors[obj.Owner]);
-				_palettesToBeRecalculated.Add(g.Palette);
+				if (g != null & g.Drawable != null && g.Drawable.IsRemapable) {
+					if (g.Palette.IsShared) // don't wanna touch somebody elses palette..
+						g.Palette = g.Palette.Clone();
+					g.Palette.Remap(_countryColors[obj.Owner]);
+					_palettesToBeRecalculated.Add(g.Palette);
+				}
 			}
 
 			// TS needs tiberium remapped
 			if (EngineType <= EngineType.FireStorm) {
 				var tiberiums = _rules.GetSection("Tiberiums").OrderedEntries.Select(tib => (OverlayType)Enum.Parse(typeof(OverlayType), tib.Value));
 				var remaps = tiberiums.Select(tib => _rules.GetSection(tib.ToString()).ReadString("Color"));
-				var tibRemaps = tiberiums.Zip(remaps, (k,v) => new {k,v}).ToDictionary(x => x.k, x => x.v);
+				var tibRemaps = tiberiums.Zip(remaps, (k, v) => new { k, v }).ToDictionary(x => x.k, x => x.v);
 
 				foreach (var ovl in _overlayObjects) {
 					if (ovl == null) continue;
 					if (SpecialOverlays.IsTib(ovl)) {
 						ovl.Palette = ovl.Palette.Clone();
-						ovl.Palette.Remap(_namedColors[tibRemaps[SpecialOverlays.GetOverlayType(ovl)]]);
+						ovl.Palette.Remap(_namedColors[tibRemaps[SpecialOverlays.GetOverlayType(ovl, EngineType)]]);
 						_palettesToBeRecalculated.Add(ovl.Palette);
 					}
 				}
@@ -1122,10 +1136,9 @@ namespace CNCMaps.MapLogic {
 				markerPalettes[OverlayType.Gems] = Palette.MakePalette(Color.Purple);
 			}
 
-
 			foreach (var o in _overlayObjects) {
 				if (o == null) continue;
-				var ovlType = SpecialOverlays.GetOverlayType(o);
+				var ovlType = SpecialOverlays.GetOverlayType(o, EngineType);
 				if (!markerPalettes.ContainsKey(ovlType)) continue;
 
 				double opacityBase = ovlType == OverlayType.Cruentus || ovlType == OverlayType.Gems ? 0.25 : 0.1;

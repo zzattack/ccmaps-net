@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Linq;
 using CNCMaps.FileFormats;
 using CNCMaps.Utility;
 using CNCMaps.VirtualFileSystem;
@@ -25,10 +26,11 @@ namespace CNCMaps.MapLogic {
 
 		bool sorted;
 		void Sort() {
-			// _fires.Sort();
-			_shps.Sort();
-			_damagedShps.Sort();
-			// _voxels.Sort();
+			// orderby() is stable sort, .sort() isnt
+			_fires = _fires.OrderBy(s => s.Props.SortIndex).ToList();
+			_shps = _shps.OrderBy(s => s.Props.SortIndex).ToList();
+			_damagedShps = _damagedShps.OrderBy(s => s.Props.SortIndex).ToList();
+			//  _voxels.Sort();
 			sorted = true;
 		}
 
@@ -45,9 +47,9 @@ namespace CNCMaps.MapLogic {
 		// below are all the different kinds of drawables that a Drawable can consist of
 		readonly List<DrawableFile<VxlFile>> _voxels = new List<DrawableFile<VxlFile>>();
 		readonly List<HvaFile> _hvas = new List<HvaFile>();
-		readonly List<DrawableFile<ShpFile>> _shps = new List<DrawableFile<ShpFile>>();
-		readonly List<DrawableFile<ShpFile>> _fires = new List<DrawableFile<ShpFile>>();
-		readonly List<DrawableFile<ShpFile>> _damagedShps = new List<DrawableFile<ShpFile>>();
+		List<DrawableFile<ShpFile>> _shps = new List<DrawableFile<ShpFile>>();
+		List<DrawableFile<ShpFile>> _fires = new List<DrawableFile<ShpFile>>();
+		List<DrawableFile<ShpFile>> _damagedShps = new List<DrawableFile<ShpFile>>();
 		private DrawableFile<ShpFile> _alphaImage;
 
 		internal void SetAlphaImage(ShpFile shpFile) {
@@ -96,7 +98,7 @@ namespace CNCMaps.MapLogic {
 			d.Offset(props.GetOffset(obj));
 			d.Offset(-vxl_ds.bmd.Width / 2, -vxl_ds.bmd.Height / 2);
 
-			short zBufVal = (short)(obj.BaseTile.Rx + obj.BaseTile.Ry + 1);
+			short zBufVal = (short)(obj.BaseTile.Rx + obj.BaseTile.Ry + obj.BaseTile.Z);
 			// rows inverted!
 			var w_low = (byte*)ds.bmd.Scan0;
 			byte* w_high = w_low + ds.bmd.Stride * ds.bmd.Height;
@@ -123,14 +125,10 @@ namespace CNCMaps.MapLogic {
 
 		private void DrawFile(GameObject obj, DrawingSurface ds, ShpFile file, DrawProperties props) {
 			if (file == null || obj == null || obj.Tile == null) return;
-			// MAGIC bruz
-			int frame = props.FrameDecider(obj);
-
+			
 			file.Draw(obj, props, ds, _globalOffset);
 			if (props.HasShadow) {
-				Point shadowOffset = _globalOffset;
-				shadowOffset.Offset(props.GetShadowOffset(obj));
-				file.DrawShadow(frame, obj, ds, shadowOffset);
+				file.DrawShadow(obj, props, ds, _globalOffset);
 			}
 		}
 		internal void SetOffset(int xOffset, int yOffset) {
