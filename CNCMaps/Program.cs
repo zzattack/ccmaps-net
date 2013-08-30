@@ -96,7 +96,11 @@ namespace CNCMaps {
 			}
 			catch (Exception exc) {
 				_logger.Error(string.Format("An unknown fatal exception occured: {0}", exc), exc);
+# if DEBUG
+				throw;
+#else
 				return 1;
+#endif
 			}
 
 			LogManager.Configuration = null; // required for mono release to flush possible targets

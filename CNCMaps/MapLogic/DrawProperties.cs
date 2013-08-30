@@ -81,7 +81,8 @@ namespace CNCMaps.MapLogic {
 		/// <returns>A framedecider between loopend and loopstart</returns>
 		public static Func<GameObject, int> LoopFrameDecider(int loopstart, int loopend) {
 			return delegate(GameObject obj) {
-				return loopstart + R.Next(loopend - loopstart);
+				// loopstart > loopend is possible
+				return Math.Min(loopstart, loopend) + R.Next(Math.Abs(loopend - loopstart));
 			};
 		}
 		public static Random R = new Random();
