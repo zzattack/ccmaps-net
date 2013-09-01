@@ -1,7 +1,11 @@
-set VER=2.0beta12
+set VER=2.0beta16
 
 del CNCMaps_*.zip
 del CNCMaps_setup_*.exe
+del CNCMaps/bin/*.*
+del CNCMaps/obj/*.*
+del CNCMaps GUI/obj/*.*
+del CNCMaps GUI/obj/*.*
 
 set MSBUILD=%WINDIR%\Microsoft.NET\Framework\v4.0.30319\msbuild.exe
 set MAKENSIS="%PROGRAMFILES(X86)%\nsis\makensis.exe"

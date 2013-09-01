@@ -1189,7 +1189,7 @@ namespace CNCMaps.MapLogic {
 			var tileCollection = _theater.GetTileCollection();
 
 			// zig-zag drawing technique explanation: http://stackoverflow.com/questions/892811/drawing-isometric-game-worlds
-
+			double last_reported = 0.0;
 			for (int y = 0; y < FullSize.Height; y++) {
 				Logger.Trace("Drawing tiles row {0}", y);
 				for (int x = FullSize.Width * 2 - 2; x >= 0; x -= 2) {
@@ -1197,8 +1197,16 @@ namespace CNCMaps.MapLogic {
 				}
 				for (int x = FullSize.Width * 2 - 3; x >= 0; x -= 2) {
 					tileCollection.DrawTile(_tiles.GetTile(x, y), _drawingSurface);
+				} 
+				
+				double pct = 50.0 * y / FullSize.Height;
+				if (pct > last_reported + 5) {
+					Logger.Info("Drawing tiles... {0}%", Math.Round(pct, 0));
+					last_reported = pct;
 				}
 			}
+
+			Logger.Info("Tiles drawn");
 
 			for (int y = 0; y < FullSize.Height; y++) {
 				Logger.Trace("Drawing objects row {0}", y);
@@ -1212,7 +1220,15 @@ namespace CNCMaps.MapLogic {
 					foreach (GameObject o in objs)
 						_theater.DrawObject(o, _drawingSurface);
 				}
+
+				double pct = 50 + 50.0 * y / FullSize.Height;
+				if (pct > last_reported + 5) {
+					Logger.Info("Drawing objects... {0}%", Math.Round(pct, 0));
+					last_reported = pct;
+				}
 			}
+
+			Logger.Info("Map drawing completed");
 		}
 
 		public void GeneratePreviewPack(bool omitMarkers) {

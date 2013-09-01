@@ -35,7 +35,7 @@ SetCompressor LZMA
 !insertmacro MUI_LANGUAGE "English"
 !insertmacro MUI_RESERVEFILE_LANGDLL
 
-Section "RA2/YR Maps Renderer" Section1
+Section "Maps Renderer" Section1
 
 	; Set Section properties
 	SetOverwrite on
@@ -88,7 +88,7 @@ Section Uninstall
 	Delete "$SMPROGRAMS\CNC Maps Renderer\CNC Maps renderer.lnk"
 	Delete "$SMPROGRAMS\CNC Maps Renderer\Uninstall.lnk"
 
-	; Clean up RA2/YR Maps renderer
+	; Clean up Maps Renderer
 	Delete "$INSTDIR\CNCMaps.exe"
 	Delete "$INSTDIR\CNCMaps_GUI.exe"
 	Delete "$INSTDIR\NLog.dll"
@@ -101,7 +101,6 @@ Section Uninstall
 	; Remove remaining directories
 	RMDir "$SMPROGRAMS\CNC Maps renderer"
 	RMDir "$INSTDIR\"
-
 SectionEnd
 
 BrandingText "by Frank Razenberg"

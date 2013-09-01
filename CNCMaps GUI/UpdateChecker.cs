@@ -1,9 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Linq.Expressions;
 using System.Net;
-using System.Text;
+using System.Reflection;
 using System.Xml;
 
 namespace CNCMaps.GUI {
@@ -14,15 +11,14 @@ namespace CNCMaps.GUI {
 		public event EventHandler UpdateCheckFailed;
 		public event DownloadProgressChangedEventHandler DownloadProgressChanged;
 
-		private const string UpdateCheckHost = "http://cncmaps.zzattack.org/tool/version_check";
-
-		public UpdateChecker() {
-		}
+		public const string UpdateCheckHost = "http://cncmaps.zzattack.org/";
+		//public const string UpdateCheckHost = "http://localhost:1511/";
+		public const string UpdateCheckPage = "tool/version_check";
 
 		public void CheckVersion() {
 			WebClient wc = new WebClient();
 			wc.Proxy = null;
-			wc.DownloadStringAsync(new Uri(UpdateCheckHost));
+			wc.OpenReadCompleted += (sender, args) => Connected(this, EventArgs.Empty);
 			wc.DownloadProgressChanged += (sender, args) => DownloadProgressChanged(this, args);
 			wc.DownloadStringCompleted += (sender, args) => {
 				if (args.Cancelled || args.Error != null)
@@ -36,18 +32,24 @@ namespace CNCMaps.GUI {
 						var releaseDate = DateTime.ParseExact(versionNode["release_date"].InnerText.Trim(), "yyyy'-'MM'-'dd", null);
 						string releaseNotes = versionNode["release_notes"].InnerText;
 						string url = versionNode["url"].InnerText;
-						UpdateAvailable(this, new UpdateAvailableArgs {
-							DownloadUrl = url,
-							ReleaseDate = releaseDate,
-							ReleaseNotes = releaseNotes,
-							Version = version,
-						});
+
+						if (version > Assembly.GetExecutingAssembly().GetName().Version)
+							UpdateAvailable(this, new UpdateAvailableArgs {
+								DownloadUrl = url,
+								ReleaseDate = releaseDate,
+								ReleaseNotes = releaseNotes,
+								Version = version,
+							});
+						else
+							AlreadyLatest(this, EventArgs.Empty);
 					}
-					catch {
+					catch (Exception exc) {
 						UpdateCheckFailed(this, EventArgs.Empty);
 					}
 				}
 			};
+			// trigger the download..
+			wc.DownloadStringAsync(new Uri(UpdateCheckHost + UpdateCheckPage));
 		}
 
 	}

@@ -256,7 +256,6 @@ namespace CNCMaps.FileFormats {
 			Logger.Trace("Drawing AlphaImage SHP file {0} (frame {1}) at ({2},{3})", FileName, frameIndex, offset.X, offset.Y);
 
 			var image = GetImage(frameIndex);
-			//var image = GetImage(frameIndex + Images.Count / 2);
 			var h = image.Header;
 			var c_px = (uint)(h.cx * h.cy);
 			int stride = ds.bmd.Stride;

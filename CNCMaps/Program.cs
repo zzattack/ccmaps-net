@@ -1,9 +1,5 @@
 ﻿using System.Drawing;
-using System.Drawing.Drawing2D;
-using System.Drawing.Imaging;
 using System.IO;
-using CNCMaps.Encodings;
-using CNCMaps.FileFormats;
 using CNCMaps.MapLogic;
 using CNCMaps.Utility;
 using CNCMaps.VirtualFileSystem;
@@ -96,7 +92,7 @@ namespace CNCMaps {
 			}
 			catch (Exception exc) {
 				_logger.Error(string.Format("An unknown fatal exception occured: {0}", exc), exc);
-# if DEBUG
+#if DEBUG
 				throw;
 #else
 				return 1;

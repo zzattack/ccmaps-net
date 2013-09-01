@@ -1,11 +1,17 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Net;
+using System.Reflection;
 using System.Security;
+using System.Security.Policy;
+using System.Threading;
 using System.Windows.Forms;
 using Microsoft.Win32;
 
@@ -14,6 +20,9 @@ namespace CNCMaps.GUI {
 	public partial class MainForm : Form {
 		public const string RendererExe = "CNCMaps.exe";
 		private bool _skipUpdateCheck;
+		// automatically swap between RA2/TS mix dir from registry
+		private bool currentEngineRA2 = true;
+
 
 		public MainForm() {
 			InitializeComponent();
@@ -29,38 +38,23 @@ namespace CNCMaps.GUI {
 			UpdateCommandline();
 			Height -= 180;
 
-			if (!_skipUpdateCheck) {
-				var uc = new UpdateChecker();
-				uc.AlreadyLatest += (o, e) => { lblStatus.Text = "Status: already latest version"; };
-				uc.Connected += (o, e) => { pbProgress.Value = 10; };
-				uc.UpdateCheckFailed += (o, e) => {
-					pbProgress.Value = 100;
-					lblStatus.Text = "Status: update check failed";
-				};
-				uc.UpdateAvailable += (o, e) => {
-					pbProgress.Value = 100;
-					lblStatus.Text = "Status: update available";
-					var dr = MessageBox.Show(string.Format("An update to version {0} released on {1} is available. Release notes: \r\n\r\n{2}\r\n\r\nUpdate now?", 
-							e.Version.ToString(), e.ReleaseDate, e.ReleaseNotes), "Update available", 
-							MessageBoxButtons.YesNo, MessageBoxIcon.Information, MessageBoxDefaultButton.Button1);
-					if (dr == DialogResult.Yes)
-						DownloadAndUpdate(e.DownloadUrl);
-				};
-				uc.CheckVersion();
-			}
-			else {
-				lblStatus.Text = "Status: not checking for newer version";
-			}
+			if (!_skipUpdateCheck)
+				PerformUpdateCheck();
+			else
+				UpdateStatus("not checking for newer version", 100);
 		}
 
+		#region registry searching
 		private string FindRenderProg() {
 			if (!IsLinux) {
 				try {
 					using (var key = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry32))
 						return (string)key.OpenSubKey("SOFTWARE\\CNC Map Render").GetValue("") + "\\" + RendererExe;
 				}
-				catch (NullReferenceException) { }
-				catch (SecurityException) { }
+				catch (NullReferenceException) {
+				}
+				catch (SecurityException) {
+				}
 			}
 			return File.Exists(Path.Combine(Environment.CurrentDirectory, RendererExe)) ? RendererExe : "";
 		}
@@ -72,9 +66,12 @@ namespace CNCMaps.GUI {
 			try {
 				using (var key = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry32))
 					return Path.GetDirectoryName(
-						(string)key.OpenSubKey("SOFTWARE\\Westwood\\" + (RA2 ? "Red Alert 2" : "Tiberian Sun")).GetValue("InstallPath", string.Empty));
+						(string)
+							key.OpenSubKey("SOFTWARE\\Westwood\\" + (RA2 ? "Red Alert 2" : "Tiberian Sun"))
+								.GetValue("InstallPath", string.Empty));
 			}
-			catch (NullReferenceException) { }
+			catch (NullReferenceException) {
+			}
 
 			return Environment.CurrentDirectory;
 		}
@@ -85,12 +82,99 @@ namespace CNCMaps.GUI {
 				return (p == 4) || (p == 6) || (p == 128);
 			}
 		}
+		#endregion
 
+		#region update checking/performing
+		private void PerformUpdateCheck() {
+			var uc = new UpdateChecker();
+			uc.AlreadyLatest += (o, e) => UpdateStatus("already latest version", 100);
+			uc.Connected += (o, e) => UpdateStatus("connected", 10);
+			uc.DownloadProgressChanged += (o, e) => { /* care, xml is small anyway */ };
+			uc.UpdateCheckFailed += (o, e) => UpdateStatus("update check failed", 100);
+			uc.UpdateAvailable += (o, e) => {
+				UpdateStatus("update available", 100);
+
+				var dr =
+					MessageBox.Show(
+						string.Format(
+							"An update to version {0} released on {1} is available. Release notes: \r\n\r\n{2}\r\n\r\nUpdate now?",
+							e.Version.ToString(), e.ReleaseDate.ToShortDateString(), e.ReleaseNotes), "Update available",
+						MessageBoxButtons.YesNo, MessageBoxIcon.Information, MessageBoxDefaultButton.Button1);
+				if (dr == DialogResult.Yes)
+					DownloadAndUpdate(e.DownloadUrl);
+			};
+			uc.CheckVersion();
+		}
+		private void DownloadAndUpdate(string url) {
+			UpdateStatus("downloading new program version", 0);
+			var wc = new WebClient();
+			wc.Proxy = null;
+
+			var address = new Uri(UpdateChecker.UpdateCheckHost + url);
+			wc.DownloadProgressChanged += (sender, args) => BeginInvoke((Action)delegate {
+				UpdateStatus(string.Format("downloading, {0}%", args.ProgressPercentage * 95 / 100), args.ProgressPercentage * 95 / 100);
+			});
+
+			wc.DownloadDataCompleted += (sender, args) => {
+				UpdateStatus("download complete, running installer", 100);
+				string appPath = Path.GetDirectoryName(Application.ExecutablePath);
+				string dest = Path.Combine(appPath, "CNCMaps_update");
+
+				int suffixNr = 0;
+				while (File.Exists(dest + (suffixNr > 0 ? suffixNr.ToString() : "") + ".exe"))
+					suffixNr++;
+
+				dest += (suffixNr > 0 ? suffixNr.ToString() : "") + ".exe";
+				File.WriteAllBytes(dest, args.Result);
+				// invoke 
+				var psi = new ProcessStartInfo(dest);
+				psi.Arguments = "/Q";
+				Process.Start(psi);
+				Close();
+			};
+
+			// trigger it all
+			wc.DownloadDataAsync(address);
+		}
+
+
+		#endregion
+
+		#region ui events
+		private void UIChanged(object sender, EventArgs e) {
+			UpdateCommandline();
+		}
+		private void UpdateStatus(string text, int progressBarValue) {
+			var invokable = new Action(delegate {
+				lblStatus.Text = "Status: " + text;
+				if (progressBarValue < 100)
+					// forces 'instant update'
+					pbProgress.Value = progressBarValue + 1;
+				pbProgress.Value = progressBarValue;
+			});
+			if (InvokeRequired)
+				Invoke(invokable);
+			else
+				invokable();
+		}
 		private void OutputNameCheckedChanged(object sender, EventArgs e) {
 			tbCustomOutput.Visible = rbCustomFilename.Checked;
 			UpdateCommandline();
 		}
 
+		private void BrowseInput(object sender, EventArgs e) {
+			ofd.CheckFileExists = true;
+			ofd.Multiselect = false;
+			ofd.Filter = "RA2/TS map files (*.map, *.mpr, *.mmx, *.yrm, *.yro)|*.mpr;*.map;*.mmx;*.yrm;*.yro|All files (*.*)|*";
+			if (string.IsNullOrEmpty(ofd.InitialDirectory))
+				ofd.InitialDirectory = FindMixDir(rbEngineAuto.Checked || rbEngineRA2.Checked || rbEngineYR.Checked);
+
+			ofd.FileName = "";
+			if (ofd.ShowDialog() == DialogResult.OK) {
+				tbInput.Text = ofd.FileName;
+				ofd.InitialDirectory = Path.GetDirectoryName(ofd.FileName);
+			}
+		}
 		private void BrowseMixDir(object sender, EventArgs e) {
 			folderBrowserDialog1.Description = "The directory that contains the mix files.";
 			folderBrowserDialog1.RootFolder = Environment.SpecialFolder.MyComputer;
@@ -99,7 +183,6 @@ namespace CNCMaps.GUI {
 			if (folderBrowserDialog1.ShowDialog() == DialogResult.OK)
 				tbMixDir.Text = folderBrowserDialog1.SelectedPath;
 		}
-
 		private void BrowseRenderer(object sender, EventArgs e) {
 			ofd.CheckFileExists = true;
 			ofd.Multiselect = false;
@@ -107,23 +190,52 @@ namespace CNCMaps.GUI {
 			ofd.InitialDirectory = Directory.GetCurrentDirectory();
 			ofd.FileName = RendererExe;
 			if (ofd.ShowDialog() == DialogResult.OK) {
-				tbRenderProg.Text = ofd.FileName.StartsWith(Directory.GetCurrentDirectory()) ?
-					ofd.FileName.Substring(Directory.GetCurrentDirectory().Length + 1) :
-					ofd.FileName;
+				tbRenderProg.Text = ofd.FileName.StartsWith(Directory.GetCurrentDirectory())
+					? ofd.FileName.Substring(Directory.GetCurrentDirectory().Length + 1)
+					: ofd.FileName;
 			}
 		}
-
 		private void InputDragEnter(object sender, DragEventArgs e) {
 			if (e.Data.GetDataPresent(DataFormats.FileDrop))
 				e.Effect = DragDropEffects.Move;
 		}
-
 		private void InputDragDrop(object sender, DragEventArgs e) {
 			var files = (string[])e.Data.GetData(DataFormats.FileDrop);
 			if (files.Length > 0) {
 				tbInput.Text = files[0];
 				UpdateCommandline();
 			}
+		}
+
+		private void RbEngineCheckedChanged(object sender, EventArgs e) {
+			bool newEngineRA2 = rbEngineAuto.Checked || rbEngineRA2.Checked || rbEngineYR.Checked;
+			if (currentEngineRA2 && !newEngineRA2 && tbMixDir.Text == FindMixDir(true))
+				tbMixDir.Text = FindMixDir(false);
+			else if (!currentEngineRA2 && newEngineRA2 && tbMixDir.Text == FindMixDir(false))
+				tbMixDir.Text = FindMixDir(true);
+			currentEngineRA2 = newEngineRA2;
+		}
+		private void PngOutputCheckedChanged(object sender, EventArgs e) {
+			nudCompression.Visible = label1.Visible = cbOutputPNG.Checked;
+			UpdateCommandline();
+		}
+		private void JpegOutputCheckedChanged(object sender, EventArgs e) {
+			lblQuality.Visible = nudEncodingQuality.Visible = cbOutputJPG.Checked;
+			UpdateCommandline();
+		}
+		private void SquaredStartPosCheckedChanged(object sender, EventArgs e) {
+			if (cbSquaredStartPositions.Checked)
+				cbTiledStartPositions.Checked = false;
+			UpdateCommandline();
+		}
+		private void TiledStartPosCheckedChanged(object sender, EventArgs e) {
+			if (cbTiledStartPositions.Checked)
+				cbSquaredStartPositions.Checked = false;
+			UpdateCommandline();
+		}
+		private void CbReplacePreviewCheckedChanged(object sender, EventArgs e) {
+			cbOmitSquareMarkers.Visible = cbReplacePreview.Checked;
+			UpdateCommandline();
 		}
 
 		private void UpdateCommandline() {
@@ -133,7 +245,6 @@ namespace CNCMaps.GUI {
 				file = file.Substring(file.LastIndexOf('\\') + 1);
 			tbCommandPreview.Text = file + " " + cmd;
 		}
-
 		private string GetCommandline() {
 			string cmd = string.Empty;
 
@@ -151,7 +262,8 @@ namespace CNCMaps.GUI {
 					cmd += "-q " + nudEncodingQuality.Value.ToString(CultureInfo.InvariantCulture) + " ";
 			}
 
-			if (tbMixDir.Text != FindMixDir(rbEngineAuto.Checked || rbEngineRA2.Checked || rbEngineYR.Checked)) cmd += "-m " + "\"" + tbMixDir.Text + "\" ";
+			if (tbMixDir.Text != FindMixDir(rbEngineAuto.Checked || rbEngineRA2.Checked || rbEngineYR.Checked))
+				cmd += "-m " + "\"" + tbMixDir.Text + "\" ";
 			if (cbEmphasizeOre.Checked) cmd += "-r ";
 			if (cbTiledStartPositions.Checked) cmd += "-s ";
 			if (cbSquaredStartPositions.Checked) cmd += "-S ";
@@ -172,106 +284,129 @@ namespace CNCMaps.GUI {
 
 			return cmd;
 		}
+		#endregion
 
-		private void UIChanged(object sender, EventArgs e) { UpdateCommandline(); }
-
-		private void PngOutputCheckedChanged(object sender, EventArgs e) {
-			nudCompression.Visible = label1.Visible = cbOutputPNG.Checked;
-			UpdateCommandline();
-		}
-
-		private void JpegOutputCheckedChanged(object sender, EventArgs e) {
-			lblQuality.Visible = nudEncodingQuality.Visible = cbOutputJPG.Checked;
-			UpdateCommandline();
-		}
-
-		private void BrowseInput(object sender, EventArgs e) {
-			ofd.CheckFileExists = true;
-			ofd.Multiselect = false;
-			ofd.Filter = "RA2/TS map files (*.map, *.mpr, *.mmx, *.yrm, *.yro)|*.mpr;*.map;*.mmx;*.yrm;*.yro|All files (*.*)|*";
-			if (string.IsNullOrEmpty(ofd.InitialDirectory))
-				ofd.InitialDirectory = FindMixDir(rbEngineAuto.Checked || rbEngineRA2.Checked || rbEngineYR.Checked);
-
-			ofd.FileName = "";
-			if (ofd.ShowDialog() == DialogResult.OK) {
-				tbInput.Text = ofd.FileName;
-				ofd.InitialDirectory = Path.GetDirectoryName(ofd.FileName);
-			}
-		}
-
-		private void SquaredStartPosCheckedChanged(object sender, EventArgs e) {
-			if (cbSquaredStartPositions.Checked)
-				cbTiledStartPositions.Checked = false;
-			UpdateCommandline();
-		}
-
-		private void TiledStartPosCheckedChanged(object sender, EventArgs e) {
-			if (cbTiledStartPositions.Checked)
-				cbSquaredStartPositions.Checked = false;
-			UpdateCommandline();
-		}
-
-		private void CbReplacePreviewCheckedChanged(object sender, EventArgs e) {
-			cbOmitSquareMarkers.Visible = cbReplacePreview.Checked;
-			UpdateCommandline();
-		}
-
+		#region renderer program execution
 		private void ExecuteCommand(object sender, EventArgs e) {
 			if (File.Exists(tbInput.Text) == false) {
+				UpdateStatus("aborted, no input file", 100);
 				MessageBox.Show("Input file doesn't exist. Aborting.");
 				return;
 			}
 
-			string exepath = tbRenderProg.Text;
-			if (File.Exists(exepath) == false) {
-				exepath = Application.ExecutablePath;
-				if (exepath.Contains("\\"))
-					exepath = exepath.Substring(0, exepath.LastIndexOf('\\') + 1);
-				exepath += RendererExe;
-				if (File.Exists(exepath) == false) {
-					MessageBox.Show("File " + RendererExe + " not found. Aborting.");
-					return;
-				}
+			string exePath = GetRendererExePath();
+			if (!File.Exists(exePath)) {
+				UpdateStatus("aborted, no renderer exe", 100);
+				MessageBox.Show("File " + RendererExe + " not found. Aborting.");
+				return;
 			}
 
 			if (!cbOutputPNG.Checked && !cbOutputJPG.Checked && !cbReplacePreview.Checked) {
-				MessageBox.Show("Either PNG, JPEG or Replace Preview must be checked.", "Nothing to do..", MessageBoxButtons.OK, MessageBoxIcon.Information);
+				UpdateStatus("aborted, no output format picked", 100);
+				MessageBox.Show("Either PNG, JPEG or Replace Preview must be checked.", "Nothing to do..", MessageBoxButtons.OK,
+					MessageBoxIcon.Information);
 				return;
 			}
 
 			MakeLog();
-			ProcessCmd(exepath);
+			ProcessCmd(exePath);
+		}
+
+		public string GetRendererExePath() {
+			string exepath = tbRenderProg.Text;
+			if (!File.Exists(exepath)) {
+				exepath = Application.ExecutablePath;
+				if (exepath.Contains("\\"))
+					exepath = exepath.Substring(0, exepath.LastIndexOf('\\') + 1);
+				exepath += RendererExe;
+			}
+			return exepath;
 		}
 
 		private void ProcessCmd(string exepath) {
-			try {
-				var p = new Process { StartInfo = { FileName = exepath, Arguments = GetCommandline() } };
+			ThreadPool.QueueUserWorkItem(delegate(object state) {
+				try {
+					var p = new Process { StartInfo = { FileName = exepath, Arguments = GetCommandline() } };
 
-				p.OutputDataReceived += ConsoleDataReceived;
-				p.StartInfo.CreateNoWindow = true;
-				p.StartInfo.RedirectStandardOutput = true;
-				p.StartInfo.UseShellExecute = false;
-				p.Start();
-				p.BeginOutputReadLine();
-			}
-			catch (InvalidOperationException) { }
-			catch (Win32Exception) { }
+					p.OutputDataReceived += ConsoleDataReceived;
+					p.StartInfo.CreateNoWindow = true;
+					p.StartInfo.RedirectStandardOutput = true;
+					p.StartInfo.UseShellExecute = false;
+					p.Start();
+					p.BeginOutputReadLine();
+
+					p.WaitForExit();
+
+					if (p.ExitCode == 0)
+						// indicates EOF
+						Log("\r\nYour map has been rendered. If your image did not appear, something went wrong." +
+							" Please sent an email to frank@zzattack.org with your map as an attachment.");
+					else
+						BeginInvoke((MethodInvoker)AskBugReport);
+				}
+				catch (InvalidOperationException) {
+				}
+				catch (Win32Exception) {
+				}
+			});
 		}
+		private void AskBugReport() {
+			// seems like rendering failed!
+			Log("\r\nIt appears an error ocurred during image rendering.");
+			var dr = MessageBox.Show(
+				"Rendering appears to have failed. Would you like to transmit a bug report containing the error log and map to frank@zzattack.org?",
+				"Failed, submit report", MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2);
+			if (dr == DialogResult.Yes)
+				SubmitBugReport();
+		}
+
+		private void SubmitBugReport() {
+			try {
+				const string url = UpdateChecker.UpdateCheckHost + "tool/report_bug";
+				WebClient wc = new WebClient();
+				wc.Proxy = null;
+				var data = new NameValueCollection();
+				data.Set("renderer_version", Assembly.LoadFile(GetRendererExePath()).GetName().Version.ToString());
+				data.Set("input_map", File.ReadAllText(tbInput.Text));
+				data.Set("input_name", Path.GetFileName(tbInput.Text));
+				data.Set("commandline", GetCommandline());
+				data.Set("log_text", rtbLog.Text);
+
+				wc.OpenWriteCompleted += (o, args) => UpdateStatus("sending bug report.. connected", 15);
+				wc.UploadProgressChanged += (o, args) => {
+					double pct = 15 + Math.Round(85.0 * args.TotalBytesToSend / args.BytesSent / 100.0, 0);
+					UpdateStatus("sending bug report.. uploading " + pct + "%", (int)pct);
+				};
+				wc.UploadValuesCompleted += (o, args) => {
+					if (args.Cancelled || args.Error != null)
+						BugReportFailed();
+					else
+						UpdateStatus("bug report sent", 100);
+				};
+
+				wc.UploadValuesAsync(new Uri(url), "POST", data);
+				UpdateStatus("sending bug report.. ", 5);
+			}
+			catch {
+				BugReportFailed();
+			}
+		}
+
+		private void BugReportFailed() {
+			Log("Submitting bug report failed. Please send a manual bug report to frank@zzattack.org including your map, settings and error log");
+			UpdateStatus("bug report failed", 100);
+		}
+
+		#endregion
 
 		#region Logging
-
 		private void ConsoleDataReceived(object sender, DataReceivedEventArgs e) {
-			if (e.Data == null) {
-				// indicates EOF
-				Log("\r\nYour map has been rendered. If your image did not appear, something went wrong." +
-					" Please sent an email to frank@zzattack.org with your map as an attachment.");
-			}
-			else {
+			if (e.Data == null) // finished
+				UpdateStatus("rendering complete", 100);
+			else
 				Log(e.Data);
-			}
 		}
-
-		bool _showlog;
+		private bool _showlog;
 		private void MakeLog() {
 			if (_showlog)
 				return;
@@ -280,9 +415,7 @@ namespace CNCMaps.GUI {
 			cbLog.Visible = true;
 			_showlog = true;
 		}
-
 		private delegate void LogDelegate(string s);
-
 		private void Log(string s) {
 			if (InvokeRequired) {
 				Invoke(new LogDelegate(Log), s);
@@ -292,62 +425,31 @@ namespace CNCMaps.GUI {
 			rtbLog.SelectionStart = rtbLog.TextLength - 1;
 			rtbLog.SelectionLength = 1;
 			rtbLog.ScrollToCaret();
-		}
 
+			var progressEntry = progressIndicators.FirstOrDefault(kvp => s.Contains(kvp.Value));
+			if (!progressEntry.Equals(default(KeyValuePair<int, string>))) {
+				UpdateStatus("rendering: " + progressEntry.Key + "%", progressEntry.Key);
+			}
+			else if (s.Contains("Drawing tiles...") || s.Contains("Drawing objects...")) {
+				int idx = s.LastIndexOf(" ") + 1;
+				double pct = Math.Round(27 + (90.0 - 27.0) * int.Parse(s.Substring(idx, s.Length - idx - 1)) / 100.0, 0);
+				UpdateStatus("drawing, " + pct + "%", (int)pct);
+			}
+		}
+		private Dictionary<int, string> progressIndicators = new Dictionary<int, string>() {
+			{5, "Initializing filesystem"},
+			{8, "Reading tiles"},
+			{10, "Parsing rules.ini"},
+			{12, "Parsing art.ini"},
+			{14, "Loading houses"},
+			{16, "Loading lighting"},
+			{18, "Creating per-height palettes"},
+			{20, "Loading light sources"},
+			{22, "Calculating palette-values for all objects"},
+			{27, "Drawing map"},
+			{90, "Map drawing completed"},
+		};
 		#endregion
 
-		// automatically swap between RA2/TS mix dir from registry
-		private bool currentEngineRA2 = true;
-		private void RbEngineCheckedChanged(object sender, EventArgs e) {
-			bool newEngineRA2 = rbEngineAuto.Checked || rbEngineRA2.Checked || rbEngineYR.Checked;
-			if (currentEngineRA2 && !newEngineRA2 && tbMixDir.Text == FindMixDir(true))
-				tbMixDir.Text = FindMixDir(false);
-			else if (!currentEngineRA2 && newEngineRA2 && tbMixDir.Text == FindMixDir(false))
-				tbMixDir.Text = FindMixDir(true);
-			currentEngineRA2 = newEngineRA2;
-		}
-
-
-		private void DownloadAndUpdate(string url) {
-			lblFill.Text = "Status: downloading new program version";
-			var pbf = new ProgressBarForm();
-			pbf.StartPosition = FormStartPosition.Manual;
-			pbf.Location = new Point(this.Left + this.Width / 2 - pbf.Width / 2, this.Top + this.Height / 2 - pbf.Height / 2);
-			pbf.Text = "Updating program";
-			pbf.lblStatus.Text = "Status: contacting download server";
-			pbf.progressBar.Value = 4;
-			pbf.Show();
-
-			var wc = new WebClient();
-			var address = new Uri(url);
-
-			wc.DownloadProgressChanged += (sender, args) =>
-				BeginInvoke((Action)delegate {
-					pbf.progressBar.Value = args.ProgressPercentage;
-					pbf.lblStatus.Text = string.Format("Status: downloading, {0}%", args.ProgressPercentage);
-				});
-
-			wc.DownloadDataCompleted += (sender, args) => {
-				string appPath = Application.ExecutablePath;
-				string dest = appPath + ".tmp";
-				string suffix = "";
-				int suffixNr = 0;
-				while (File.Exists(dest + suffix)) {
-					suffixNr++;
-					suffix = suffixNr.ToString(CultureInfo.InvariantCulture);
-				}
-				dest = dest + suffix;
-				File.Move(appPath, dest);
-				File.WriteAllBytes(appPath, args.Result);
-				// invoke 
-				var psi = new ProcessStartInfo(appPath);
-				psi.Arguments = string.Format("--killpid {0} --cleanupdate {1} --skip-update-check", Process.GetCurrentProcess().Id, dest);
-				Process.Start(psi);
-				pbf.Close();
-			};
-
-			// trigger it all
-			wc.DownloadDataAsync(address);
-		}
 	}
 }

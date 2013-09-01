@@ -631,6 +631,7 @@
 			// 
 			this.pbProgress.Name = "pbProgress";
 			this.pbProgress.Size = new System.Drawing.Size(100, 16);
+			this.pbProgress.Style = System.Windows.Forms.ProgressBarStyle.Continuous;
 			// 
 			// MainForm
 			// 
