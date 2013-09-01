@@ -4,7 +4,7 @@ Project page:
 
 * http://github.com/zzattack/ccmaps-net
 
-This project provides a tool to render battle maps of the most popular Westwood RTS games Red Alert 2 and Tiberian Sun, including their expansions Yuri's Revenge and FireStorm.
+This project provides a tool to render battle maps of the most popular Westwood RTS games Red Alert 2 and Tiberian Sun, including their expansions Yuri's Revenge and Firestorm.
 
 Status
 ------
@@ -18,6 +18,7 @@ The program requires several .mix files from the original games. These include:
 * ra2.mix
 * language.mix
 * theme.mix
+(or their TS equivalents)
 
 If the original game is installed under Microsoft Windows the location of these files will be found in the registry, but under Mono you have to specify their location on the command line.
 
@@ -25,7 +26,7 @@ The program depends on a software-only OpenGL renderer named Mesa. This approach
 
 Usage
 -----
-Instructions on the command line application can be found by invoking `ccmaps -h`. Alternatively the CNCMaps GUI program can be used which contains descriptions of every option available and interactively updates the corresponding command line.
+Instructions on the command line application can be found by invoking `cncmaps -h`. Alternatively the CNCMaps GUI program can be used which contains descriptions of every option available and interactively updates the corresponding command line.
 
 Development
 -----------
@@ -40,15 +41,15 @@ The project is no longer maintained at either of these locations.
 
 Contact
 -------
-I am the main and only contributor to this project. You can contact me at frank@zzattack.org.
+I am the main and only contributor to this project but am very willing to accept patches or collaborate on implementing support of new features or fixes. You can contact me at frank@zzattack.org.
 
 Acknowledgments
 ---------------
 Special thanks go out to authors of several modding tools that have greatly benefited the community as well as development of this program:
 
 * Olaf van der Spek for XCC and XWIS
-* Matthian Wagner for FinalAlert
-* All contributors to [ModEnc](http://modenc.renegadeprojects.com), especially the people from \#renproj@FreeNode
+* Matthias Wagner for FinalAlert
+* All contributors to [ModEnc](http://modenc.renegadeprojects.com), especially the people from \#renproj@Freenode
 * [Strike-Team community](http://strike-team.net/) for testing and support
 
 License
