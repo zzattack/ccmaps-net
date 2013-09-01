@@ -23,9 +23,9 @@ namespace CNCMaps.MapLogic {
 		private static string[] _fires;
 		private static readonly Random R = new Random();
 		static readonly string[] ExtraBuildingImages = {
-			"ProductionAnim", // you don't want ProductionAnims on map renders // Why not? look at NACNST, the crane is missing!
+			"IdleAnim", // you don't want ProductionAnims on map renders // Why not? look at NACNST, the crane is missing!
 			"SuperAnim",
-			"Turret",
+			// "Turret",
 			"BibShape",
 			"SpecialAnimFour",
 			"SpecialAnimThree",
@@ -105,7 +105,7 @@ namespace CNCMaps.MapLogic {
 			}
 			else if (theaterExtension) {
 				imageFileName += Defaults.GetExtension(_theaterType);
-				if (_collectionType != CollectionType.Overlay || _engine <= EngineType.FireStorm) {
+				if (_collectionType != CollectionType.Overlay || _engine <= EngineType.Firestorm) {
 					drawable.PaletteType = PaletteType.Iso;
 				}
 			}
@@ -133,7 +133,7 @@ namespace CNCMaps.MapLogic {
 
 			if (artSection.ReadString("Remapable") != string.Empty) {
 				// does NOT work in RA2
-				if (_engine <= EngineType.FireStorm)
+				if (_engine <= EngineType.Firestorm)
 					drawable.IsRemapable = artSection.ReadBool("Remapable");
 			}
 
@@ -228,7 +228,7 @@ namespace CNCMaps.MapLogic {
 						//drawable.Foundation = new Size(3, 1);
 					}
 				}
-				else if (_engine <= EngineType.FireStorm) {
+				else if (_engine <= EngineType.Firestorm) {
 					if (SpecialOverlays.IsTib(ovl)) {
 						drawable.PaletteType = PaletteType.Unit;
 						drawable.LightingType = LightingType.None;
@@ -348,8 +348,11 @@ namespace CNCMaps.MapLogic {
 						ApplyNewTheaterIfNeeded(img, ref img);
 					}
 					var turretOffset = new Point(rulesSection.ReadInt("TurretAnimX"), rulesSection.ReadInt("TurretAnimY"));
-					if (voxel)
+					if (voxel) {
 						turretOffset.Offset(Drawable.TileWidth / 2, 0);
+						if (_collectionType == CollectionType.Vehicle)
+							turretOffset.Y += (int)((turretart.ReadDouble("TurretOffset") * Drawable.TileHeight) / 256);
+					}
 
 					var props = new DrawProperties {
 						Offset = turretOffset,
@@ -426,7 +429,7 @@ namespace CNCMaps.MapLogic {
 		}
 
 		private void ApplyNewTheaterIfNeeded(string artName, ref string imageFileName) {
-			if (_engine <= EngineType.FireStorm) {
+			if (_engine <= EngineType.Firestorm) {
 				// the tag will only work if the ID for the object starts with either G, N or C and its second letter is A (for Arctic/Snow theater) or T (for Temperate theater)
 				if (new[] { 'G', 'N', 'C' }.Contains(artName[0]) && new[] { 'A', 'T' }.Contains(artName[1]))
 					ApplyNewTheater(ref imageFileName);

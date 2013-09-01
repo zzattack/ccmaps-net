@@ -25,6 +25,7 @@
 		private void InitializeComponent() {
 			System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
 			this.gbMiscOptions = new System.Windows.Forms.GroupBox();
+			this.cbOmitSquareMarkers = new System.Windows.Forms.CheckBox();
 			this.panel1 = new System.Windows.Forms.Panel();
 			this.rbPreferHardwareRendering = new System.Windows.Forms.RadioButton();
 			this.rbPreferSoftwareRendering = new System.Windows.Forms.RadioButton();
@@ -71,7 +72,10 @@
 			this.cbLog = new System.Windows.Forms.GroupBox();
 			this.rtbLog = new System.Windows.Forms.RichTextBox();
 			this.folderBrowserDialog1 = new System.Windows.Forms.FolderBrowserDialog();
-			this.cbOmitSquareMarkers = new System.Windows.Forms.CheckBox();
+			this.statusStrip = new System.Windows.Forms.StatusStrip();
+			this.lblStatus = new System.Windows.Forms.ToolStripStatusLabel();
+			this.lblFill = new System.Windows.Forms.ToolStripStatusLabel();
+			this.pbProgress = new System.Windows.Forms.ToolStripProgressBar();
 			this.gbMiscOptions.SuspendLayout();
 			this.panel1.SuspendLayout();
 			this.pnlMapSize.SuspendLayout();
@@ -80,6 +84,7 @@
 			((System.ComponentModel.ISupportInitialize)(this.nudEncodingQuality)).BeginInit();
 			((System.ComponentModel.ISupportInitialize)(this.nudCompression)).BeginInit();
 			this.cbLog.SuspendLayout();
+			this.statusStrip.SuspendLayout();
 			this.SuspendLayout();
 			// 
 			// gbMiscOptions
@@ -103,6 +108,17 @@
 			this.gbMiscOptions.Text = "Misc. Options";
 			this.gbMiscOptions.DragDrop += new System.Windows.Forms.DragEventHandler(this.InputDragDrop);
 			this.gbMiscOptions.DragEnter += new System.Windows.Forms.DragEventHandler(this.InputDragEnter);
+			// 
+			// cbOmitSquareMarkers
+			// 
+			this.cbOmitSquareMarkers.AutoSize = true;
+			this.cbOmitSquareMarkers.Location = new System.Drawing.Point(319, 206);
+			this.cbOmitSquareMarkers.Name = "cbOmitSquareMarkers";
+			this.cbOmitSquareMarkers.Size = new System.Drawing.Size(122, 17);
+			this.cbOmitSquareMarkers.TabIndex = 17;
+			this.cbOmitSquareMarkers.Text = "Omit square markers";
+			this.cbOmitSquareMarkers.UseVisualStyleBackColor = true;
+			this.cbOmitSquareMarkers.CheckedChanged += new System.EventHandler(this.UIChanged);
 			// 
 			// panel1
 			// 
@@ -587,23 +603,42 @@
 			this.rtbLog.TabIndex = 0;
 			this.rtbLog.Text = "";
 			// 
-			// cbOmitSquareMarkers
+			// statusStrip
 			// 
-			this.cbOmitSquareMarkers.AutoSize = true;
-			this.cbOmitSquareMarkers.Location = new System.Drawing.Point(319, 206);
-			this.cbOmitSquareMarkers.Name = "cbOmitSquareMarkers";
-			this.cbOmitSquareMarkers.Size = new System.Drawing.Size(122, 17);
-			this.cbOmitSquareMarkers.TabIndex = 17;
-			this.cbOmitSquareMarkers.Text = "Omit square markers";
-			this.cbOmitSquareMarkers.UseVisualStyleBackColor = true;
-			this.cbOmitSquareMarkers.CheckedChanged += new System.EventHandler(this.UIChanged);
+			this.statusStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.lblStatus,
+            this.lblFill,
+            this.pbProgress});
+			this.statusStrip.Location = new System.Drawing.Point(0, 684);
+			this.statusStrip.Name = "statusStrip";
+			this.statusStrip.Size = new System.Drawing.Size(566, 22);
+			this.statusStrip.TabIndex = 7;
+			this.statusStrip.Text = "statusStrip1";
+			// 
+			// lblStatus
+			// 
+			this.lblStatus.Name = "lblStatus";
+			this.lblStatus.Size = new System.Drawing.Size(42, 17);
+			this.lblStatus.Text = "Status:";
+			// 
+			// lblFill
+			// 
+			this.lblFill.Name = "lblFill";
+			this.lblFill.Size = new System.Drawing.Size(376, 17);
+			this.lblFill.Spring = true;
+			// 
+			// pbProgress
+			// 
+			this.pbProgress.Name = "pbProgress";
+			this.pbProgress.Size = new System.Drawing.Size(100, 16);
 			// 
 			// MainForm
 			// 
 			this.AllowDrop = true;
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-			this.ClientSize = new System.Drawing.Size(566, 691);
+			this.ClientSize = new System.Drawing.Size(566, 706);
+			this.Controls.Add(this.statusStrip);
 			this.Controls.Add(this.cbLog);
 			this.Controls.Add(this.lblCommand);
 			this.Controls.Add(this.tbCommandPreview);
@@ -611,7 +646,7 @@
 			this.Controls.Add(this.gbMiscOptions);
 			this.Controls.Add(this.lblCompression);
 			this.Name = "MainForm";
-			this.Text = "Red Alert 2 and Tiberian Sun Map Renderer";
+			this.Text = "Red Alert 2 and Tiberian Sun map renderer";
 			this.Load += new System.EventHandler(this.MainFormLoad);
 			this.DragDrop += new System.Windows.Forms.DragEventHandler(this.InputDragDrop);
 			this.DragEnter += new System.Windows.Forms.DragEventHandler(this.InputDragEnter);
@@ -628,6 +663,8 @@
 			((System.ComponentModel.ISupportInitialize)(this.nudEncodingQuality)).EndInit();
 			((System.ComponentModel.ISupportInitialize)(this.nudCompression)).EndInit();
 			this.cbLog.ResumeLayout(false);
+			this.statusStrip.ResumeLayout(false);
+			this.statusStrip.PerformLayout();
 			this.ResumeLayout(false);
 			this.PerformLayout();
 
@@ -683,6 +720,10 @@
 		private System.Windows.Forms.RadioButton rbPreferHardwareRendering;
 		private System.Windows.Forms.RadioButton rbPreferSoftwareRendering;
 		private System.Windows.Forms.CheckBox cbOmitSquareMarkers;
+		private System.Windows.Forms.StatusStrip statusStrip;
+		private System.Windows.Forms.ToolStripStatusLabel lblFill;
+		private System.Windows.Forms.ToolStripProgressBar pbProgress;
+		private System.Windows.Forms.ToolStripStatusLabel lblStatus;
 
 	}
 }

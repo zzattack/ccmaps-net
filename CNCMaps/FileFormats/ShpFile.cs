@@ -14,123 +14,124 @@ namespace CNCMaps.FileFormats {
 
 	class ShpFile : VirtualFile {
 
-		static NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
+		static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
 
 		[StructLayout(LayoutKind.Sequential, Pack = 1)]
 		public struct ShpFileHeader {
-			private short zero;
-			public short cx;
-			public short cy;
-			public short c_images;
+			private readonly short Zero;
+			public readonly short Width;
+			public readonly short Height;
+			public readonly short NumImages;
 		}
 
 		[StructLayout(LayoutKind.Sequential, Pack = 1)]
-		struct ShpImageHeader {
-			public short x;
-			public short y;
-			public short cx;
-			public short cy;
-			public byte compression;
-			public byte unknown1;
-			public byte unknown2;
-			public byte unknown3;
-			private int unknown4;
-			private int zero;
-			public int offset;
+		public struct ShpImageHeader {
+			public readonly short x;
+			public readonly short y;
+			public readonly short cx;
+			public readonly short cy;
+			public readonly byte compression;
+			public readonly byte unknown1;
+			public readonly byte unknown2;
+			public readonly byte unknown3;
+			private readonly int unknown4;
+			private readonly int zero;
+			public readonly int offset;
 		}
 
-		struct ShpImage {
-			public ShpImageHeader header;
-			public byte[] imageData;
+		[StructLayout(LayoutKind.Sequential, Pack = 1)]
+		public struct ShpImage {
+			public ShpImageHeader Header;
+			public byte[] ImageData;
 		}
 
-		ShpFileHeader fileHeader;
-		List<ShpImage> images;
-
-		bool initialized;
+		public ShpFileHeader Header { get; private set; }
+		public List<ShpImage> Images { get; private set; }
+		bool _isInitialized;
 
 		public ShpFile(Stream baseStream, string filename, int baseOffset, int fileSize, bool isBuffered = true)
 			: base(baseStream, filename, baseOffset, fileSize, isBuffered) {
 		}
 
 		public void Initialize() {
-			initialized = true;
-			logger.Debug("Initializing SHP data for file {0}", FileName);
-			fileHeader = EzMarshal.ByteArrayToStructure<ShpFileHeader>(Read(Marshal.SizeOf(typeof(ShpFileHeader))));
-			images = new List<ShpImage>(fileHeader.c_images);
-			for (int i = 0; i < fileHeader.c_images; i++) {
+			_isInitialized = true;
+			Logger.Debug("Initializing SHP data for file {0}", FileName);
+			Header = EzMarshal.ByteArrayToStructure<ShpFileHeader>(Read(Marshal.SizeOf(typeof(ShpFileHeader))));
+			Images = new List<ShpImage>(Header.NumImages);
+			for (int i = 0; i < Header.NumImages; i++) {
 				var img = new ShpImage();
-				img.header = EzMarshal.ByteArrayToStructure<ShpImageHeader>(Read(Marshal.SizeOf(typeof(ShpImageHeader))));
-				images.Add(img);
+				img.Header = EzMarshal.ByteArrayToStructure<ShpImageHeader>(Read(Marshal.SizeOf(typeof(ShpImageHeader))));
+				Images.Add(img);
 			}
 		}
 
 		private static Random R = new Random();
 		private ShpImage GetImage(int imageIndex) {
-			if (imageIndex >= images.Count) return new ShpImage();
+			if (imageIndex >= Images.Count) return new ShpImage();
 
-			ShpImage img = images[imageIndex];
-			// make sure imageData is present/decoded if needed
-			if (img.imageData == null) {
-				Position = img.header.offset;
-				int c_px = img.header.cx * img.header.cy;
+			ShpImage img = Images[imageIndex];
+			// make sure ImageData is present/decoded if needed
+			if (img.ImageData == null) {
+				Position = img.Header.offset;
+				int c_px = img.Header.cx * img.Header.cy;
 
-				//img.header.compression &= 0x03;
-				if (img.header.compression <= 1) {
+				//img.Header.compression &= 0x03;
+				if (img.Header.compression <= 1) {
 					// Raw 8 bits-per-pixel image data
-					img.imageData = Read(c_px);
+					img.ImageData = Read(c_px);
 				}
-				else if (img.header.compression == 2) {
+				else if (img.Header.compression == 2) {
 					// Image data divided into scanlines {
 					// -- Length of scanline (ImageHeader.width + 2) : uint16
 					// -- Raw 8 bits-per-pixel image data : uint8[ImageHeader.width]
-					img.imageData = new byte[c_px];
+					img.ImageData = new byte[c_px];
 					int offset = 0;
-					for (int y = 0; y < img.header.cy; y++) {
+					for (int y = 0; y < img.Header.cy; y++) {
 						ushort scanlineLength = (ushort)(ReadUInt16() - sizeof(ushort));
-						Read(img.imageData, offset, scanlineLength);
+						Read(img.ImageData, offset, scanlineLength);
 						offset += scanlineLength;
 					}
 				}
-				else if (img.header.compression == 3) {
-					img.imageData = new byte[c_px];
+				else if (img.Header.compression == 3) {
+					img.ImageData = new byte[c_px];
 					var compressedEnd = (int)Length;
-					if (imageIndex < images.Count - 1)
-						compressedEnd = images[imageIndex + 1].header.offset;
-					if (compressedEnd < img.header.offset)
+					if (imageIndex < Images.Count - 1)
+						compressedEnd = Images[imageIndex + 1].Header.offset;
+					if (compressedEnd < img.Header.offset)
 						compressedEnd = (int)Length;
-					Format3.DecodeInto(Read(compressedEnd - img.header.offset), img.imageData, img.header.cx, img.header.cy);
+					Format3.DecodeInto(Read(compressedEnd - img.Header.offset), img.ImageData, img.Header.cx, img.Header.cy);
 				}
 				else {
-					logger.Warn("SHP image {0} frame {1} has unknown compression!", FileName, imageIndex);
+					Logger.Warn("SHP image {0} frame {1} has unknown compression!", FileName, imageIndex);
 				}
 			}
 			return img;
 		}
 
-		unsafe public void Draw(GameObject obj, DrawProperties props, DrawingSurface ds, Point drawableOffset) {
-			if (!initialized) Initialize();
+		unsafe public void Draw(GameObject obj, DrawProperties props, DrawingSurface ds, Point globalOffset) {
+			if (!_isInitialized) Initialize();
 
 			int frameIndex = props.FrameDecider(obj);
-			drawableOffset.Offset(props.GetOffset(obj));
+			Point offset = globalOffset;
+			offset.Offset(props.GetOffset(obj));
 			Palette p = props.PaletteOverride ?? obj.Palette;
 
 			frameIndex = DecideFrameIndex(frameIndex);
-			if (frameIndex >= images.Count)
+			if (frameIndex >= Images.Count)
 				return;
 
-			logger.Trace("Drawing SHP file {0} (Frame {1}) at ({2},{3})", FileName, frameIndex, drawableOffset.X, drawableOffset.Y);
+			Logger.Trace("Drawing SHP file {0} (Frame {1}) at ({2},{3})", FileName, frameIndex, offset.X, offset.Y);
 
 			var image = GetImage(frameIndex);
-			if (image.imageData == null || image.header.cx * image.header.cy != image.imageData.Length)
+			if (image.ImageData == null || image.Header.cx * image.Header.cy != image.ImageData.Length)
 				return;
 
-			var h = image.header;
+			var h = image.Header;
 			var c_px = (uint)(h.cx * h.cy);
 			int stride = ds.bmd.Stride;
 			var zBuffer = ds.GetZBuffer();
 
-			if (c_px <= 0 || h.cx < 0 || h.cy < 0 || frameIndex > fileHeader.c_images)
+			if (c_px <= 0 || h.cx < 0 || h.cy < 0 || frameIndex > Header.NumImages)
 				return;
 
 
@@ -138,13 +139,13 @@ namespace CNCMaps.FileFormats {
 			byte* w_high = (byte*)ds.bmd.Scan0 + stride * ds.bmd.Height;
 
 			var tile = obj.Tile;
-			int dx = drawableOffset.X + tile.Dx * Drawable.TileWidth / 2 + Drawable.TileWidth / 2 - fileHeader.cx / 2 + h.x,
-				dy = drawableOffset.Y + (tile.Dy - tile.Z) * Drawable.TileHeight / 2 - fileHeader.cy / 2 + h.y;
+			int dx = offset.X + tile.Dx * Drawable.TileWidth / 2 + Drawable.TileWidth / 2 - Header.Width / 2 + h.x,
+				dy = offset.Y + (tile.Dy - tile.Z) * Drawable.TileHeight / 2 - Header.Height / 2 + h.y;
 			byte* w = (byte*)ds.bmd.Scan0 + dx * 3 + stride * dy;
 			int zIdx = dx + dy * ds.Width;
 			int rIdx = 0;
 
-			// short zBufVal = (short)(drawableOffset.Y + tile.Dy * Drawable.TileHeight / 2 + fileHeader.cy);
+			// short zBufVal = (short)(offset.Y + tile.Dy * Drawable.TileHeight / 2 + Header.Height);
 			short zBufVal = (short)(obj.BaseTile.Rx + obj.BaseTile.Ry + obj.BaseTile.Z + obj.Drawable.HeightOffset);
 
 			for (int y = 0; y < h.cy; y++) {
@@ -156,7 +157,7 @@ namespace CNCMaps.FileFormats {
 				}
 
 				for (int x = 0; x < h.cx; x++) {
-					byte paletteValue = image.imageData[rIdx];
+					byte paletteValue = image.ImageData[rIdx];
 					if (paletteValue != 0 && w_low <= w && w < w_high && (props.OverridesZbuffer || zBufVal >= zBuffer[zIdx])) {
 						*(w + 0) = p.colors[paletteValue].B;
 						*(w + 1) = p.colors[paletteValue].G;
@@ -173,45 +174,45 @@ namespace CNCMaps.FileFormats {
 			}
 		}
 
-		unsafe public void DrawShadow(GameObject obj, DrawProperties props, DrawingSurface ds, Point drawableOffset) {
+		unsafe public void DrawShadow(GameObject obj, DrawProperties props, DrawingSurface ds, Point globalOffset) {
 			int frameIndex = props.FrameDecider(obj);
-			drawableOffset.Offset(props.GetShadowOffset(obj));
-			Palette p = props.PaletteOverride ?? obj.Palette;
+			Point offset = globalOffset;
+			offset.Offset(props.GetShadowOffset(obj));
 
 			frameIndex = DecideFrameIndex(frameIndex);
-			frameIndex += images.Count / 2; // latter half are shadow images
-			if (frameIndex >= images.Count)
+			frameIndex += Images.Count / 2; // latter half are shadow Images
+			if (frameIndex >= Images.Count)
 				return;
 
-			logger.Trace("Drawing SHP shadow {0} (frame {1}) at ({2},{3})", FileName, frameIndex, drawableOffset.X, drawableOffset.Y);
+			Logger.Trace("Drawing SHP shadow {0} (frame {1}) at ({2},{3})", FileName, frameIndex, offset.X, offset.Y);
 
 			var image = GetImage(frameIndex);
-			if (image.imageData == null || image.header.cx * image.header.cy != image.imageData.Length)
+			if (image.ImageData == null || image.Header.cx * image.Header.cy != image.ImageData.Length)
 				return;
 
-			var h = image.header;
+			var h = image.Header;
 			var c_px = (uint)(h.cx * h.cy);
 			int stride = ds.bmd.Stride;
 			var shadows = ds.GetShadows();
 			var zBuffer = ds.GetZBuffer();
 
-			if (c_px <= 0 || h.cx < 0 || h.cy < 0 || frameIndex > fileHeader.c_images)
+			if (c_px <= 0 || h.cx < 0 || h.cy < 0 || frameIndex > Header.NumImages)
 				return;
 
 
 			var w_low = (byte*)ds.bmd.Scan0;
 			byte* w_high = (byte*)ds.bmd.Scan0 + stride * ds.bmd.Height;
 
-			int dx = drawableOffset.X + obj.Tile.Dx * Drawable.TileWidth / 2 + Drawable.TileWidth / 2 - fileHeader.cx / 2 + h.x,
-				dy = drawableOffset.Y + (obj.Tile.Dy - obj.Tile.Z) * Drawable.TileHeight / 2 - fileHeader.cy / 2 + h.y;
+			int dx = offset.X + obj.Tile.Dx * Drawable.TileWidth / 2 + Drawable.TileWidth / 2 - Header.Width / 2 + h.x,
+				dy = offset.Y + (obj.Tile.Dy - obj.Tile.Z) * Drawable.TileHeight / 2 - Header.Height / 2 + h.y;
 			byte* w = (byte*)ds.bmd.Scan0 + dx * 3 + stride * dy;
 			int zIdx = dx + dy * ds.Width;
 			int rIdx = 0;
 			short zBufVal = (short)(obj.BaseTile.Rx + obj.BaseTile.Ry + obj.BaseTile.Z + obj.Drawable.HeightOffset);
-			
+
 			for (int y = 0; y < h.cy; y++) {
 				for (int x = 0; x < h.cx; x++) {
-					if (w_low <= w && w < w_high && image.imageData[rIdx] != 0 && !shadows[zIdx] && zBufVal >= zBuffer[zIdx]) {
+					if (w_low <= w && w < w_high && image.ImageData[rIdx] != 0 && !shadows[zIdx] && zBufVal >= zBuffer[zIdx]) {
 						*(w + 0) /= 2;
 						*(w + 1) /= 2;
 						*(w + 2) /= 2;
@@ -229,61 +230,53 @@ namespace CNCMaps.FileFormats {
 		}
 
 		private int DecideFrameIndex(int frameIndex) {
-			DrawFrame f = (DrawFrame) frameIndex;
+			DrawFrame f = (DrawFrame)frameIndex;
 			if (f == DrawFrame.Random)
-				frameIndex = R.Next(images.Count);
+				frameIndex = R.Next(Images.Count);
 			//else if (f == DrawFrame.RandomHealthy) {
-			//	// pick from the 1st 25% of the the images
-			//	frameIndex = R.Next(images.Count / 4);
+			//	// pick from the 1st 25% of the the Images
+			//	frameIndex = R.Next(Images.Count / 4);
 			//}
 			//else if (f == DrawFrame.Damaged) {
 			//	// first image of the 2nd half
-			//	frameIndex = images.Count / 4;
+			//	frameIndex = Images.Count / 4;
 			//}
 			return frameIndex;
 		}
 
-		/// <summary>
-		/// 
-		/// </summary>
-		/// <param name="unitDirectionFacing"></param>
-		/// <param name="ds"></param>
-		/// <param name="xOffset"></param>
-		/// <param name="yOffset"></param>
-		public unsafe void DrawAlpha(int unitDirectionFacing, DrawingSurface ds, Point offset) {
-			if (!initialized) Initialize();
+		unsafe public void DrawAlpha(GameObject obj, DrawProperties props, DrawingSurface ds, Point globalOffset) {
+			if (!_isInitialized) Initialize();
 
 			// Change originally implemented by Starkku: Ares supports multiframe AlphaImages, based on frame count 
 			// the direction the unit it facing.
-			int frameIndex =
-				fileHeader.c_images > 1 && (fileHeader.c_images % 8) == 0
-				? unitDirectionFacing / 8
-				: 0;
+			int frameIndex = props.FrameDecider(obj);
+			Point offset = globalOffset;
+			offset.Offset(props.GetOffset(obj));
 
-			logger.Trace("Drawing AlphaImage SHP file {0} (frame {1}) at ({2},{3})", FileName, frameIndex, offset.X, offset.Y);
+			Logger.Trace("Drawing AlphaImage SHP file {0} (frame {1}) at ({2},{3})", FileName, frameIndex, offset.X, offset.Y);
 
 			var image = GetImage(frameIndex);
-			//var image = GetImage(frameIndex + images.Count / 2);
-			var h = image.header;
+			//var image = GetImage(frameIndex + Images.Count / 2);
+			var h = image.Header;
 			var c_px = (uint)(h.cx * h.cy);
 			int stride = ds.bmd.Stride;
 
-			if (c_px <= 0 || h.cx < 0 || h.cy < 0 || frameIndex > fileHeader.c_images)
+			if (c_px <= 0 || h.cx < 0 || h.cy < 0 || frameIndex > Header.NumImages)
 				return;
 
 			var w_low = (byte*)ds.bmd.Scan0;
 			byte* w_high = (byte*)ds.bmd.Scan0 + stride * ds.bmd.Height;
 
-			int dx = offset.X + Drawable.TileWidth / 2 - fileHeader.cx / 2 + h.x,
-				dy = offset.Y - fileHeader.cy / 2 + h.y;
+			int dx = offset.X + Drawable.TileWidth / 2 - Header.Width / 2 + h.x,
+				dy = offset.Y - Header.Height / 2 + h.y;
 			byte* w = (byte*)ds.bmd.Scan0 + dx * 3 + stride * dy;
 
 			int rIdx = 0;
 
 			for (int y = 0; y < h.cy; y++) {
 				for (int x = 0; x < h.cx; x++) {
-					if (image.imageData[rIdx] != 0 && w_low <= w && w < w_high) {
-						float mult = image.imageData[rIdx] / 127.0f;
+					if (image.ImageData[rIdx] != 0 && w_low <= w && w < w_high) {
+						float mult = image.ImageData[rIdx] / 127.0f;
 						*(w + 0) = limit(mult, *(w + 0));
 						*(w + 1) = limit(mult, *(w + 1));
 						*(w + 2) = limit(mult, *(w + 2));

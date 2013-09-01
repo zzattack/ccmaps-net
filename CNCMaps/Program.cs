@@ -38,7 +38,7 @@ namespace CNCMaps {
 				map.FileName = Settings.InputFile;
 
 				// Code to organize moving of maps in a directory for themselves
-				/*string mapName = map.DetermineMapName(EngineType.FireStorm);
+				/*string mapName = map.DetermineMapName(EngineType.Firestorm);
 				string dir = Path.Combine(Path.GetDirectoryName(map.FileName), mapName);
 				if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
 				map.Close();
@@ -60,10 +60,10 @@ namespace CNCMaps {
 				map.DrawMap();
 
 #if DEBUG
-				using (var form = new DebugDrawingSurfaceWindow(map.GetDrawingSurface(), map.GetTiles(), map.GetTheater(), map)) {
-					form.RequestTileEvaluate += tile => map.DebugDrawTile(tile);
-					form.ShowDialog();
-				}
+				//using (var form = new DebugDrawingSurfaceWindow(map.GetDrawingSurface(), map.GetTiles(), map.GetTheater(), map)) {
+				//	form.RequestTileEvaluate += tile => map.DebugDrawTile(tile);
+				//	form.ShowDialog();
+				//}
 #endif
 
 				if (Settings.StartPositionMarking == StartPositionMarking.Squared)
@@ -169,7 +169,7 @@ namespace CNCMaps {
 				{"y|force-ra2", "Force using the Red Alert 2 engine for rendering", v => Settings.Engine = EngineType.RedAlert2}, 
 				{"Y|force-yr", "Force using the Yuri's Revenge engine for rendering", v => Settings.Engine = EngineType.YurisRevenge},
 				{"t|force-ts", "Force using the Tiberian Sun engine for rendering", v => Settings.Engine = EngineType.TiberianSun},
-				{"T|force-fs", "Force using the FireStorm engine for rendering", v => Settings.Engine = EngineType.FireStorm},
+				{"T|force-fs", "Force using the Firestorm engine for rendering", v => Settings.Engine = EngineType.Firestorm},
 				{"j|output-jpg", "Output JPEG file", v => Settings.SaveJPEG = true},
 				{"q|jpeg-quality=", "Set JPEG quality level (0-100)", (int v) => Settings.JPEGCompression = v},
 				{"p|output-png", "Output PNG file", v => Settings.SavePNG = true},

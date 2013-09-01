@@ -1,8 +1,10 @@
 ﻿using System;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Drawing;
 using System.Globalization;
 using System.IO;
+using System.Net;
 using System.Security;
 using System.Windows.Forms;
 using Microsoft.Win32;
@@ -11,16 +13,44 @@ namespace CNCMaps.GUI {
 
 	public partial class MainForm : Form {
 		public const string RendererExe = "CNCMaps.exe";
+		private bool _skipUpdateCheck;
 
 		public MainForm() {
 			InitializeComponent();
 		}
+		public MainForm(bool skipUpdateCheck)
+			: this() {
+			_skipUpdateCheck = skipUpdateCheck;
+		}
 
-		private void MainFormLoad(object sender, EventArgs e) {
+		private void MainFormLoad(object sender, EventArgs args) {
 			tbRenderProg.Text = FindRenderProg();
 			tbMixDir.Text = FindMixDir(true);
 			UpdateCommandline();
 			Height -= 180;
+
+			if (!_skipUpdateCheck) {
+				var uc = new UpdateChecker();
+				uc.AlreadyLatest += (o, e) => { lblStatus.Text = "Status: already latest version"; };
+				uc.Connected += (o, e) => { pbProgress.Value = 10; };
+				uc.UpdateCheckFailed += (o, e) => {
+					pbProgress.Value = 100;
+					lblStatus.Text = "Status: update check failed";
+				};
+				uc.UpdateAvailable += (o, e) => {
+					pbProgress.Value = 100;
+					lblStatus.Text = "Status: update available";
+					var dr = MessageBox.Show(string.Format("An update to version {0} released on {1} is available. Release notes: \r\n\r\n{2}\r\n\r\nUpdate now?", 
+							e.Version.ToString(), e.ReleaseDate, e.ReleaseNotes), "Update available", 
+							MessageBoxButtons.YesNo, MessageBoxIcon.Information, MessageBoxDefaultButton.Button1);
+					if (dr == DialogResult.Yes)
+						DownloadAndUpdate(e.DownloadUrl);
+				};
+				uc.CheckVersion();
+			}
+			else {
+				lblStatus.Text = "Status: not checking for newer version";
+			}
 		}
 
 		private string FindRenderProg() {
@@ -137,7 +167,7 @@ namespace CNCMaps.GUI {
 			if (rbPreferSoftwareRendering.Checked) cmd += "-g ";
 			else if (rbPreferHardwareRendering.Checked) cmd += "-G ";
 
-			if (cbReplacePreview.Checked) 
+			if (cbReplacePreview.Checked)
 				cmd += cbOmitSquareMarkers.Checked ? "-K" : "-k ";
 
 			return cmd;
@@ -213,7 +243,6 @@ namespace CNCMaps.GUI {
 			ProcessCmd(exepath);
 		}
 
-
 		private void ProcessCmd(string exepath) {
 			try {
 				var p = new Process { StartInfo = { FileName = exepath, Arguments = GetCommandline() } };
@@ -278,5 +307,47 @@ namespace CNCMaps.GUI {
 			currentEngineRA2 = newEngineRA2;
 		}
 
+
+		private void DownloadAndUpdate(string url) {
+			lblFill.Text = "Status: downloading new program version";
+			var pbf = new ProgressBarForm();
+			pbf.StartPosition = FormStartPosition.Manual;
+			pbf.Location = new Point(this.Left + this.Width / 2 - pbf.Width / 2, this.Top + this.Height / 2 - pbf.Height / 2);
+			pbf.Text = "Updating program";
+			pbf.lblStatus.Text = "Status: contacting download server";
+			pbf.progressBar.Value = 4;
+			pbf.Show();
+
+			var wc = new WebClient();
+			var address = new Uri(url);
+
+			wc.DownloadProgressChanged += (sender, args) =>
+				BeginInvoke((Action)delegate {
+					pbf.progressBar.Value = args.ProgressPercentage;
+					pbf.lblStatus.Text = string.Format("Status: downloading, {0}%", args.ProgressPercentage);
+				});
+
+			wc.DownloadDataCompleted += (sender, args) => {
+				string appPath = Application.ExecutablePath;
+				string dest = appPath + ".tmp";
+				string suffix = "";
+				int suffixNr = 0;
+				while (File.Exists(dest + suffix)) {
+					suffixNr++;
+					suffix = suffixNr.ToString(CultureInfo.InvariantCulture);
+				}
+				dest = dest + suffix;
+				File.Move(appPath, dest);
+				File.WriteAllBytes(appPath, args.Result);
+				// invoke 
+				var psi = new ProcessStartInfo(appPath);
+				psi.Arguments = string.Format("--killpid {0} --cleanupdate {1} --skip-update-check", Process.GetCurrentProcess().Id, dest);
+				Process.Start(psi);
+				pbf.Close();
+			};
+
+			// trigger it all
+			wc.DownloadDataAsync(address);
+		}
 	}
 }

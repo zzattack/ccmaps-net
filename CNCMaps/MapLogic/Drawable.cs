@@ -52,8 +52,12 @@ namespace CNCMaps.MapLogic {
 		List<DrawableFile<ShpFile>> _damagedShps = new List<DrawableFile<ShpFile>>();
 		private DrawableFile<ShpFile> _alphaImage;
 
-		internal void SetAlphaImage(ShpFile shpFile) {
-			_alphaImage = new DrawableFile<ShpFile>(shpFile);
+		internal void SetAlphaImage(ShpFile alphaSHP) {
+			_alphaImage = new DrawableFile<ShpFile>(alphaSHP);
+			_alphaImage.Props = new DrawProperties {
+				Offset = new Point(0, 15),
+				FrameDecider = FrameDeciders.AlphaImageFrameDecider(alphaSHP),
+			};
 		}
 
 		public virtual void Draw(GameObject obj, DrawingSurface ds) {
@@ -75,12 +79,8 @@ namespace CNCMaps.MapLogic {
 				foreach (var v in _shps)
 					DrawFile(obj, ds, v.File, v.Props);
 
-				if (_alphaImage != null) {
-					Point d = new Point(obj.Tile.Dx * TileWidth / 2, (obj.Tile.Dy - obj.Tile.Z) * TileHeight / 2);
-					d.Offset(_globalOffset);
-					d.Y += 15;
-					_alphaImage.File.DrawAlpha(direction, ds, d);
-				}
+				if (_alphaImage != null)
+					_alphaImage.File.DrawAlpha(obj, _alphaImage.Props, ds, _globalOffset);
 			}
 
 			for (int i = 0; i < _voxels.Count; i++) {

@@ -126,7 +126,7 @@ namespace CNCMaps.FileFormats {
 			Palette p = tile.Palette;
 
 			// calculate tile index -> pixel index
-			// short zBufVal = (short)((tile.Rx + tile.Ry) * fileHeader.cy / 2);
+			// short zBufVal = (short)((tile.Rx + tile.Ry) * fileHeader.Height / 2);
 			short zBufVal = (short)(tile.Rx + tile.Ry + img.header.height);
 			int xOffset = tile.Dx * fileHeader.cx / 2;
 			int yOffset = (tile.Dy - tile.Z) * fileHeader.cy / 2;

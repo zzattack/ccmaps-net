@@ -47,7 +47,7 @@ namespace CNCMaps.MapLogic {
 				_rules = VFS.Open("rulesmd.ini") as IniFile;
 				_art = VFS.Open("artmd.ini") as IniFile;
 			}
-			else if (engine == EngineType.FireStorm) {
+			else if (engine == EngineType.Firestorm) {
 				_rules = VFS.Open("rules.ini") as IniFile;
 				var fsRules = VFS.Open<IniFile>("firestrm.ini");
 				Logger.Info("Merging Firestorm rules with TS rules");

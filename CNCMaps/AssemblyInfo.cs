@@ -9,7 +9,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Frank Razenberg")]
 [assembly: AssemblyProduct("CNCMaps")]
-[assembly: AssemblyCopyright("Copyright © 2009-2012 Frank Razenberg")]
+[assembly: AssemblyCopyright("Copyright © 2009-2013 Frank Razenberg")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 

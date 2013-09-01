@@ -151,7 +151,7 @@ namespace CNCMaps.VirtualFileSystem {
 				AddFile(Path.Combine(mixDir, "ra2.mix"));
 			}
 			else {
-				if (engine == EngineType.FireStorm)
+				if (engine == EngineType.Firestorm)
 					AddFile("patch.mix");
 				AddFile("tibsun.mix");
 			}

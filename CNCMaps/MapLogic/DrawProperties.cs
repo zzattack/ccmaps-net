@@ -1,6 +1,7 @@
 using System;
 using System.Drawing;
 using System.Security.Cryptography.X509Certificates;
+using CNCMaps.FileFormats;
 
 namespace CNCMaps.MapLogic {
 	public enum DrawFrame : int {
@@ -36,33 +37,21 @@ namespace CNCMaps.MapLogic {
 
 		public int SortIndex { get; set; }
 		public bool OverridesZbuffer { get; set; }
-
-		public DrawProperties() {
-			// FrameDecider = FrameDeciders.NullFrameDecider;
-		}
-
+		
 	}
 
 	internal static class FrameDeciders {
 		public static Func<GameObject, int> TurretFrameDecider = delegate(GameObject obj) {
-			int direction = (obj is InfantryObject) ? (obj as InfantryObject).Direction : 0;
+			int direction = (obj is OwnableObject) ? (obj as OwnableObject).Direction : 0;
 			switch (direction) {
-				case 0:
-					return 28;
-				case 32:
-					return 24;
-				case 64:
-					return 20;
-				case 96:
-					return 16;
-				case 128:
-					return 12;
-				case 160:
-					return 8;
-				case 192:
-					return 4;
-				default:
-					return 0;
+				case 0: return 28;
+				case 32: return 24;
+				case 64: return 20;
+				case 96: return 16;
+				case 128: return 12;
+				case 160: return 8;
+				case 192: return 4;
+				default: return 0;
 			}
 		};
 
@@ -91,7 +80,7 @@ namespace CNCMaps.MapLogic {
 			return (int)DrawFrame.Random;
 		};
 
-		
+
 		public static Func<GameObject, int> DirectionBasedFrameDecider = delegate(GameObject obj) {
 			int direction = (obj as OwnableObject).Direction;
 			return direction / 32;
@@ -102,6 +91,18 @@ namespace CNCMaps.MapLogic {
 		};
 
 		public static Func<GameObject, int> NullFrameDecider = arg => 0;
+
+		public static Func<GameObject, int> AlphaImageFrameDecider(ShpFile shp) {
+			return delegate(GameObject obj) {
+				int direction = (obj as OwnableObject).Direction;
+				shp.Initialize(); // header needs to be loaded at least
+				int imgCount = shp.Header.NumImages;
+				if (imgCount % 8 == 0)
+					return (imgCount / 8) * (direction / 32);
+				else
+					return 0;
+			};
+		}
 
 
 	}

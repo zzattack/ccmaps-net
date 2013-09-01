@@ -32,26 +32,26 @@ namespace CNCMaps.MapLogic {
 			return IsOre(o) || IsGem(o);
 		}
 
-		public const byte Min_ID_Riparius = 102;
-		public const byte Max_ID_Riparius = 121;
-		public const byte Min_ID_Vinifera = 127;
-		public const byte Max_ID_Vinifera = 146;
-		public const byte Min_ID_Cruentus = 27;
-		public const byte Max_ID_Cruentus = 38;
-		public const byte Min_ID_Aboreus = 147;
-		public const byte Max_ID_Aboreus = 166;
+		public const byte MinIDRiparius = 102;
+		public const byte MaxIDRiparius = 121;
+		public const byte MinIDVinifera = 127;
+		public const byte MaxIDVinifera = 146;
+		public const byte MinIDCruentus = 27;
+		public const byte MaxIDCruentus = 38;
+		public const byte MinIDAboreus = 147;
+		public const byte MaxIDAboreus = 166;
 
 		public static bool IsTib_Riparius(OverlayObject o) {
-			return o.OverlayID >= Min_ID_Riparius && o.OverlayID <= Max_ID_Riparius;
+			return o.OverlayID >= MinIDRiparius && o.OverlayID <= MaxIDRiparius;
 		}
 		public static bool IsTib_Cruentus(OverlayObject o) {
-			return o.OverlayID >= Min_ID_Cruentus && o.OverlayID <= Max_ID_Cruentus;
+			return o.OverlayID >= MinIDCruentus && o.OverlayID <= MaxIDCruentus;
 		}
 		public static bool IsTib_Vinifera(OverlayObject o) {
-			return o.OverlayID >= Min_ID_Vinifera && o.OverlayID <= Max_ID_Vinifera;
+			return o.OverlayID >= MinIDVinifera && o.OverlayID <= MaxIDVinifera;
 		}
 		public static bool IsTib_Aboreus(OverlayObject o) {
-			return o.OverlayID >= Min_ID_Aboreus && o.OverlayID <= Max_ID_Aboreus;
+			return o.OverlayID >= MinIDAboreus && o.OverlayID <= MaxIDAboreus;
 		}
 		public static bool IsTib(OverlayObject o) {
 			return IsTib_Riparius(o) || IsTib_Cruentus(o) || IsTib_Vinifera(o) || IsTib_Aboreus(o);
@@ -67,7 +67,7 @@ namespace CNCMaps.MapLogic {
 		}
 
 		public static OverlayType GetOverlayType(OverlayObject o, EngineType engine) {
-			if (engine <= EngineType.FireStorm) {
+			if (engine <= EngineType.Firestorm) {
 				if (IsTib_Riparius(o)) return OverlayType.Riparius;
 				else if (IsTib_Cruentus(o)) return OverlayType.Cruentus;
 				else if (IsTib_Vinifera(o)) return OverlayType.Vinifera;

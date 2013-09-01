@@ -352,7 +352,7 @@ namespace CNCMaps.MapLogic {
 				_rules = VFS.Open("rulesmd.ini") as IniFile;
 				_art = VFS.Open("artmd.ini") as IniFile;
 			}
-			else if (EngineType == EngineType.FireStorm) {
+			else if (EngineType == EngineType.Firestorm) {
 				_rules = VFS.Open("rules.ini") as IniFile;
 				_art = VFS.Open("art.ini") as IniFile;
 
@@ -375,13 +375,13 @@ namespace CNCMaps.MapLogic {
 			Drawable.TileWidth = (ushort)TileWidth;
 			Drawable.TileHeight = (ushort)TileHeight;
 
-			_theater = new Theater(ReadString("Map", "Theater"), EngineType, _rules, _art);
-			_theater.Initialize();
-			RemoveUnknownObjects();
-
 			Logger.Info("Overriding rules.ini with map INI entries");
 			_rules.MergeWith(this);
 
+			_theater = new Theater(ReadString("Map", "Theater"), EngineType, _rules, _art);
+			_theater.Initialize();
+			RemoveUnknownObjects();
+			
 			// turns out this probably wasn't ever needed
 			SetStructuresBaseTile();
 			LoadColors();
@@ -891,7 +891,7 @@ namespace CNCMaps.MapLogic {
 			}
 
 			// TS needs tiberium remapped
-			if (EngineType <= EngineType.FireStorm) {
+			if (EngineType <= EngineType.Firestorm) {
 				var tiberiums = _rules.GetSection("Tiberiums").OrderedEntries.Select(tib => (OverlayType)Enum.Parse(typeof(OverlayType), tib.Value));
 				var remaps = tiberiums.Select(tib => _rules.GetSection(tib.ToString()).ReadString("Color"));
 				var tibRemaps = tiberiums.Zip(remaps, (k, v) => new { k, v }).ToDictionary(x => x.k, x => x.v);
@@ -1123,7 +1123,7 @@ namespace CNCMaps.MapLogic {
 			Dictionary<OverlayType, Palette> markerPalettes;
 
 			// TS needs tiberium remapped
-			if (EngineType <= EngineType.FireStorm) {
+			if (EngineType <= EngineType.Firestorm) {
 				var tiberiums = _rules.GetSection("Tiberiums").OrderedEntries.
 					Select(tib => (OverlayType)Enum.Parse(typeof(OverlayType), tib.Value));
 				var remaps = tiberiums.Select(tib => _rules.GetSection(tib.ToString()).ReadString("Color"));
@@ -1244,7 +1244,7 @@ namespace CNCMaps.MapLogic {
 					pw = (int)Math.Ceiling(1.975 * FullSize.Width);
 					ph = (int)Math.Ceiling(0.995 * FullSize.Height);
 					break;
-				case EngineType.FireStorm:
+				case EngineType.Firestorm:
 					pw = (int)Math.Ceiling(1.975 * FullSize.Width);
 					ph = (int)Math.Ceiling(0.995 * FullSize.Height);
 					break;
@@ -1320,7 +1320,7 @@ namespace CNCMaps.MapLogic {
 					case EngineType.RedAlert2:
 						missionsFile = "mission.ini";
 						break;
-					case EngineType.FireStorm:
+					case EngineType.Firestorm:
 						missionsFile = "mission1.ini";
 						break;
 					case EngineType.YurisRevenge:
@@ -1360,7 +1360,7 @@ namespace CNCMaps.MapLogic {
 						case EngineType.RedAlert2:
 							pkt = VFS.Open<PktFile>("missions.pkt");
 							break;
-						case EngineType.FireStorm:
+						case EngineType.Firestorm:
 							pkt = VFS.Open<PktFile>("multi01.pkt");
 							break;
 						case EngineType.YurisRevenge:
@@ -1385,7 +1385,7 @@ namespace CNCMaps.MapLogic {
 
 			// now, if we have a map entry from a PKT file, 
 			// for TS we are done, but for RA2 we need to look in the CSV file for the translated mapname
-			if (EngineType <= EngineType.FireStorm) {
+			if (EngineType <= EngineType.Firestorm) {
 				if (pktMapEntry != null)
 					mapName = pktMapEntry.Description;
 				else if (missionEntry != null) {
