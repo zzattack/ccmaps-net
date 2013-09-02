@@ -54,14 +54,16 @@ namespace CNCMaps.FileFormats {
 		}
 
 		public void Initialize() {
-			_isInitialized = true;
-			Logger.Debug("Initializing SHP data for file {0}", FileName);
-			Header = EzMarshal.ByteArrayToStructure<ShpFileHeader>(Read(Marshal.SizeOf(typeof(ShpFileHeader))));
-			Images = new List<ShpImage>(Header.NumImages);
-			for (int i = 0; i < Header.NumImages; i++) {
-				var img = new ShpImage();
-				img.Header = EzMarshal.ByteArrayToStructure<ShpImageHeader>(Read(Marshal.SizeOf(typeof(ShpImageHeader))));
-				Images.Add(img);
+			if (!_isInitialized) {
+				_isInitialized = true;
+				Logger.Debug("Initializing SHP data for file {0}", FileName);
+				Header = EzMarshal.ByteArrayToStructure<ShpFileHeader>(Read(Marshal.SizeOf(typeof (ShpFileHeader))));
+				Images = new List<ShpImage>(Header.NumImages);
+				for (int i = 0; i < Header.NumImages; i++) {
+					var img = new ShpImage();
+					img.Header = EzMarshal.ByteArrayToStructure<ShpImageHeader>(Read(Marshal.SizeOf(typeof (ShpImageHeader))));
+					Images.Add(img);
+				}
 			}
 		}
 
@@ -109,7 +111,7 @@ namespace CNCMaps.FileFormats {
 		}
 
 		unsafe public void Draw(GameObject obj, DrawProperties props, DrawingSurface ds, Point globalOffset) {
-			if (!_isInitialized) Initialize();
+			Initialize();
 
 			int frameIndex = props.FrameDecider(obj);
 			Point offset = globalOffset;
@@ -245,7 +247,7 @@ namespace CNCMaps.FileFormats {
 		}
 
 		unsafe public void DrawAlpha(GameObject obj, DrawProperties props, DrawingSurface ds, Point globalOffset) {
-			if (!_isInitialized) Initialize();
+			Initialize();
 
 			// Change originally implemented by Starkku: Ares supports multiframe AlphaImages, based on frame count 
 			// the direction the unit it facing.

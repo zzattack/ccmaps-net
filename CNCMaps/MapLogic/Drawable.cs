@@ -53,11 +53,10 @@ namespace CNCMaps.MapLogic {
 		private DrawableFile<ShpFile> _alphaImage;
 
 		internal void SetAlphaImage(ShpFile alphaSHP) {
-			_alphaImage = new DrawableFile<ShpFile>(alphaSHP);
-			_alphaImage.Props = new DrawProperties {
+			_alphaImage = new DrawableFile<ShpFile>(alphaSHP, new DrawProperties {
 				Offset = new Point(0, 15),
 				FrameDecider = FrameDeciders.AlphaImageFrameDecider(alphaSHP),
-			};
+			});
 		}
 
 		public virtual void Draw(GameObject obj, DrawingSurface ds) {
