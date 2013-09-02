@@ -6,80 +6,91 @@ using System.Text;
 
 namespace CNCMaps.MapLogic {
 
-	public enum OverlayType {
+	public enum OverlayTibType {
 		Riparius = 0, // note: don't change the indices of 0-3! they're hardcoded in the game too!
 		Cruentus = 1,
 		Vinifera = 2,
 		Aboreus = 3,
-		Ore = 4,
-		Gems = 5,
+		Ore = 0, // ts: rip
+		Gems = 1, // ts: cru
 		NotSpecial = -1,
 	};
 
 	public static class SpecialOverlays {
+		// Riparius = 1, Cruentus = 2, Vinifera = 3, Aboreus = 4
+		public const byte Ra2MinIdRiparius = 102;
+		public const byte Ra2MaxIdRiparius = 121;
+		public const byte Ra2MinIdCruentus = 27;
+		public const byte Ra2MaxIdCruentus = 38;
+		public const byte Ra2MinIdVinifera = 127;
+		public const byte Ra2MaxIdVinifera = 146;
+		public const byte Ra2MinIdAboreus = 147;
+		public const byte Ra2MaxIdAboreus = 166;
+
 		public const byte MaxOreID = 127;
 		public const byte MinOreID = 102;
 		public const byte MaxGemsID = 38;
 		public const byte MinGemsID = 27;
 
-		public static bool IsOre(OverlayObject o) {
-			return o.OverlayID >= MinOreID && o.OverlayID <= MaxOreID;
+		public const byte TsMinIdRiparius = 102;
+		public const byte TsMaxIdRiparius = 121;
+		public const byte TsMinIdCruentus = 27;
+		public const byte TsMaxIdCruentus = 38;
+		public const byte TsMinIdVinifera = 127;
+		public const byte TsMaxIdVinifera = 146;
+		public const byte TsMinIdAboreus = 147;
+		public const byte TsMaxIdAboreus = 166;
+
+		private static bool IsRA2_Riparius(OverlayObject o) {
+			return o.OverlayID >= Ra2MinIdRiparius && o.OverlayID <= Ra2MaxIdRiparius;
 		}
-		public static bool IsGem(OverlayObject o) {
-			return o.OverlayID >= MinGemsID && o.OverlayID <= MaxGemsID;
+		private static bool IsRA2_Cruentus(OverlayObject o) {
+			return o.OverlayID >= Ra2MinIdCruentus && o.OverlayID <= Ra2MaxIdCruentus;
 		}
-		public static bool IsOreOrGem(OverlayObject o) {
-			return IsOre(o) || IsGem(o);
+		private static bool IsRA2_Vinifera(OverlayObject o) {
+			return o.OverlayID >= Ra2MinIdVinifera && o.OverlayID <= Ra2MaxIdVinifera;
+		}
+		private static bool IsRA2_Aboreus(OverlayObject o) {
+			return o.OverlayID >= Ra2MinIdAboreus && o.OverlayID <= Ra2MaxIdAboreus;
 		}
 
-		public const byte MinIDRiparius = 102;
-		public const byte MaxIDRiparius = 121;
-		public const byte MinIDVinifera = 127;
-		public const byte MaxIDVinifera = 146;
-		public const byte MinIDCruentus = 27;
-		public const byte MaxIDCruentus = 38;
-		public const byte MinIDAboreus = 147;
-		public const byte MaxIDAboreus = 166;
+		private static bool IsTS_Riparius(OverlayObject o) {
+			return o.OverlayID >= TsMinIdRiparius && o.OverlayID <= TsMaxIdRiparius;
+		}
+		private static bool IsTS_Cruentus(OverlayObject o) {
+			return o.OverlayID >= TsMinIdCruentus && o.OverlayID <= TsMaxIdCruentus;
+		}
+		private static bool IsTS_Vinifera(OverlayObject o) {
+			return o.OverlayID >= TsMinIdVinifera && o.OverlayID <= TsMaxIdVinifera;
+		}
+		private static bool IsTS_Aboreus(OverlayObject o) {
+			return o.OverlayID >= TsMinIdAboreus && o.OverlayID <= TsMaxIdAboreus;
+		}
+		private static bool IsTib(OverlayObject o) {
+			return IsTS_Riparius(o) || IsTS_Cruentus(o) || IsTS_Vinifera(o) || IsTS_Aboreus(o);
+		}
 
-		public static bool IsTib_Riparius(OverlayObject o) {
-			return o.OverlayID >= MinIDRiparius && o.OverlayID <= MaxIDRiparius;
-		}
-		public static bool IsTib_Cruentus(OverlayObject o) {
-			return o.OverlayID >= MinIDCruentus && o.OverlayID <= MaxIDCruentus;
-		}
-		public static bool IsTib_Vinifera(OverlayObject o) {
-			return o.OverlayID >= MinIDVinifera && o.OverlayID <= MaxIDVinifera;
-		}
-		public static bool IsTib_Aboreus(OverlayObject o) {
-			return o.OverlayID >= MinIDAboreus && o.OverlayID <= MaxIDAboreus;
-		}
-		public static bool IsTib(OverlayObject o) {
-			return IsTib_Riparius(o) || IsTib_Cruentus(o) || IsTib_Vinifera(o) || IsTib_Aboreus(o);
-		}
 		public static bool IsHighBridge(OverlayObject o) {
 			return o.OverlayID == 24 || o.OverlayID == 25 || o.OverlayID == 238 || o.OverlayID == 237;
 		}
 		public static bool IsTSRails(OverlayObject o) {
 			return 43 <= o.OverlayID && o.OverlayID <= 57;
 		}
-		public static bool IsOreOrGemOrTib(OverlayObject o) {
-			return IsOre(o) || IsGem(o) || IsTib(o);
-		}
 
-		public static OverlayType GetOverlayType(OverlayObject o, EngineType engine) {
+		public static OverlayTibType GetOverlayTibType(OverlayObject o, EngineType engine) {
 			if (engine <= EngineType.Firestorm) {
-				if (IsTib_Riparius(o)) return OverlayType.Riparius;
-				else if (IsTib_Cruentus(o)) return OverlayType.Cruentus;
-				else if (IsTib_Vinifera(o)) return OverlayType.Vinifera;
-				else if (IsTib_Aboreus(o)) return OverlayType.Aboreus;
+				if (IsTS_Riparius(o)) return OverlayTibType.Riparius;
+				else if (IsTS_Cruentus(o)) return OverlayTibType.Cruentus;
+				else if (IsTS_Vinifera(o)) return OverlayTibType.Vinifera;
+				else if (IsTS_Aboreus(o)) return OverlayTibType.Aboreus;
 			}
 			else {
-				if (IsOre(o)) return OverlayType.Ore;
-				else if (IsGem(o)) return OverlayType.Gems;
-				else if (IsTib_Vinifera(o)) return OverlayType.Vinifera;
-				else if (IsTib_Aboreus(o)) return OverlayType.Aboreus;
+				if (IsRA2_Riparius(o)) return OverlayTibType.Riparius;
+				else if (IsRA2_Cruentus(o)) return OverlayTibType.Cruentus;
+				else if (IsRA2_Vinifera(o)) return OverlayTibType.Vinifera;
+				else if (IsRA2_Aboreus(o)) return OverlayTibType.Aboreus;
 			}
-			return OverlayType.NotSpecial;
+			return OverlayTibType.NotSpecial;
 		}
 	}
 

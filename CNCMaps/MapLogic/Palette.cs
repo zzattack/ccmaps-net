@@ -92,6 +92,7 @@ namespace CNCMaps.MapLogic {
 			return p;
 		}
 
+		/// <param name="opacity">how much to retain of the first palette (range 0-1)</param>
 		public static Palette Merge(Palette A, Palette B, double opacity) {
 			// make sure recalculate has been called on A and B,
 			// and be sure not to call recalculate on this

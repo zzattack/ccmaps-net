@@ -757,7 +757,9 @@ namespace CNCMaps.MapLogic {
 				// The value consists of the sum of all dx's with a little magic offsets
 				// plus the sum of all dy's with also a little magic offset, and also
 				// everything is calculated modulo 12
-				if (SpecialOverlays.IsOre(o)) {
+				var type = SpecialOverlays.GetOverlayTibType(o, EngineType);
+
+				if (type == OverlayTibType.Ore) {
 					int x = o.Tile.Dx;
 					int y = o.Tile.Dy;
 					double yInc = ((((y - 9) / 2) % 12) * (((y - 8) / 2) % 12)) % 12;
@@ -772,7 +774,7 @@ namespace CNCMaps.MapLogic {
 					o.OverlayID = (byte)(SpecialOverlays.MinOreID + num);
 				}
 
-				else if (SpecialOverlays.IsGem(o)) {
+				else if (type == OverlayTibType.Gems) {
 					int x = o.Tile.Dx;
 					int y = o.Tile.Dy;
 					double yInc = ((((y - 9) / 2) % 12) * (((y - 8) / 2) % 12)) % 12;
@@ -892,15 +894,16 @@ namespace CNCMaps.MapLogic {
 
 			// TS needs tiberium remapped
 			if (EngineType <= EngineType.Firestorm) {
-				var tiberiums = _rules.GetSection("Tiberiums").OrderedEntries.Select(tib => (OverlayType)Enum.Parse(typeof(OverlayType), tib.Value));
+				var tiberiums = _rules.GetSection("Tiberiums").OrderedEntries.Select(tib => (OverlayTibType)Enum.Parse(typeof(OverlayTibType), tib.Value));
 				var remaps = tiberiums.Select(tib => _rules.GetSection(tib.ToString()).ReadString("Color"));
 				var tibRemaps = tiberiums.Zip(remaps, (k, v) => new { k, v }).ToDictionary(x => x.k, x => x.v);
 
 				foreach (var ovl in _overlayObjects) {
 					if (ovl == null) continue;
-					if (SpecialOverlays.IsTib(ovl)) {
+					var tibType = SpecialOverlays.GetOverlayTibType(ovl, EngineType);
+					if (tibType != OverlayTibType.NotSpecial) {
 						ovl.Palette = ovl.Palette.Clone();
-						ovl.Palette.Remap(_namedColors[tibRemaps[SpecialOverlays.GetOverlayType(ovl, EngineType)]]);
+						ovl.Palette.Remap(_namedColors[tibRemaps[SpecialOverlays.GetOverlayTibType(ovl, EngineType)]]);
 						_palettesToBeRecalculated.Add(ovl.Palette);
 					}
 				}
@@ -1120,48 +1123,40 @@ namespace CNCMaps.MapLogic {
 
 		public void MarkOreAndGems() {
 			Logger.Info("Marking ore and gems");
-			Dictionary<OverlayType, Palette> markerPalettes;
+			var markerPalettes = new Dictionary<OverlayTibType, Palette>();
 
-			// TS needs tiberium remapped
-			if (EngineType <= EngineType.Firestorm) {
-				var tiberiums = _rules.GetSection("Tiberiums").OrderedEntries.
-					Select(tib => (OverlayType) Enum.Parse(typeof (OverlayType), tib.Value));
-				var remaps = tiberiums.Select(tib => _rules.GetSection(tib.ToString()).ReadString("Color"));
-				markerPalettes = tiberiums.Zip(remaps, (key, value) => new {key, value}).ToDictionary(
-					x => x.key, x => Palette.MakePalette(_namedColors[x.value]));
-			}
-			else {
-				var tiberiums =
-					_rules.GetOrCreateSection("Tiberiums")
-						.OrderedEntries.Select(tib => (OverlayType) Enum.Parse(typeof (OverlayType), tib.Value));
-				var remaps = tiberiums.Select(tib => _rules.GetOrCreateSection(tib.ToString()).ReadString("MapRendererColor"));
-				var markerPaletteColors = tiberiums.Zip(remaps, (key, value) => new {key, value})
-					.ToDictionary(x => x.key, x => x.value);
-
-				markerPalettes = new Dictionary<OverlayType, Palette>();
-				markerPalettes[OverlayType.Ore] = Palette.MakePalette(Color.Yellow);
-				markerPalettes[OverlayType.Gems] = Palette.MakePalette(Color.Purple);
-
-				if (markerPaletteColors.ContainsKey(OverlayType.Aboreus) &&
-					_namedColors.ContainsKey(markerPaletteColors[OverlayType.Aboreus]))
-					markerPalettes[OverlayType.Aboreus] = Palette.MakePalette(_namedColors[markerPaletteColors[OverlayType.Aboreus]]);
-				else
-					markerPalettes[OverlayType.Aboreus] = Palette.MakePalette(Color.Yellow);
-
-				if (markerPaletteColors.ContainsKey(OverlayType.Vinifera) &&
-					_namedColors.ContainsKey(markerPaletteColors[OverlayType.Vinifera]))
-					markerPalettes[OverlayType.Vinifera] = Palette.MakePalette(_namedColors[markerPaletteColors[OverlayType.Vinifera]]);
-				else
-					markerPalettes[OverlayType.Vinifera] = Palette.MakePalette(Color.Yellow);
+			// init sensible defaults
+			if (EngineType >= EngineType.RedAlert2) {
+				markerPalettes[OverlayTibType.Ore] = Palette.MakePalette(Color.Yellow);
+				markerPalettes[OverlayTibType.Gems] = Palette.MakePalette(Color.Purple);
 			}
 
+			// read [Tiberiums] for names or different tiberiums, and the [Color] entry (for TS)
+			// for their corresponding "remapped" color. In RA2 this isn't actually used,
+			// but made available for the renderer's preview functionality through a key "MapRendererColor"
+			var tiberiums = _rules.GetOrCreateSection("Tiberiums").OrderedEntries
+				.Select(tib => (OverlayTibType)Enum.Parse(typeof(OverlayTibType), tib.Value)).ToList();
+			var remaps = tiberiums.Select(tib => _rules.GetOrCreateSection(tib.ToString())
+				.ReadString(EngineType >= EngineType.RedAlert2 ? "MapRendererColor" : "Color")).ToList();
+
+			// override defaults if specified in rules
+			for (int i = 0; i < tiberiums.Count; i++) {
+				OverlayTibType type = tiberiums[i];
+				string namedColor = remaps[i];
+				if (_namedColors.ContainsKey(namedColor))
+					markerPalettes[type] = Palette.MakePalette(_namedColors[namedColor]);
+			}
+
+			// apply the 'marking' by replacing the tile containing ore by a partly
+			// transparent version of its original, merged with a palette of solely
+			// the color of the tiberium kind stored on it
 			foreach (var o in _overlayObjects) {
 				if (o == null) continue;
-				var ovlType = SpecialOverlays.GetOverlayType(o, EngineType);
+				var ovlType = SpecialOverlays.GetOverlayTibType(o, EngineType);
 				if (!markerPalettes.ContainsKey(ovlType)) continue;
 
-				double opacityBase = ovlType == OverlayType.Cruentus || ovlType == OverlayType.Gems ? 0.25 : 0.1;
-				double opacity = Math.Min((byte)11, o.OverlayValue) / 11.0 * 0.6 + opacityBase;
+				double opacityBase = ovlType == OverlayTibType.Ore && EngineType == EngineType.RedAlert2 ? 0.3 : 0.15;
+				double opacity = Math.Max(0, 12 - o.OverlayValue) / 11.0 * 0.5 + opacityBase;
 				o.Tile.Palette = Palette.Merge(o.Tile.Palette, markerPalettes[ovlType], opacity);
 				o.Palette = Palette.Merge(o.Palette, markerPalettes[ovlType], opacity);
 			}
@@ -1169,15 +1164,18 @@ namespace CNCMaps.MapLogic {
 
 		public void RedrawOreAndGems() {
 			var tileCollection = _theater.GetTileCollection();
+			var checkFunc = new Func<OverlayObject, bool>(delegate(OverlayObject ovl) {
+				return SpecialOverlays.GetOverlayTibType(ovl, EngineType) != OverlayTibType.NotSpecial;
+			});
 
 			// first redraw all required tiles (zigzag method)
 			for (int y = 0; y < FullSize.Height; y++) {
 				for (int x = FullSize.Width * 2 - 2; x >= 0; x -= 2) {
-					if (_overlayObjects[x, y] == null || !SpecialOverlays.IsOreOrGemOrTib(_overlayObjects[x, y])) continue;
+					if (_overlayObjects[x, y] == null || !checkFunc(_overlayObjects[x, y])) continue;
 					tileCollection.DrawTile(_tiles.GetTile(x, y), _drawingSurface);
 				}
 				for (int x = FullSize.Width * 2 - 3; x >= 0; x -= 2) {
-					if (_overlayObjects[x, y] == null || !SpecialOverlays.IsOreOrGemOrTib(_overlayObjects[x, y])) continue;
+					if (_overlayObjects[x, y] == null || !checkFunc(_overlayObjects[x, y])) continue;
 					tileCollection.DrawTile(_tiles.GetTile(x, y), _drawingSurface);
 				}
 			}
@@ -1185,13 +1183,13 @@ namespace CNCMaps.MapLogic {
 			// then the objects on these ore positions
 			for (int y = 0; y < FullSize.Height; y++) {
 				for (int x = FullSize.Width * 2 - 2; x >= 0; x -= 2) {
-					if (_overlayObjects[x, y] == null || !SpecialOverlays.IsOreOrGemOrTib(_overlayObjects[x, y])) continue;
+					if (_overlayObjects[x, y] == null || !checkFunc(_overlayObjects[x, y])) continue;
 					List<GameObject> objs = GetObjectsAt(x, y);
 					foreach (GameObject o in objs)
 						_theater.DrawObject(o, _drawingSurface);
 				}
 				for (int x = FullSize.Width * 2 - 3; x >= 0; x -= 2) {
-					if (_overlayObjects[x, y] == null || !SpecialOverlays.IsOreOrGemOrTib(_overlayObjects[x, y])) continue;
+					if (_overlayObjects[x, y] == null || !checkFunc(_overlayObjects[x, y])) continue;
 					List<GameObject> objs = GetObjectsAt(x, y);
 					foreach (GameObject o in objs)
 						_theater.DrawObject(o, _drawingSurface);

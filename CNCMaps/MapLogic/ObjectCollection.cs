@@ -216,8 +216,10 @@ namespace CNCMaps.MapLogic {
 			if (_collectionType == CollectionType.Overlay) {
 				int objIdx = _drawables.Count - 1;
 				var ovl = new OverlayObject((byte)objIdx, 0);
+				var tibType = SpecialOverlays.GetOverlayTibType(ovl, _engine);
+
 				if (_engine >= EngineType.RedAlert2) {
-					if (SpecialOverlays.IsOreOrGem(ovl) || SpecialOverlays.IsTib_Aboreus(ovl) || SpecialOverlays.IsTib_Vinifera(ovl)) {
+					if (tibType != OverlayTibType.NotSpecial) {
 						drawable.PaletteType = PaletteType.Overlay;
 						drawable.LightingType = LightingType.None;
 					}
@@ -229,7 +231,7 @@ namespace CNCMaps.MapLogic {
 					}
 				}
 				else if (_engine <= EngineType.Firestorm) {
-					if (SpecialOverlays.IsTib(ovl)) {
+					if (tibType != OverlayTibType.NotSpecial) {
 						drawable.PaletteType = PaletteType.Unit;
 						drawable.LightingType = LightingType.None;
 						drawable.IsRemapable = true;
