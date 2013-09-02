@@ -77,7 +77,7 @@ namespace CNCMaps.FileFormats {
 				Position = img.Header.offset;
 				int c_px = img.Header.cx * img.Header.cy;
 
-				//img.Header.compression &= 0x03;
+				// img.Header.compression &= 0x03;
 				if (img.Header.compression <= 1) {
 					// Raw 8 bits-per-pixel image data
 					img.ImageData = Read(c_px);
@@ -114,51 +114,45 @@ namespace CNCMaps.FileFormats {
 			Initialize();
 
 			int frameIndex = props.FrameDecider(obj);
-			Point offset = globalOffset;
-			offset.Offset(props.GetOffset(obj));
 			Palette p = props.PaletteOverride ?? obj.Palette;
 
 			frameIndex = DecideFrameIndex(frameIndex);
 			if (frameIndex >= Images.Count)
 				return;
-
-			Logger.Trace("Drawing SHP file {0} (Frame {1}) at ({2},{3})", FileName, frameIndex, offset.X, offset.Y);
-
+			
 			var image = GetImage(frameIndex);
 			if (image.ImageData == null || image.Header.cx * image.Header.cy != image.ImageData.Length)
 				return;
+			
+			Point offset = globalOffset;
+			offset.Offset(props.GetOffset(obj));
+			offset.X += obj.Tile.Dx * Drawable.TileWidth / 2 + Drawable.TileWidth / 2 - Header.Width / 2 + image.Header.x;
+			offset.Y += (obj.Tile.Dy - obj.Tile.Z) * Drawable.TileHeight / 2 - Header.Height / 2 + image.Header.y;
+			Logger.Trace("Drawing SHP file {0} (Frame {1}) at ({2},{3})", FileName, frameIndex, offset.X, offset.Y);
 
-			var h = image.Header;
-			var c_px = (uint)(h.cx * h.cy);
 			int stride = ds.bmd.Stride;
 			var zBuffer = ds.GetZBuffer();
-
-			if (c_px <= 0 || h.cx < 0 || h.cy < 0 || frameIndex > Header.NumImages)
-				return;
-
-
+			
 			var w_low = (byte*)ds.bmd.Scan0;
 			byte* w_high = (byte*)ds.bmd.Scan0 + stride * ds.bmd.Height;
 
 			var tile = obj.Tile;
-			int dx = offset.X + tile.Dx * Drawable.TileWidth / 2 + Drawable.TileWidth / 2 - Header.Width / 2 + h.x,
-				dy = offset.Y + (tile.Dy - tile.Z) * Drawable.TileHeight / 2 - Header.Height / 2 + h.y;
-			byte* w = (byte*)ds.bmd.Scan0 + dx * 3 + stride * dy;
-			int zIdx = dx + dy * ds.Width;
+			byte* w = (byte*)ds.bmd.Scan0 + offset.X * 3 + stride * offset.Y;
+			int zIdx = offset.X + offset.Y * ds.Width;
 			int rIdx = 0;
 
 			// short zBufVal = (short)(offset.Y + tile.Dy * Drawable.TileHeight / 2 + Header.Height);
 			short zBufVal = (short)(obj.BaseTile.Rx + obj.BaseTile.Ry + obj.BaseTile.Z + obj.Drawable.HeightOffset);
 
-			for (int y = 0; y < h.cy; y++) {
-				if (dy + y < 0) {
+			for (int y = 0; y < image.Header.cy; y++) {
+				if (offset.Y + y < 0) {
 					w += stride;
-					rIdx += h.cx;
+					rIdx += image.Header.cx;
 					zIdx += ds.Width;
 					continue; // out of bounds
 				}
 
-				for (int x = 0; x < h.cx; x++) {
+				for (int x = 0; x < image.Header.cx; x++) {
 					byte paletteValue = image.ImageData[rIdx];
 					if (paletteValue != 0 && w_low <= w && w < w_high && (props.OverridesZbuffer || zBufVal >= zBuffer[zIdx])) {
 						*(w + 0) = p.colors[paletteValue].B;
@@ -171,49 +165,50 @@ namespace CNCMaps.FileFormats {
 					zIdx++;
 					w += 3;
 				}
-				w += stride - 3 * h.cx;
-				zIdx += ds.Width - h.cx;
+				w += stride - 3 * image.Header.cx;
+				zIdx += ds.Width - image.Header.cx;
 			}
 		}
 
 		unsafe public void DrawShadow(GameObject obj, DrawProperties props, DrawingSurface ds, Point globalOffset) {
 			int frameIndex = props.FrameDecider(obj);
-			Point offset = globalOffset;
-			offset.Offset(props.GetShadowOffset(obj));
-
+			
 			frameIndex = DecideFrameIndex(frameIndex);
 			frameIndex += Images.Count / 2; // latter half are shadow Images
 			if (frameIndex >= Images.Count)
 				return;
-
-			Logger.Trace("Drawing SHP shadow {0} (frame {1}) at ({2},{3})", FileName, frameIndex, offset.X, offset.Y);
-
+			
 			var image = GetImage(frameIndex);
 			if (image.ImageData == null || image.Header.cx * image.Header.cy != image.ImageData.Length)
 				return;
-
-			var h = image.Header;
-			var c_px = (uint)(h.cx * h.cy);
+			
+			Point offset = globalOffset;
+			offset.Offset(props.GetShadowOffset(obj));
+			offset.X += obj.Tile.Dx * Drawable.TileWidth / 2 + Drawable.TileWidth / 2 - Header.Width / 2 + image.Header.x;
+			offset.Y += (obj.Tile.Dy - obj.Tile.Z) * Drawable.TileHeight / 2 - Header.Height / 2 + image.Header.y;
+			Logger.Trace("Drawing SHP shadow {0} (frame {1}) at ({2},{3})", FileName, frameIndex, offset.X, offset.Y);
+			
 			int stride = ds.bmd.Stride;
 			var shadows = ds.GetShadows();
-			var zBuffer = ds.GetZBuffer();
-
-			if (c_px <= 0 || h.cx < 0 || h.cy < 0 || frameIndex > Header.NumImages)
-				return;
-
-
+			var zBuffer = ds.GetZBuffer();	
+		
 			var w_low = (byte*)ds.bmd.Scan0;
 			byte* w_high = (byte*)ds.bmd.Scan0 + stride * ds.bmd.Height;
 
-			int dx = offset.X + obj.Tile.Dx * Drawable.TileWidth / 2 + Drawable.TileWidth / 2 - Header.Width / 2 + h.x,
-				dy = offset.Y + (obj.Tile.Dy - obj.Tile.Z) * Drawable.TileHeight / 2 - Header.Height / 2 + h.y;
-			byte* w = (byte*)ds.bmd.Scan0 + dx * 3 + stride * dy;
-			int zIdx = dx + dy * ds.Width;
+			byte* w = (byte*)ds.bmd.Scan0 + offset.X * 3 + stride * offset.Y;
+			int zIdx = offset.X + offset.Y * ds.Width;
 			int rIdx = 0;
 			short zBufVal = (short)(obj.BaseTile.Rx + obj.BaseTile.Ry + obj.BaseTile.Z + obj.Drawable.HeightOffset);
 
-			for (int y = 0; y < h.cy; y++) {
-				for (int x = 0; x < h.cx; x++) {
+			for (int y = 0; y < image.Header.cy; y++) {
+				if (offset.Y + y < 0) {
+					w += stride;
+					rIdx += image.Header.cx;
+					zIdx += ds.Width;
+					continue; // out of bounds
+				}
+
+				for (int x = 0; x < image.Header.cx; x++) {
 					if (w_low <= w && w < w_high && image.ImageData[rIdx] != 0 && !shadows[zIdx] && zBufVal >= zBuffer[zIdx]) {
 						*(w + 0) /= 2;
 						*(w + 1) /= 2;
@@ -225,8 +220,8 @@ namespace CNCMaps.FileFormats {
 					zIdx++;
 					w += 3;
 				}
-				w += stride - 3 * h.cx;	// ... and if we're no more on the same row,
-				zIdx += ds.Width - h.cx;
+				w += stride - 3 * image.Header.cx;	// ... and if we're no more on the same row,
+				zIdx += ds.Width - image.Header.cx;
 				// adjust the writing pointer accordingy
 			}
 		}
@@ -252,22 +247,23 @@ namespace CNCMaps.FileFormats {
 			// Change originally implemented by Starkku: Ares supports multiframe AlphaImages, based on frame count 
 			// the direction the unit it facing.
 			int frameIndex = props.FrameDecider(obj);
-			Point offset = globalOffset;
-			offset.Offset(props.GetOffset(obj));
-
-			Logger.Trace("Drawing AlphaImage SHP file {0} (frame {1}) at ({2},{3})", FileName, frameIndex, offset.X, offset.Y);
 
 			var image = GetImage(frameIndex);
 			var h = image.Header;
 			var c_px = (uint)(h.cx * h.cy);
-			int stride = ds.bmd.Stride;
-
 			if (c_px <= 0 || h.cx < 0 || h.cy < 0 || frameIndex > Header.NumImages)
 				return;
 
+			Point offset = globalOffset;
+			offset.Offset(props.GetOffset(obj));
+			offset.X += obj.Tile.Dx * Drawable.TileWidth / 2;
+			offset.Y += (obj.Tile.Dy - obj.Tile.Z) * Drawable.TileHeight / 2;
+			Logger.Trace("Drawing AlphaImage SHP file {0} (frame {1}) at ({2},{3})", FileName, frameIndex, offset.X, offset.Y);
+
+			int stride = ds.bmd.Stride;
 			var w_low = (byte*)ds.bmd.Scan0;
 			byte* w_high = (byte*)ds.bmd.Scan0 + stride * ds.bmd.Height;
-
+			
 			int dx = offset.X + Drawable.TileWidth / 2 - Header.Width / 2 + h.x,
 				dy = offset.Y - Header.Height / 2 + h.y;
 			byte* w = (byte*)ds.bmd.Scan0 + dx * 3 + stride * dy;

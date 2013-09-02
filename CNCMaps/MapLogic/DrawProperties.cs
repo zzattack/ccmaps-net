@@ -94,7 +94,9 @@ namespace CNCMaps.MapLogic {
 
 		public static Func<GameObject, int> AlphaImageFrameDecider(ShpFile shp) {
 			return delegate(GameObject obj) {
-				int direction = (obj as OwnableObject).Direction;
+				int direction = 0;
+				if (obj is OwnableObject)
+					direction = (obj as OwnableObject).Direction;
 				shp.Initialize(); // header needs to be loaded at least
 				int imgCount = shp.Header.NumImages;
 				if (imgCount % 8 == 0)
