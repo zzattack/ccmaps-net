@@ -381,7 +381,7 @@ namespace CNCMaps.MapLogic {
 			_theater = new Theater(ReadString("Map", "Theater"), EngineType, _rules, _art);
 			_theater.Initialize();
 			RemoveUnknownObjects();
-			
+
 			// turns out this probably wasn't ever needed
 			SetStructuresBaseTile();
 			LoadColors();
@@ -1125,15 +1125,34 @@ namespace CNCMaps.MapLogic {
 			// TS needs tiberium remapped
 			if (EngineType <= EngineType.Firestorm) {
 				var tiberiums = _rules.GetSection("Tiberiums").OrderedEntries.
-					Select(tib => (OverlayType)Enum.Parse(typeof(OverlayType), tib.Value));
+					Select(tib => (OverlayType) Enum.Parse(typeof (OverlayType), tib.Value));
 				var remaps = tiberiums.Select(tib => _rules.GetSection(tib.ToString()).ReadString("Color"));
-				markerPalettes = tiberiums.Zip(remaps, (key, value) => new { key, value }).ToDictionary(
+				markerPalettes = tiberiums.Zip(remaps, (key, value) => new {key, value}).ToDictionary(
 					x => x.key, x => Palette.MakePalette(_namedColors[x.value]));
 			}
 			else {
+				var tiberiums =
+					_rules.GetOrCreateSection("Tiberiums")
+						.OrderedEntries.Select(tib => (OverlayType) Enum.Parse(typeof (OverlayType), tib.Value));
+				var remaps = tiberiums.Select(tib => _rules.GetOrCreateSection(tib.ToString()).ReadString("MapRendererColor"));
+				var markerPaletteColors = tiberiums.Zip(remaps, (key, value) => new {key, value})
+					.ToDictionary(x => x.key, x => x.value);
+
 				markerPalettes = new Dictionary<OverlayType, Palette>();
 				markerPalettes[OverlayType.Ore] = Palette.MakePalette(Color.Yellow);
 				markerPalettes[OverlayType.Gems] = Palette.MakePalette(Color.Purple);
+
+				if (markerPaletteColors.ContainsKey(OverlayType.Aboreus) &&
+					_namedColors.ContainsKey(markerPaletteColors[OverlayType.Aboreus]))
+					markerPalettes[OverlayType.Aboreus] = Palette.MakePalette(_namedColors[markerPaletteColors[OverlayType.Aboreus]]);
+				else
+					markerPalettes[OverlayType.Aboreus] = Palette.MakePalette(Color.Yellow);
+
+				if (markerPaletteColors.ContainsKey(OverlayType.Vinifera) &&
+					_namedColors.ContainsKey(markerPaletteColors[OverlayType.Vinifera]))
+					markerPalettes[OverlayType.Vinifera] = Palette.MakePalette(_namedColors[markerPaletteColors[OverlayType.Vinifera]]);
+				else
+					markerPalettes[OverlayType.Vinifera] = Palette.MakePalette(Color.Yellow);
 			}
 
 			foreach (var o in _overlayObjects) {
@@ -1150,17 +1169,15 @@ namespace CNCMaps.MapLogic {
 
 		public void RedrawOreAndGems() {
 			var tileCollection = _theater.GetTileCollection();
-			var checkFunc = EngineType >= EngineType.RedAlert2
-				? (Func<OverlayObject, bool>)SpecialOverlays.IsOreOrGem : SpecialOverlays.IsTib;
 
 			// first redraw all required tiles (zigzag method)
 			for (int y = 0; y < FullSize.Height; y++) {
 				for (int x = FullSize.Width * 2 - 2; x >= 0; x -= 2) {
-					if (_overlayObjects[x, y] == null || !checkFunc(_overlayObjects[x, y])) continue;
+					if (_overlayObjects[x, y] == null || !SpecialOverlays.IsOreOrGemOrTib(_overlayObjects[x, y])) continue;
 					tileCollection.DrawTile(_tiles.GetTile(x, y), _drawingSurface);
 				}
 				for (int x = FullSize.Width * 2 - 3; x >= 0; x -= 2) {
-					if (_overlayObjects[x, y] == null || !checkFunc(_overlayObjects[x, y])) continue;
+					if (_overlayObjects[x, y] == null || !SpecialOverlays.IsOreOrGemOrTib(_overlayObjects[x, y])) continue;
 					tileCollection.DrawTile(_tiles.GetTile(x, y), _drawingSurface);
 				}
 			}
@@ -1168,13 +1185,13 @@ namespace CNCMaps.MapLogic {
 			// then the objects on these ore positions
 			for (int y = 0; y < FullSize.Height; y++) {
 				for (int x = FullSize.Width * 2 - 2; x >= 0; x -= 2) {
-					if (_overlayObjects[x, y] == null || !checkFunc(_overlayObjects[x, y])) continue;
+					if (_overlayObjects[x, y] == null || !SpecialOverlays.IsOreOrGemOrTib(_overlayObjects[x, y])) continue;
 					List<GameObject> objs = GetObjectsAt(x, y);
 					foreach (GameObject o in objs)
 						_theater.DrawObject(o, _drawingSurface);
 				}
 				for (int x = FullSize.Width * 2 - 3; x >= 0; x -= 2) {
-					if (_overlayObjects[x, y] == null || !checkFunc(_overlayObjects[x, y])) continue;
+					if (_overlayObjects[x, y] == null || !SpecialOverlays.IsOreOrGemOrTib(_overlayObjects[x, y])) continue;
 					List<GameObject> objs = GetObjectsAt(x, y);
 					foreach (GameObject o in objs)
 						_theater.DrawObject(o, _drawingSurface);
@@ -1184,12 +1201,11 @@ namespace CNCMaps.MapLogic {
 
 		public void DrawMap() {
 			Logger.Info("Drawing map");
-			_drawingSurface = new DrawingSurface(FullSize.Width * TileWidth, FullSize.Height * TileHeight,
-												 System.Drawing.Imaging.PixelFormat.Format24bppRgb);
+			_drawingSurface = new DrawingSurface(FullSize.Width * TileWidth, FullSize.Height * TileHeight, PixelFormat.Format24bppRgb);
 			var tileCollection = _theater.GetTileCollection();
 
 			// zig-zag drawing technique explanation: http://stackoverflow.com/questions/892811/drawing-isometric-game-worlds
-			double last_reported = 0.0;
+			double lastReported = 0.0;
 			for (int y = 0; y < FullSize.Height; y++) {
 				Logger.Trace("Drawing tiles row {0}", y);
 				for (int x = FullSize.Width * 2 - 2; x >= 0; x -= 2) {
@@ -1197,12 +1213,12 @@ namespace CNCMaps.MapLogic {
 				}
 				for (int x = FullSize.Width * 2 - 3; x >= 0; x -= 2) {
 					tileCollection.DrawTile(_tiles.GetTile(x, y), _drawingSurface);
-				} 
-				
+				}
+
 				double pct = 50.0 * y / FullSize.Height;
-				if (pct > last_reported + 5) {
+				if (pct > lastReported + 5) {
 					Logger.Info("Drawing tiles... {0}%", Math.Round(pct, 0));
-					last_reported = pct;
+					lastReported = pct;
 				}
 			}
 
@@ -1222,9 +1238,9 @@ namespace CNCMaps.MapLogic {
 				}
 
 				double pct = 50 + 50.0 * y / FullSize.Height;
-				if (pct > last_reported + 5) {
+				if (pct > lastReported + 5) {
 					Logger.Info("Drawing objects... {0}%", Math.Round(pct, 0));
-					last_reported = pct;
+					lastReported = pct;
 				}
 			}
 

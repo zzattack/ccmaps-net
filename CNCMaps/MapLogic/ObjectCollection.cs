@@ -217,7 +217,7 @@ namespace CNCMaps.MapLogic {
 				int objIdx = _drawables.Count - 1;
 				var ovl = new OverlayObject((byte)objIdx, 0);
 				if (_engine >= EngineType.RedAlert2) {
-					if (SpecialOverlays.IsOreOrGem(ovl)) {
+					if (SpecialOverlays.IsOreOrGem(ovl) || SpecialOverlays.IsTib_Aboreus(ovl) || SpecialOverlays.IsTib_Vinifera(ovl)) {
 						drawable.PaletteType = PaletteType.Overlay;
 						drawable.LightingType = LightingType.None;
 					}

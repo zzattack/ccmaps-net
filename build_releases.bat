@@ -1,4 +1,4 @@
-set VER=2.0beta17
+set VER=2.0beta19
 
 del CNCMaps_*.zip
 del CNCMaps_setup_*.exe
@@ -12,8 +12,6 @@ set MAKENSIS="%PROGRAMFILES(X86)%\nsis\makensis.exe"
 
 %MSBUILD% CNCMaps.sln /p:Configuration=Release
 %MAKENSIS% nsisinstaller-rls.nsi
-
-for /f "delims=" %%a in ('cat nsisinstaller-dbg.nsi ^| grep "!define VERSION" ^| gawk "{ print $3 }" ') do @set VER=%%a
  
 cd CNCMaps/bin/Release
 for /D %%f in (CNCMaps.exe NLog.config NLog.dll OpenTK.dll OpenTK.dll.config osmesa.dll) DO (

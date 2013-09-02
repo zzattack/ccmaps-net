@@ -11,8 +11,7 @@ namespace CNCMaps.GUI {
 		public event EventHandler UpdateCheckFailed;
 		public event DownloadProgressChangedEventHandler DownloadProgressChanged;
 
-		public const string UpdateCheckHost = "http://cncmaps.zzattack.org/";
-		//public const string UpdateCheckHost = "http://localhost:1511/";
+		public const string UpdateCheckHost = "https://cnc-maps.net/";
 		public const string UpdateCheckPage = "tool/version_check";
 
 		public void CheckVersion() {

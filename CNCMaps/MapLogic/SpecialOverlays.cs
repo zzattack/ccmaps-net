@@ -76,6 +76,8 @@ namespace CNCMaps.MapLogic {
 			else {
 				if (IsOre(o)) return OverlayType.Ore;
 				else if (IsGem(o)) return OverlayType.Gems;
+				else if (IsTib_Vinifera(o)) return OverlayType.Vinifera;
+				else if (IsTib_Aboreus(o)) return OverlayType.Aboreus;
 			}
 			return OverlayType.NotSpecial;
 		}

@@ -19,9 +19,9 @@ namespace CNCMaps.GUI {
 
 	public partial class MainForm : Form {
 		public const string RendererExe = "CNCMaps.exe";
-		private bool _skipUpdateCheck;
+		private readonly bool _skipUpdateCheck;
 		// automatically swap between RA2/TS mix dir from registry
-		private bool currentEngineRA2 = true;
+		private bool _currentEngineRa2 = true;
 
 
 		public MainForm() {
@@ -209,11 +209,11 @@ namespace CNCMaps.GUI {
 
 		private void RbEngineCheckedChanged(object sender, EventArgs e) {
 			bool newEngineRA2 = rbEngineAuto.Checked || rbEngineRA2.Checked || rbEngineYR.Checked;
-			if (currentEngineRA2 && !newEngineRA2 && tbMixDir.Text == FindMixDir(true))
+			if (_currentEngineRa2 && !newEngineRA2 && tbMixDir.Text == FindMixDir(true))
 				tbMixDir.Text = FindMixDir(false);
-			else if (!currentEngineRA2 && newEngineRA2 && tbMixDir.Text == FindMixDir(false))
+			else if (!_currentEngineRa2 && newEngineRA2 && tbMixDir.Text == FindMixDir(false))
 				tbMixDir.Text = FindMixDir(true);
-			currentEngineRA2 = newEngineRA2;
+			_currentEngineRa2 = newEngineRA2;
 		}
 		private void PngOutputCheckedChanged(object sender, EventArgs e) {
 			nudCompression.Visible = label1.Visible = cbOutputPNG.Checked;
