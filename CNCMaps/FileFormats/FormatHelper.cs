@@ -56,7 +56,7 @@ namespace CNCMaps.FileFormats {
 					ret = new CsfFile(baseStream, filename, offset, length, m != CacheMethod.NoCache); // defaults to cache
 					break;
 				case FileFormat.Hva:
-					ret = new HvaFile(baseStream, filename, offset, length, m == CacheMethod.Cache); // defaults to not cache
+					ret = new HvaFile(baseStream, filename, offset, length, m != CacheMethod.NoCache); // defaults to not cache
 					break;
 				case FileFormat.Ini:
 					ret = new IniFile(baseStream, filename, offset, length, m != CacheMethod.NoCache);
@@ -77,13 +77,13 @@ namespace CNCMaps.FileFormats {
 					ret = new PktFile(baseStream, filename, offset, length, m != CacheMethod.NoCache);
 					break;
 				case FileFormat.Shp:
-					ret = new ShpFile(baseStream, filename, offset, length, m == CacheMethod.Cache);
+					ret = new ShpFile(baseStream, filename, offset, length, m != CacheMethod.NoCache);
 					break;
 				case FileFormat.Tmp:
 					ret = new TmpFile(baseStream, filename, offset, length, m != CacheMethod.NoCache);
 					break;
 				case FileFormat.Vxl:
-					ret = new VxlFile(baseStream, filename, offset, length, m == CacheMethod.Cache);
+					ret = new VxlFile(baseStream, filename, offset, length, m != CacheMethod.NoCache);
 					break;
 				case FileFormat.Ukn:
 				default:

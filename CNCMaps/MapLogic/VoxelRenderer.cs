@@ -98,6 +98,7 @@ namespace CNCMaps.MapLogic {
 						throw new InvalidOperationException("Mesa context could not be made current");
 					}
 				}
+				logger.Info("Successfully acquired Mesa context");
 				return true;
 			}
 			catch {
