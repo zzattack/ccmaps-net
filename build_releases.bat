@@ -1,4 +1,4 @@
-set VER=2.0beta16
+set VER=2.0beta17
 
 del CNCMaps_*.zip
 del CNCMaps_setup_*.exe
@@ -25,6 +25,8 @@ for /D %%f in (CNCMaps.exe NLog.config NLog.dll OpenTK.dll OpenTK.dll.config) DO
 )
 
 cd ../../../
+
+exit
 
 %MSBUILD% CNCMaps.sln /p:Configuration=Debug
 %MAKENSIS% nsisinstaller-dbg.nsi

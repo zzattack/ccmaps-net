@@ -85,6 +85,9 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\CNCMaps\Properties\AssemblyInfoGlobal.cs">
+      <Link>Properties\AssemblyInfoGlobal.cs</Link>
+    </Compile>
     <Compile Include="..\CNCMaps\Utility\Option.cs">
       <Link>Option.cs</Link>
     </Compile>
