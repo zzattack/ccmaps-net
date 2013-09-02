@@ -450,7 +450,7 @@ namespace CNCMaps.MapLogic {
 
 		private void AddImageToObject(Drawable drawableObject, string fileName, DrawProperties drawProps) {
 			if (fileName.EndsWith(".vxl")) {
-				var vxl = VFS.Open<VxlFile>(fileName, FileFormat.Vxl);
+				var vxl = VFS.Open<VxlFile>(fileName);
 				if (vxl != null) {
 					string hvaFileName = Path.ChangeExtension(fileName, ".hva");
 					var hva = VFS.Open(hvaFileName) as HvaFile;
@@ -458,7 +458,7 @@ namespace CNCMaps.MapLogic {
 				}
 			}
 			else {
-				var shp = VFS.Open<ShpFile>(fileName, FileFormat.Shp);
+				var shp = VFS.Open<ShpFile>(fileName);
 				if (shp != null)
 					drawableObject.AddShp(shp, drawProps);
 			}

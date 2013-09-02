@@ -10,7 +10,7 @@ namespace CNCMaps.FileFormats {
 
 		static NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
-		public VxlFile(Stream baseStream, string filename, int baseOffset, int fileSize, bool isBuffered = true)
+		public VxlFile(Stream baseStream, string filename, int baseOffset, int fileSize, bool isBuffered = false)
 			: base(baseStream, filename, baseOffset, fileSize, isBuffered) {
 		}
 

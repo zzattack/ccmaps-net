@@ -110,7 +110,7 @@ namespace CNCMaps.MapLogic {
 			}
 
 			foreach (string mix in Defaults.GetTheaterMixes(_theaterType))
-				VFS.Add(mix);
+				VFS.Add(mix, CacheMethod.Cache); // we wish for these to be cached as they're gonna be hit often
 
 			_palettes.AnimPalette = new Palette(VFS.Open<PalFile>("anim.pal"));
 

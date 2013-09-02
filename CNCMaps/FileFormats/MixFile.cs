@@ -23,6 +23,7 @@ namespace CNCMaps.FileFormats {
 		Dictionary<uint, MixEntry> index;
 		bool isRmix, isEncrypted;
 		long dataStart;
+		const long headerStart = 84;
 
 		public MixFile(Stream baseStream, string filename = "",  bool isBuffered = false) : this(baseStream, filename, 0, baseStream.Length, isBuffered) { }
 
@@ -55,9 +56,7 @@ namespace CNCMaps.FileFormats {
 			isEncrypted = false;
 			index = ParseTdHeader(this, out dataStart).ToDictionary(x => x.Hash);
 		}
-
-		const long headerStart = 84;
-
+		
 		List<MixEntry> ParseRaHeader(VirtualFile reader, out long dataStart) {
 			//BinaryReader reader = new BinaryReader(s);
 			byte[] keyblock = reader.Read(80);
@@ -170,12 +169,12 @@ namespace CNCMaps.FileFormats {
 			public const int Size = 12;
 		}
 
-		public VirtualFile OpenFile(string filename, FileFormat f = FileFormat.None) {
+		public VirtualFile OpenFile(string filename, FileFormat f = FileFormat.None, CacheMethod m = CacheMethod.Default) {
 			MixEntry e;
 			if (!index.TryGetValue(MixEntry.HashFilename(filename), out e))
 				return null;
 			else
-				return FormatHelper.OpenAsFormat(baseStream, filename, (int)(baseOffset + dataStart + e.Offset), (int)e.Length, f);
+				return FormatHelper.OpenAsFormat(BaseStream, filename, (int)(BaseOffset + dataStart + e.Offset), (int)e.Length, f, m);
 		}
 
 		public IEnumerable<uint> AllFileHashes() {

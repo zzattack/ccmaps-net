@@ -44,7 +44,7 @@ namespace CNCMaps.FileFormats {
 			return FileFormat.Ukn;
 		}
 
-		public static VirtualFile OpenAsFormat(Stream baseStream, string filename, int offset = 0, int length = -1, FileFormat format = FileFormat.None) {
+		public static VirtualFile OpenAsFormat(Stream baseStream, string filename, int offset = 0, int length = -1, FileFormat format = FileFormat.None, CacheMethod m = CacheMethod.Default) {
 			if (length == -1) length = (int)baseStream.Length;
 			if (format == FileFormat.None) {
 				format = GuessFormat(filename);
@@ -53,41 +53,41 @@ namespace CNCMaps.FileFormats {
 			VirtualFile ret;
 			switch (format) {
 				case FileFormat.Csf:
-					ret = new CsfFile(baseStream, filename, offset, length, true);
+					ret = new CsfFile(baseStream, filename, offset, length, m != CacheMethod.NoCache); // defaults to cache
 					break;
 				case FileFormat.Hva:
-					ret = new HvaFile(baseStream, filename, offset, length, true);
+					ret = new HvaFile(baseStream, filename, offset, length, m == CacheMethod.Cache); // defaults to not cache
 					break;
 				case FileFormat.Ini:
-					ret = new IniFile(baseStream, filename, offset, length, true);
+					ret = new IniFile(baseStream, filename, offset, length, m != CacheMethod.NoCache);
 					break;
 				case FileFormat.Map:
-					ret = new MapFile(baseStream, filename, offset, length, true);
+					ret = new MapFile(baseStream, filename, offset, length, m != CacheMethod.NoCache);
 					break;
 				case FileFormat.Missions:
-					ret = new MissionsFile(baseStream, filename, offset, length, true);
+					ret = new MissionsFile(baseStream, filename, offset, length, m != CacheMethod.NoCache);
 					break;
 				case FileFormat.Mix:
-					ret = new MixFile(baseStream, filename, offset, length, false);
+					ret = new MixFile(baseStream, filename, offset, length, m == CacheMethod.Cache);
 					break;
 				case FileFormat.Pal:
-					ret = new PalFile(baseStream, filename, offset, length, true);
+					ret = new PalFile(baseStream, filename, offset, length, m != CacheMethod.NoCache);
 					break;
 				case FileFormat.Pkt:
-					ret = new PktFile(baseStream, filename, offset, length, true);
+					ret = new PktFile(baseStream, filename, offset, length, m != CacheMethod.NoCache);
 					break;
 				case FileFormat.Shp:
-					ret = new ShpFile(baseStream, filename, offset, length, true);
+					ret = new ShpFile(baseStream, filename, offset, length, m == CacheMethod.Cache);
 					break;
 				case FileFormat.Tmp:
-					ret = new TmpFile(baseStream, filename, offset, length, true);
+					ret = new TmpFile(baseStream, filename, offset, length, m != CacheMethod.NoCache);
 					break;
 				case FileFormat.Vxl:
-					ret = new VxlFile(baseStream, filename, offset, length, true);
+					ret = new VxlFile(baseStream, filename, offset, length, m == CacheMethod.Cache);
 					break;
 				case FileFormat.Ukn:
 				default:
-					ret = new VirtualFile(baseStream, filename, offset, length, true);
+					ret = new VirtualFile(baseStream, filename, offset, length, m != CacheMethod.NoCache);
 					break;
 			}
 			return ret;

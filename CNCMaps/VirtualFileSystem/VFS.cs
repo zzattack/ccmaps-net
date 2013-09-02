@@ -20,12 +20,12 @@ namespace CNCMaps.VirtualFileSystem {
 			return instance.OpenFile(filename);
 		}
 
-		public static T Open<T>(string filename) where T : VirtualFile {
-			return Open(filename, GetFormatFromTypeclass(typeof(T))) as T;
+		public static T Open<T>(string filename, CacheMethod m = CacheMethod.Default) where T : VirtualFile {
+			return Open(filename, GetFormatFromTypeclass(typeof(T)), m) as T;
 		}
 
-		public static T Open<T>(string filename, FileFormat f) where T : VirtualFile {
-			return Open(filename, f) as T;
+		public static T Open<T>(string filename, FileFormat f, CacheMethod m) where T : VirtualFile {
+			return Open(filename, f, m) as T;
 		}
 
 		static FileFormat GetFormatFromTypeclass(Type t) {
@@ -43,8 +43,8 @@ namespace CNCMaps.VirtualFileSystem {
 			return FileFormat.Ukn;
 		}
 
-		public static VirtualFile Open(string filename, FileFormat format = FileFormat.None) {
-			return instance.OpenFile(filename, format);
+		public static VirtualFile Open(string filename, FileFormat f, CacheMethod m) {
+			return instance.OpenFile(filename, f, m);
 		}
 
 		public static bool Add(string filename, CacheMethod cache = CacheMethod.Default) {
@@ -65,13 +65,13 @@ namespace CNCMaps.VirtualFileSystem {
 			return OpenFile(filename, format);
 		}
 
-		public VirtualFile OpenFile(string filename, FileFormat format = FileFormat.None) {
+		public VirtualFile OpenFile(string filename, FileFormat format = FileFormat.None, CacheMethod m = CacheMethod.Default) {
 			if (_allArchives == null || _allArchives.Count == 0) return null;
 			var archive = _allArchives.FirstOrDefault(v => v != null && v.ContainsFile(filename));
 			if (archive == null) return null;
 
 			try {
-				return archive.OpenFile(filename, format);
+				return archive.OpenFile(filename, format, m);
 			}
 			catch {
 				return null;
@@ -97,7 +97,7 @@ namespace CNCMaps.VirtualFileSystem {
 			}
 			// virtual mix file
 			else if (Exists(path)) {
-				var mx = Open<MixFile>(path);
+				var mx = Open<MixFile>(path, m);
 				_allArchives.Add(mx);
 				return true;
 			}

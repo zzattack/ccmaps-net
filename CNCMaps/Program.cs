@@ -18,14 +18,14 @@ namespace CNCMaps {
 			InitLoggerConfig();
 			InitSettings(args);
 			if (!ValidateSettings())
-				return 1;
+				return 2;
 
 			try {
 				_logger.Info("Initializing virtual filesystem");
 				var vfs = VFS.GetInstance();
 				if (!vfs.ScanMixDir(Settings.Engine, Settings.MixFilesDirectory)) {
 					_logger.Fatal("Scanning for mix files failed. If on Linux, specify the --mixdir command line argument");
-					return 1;
+					return 2;
 				}
 
 				var map = new MapFile(
@@ -117,7 +117,7 @@ namespace CNCMaps {
 				// init default config
 				var target = new ColoredConsoleTarget();
 				target.Name = "console";
-				target.Layout = "${processtime:format=ss.fff} [${level}] ${message}";
+				target.Layout = "${processtime:format=ss.mmm} [${level}] ${message}";
 				target.RowHighlightingRules.Add(new ConsoleRowHighlightingRule() {
 					ForegroundColor = ConsoleOutputColor.Magenta,
 					Condition = "level = LogLevel.Fatal"

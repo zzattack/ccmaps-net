@@ -7,35 +7,34 @@ namespace CNCMaps.VirtualFileSystem {
 	/// Virtual file class
 	/// </summary>
 	public class VirtualFile : Stream {
-		protected Stream baseStream;
-		protected int baseOffset;
-		protected long size;
-		protected long pos;
-
+		protected Stream BaseStream;
+		protected int BaseOffset;
+		protected long Size;
+		protected long Pos;
 		virtual public string FileName { get; set; }
 
-		byte[] buff;
-		bool isBuffered;
-		bool IsBufferInitialized;
+		byte[] _buff;
+		readonly bool _isBuffered;
+		bool _isBufferInitialized;
 
-		public VirtualFile(Stream BaseStream, string filename, int baseOffset, long fileSize, bool isBuffered = false) {
-			size = fileSize;
-			this.baseOffset = baseOffset;
-			baseStream = BaseStream;
-			this.isBuffered = isBuffered;
+		public VirtualFile(Stream baseStream, string filename, int baseOffset, long fileSize, bool isBuffered = false) {
+			Size = fileSize;
+			this.BaseOffset = baseOffset;
+			this.BaseStream = baseStream;
+			this._isBuffered = isBuffered;
 			FileName = filename;
 		}
 
-		public VirtualFile(Stream BaseStream, string filename = "", bool isBuffered = false) {
-			baseStream = BaseStream;
-			baseOffset = 0;
-			size = BaseStream.Length;
-			this.isBuffered = isBuffered;
+		public VirtualFile(Stream baseStream, string filename = "", bool isBuffered = false) {
+			this.BaseStream = baseStream;
+			BaseOffset = 0;
+			Size = baseStream.Length;
+			this._isBuffered = isBuffered;
 			FileName = filename;
 		}
 
 		public override bool CanRead {
-			get { return pos < size; }
+			get { return Pos < Size; }
 		}
 
 		public override bool CanWrite {
@@ -43,7 +42,7 @@ namespace CNCMaps.VirtualFileSystem {
 		}
 
 		public override long Length {
-			get { return size; }
+			get { return Size; }
 		}
 
 		public override void Flush() {
@@ -51,48 +50,48 @@ namespace CNCMaps.VirtualFileSystem {
 
 		public override int Read(byte[] buffer, int offset, int count) {
 			count = Math.Min(count, (int)(Length - Position));
-			if (isBuffered) {
-				if (!IsBufferInitialized)
+			if (_isBuffered) {
+				if (!_isBufferInitialized)
 					InitBuffer();
 
-				Array.Copy(buff, pos, buffer, offset, count);
+				Array.Copy(_buff, Pos, buffer, offset, count);
 			}
 			else {
 				// ensure
-				baseStream.Position = baseOffset + pos;
-				baseStream.Read(buffer, offset, count);
+				BaseStream.Position = BaseOffset + Pos;
+				BaseStream.Read(buffer, offset, count);
 			}
-			pos += count;
+			Pos += count;
 			return count;
 		}
 
 		public unsafe int Read(byte* buffer, int count) {
 			count = Math.Min(count, (int)(Length - Position));
-			if (isBuffered) {
-				if (!IsBufferInitialized)
+			if (_isBuffered) {
+				if (!_isBufferInitialized)
 					InitBuffer();
 
 				for (int i = 0; i < count; i++)
-					*buffer++ = buff[pos + i];
+					*buffer++ = _buff[Pos + i];
 			}
 			else {
 				// ensure
-				baseStream.Position = baseOffset + pos;
-
-				byte[] rbuff = Read(count);
+				BaseStream.Position = BaseOffset + Pos;
+				byte[] rbuff = new byte[count];
+				BaseStream.Read(rbuff, 0, count);
 				for (int i = 0; i < count; i++)
-					*buffer++ = rbuff[pos + i];
+					*buffer++ = rbuff[i];
 			}
-			pos += count;
+			Pos += count;
 			return count;
 		}
 
 		private void InitBuffer() {
 			// ensure
-			baseStream.Position = baseOffset + pos;
-			buff = new byte[size];
-			baseStream.Read(buff, 0, (int)size);
-			IsBufferInitialized = true;
+			BaseStream.Position = BaseOffset + Pos;
+			_buff = new byte[Size];
+			BaseStream.Read(_buff, 0, (int)Size);
+			_isBufferInitialized = true;
 		}
 
 		public byte[] Read(int numBytes) {
@@ -147,34 +146,30 @@ namespace CNCMaps.VirtualFileSystem {
 
 		public override void Close() {
 			base.Close();
-			baseStream.Close();
+			BaseStream.Close();
 		}
 
 		public override void SetLength(long value) {
-			size = value;
+			Size = value;
 		}
 
 		public override long Position {
 			get {
-				return pos;
+				return Pos;
 			}
 			set {
-				pos = value;
-				if (!isBuffered && pos + baseOffset != baseStream.Position)
-					baseStream.Seek(pos + baseOffset, SeekOrigin.Begin);
+				Pos = value;
+				if (!_isBuffered && Pos + BaseOffset != BaseStream.Position)
+					BaseStream.Seek(Pos + BaseOffset, SeekOrigin.Begin);
 			}
 		}
 
 		public long Remaining {
-			get {
-				return Length - pos;
-			}
+			get {return Length - Pos;}
 		}
 
 		public bool Eof {
-			get {
-				return Remaining <= 0;
-			}
+			get {return Remaining <= 0;}
 		}
 
 		public override bool CanSeek {

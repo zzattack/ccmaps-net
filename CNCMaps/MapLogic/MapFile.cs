@@ -467,7 +467,7 @@ namespace CNCMaps.MapLogic {
 					if (s == null || s.BaseTile != null) continue; // s.BaseTile set means we've already moved it
 
 					Size foundation = _theater.GetFoundation(s);
-					if (foundation == Size.Empty) continue;
+					if (foundation == System.Drawing.Size.Empty) continue;
 					s.BaseTile = _tiles.GetTileR(s.Tile.Rx + foundation.Width - 1, s.Tile.Ry + foundation.Height - 1);
 
 					// move structure
@@ -485,7 +485,7 @@ namespace CNCMaps.MapLogic {
 					if (o == null || o.BaseTile != null) continue; // BaseTile set means we've already moved it
 
 					Size foundation = _theater.GetObjectCollection(o).GetDrawable(o).Foundation;
-					if (foundation == Size.Empty) continue;
+					if (foundation == System.Drawing.Size.Empty) continue;
 					o.BaseTile = _tiles.GetTileR(o.Tile.Rx + foundation.Width - 1, o.Tile.Ry + foundation.Height - 1);
 
 					if (o.BaseTile == null)

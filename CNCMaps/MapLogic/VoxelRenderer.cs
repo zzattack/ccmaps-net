@@ -69,6 +69,7 @@ namespace CNCMaps.MapLogic {
 
 		private bool CreateContext() {
 			logger.Debug("Creating graphics context, trying {0} first", Program.Settings.PreferOSMesa ? "OSMesa" : "Window Manager");
+
 			if (Program.Settings.PreferOSMesa)
 				return CreateMesaContext() || CreateGameWindow();
 			else
@@ -77,7 +78,7 @@ namespace CNCMaps.MapLogic {
 
 		private bool CreateGameWindow() {
 			try {
-				gw = new GameWindow(200, 200);
+				gw = new GameWindow(200, 200, GraphicsMode.Default, "", GameWindowFlags.Default);
 				return true;
 			}
 			catch {

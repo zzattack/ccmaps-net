@@ -15,18 +15,14 @@ namespace CNCMaps.VirtualFileSystem {
 		}
 
 		public override bool CanRead {
-			get {
-				return !Eof;
-			}
+			get { return !Eof; }
 		}
 
 		public string ReadLine() {
 			// works for ascii only!
-			if (Eof) return null;
-
-			StringBuilder builder = new StringBuilder(80);
-			while (!Eof) {
-				char c =(char)ReadByte();
+			var builder = new StringBuilder(80);
+			while (CanRead) {
+				char c = (char)ReadByte();
 				if (c == '\n')
 					break;
 				else if (c != '\r')

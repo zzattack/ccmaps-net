@@ -129,7 +129,6 @@
     <Compile Include="VirtualFileSystem\DirArchive.cs" />
     <Compile Include="VirtualFileSystem\MemoryFile.cs" />
     <Compile Include="VirtualFileSystem\VirtualFile.cs" />
-    <Compile Include="VirtualFileSystem\MixArchive.cs" />
     <Compile Include="VirtualFileSystem\VFS.cs" />
     <Compile Include="VirtualFileSystem\VirtualTextFile.cs" />
   </ItemGroup>
@@ -157,6 +156,11 @@
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <ProjectExtensions>
+    <VisualStudio>
+      <UserProperties BuildVersion_UpdateFileVersion="True" BuildVersion_UpdateAssemblyVersion="True" BuildVersion_UseGlobalSettings="True" BuildVersion_AssemblyInfoFilename="CNCMaps\Properties\AssemblyInfoGlobal.cs" />
+    </VisualStudio>
+  </ProjectExtensions>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">
