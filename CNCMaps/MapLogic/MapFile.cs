@@ -399,8 +399,10 @@ namespace CNCMaps.MapLogic {
 			CreateLevelPalettes();
 			LoadPalettes();
 			ApplyRemappables();
-			LoadLightSources();
-			ApplyLightSources();
+			if (!Program.Settings.IgnoreLighting) {
+				LoadLightSources();
+				ApplyLightSources();
+			}
 
 			// first preparing all palettes as above, and only now recalculating them 
 			// could save a large amount of work in total
@@ -794,7 +796,12 @@ namespace CNCMaps.MapLogic {
 
 		private void LoadLighting() {
 			Logger.Info("Loading lighting");
-			_lighting = new Lighting(GetOrCreateSection("Lighting"));
+			if (!Program.Settings.IgnoreLighting)
+				_lighting = new Lighting(GetOrCreateSection("Lighting"));
+			else {
+				_lighting = new Lighting(new IniSection(""));
+				_lighting.Level = 0.0;
+			}
 		}
 
 		// Large-degree changes to make the lighting better mimic the way it is in the game.

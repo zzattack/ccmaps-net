@@ -187,6 +187,7 @@ namespace CNCMaps {
 				{"F|force-fullmap", "Ignore LocalSize definition and just save the full map", v => Settings.IgnoreLocalSize = true},
 				{"f|force-localsize", "Use localsize for map dimensions (default)", v => Settings.IgnoreLocalSize = false}, 
 				{"k|replace-preview", "Update the maps [PreviewPack] data with the rendered image",v => Settings.GeneratePreviewPack = true}, 
+				{"n|ignore-lighting", "Ignore all lighting and lamps on the map",v => Settings.IgnoreLighting = true}, 
 				{"K|replace-preview-nosquares", "Update the maps [PreviewPack] data with the rendered image, without squares",
 					v => {
 						Settings.GeneratePreviewPack = true;

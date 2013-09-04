@@ -14,7 +14,6 @@ namespace CNCMaps.MapLogic {
 		public Lighting() { }
 
 		public Lighting(IniFile.IniSection iniSection) {
-			System.Diagnostics.Debug.Assert(iniSection.Name == "Lighting");
 			Level = iniSection.ReadDouble("Level", 0.032);
 			Ambient = iniSection.ReadDouble("Ambient", 1.0);
 			Red = iniSection.ReadDouble("Red", 1.0);

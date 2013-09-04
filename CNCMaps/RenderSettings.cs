@@ -11,6 +11,7 @@ namespace CNCMaps {
 		public string MixFilesDirectory { get; set; }
 		public bool ShowHelp { get; set; }
 		public bool MarkOreFields { get; set; }
+		public bool IgnoreLighting { get; set; }
 		public bool IgnoreLocalSize { get; set; }
 		public EngineType Engine { get; set; }
 		public StartPositionMarking StartPositionMarking;
@@ -36,6 +37,7 @@ namespace CNCMaps {
 				MixFilesDirectory = ""
 			};
 		}
+
 	}
 
 }
