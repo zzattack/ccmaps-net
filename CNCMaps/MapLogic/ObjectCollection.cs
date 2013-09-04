@@ -206,9 +206,16 @@ namespace CNCMaps.MapLogic {
 				drawable.Foundation = new Size(3, 1); // ensures bridges are drawn a bit lower than where they're stored
 			}
 			else if (rulesSection.ReadString("Land") == "Railroad") {
-				mainProps.Offset.Y = 14;
-				mainProps.ZAdjust = 14;
-				mainProps.OverridesZbuffer = true;
+				if (_engine <= EngineType.Firestorm) {
+					if (_drawables.Count < 44)
+						mainProps.Offset.Y = 11;
+					else
+						mainProps.Offset.Y += 0;
+				}
+				else {
+					mainProps.Offset.Y = 14;
+				}
+				mainProps.ZAdjust = 15;
 				drawable.LightingType = LightingType.Full;
 				drawable.PaletteType = PaletteType.Iso;
 			}

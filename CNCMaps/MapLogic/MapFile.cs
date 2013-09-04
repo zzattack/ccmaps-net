@@ -482,7 +482,7 @@ namespace CNCMaps.MapLogic {
 			for (int y = 0; y < _overlayObjects.GetLength(1); y++) {
 				for (int x = 0; x < _overlayObjects.GetLength(0); x++) {
 					OverlayObject o = _overlayObjects[x, y];
-					if (o == null || o.BaseTile != null) continue; // BaseTile set means we've already moved it
+					if (o == null || o.BaseTile != null || o.Drawable == null) continue; // BaseTile set means we've already moved it
 
 					Size foundation = o.Drawable.Foundation;
 					if (foundation == System.Drawing.Size.Empty) continue;
