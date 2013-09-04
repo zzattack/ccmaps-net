@@ -97,13 +97,13 @@ namespace CNCMaps.MapLogic {
 			d.Offset(props.GetOffset(obj));
 			d.Offset(-vxl_ds.bmd.Width / 2, -vxl_ds.bmd.Height / 2);
 
-			short zBufVal = (short)(obj.BaseTile.Rx + obj.BaseTile.Ry + obj.BaseTile.Z);
 			// rows inverted!
 			var w_low = (byte*)ds.bmd.Scan0;
 			byte* w_high = w_low + ds.bmd.Stride * ds.bmd.Height;
 			var zBuffer = ds.GetZBuffer();
 
 			for (int y = 0; y < vxl_ds.Height; y++) {
+				short zBufVal = (short)((obj.BaseTile.Rx + obj.BaseTile.Ry + obj.BaseTile.Z) * TileHeight + vxl_ds.Height - y);
 				byte* src_row = (byte*)vxl_ds.bmd.Scan0 + vxl_ds.bmd.Stride * (vxl_ds.Height - y - 1);
 				byte* dst_row = ((byte*)ds.bmd.Scan0 + (d.Y + y) * ds.bmd.Stride + d.X * 3);
 				int zIdx = (d.Y + y) * ds.Width + d.X;

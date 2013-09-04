@@ -65,12 +65,6 @@ namespace CNCMaps.FileFormats {
 					return (datapresency & 0x04) == 0x04;
 				}
 			}
-			[Flags]
-			public enum DataPresencyFlags : uint {
-				has_extra_data = 1 << 0,
-				has_z_data = 1 << 1,
-				has_damaged_data = 1 << 2
-			}
 		}
 
 		class TmpImage {
@@ -123,13 +117,11 @@ namespace CNCMaps.FileFormats {
 			if (tile.SubTile >= images.Count) return;
 			TmpImage img = images[tile.SubTile];
 			var zBuffer = ds.GetZBuffer();
+			var heightBuffer = ds.GetHeightBuffer();
 			Palette p = tile.Palette;
 
 			// calculate tile index -> pixel index
-			// short zBufVal = (short)((tile.Rx + tile.Ry) * fileHeader.Height / 2);
-			short zBufVal = (short)(tile.Rx + tile.Ry + img.header.height);
-			int xOffset = tile.Dx * fileHeader.cx / 2;
-			int yOffset = (tile.Dy - tile.Z) * fileHeader.cy / 2;
+			Point offset = new Point(tile.Dx * fileHeader.cx / 2, (tile.Dy - tile.Z) * fileHeader.cy / 2);
 
 			// make touched tiles (used for determining image cutoff)
 			int gx = tile.Dx, gy = (tile.Dy - tile.Z) / 2;
@@ -138,7 +130,7 @@ namespace CNCMaps.FileFormats {
 				tile.Layer.GridTouchedBy[gx, gy] = tile;
 			}
 
-			logger.Trace("Drawing TMP file {0} (subtile {1}) at ({2},{3})", FileName, tile.SubTile, xOffset, yOffset);
+			logger.Trace("Drawing TMP file {0} (subtile {1}) at ({2},{3})", FileName, tile.SubTile, offset.X, offset.Y);
 
 			int stride = ds.bmd.Stride;
 
@@ -148,23 +140,24 @@ namespace CNCMaps.FileFormats {
 			// writing bounds
 			var w_low = (byte*)ds.bmd.Scan0;
 			byte* w_high = (byte*)ds.bmd.Scan0 + stride * ds.bmd.Height;
-			byte* w = (byte*)ds.bmd.Scan0 + stride * yOffset + (xOffset + halfCx - 2) * 3;
+			byte* w = (byte*)ds.bmd.Scan0 + stride * offset.Y + (offset.X + halfCx - 2) * 3;
 
 			int rIdx = 0, x, y = 0;
-			int zIdx = yOffset * ds.Width + xOffset + halfCx - 2;
+			int zIdx = offset.Y * ds.Width + offset.X + halfCx - 2;
 			int cx = 0; // Amount of pixel to copy
-
+					
 			for (; y < halfCy; y++) {
 				cx += 4;
 				for (ushort c = 0; c < cx; c++) {
 					byte paletteValue = img.tileData[rIdx];
-					// short z = (img.zData != null) ? (short)(zBufVal - img.zData[rIdx]) : short.MaxValue;
+					short zBufVal = (short)((tile.Rx + tile.Ry + tile.Z) * Drawable.TileHeight / 2);// - (img.zData != null ? img.zData[rIdx] : 0));
 					
 					if (w_low <= w && w < w_high) {
 						*(w + 0) = p.colors[paletteValue].B;
 						*(w + 1) = p.colors[paletteValue].G;
 						*(w + 2) = p.colors[paletteValue].R;
 						zBuffer[zIdx] = zBufVal;
+						heightBuffer[zIdx] = (short) (tile.Z * Drawable.TileHeight / 2);
 					}
 					w += 3;
 					zIdx++;
@@ -180,12 +173,13 @@ namespace CNCMaps.FileFormats {
 				cx -= 4;
 				for (ushort c = 0; c < cx; c++) {
 					byte paletteValue = img.tileData[rIdx];
-					// short z = (img.zData != null) ? (short)(zBufVal - img.zData[rIdx]) : short.MaxValue;
+					short zBufVal = (short) ((tile.Rx + tile.Ry + tile.Z) * Drawable.TileHeight / 2);// - (img.zData != null ? img.zData[rIdx] : 0));
 					if (w_low <= w && w < w_high) {
 						*(w + 0) = p.colors[paletteValue].B;
 						*(w + 1) = p.colors[paletteValue].G;
 						*(w + 2) = p.colors[paletteValue].R;
 						zBuffer[zIdx] = zBufVal;
+						heightBuffer[zIdx] = (short)(tile.Z * Drawable.TileHeight / 2);
 					}
 					w += 3;
 					zIdx++;
@@ -196,19 +190,19 @@ namespace CNCMaps.FileFormats {
 			}
 
 			if (!img.header.HasExtraData) return; // we're done now
-			
-			 int dx = xOffset + img.header.x_extra - img.header.x;
-			int dy = yOffset + img.header.y_extra - img.header.y;
-			w = w_low + stride * dy + 3 * dx;
-			zIdx = dx + dy * ds.Width;
+
+			offset.X += img.header.x_extra - img.header.x;
+			offset.Y += img.header.y_extra - img.header.y;
+			w = w_low + stride * offset.Y + 3 * offset.X;
+			zIdx = offset.X + offset.Y * ds.Width;
 			rIdx = 0;
 
 			// identify extra-data affected tiles for cutoff
 			var extraBounds = Rectangle.FromLTRB(
-				Math.Max(0, (int)Math.Floor(dx / (fileHeader.cx / 2.0))),
-				Math.Max(0, (int)Math.Floor(dy / (fileHeader.cy / 2.0))),
-				Math.Min(tile.Layer.Width - 1, (int)Math.Ceiling((dx + img.header.cx_extra) / (fileHeader.cx / 2.0))),
-				Math.Min((tile.Layer.Height - 1) * 2, (int)Math.Ceiling((dy + img.header.cy_extra) / (fileHeader.cy / 2.0))));
+				Math.Max(0, (int)Math.Floor(offset.X / (fileHeader.cx / 2.0))),
+				Math.Max(0, (int)Math.Floor(offset.Y / (fileHeader.cy / 2.0))),
+				Math.Min(tile.Layer.Width - 1, (int)Math.Ceiling((offset.X + img.header.cx_extra) / (fileHeader.cx / 2.0))),
+				Math.Min((tile.Layer.Height - 1) * 2, (int)Math.Ceiling((offset.X + img.header.cy_extra) / (fileHeader.cy / 2.0))));
 			for (int by = extraBounds.Top; by < extraBounds.Bottom; by++) {
 				for (int bx = extraBounds.Left; bx < extraBounds.Right; bx++) {
 					logger.Trace("Tile at ({0},{1}) has extradata affecting ({2},{3})", tile.Dx, tile.Dy, bx, by);
@@ -222,13 +216,14 @@ namespace CNCMaps.FileFormats {
 				for (x = 0; x < img.header.cx_extra; x++) {
 					// Checking per line is required because v needs to be checked every time
 					byte paletteValue = img.extraData[rIdx];
-					// short z = (img.extraZData != null) ? (short)(zBufVal - img.extraZData[rIdx]) : short.MaxValue;
-
+					short zBufVal = (short)((tile.Rx + tile.Ry + tile.Z) * Drawable.TileHeight / 2);
+					
 					if (paletteValue != 0 && w_low <= w && w < w_high) {
 						*w++ = p.colors[paletteValue].B;
 						*w++ = p.colors[paletteValue].G;
 						*w++ = p.colors[paletteValue].R;
 						zBuffer[zIdx] = zBufVal;
+						heightBuffer[zIdx] = (short)(tile.Z * Drawable.TileHeight / 2);
 					}
 					else
 						w += 3;

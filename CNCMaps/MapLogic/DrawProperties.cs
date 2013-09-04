@@ -87,7 +87,8 @@ namespace CNCMaps.MapLogic {
 		};
 
 		public static Func<GameObject, int> OverlayValueFrameDecider = delegate(GameObject obj) {
-			return (obj as OverlayObject).OverlayValue;
+			if (obj is OverlayObject) return (obj as OverlayObject).OverlayValue;
+			else return 0;
 		};
 
 		public static Func<GameObject, int> NullFrameDecider = arg => 0;

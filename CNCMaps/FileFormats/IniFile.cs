@@ -111,6 +111,9 @@ namespace CNCMaps.FileFormats {
 				public void Set(string value) {
 					this.value = value;
 				}
+				public override bool Equals(object obj) {
+					return value.Equals(obj.ToString());
+				}
 			}
 
 			public string Name { get; set; }

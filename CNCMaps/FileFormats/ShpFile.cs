@@ -57,11 +57,11 @@ namespace CNCMaps.FileFormats {
 			if (!_isInitialized) {
 				_isInitialized = true;
 				Logger.Debug("Initializing SHP data for file {0}", FileName);
-				Header = EzMarshal.ByteArrayToStructure<ShpFileHeader>(Read(Marshal.SizeOf(typeof (ShpFileHeader))));
+				Header = EzMarshal.ByteArrayToStructure<ShpFileHeader>(Read(Marshal.SizeOf(typeof(ShpFileHeader))));
 				Images = new List<ShpImage>(Header.NumImages);
 				for (int i = 0; i < Header.NumImages; i++) {
 					var img = new ShpImage();
-					img.Header = EzMarshal.ByteArrayToStructure<ShpImageHeader>(Read(Marshal.SizeOf(typeof (ShpImageHeader))));
+					img.Header = EzMarshal.ByteArrayToStructure<ShpImageHeader>(Read(Marshal.SizeOf(typeof(ShpImageHeader))));
 					Images.Add(img);
 				}
 			}
@@ -119,11 +119,11 @@ namespace CNCMaps.FileFormats {
 			frameIndex = DecideFrameIndex(frameIndex);
 			if (frameIndex >= Images.Count)
 				return;
-			
+
 			var image = GetImage(frameIndex);
 			if (image.ImageData == null || image.Header.cx * image.Header.cy != image.ImageData.Length)
 				return;
-			
+
 			Point offset = globalOffset;
 			offset.Offset(props.GetOffset(obj));
 			offset.X += obj.Tile.Dx * Drawable.TileWidth / 2 + Drawable.TileWidth / 2 - Header.Width / 2 + image.Header.x;
@@ -132,7 +132,8 @@ namespace CNCMaps.FileFormats {
 
 			int stride = ds.bmd.Stride;
 			var zBuffer = ds.GetZBuffer();
-			
+			var heightBuffer = ds.GetHeightBuffer();
+
 			var w_low = (byte*)ds.bmd.Scan0;
 			byte* w_high = (byte*)ds.bmd.Scan0 + stride * ds.bmd.Height;
 
@@ -140,9 +141,6 @@ namespace CNCMaps.FileFormats {
 			byte* w = (byte*)ds.bmd.Scan0 + offset.X * 3 + stride * offset.Y;
 			int zIdx = offset.X + offset.Y * ds.Width;
 			int rIdx = 0;
-
-			// short zBufVal = (short)(offset.Y + tile.Dy * Drawable.TileHeight / 2 + Header.Height);
-			short zBufVal = (short)(obj.BaseTile.Rx + obj.BaseTile.Ry + obj.BaseTile.Z + obj.Drawable.HeightOffset);
 
 			for (int y = 0; y < image.Header.cy; y++) {
 				if (offset.Y + y < 0) {
@@ -152,6 +150,10 @@ namespace CNCMaps.FileFormats {
 					continue; // out of bounds
 				}
 
+				short zBufVal = (short)((obj.Tile.Rx + obj.Tile.Ry + obj.Tile.Z + obj.Drawable.HeightOffset) * Drawable.TileHeight / 2);
+				zBufVal += (short)(Header.Height / 2);// + image.Header.y + y);
+				// zBufVal += (short)(-Header.Height / 2 + image.Header.y + image.Header.cy);
+
 				for (int x = 0; x < image.Header.cx; x++) {
 					byte paletteValue = image.ImageData[rIdx];
 					if (paletteValue != 0 && w_low <= w && w < w_high && (props.OverridesZbuffer || zBufVal >= zBuffer[zIdx])) {
@@ -159,6 +161,7 @@ namespace CNCMaps.FileFormats {
 						*(w + 1) = p.colors[paletteValue].G;
 						*(w + 2) = p.colors[paletteValue].R;
 						zBuffer[zIdx] = Math.Max(zBufVal, zBuffer[zIdx]);
+						heightBuffer[zIdx] = (short)(image.Header.cy + obj.Tile.Z * Drawable.TileHeight / 2);
 					}
 					// Up to the next pixel
 					rIdx++;
@@ -172,33 +175,34 @@ namespace CNCMaps.FileFormats {
 
 		unsafe public void DrawShadow(GameObject obj, DrawProperties props, DrawingSurface ds, Point globalOffset) {
 			int frameIndex = props.FrameDecider(obj);
-			
+
 			frameIndex = DecideFrameIndex(frameIndex);
 			frameIndex += Images.Count / 2; // latter half are shadow Images
 			if (frameIndex >= Images.Count)
 				return;
-			
+
 			var image = GetImage(frameIndex);
 			if (image.ImageData == null || image.Header.cx * image.Header.cy != image.ImageData.Length)
 				return;
-			
+
 			Point offset = globalOffset;
 			offset.Offset(props.GetShadowOffset(obj));
 			offset.X += obj.Tile.Dx * Drawable.TileWidth / 2 + Drawable.TileWidth / 2 - Header.Width / 2 + image.Header.x;
 			offset.Y += (obj.Tile.Dy - obj.Tile.Z) * Drawable.TileHeight / 2 - Header.Height / 2 + image.Header.y;
 			Logger.Trace("Drawing SHP shadow {0} (frame {1}) at ({2},{3})", FileName, frameIndex, offset.X, offset.Y);
-			
+
 			int stride = ds.bmd.Stride;
 			var shadows = ds.GetShadows();
-			var zBuffer = ds.GetZBuffer();	
-		
+			var zBuffer = ds.GetZBuffer();
+			var heightBuffer = ds.GetHeightBuffer();
+
 			var w_low = (byte*)ds.bmd.Scan0;
 			byte* w_high = (byte*)ds.bmd.Scan0 + stride * ds.bmd.Height;
 
 			byte* w = (byte*)ds.bmd.Scan0 + offset.X * 3 + stride * offset.Y;
 			int zIdx = offset.X + offset.Y * ds.Width;
 			int rIdx = 0;
-			short zBufVal = (short)(obj.BaseTile.Rx + obj.BaseTile.Ry + obj.BaseTile.Z + obj.Drawable.HeightOffset);
+			int castHeight = obj.Tile.Z * Drawable.TileHeight / 2;
 
 			for (int y = 0; y < image.Header.cy; y++) {
 				if (offset.Y + y < 0) {
@@ -208,8 +212,11 @@ namespace CNCMaps.FileFormats {
 					continue; // out of bounds
 				}
 
+				short zBufVal = (short)((obj.Tile.Rx + obj.Tile.Ry + obj.Tile.Z + obj.Drawable.HeightOffset) * Drawable.TileHeight / 2);
+				zBufVal += (short)(Header.Height / 2);// + image.Header.y + y);
+				// zBufVal += (short)(-Header.Height / 2 + image.Header.y + image.Header.cy);
 				for (int x = 0; x < image.Header.cx; x++) {
-					if (w_low <= w && w < w_high && image.ImageData[rIdx] != 0 && !shadows[zIdx] && zBufVal >= zBuffer[zIdx]) {
+					if (w_low <= w && w < w_high && image.ImageData[rIdx] != 0 && zBufVal >= zBuffer[zIdx] && castHeight >= heightBuffer[zIdx]) {
 						*(w + 0) /= 2;
 						*(w + 1) /= 2;
 						*(w + 2) /= 2;
@@ -263,7 +270,7 @@ namespace CNCMaps.FileFormats {
 			int stride = ds.bmd.Stride;
 			var w_low = (byte*)ds.bmd.Scan0;
 			byte* w_high = (byte*)ds.bmd.Scan0 + stride * ds.bmd.Height;
-			
+
 			int dx = offset.X + Drawable.TileWidth / 2 - Header.Width / 2 + h.x,
 				dy = offset.Y - Header.Height / 2 + h.y;
 			byte* w = (byte*)ds.bmd.Scan0 + dx * 3 + stride * dy;

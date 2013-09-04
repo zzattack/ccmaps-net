@@ -55,12 +55,10 @@ namespace CNCMaps {
 
 				map.DrawMap();
 
-#if DEBUG
-				//using (var form = new DebugDrawingSurfaceWindow(map.GetDrawingSurface(), map.GetTiles(), map.GetTheater(), map)) {
-				//	form.RequestTileEvaluate += tile => map.DebugDrawTile(tile);
-				//	form.ShowDialog();
-				//}
-#endif
+				using (var form = new DebugDrawingSurfaceWindow(map.GetDrawingSurface(), map.GetTiles(), map.GetTheater(), map)) {
+					form.RequestTileEvaluate += tile => map.DebugDrawTile(tile);
+					form.ShowDialog();
+				}
 
 				if (Settings.StartPositionMarking == StartPositionMarking.Squared)
 					map.DrawSquaredStartPositions();

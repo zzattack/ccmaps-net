@@ -92,6 +92,22 @@ namespace CNCMaps.MapLogic {
 			}
 			return OverlayTibType.NotSpecial;
 		}
+
+		internal static string GetTibName(OverlayObject o, EngineType engine) {
+			if (engine <= EngineType.Firestorm) {
+				if (IsTS_Riparius(o)) return "Riparius";
+				else if (IsTS_Cruentus(o)) return "Cruentus";
+				else if (IsTS_Vinifera(o)) return "Vinifera";
+				else if (IsTS_Aboreus(o)) return "Aboreus";
+			}
+			else {
+				if (IsRA2_Riparius(o)) return "Riparius";
+				else if (IsRA2_Cruentus(o)) return "Cruentus";
+				else if (IsRA2_Vinifera(o)) return "Vinifera";
+				else if (IsRA2_Aboreus(o)) return "Aboreus";
+			}
+			return "";
+		}
 	}
 
 

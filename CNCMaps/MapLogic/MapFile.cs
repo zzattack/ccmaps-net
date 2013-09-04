@@ -894,8 +894,8 @@ namespace CNCMaps.MapLogic {
 
 			// TS needs tiberium remapped
 			if (EngineType <= EngineType.Firestorm) {
-				var tiberiums = _rules.GetSection("Tiberiums").OrderedEntries.Select(tib => (OverlayTibType)Enum.Parse(typeof(OverlayTibType), tib.Value));
-				var remaps = tiberiums.Select(tib => _rules.GetSection(tib.ToString()).ReadString("Color"));
+				var tiberiums = _rules.GetSection("Tiberiums").OrderedEntries.Select(tib => tib.Value.ToString());
+				var remaps = tiberiums.Select(tib => _rules.GetOrCreateSection(tib).ReadString("Color"));
 				var tibRemaps = tiberiums.Zip(remaps, (k, v) => new { k, v }).ToDictionary(x => x.k, x => x.v);
 
 				foreach (var ovl in _overlayObjects) {
@@ -903,7 +903,9 @@ namespace CNCMaps.MapLogic {
 					var tibType = SpecialOverlays.GetOverlayTibType(ovl, EngineType);
 					if (tibType != OverlayTibType.NotSpecial) {
 						ovl.Palette = ovl.Palette.Clone();
-						ovl.Palette.Remap(_namedColors[tibRemaps[SpecialOverlays.GetOverlayTibType(ovl, EngineType)]]);
+						string tibName = SpecialOverlays.GetTibName(ovl, EngineType);
+						if (tibRemaps.ContainsKey(tibName) && _namedColors.ContainsKey(tibRemaps[tibName]))
+							ovl.Palette.Remap(_namedColors[tibRemaps[tibName]]);
 						_palettesToBeRecalculated.Add(ovl.Palette);
 					}
 				}

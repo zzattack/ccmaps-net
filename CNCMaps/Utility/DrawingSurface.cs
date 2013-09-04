@@ -10,6 +10,7 @@ namespace CNCMaps.Utility {
 		public int Height { get; private set; } // prevents repeated (slow) lookups in bm.Width
 
 		short[] zBuffer;
+		short[] heightBuffer;
 		bool[] shadowBuffer;
 
 		static NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
@@ -21,6 +22,7 @@ namespace CNCMaps.Utility {
 			Height = height;
 			Lock(bm.PixelFormat);
 			zBuffer = new short[width * height];
+			heightBuffer = new short[width * height];
 			shadowBuffer = new bool[width * height];
 		}
 
@@ -47,9 +49,13 @@ namespace CNCMaps.Utility {
 		public bool[] GetShadows() {
 			return shadowBuffer;
 		}
-		
+
 		public short[] GetZBuffer() {
 			return zBuffer;
+		}
+
+		public short[] GetHeightBuffer() {
+			return heightBuffer;
 		}
 
 		public void SavePNG(string path, int compressionLevel, int left, int top, int width, int height) {
@@ -94,6 +100,7 @@ namespace CNCMaps.Utility {
 		internal void FreeNonBitmap() {
 			this.zBuffer = null;
 			this.shadowBuffer = null;
+			this.heightBuffer = null;
 		}
 
 

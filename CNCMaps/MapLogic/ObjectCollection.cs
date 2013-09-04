@@ -188,9 +188,13 @@ namespace CNCMaps.MapLogic {
 				// xOffset = yOffset = 0; // TOOD: check we really don't need this
 			}
 			if (rulesSection.ReadBool("IsVeins")) {
+				drawable.LightingType = LightingType.None;
+				drawable.PaletteType= PaletteType.Unit;
+			}
+			if (rulesSection.ReadBool("IsVeinholeMonster")) {
 				offset.Y = -36;
 				drawable.LightingType = LightingType.None;
-				drawable.IsValid = true;
+				drawable.PaletteType = PaletteType.Unit; 
 			}
 			if (_collectionType == CollectionType.Terrain) {
 				offset.Y = Drawable.TileHeight / 2; // trees and such are placed in the middle of their tile
@@ -226,7 +230,7 @@ namespace CNCMaps.MapLogic {
 					else if (SpecialOverlays.IsHighBridge(ovl)) {
 						offsetHack = OffsetHacks.RA2BridgeOffsets;
 						shadowOffsetHack = OffsetHacks.RA2BridgeShadowOffsets;
-						drawable.HeightOffset = 2;
+						drawable.HeightOffset = 1; // bridge has height 4 and roughly foundation 3x1 totaling 4
 						//drawable.Foundation = new Size(3, 1);
 					}
 				}
@@ -241,7 +245,7 @@ namespace CNCMaps.MapLogic {
 					else if (SpecialOverlays.IsHighBridge(ovl)) {
 						offsetHack = OffsetHacks.TSBridgeOffsets;
 						shadowOffsetHack = OffsetHacks.TSBridgeShadowOffsets;
-						drawable.HeightOffset = 1;
+						drawable.HeightOffset = 2;
 					}
 				}
 			}
