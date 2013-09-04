@@ -1136,7 +1136,7 @@ namespace CNCMaps.MapLogic {
 			// read [Tiberiums] for names or different tiberiums, and the [Color] entry (for TS)
 			// for their corresponding "remapped" color. In RA2 this isn't actually used,
 			// but made available for the renderer's preview functionality through a key "MapRendererColor"
-			var tiberiums = _rules.GetOrCreateSection("Tiberiums").OrderedEntries.Select(kvp=>kvp.Value).ToList();
+			var tiberiums = _rules.GetOrCreateSection("Tiberiums").OrderedEntries.Select(kvp => kvp.Value).ToList();
 			var remaps = tiberiums.Select(tib => _rules.GetOrCreateSection(tib)
 				.ReadString(EngineType >= EngineType.RedAlert2 ? "MapRendererColor" : "Color")).ToList();
 
@@ -1362,7 +1362,8 @@ namespace CNCMaps.MapLogic {
 				}
 				var mf = VFS.Open<MissionsFile>(missionsFile);
 				missionEntry = mf.GetMissionEntry(Path.GetFileName(FileName));
-				missionName = (EngineType >= EngineType.RedAlert2) ? missionEntry.UIName : missionEntry.Name;
+				if (missionEntry != null)
+					missionName = (EngineType >= EngineType.RedAlert2) ? missionEntry.UIName : missionEntry.Name;
 			}
 
 			else {

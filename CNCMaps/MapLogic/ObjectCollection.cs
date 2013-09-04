@@ -192,15 +192,15 @@ namespace CNCMaps.MapLogic {
 				drawable.PaletteType= PaletteType.Unit;
 			}
 			if (rulesSection.ReadBool("IsVeinholeMonster")) {
-				offset.Y = -36;
+				offset.Y = -48; // why is this needed???
 				drawable.LightingType = LightingType.None;
-				drawable.PaletteType = PaletteType.Unit; 
+				drawable.PaletteType = PaletteType.Unit;
 			}
 			if (_collectionType == CollectionType.Terrain) {
-				offset.Y = Drawable.TileHeight / 2; // trees and such are placed in the middle of their tile
+				offset.Y += Drawable.TileHeight / 2; // trees and such are placed in the middle of their tile
 			}
 			if (rulesSection.ReadString("Land") == "Rock") {
-				offset.Y = Drawable.TileHeight / 2;
+				offset.Y += Drawable.TileHeight / 2;
 			}
 			else if (rulesSection.ReadString("Land") == "Road") {
 				offset.Y = Drawable.TileHeight / 2;
@@ -250,7 +250,7 @@ namespace CNCMaps.MapLogic {
 				}
 			}
 
-			drawable.Overrides = rulesSection.ReadBool("Overrides");
+			drawable.Overrides = rulesSection.ReadBool("Overrides", drawable.Overrides);
 
 			AddImageToObject(drawable, imageFileName,
 				new DrawProperties {
