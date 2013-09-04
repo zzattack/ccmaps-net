@@ -17,8 +17,9 @@ namespace CNCMaps.MapLogic {
 		public Func<GameObject, int> FrameDecider { get; set; }
 		public Func<GameObject, Point> OffsetHack { get; set; } // used to reposition bridges based on their overlay value
 		public Func<GameObject, Point> ShadowOffsetHack { get; set; } // used to reposition bridges based on their overlay value
-		public Point Offset { private get; set; }
-		public Point ShadowOffset { private get; set; }
+		public Point Offset;
+		public Point ShadowOffset;
+		public int ZAdjust { get; set; }
 		
 		public Point GetOffset(GameObject obj) {
 			var ret = Offset;

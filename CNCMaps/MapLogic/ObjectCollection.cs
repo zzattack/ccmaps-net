@@ -64,6 +64,8 @@ namespace CNCMaps.MapLogic {
 		private void LoadObject(string objName) {
 			IniFile.IniSection rulesSection = _rules.GetSection(objName);
 			var drawable = new Drawable(objName);
+			var mainProps = new DrawProperties();
+			
 			_drawables.Add(drawable);
 			_drawablesDict[objName] = drawable;
 
@@ -82,11 +84,7 @@ namespace CNCMaps.MapLogic {
 			drawable.PaletteType = Defaults.GetDefaultPalette(_collectionType, _engine);
 			drawable.LightingType = Defaults.GetDefaultLighting(_collectionType);
 			drawable.IsRemapable = Defaults.GetDefaultRemappability(_collectionType);
-			var frameDecider = Defaults.GetDefaultFrameDecider(_collectionType);
-
-			Point offset = new Point();
-			Func<GameObject, Point> offsetHack = null;
-			Func<GameObject, Point> shadowOffsetHack = null;
+			mainProps.FrameDecider = Defaults.GetDefaultFrameDecider(_collectionType);
 
 			string imageFileName = artSection.ReadString("Image", artSectionName);
 			bool isVoxel = artSection.ReadBool("Voxel");
@@ -95,12 +93,12 @@ namespace CNCMaps.MapLogic {
 				imageFileName += ".vxl";
 				if (_collectionType == CollectionType.Building) {
 					// half tile to the left
-					offset.X += Drawable.TileWidth / 2;
+					mainProps.Offset.X += Drawable.TileWidth / 2;
 				}
 				else if (_collectionType == CollectionType.Vehicle) {
 					// also vertical tile center
-					offset.X += Drawable.TileWidth / 2;
-					offset.Y += Drawable.TileHeight / 2;
+					mainProps.Offset.X += Drawable.TileWidth / 2;
+					mainProps.Offset.Y += Drawable.TileHeight / 2;
 				}
 			}
 			else if (theaterExtension) {
@@ -171,18 +169,18 @@ namespace CNCMaps.MapLogic {
 				drawable.IsWall = true;
 				drawable.PaletteType = PaletteType.Unit;
 				drawable.LightingType = LightingType.Ambient;
-				frameDecider = FrameDeciders.OverlayValueFrameDecider;
+				mainProps.FrameDecider = FrameDeciders.OverlayValueFrameDecider;
 			}
 
 			if (rulesSection.ReadBool("Gate")) {
 				drawable.IsGate = true;
 				drawable.PaletteType = PaletteType.Unit;
-				frameDecider = FrameDeciders.NullFrameDecider;
+				mainProps.FrameDecider = FrameDeciders.NullFrameDecider;
 			}
 
-			bool shadow = artSection.ReadBool("Shadow", Defaults.GetShadowAssumption(_collectionType));
+			mainProps.HasShadow = artSection.ReadBool("Shadow", Defaults.GetShadowAssumption(_collectionType));
 			if (!rulesSection.ReadBool("DrawFlat", true))
-				shadow = true;
+				mainProps.HasShadow = true;
 
 			if (rulesSection.ReadBool("BridgeRepairHut")) {
 				// xOffset = yOffset = 0; // TOOD: check we really don't need this
@@ -192,27 +190,28 @@ namespace CNCMaps.MapLogic {
 				drawable.PaletteType= PaletteType.Unit;
 			}
 			if (rulesSection.ReadBool("IsVeinholeMonster")) {
-				offset.Y = -48; // why is this needed???
+				mainProps.Offset.Y = -48; // why is this needed???
 				drawable.LightingType = LightingType.None;
 				drawable.PaletteType = PaletteType.Unit;
 			}
 			if (_collectionType == CollectionType.Terrain) {
-				offset.Y += Drawable.TileHeight / 2; // trees and such are placed in the middle of their tile
+				mainProps.Offset.Y += Drawable.TileHeight / 2; // trees and such are placed in the middle of their tile
 			}
 			if (rulesSection.ReadString("Land") == "Rock") {
-				offset.Y += Drawable.TileHeight / 2;
+				mainProps.Offset.Y += Drawable.TileHeight / 2;
 			}
 			else if (rulesSection.ReadString("Land") == "Road") {
-				offset.Y = Drawable.TileHeight / 2;
+				mainProps.Offset.Y = Drawable.TileHeight / 2;
 				drawable.Foundation = new Size(3, 1); // ensures bridges are drawn a bit lower than where they're stored
 			}
 			else if (rulesSection.ReadString("Land") == "Railroad") {
-				offset.Y = 14;
+				mainProps.Offset.Y = 14;
 				drawable.LightingType = LightingType.Full;
+				drawable.PaletteType = PaletteType.Iso;
 			}
 			if (rulesSection.ReadBool("SpawnsTiberium")) {
 				// For example on TIBTRE / Ore Poles
-				offset.Y = -1;
+				mainProps.Offset.Y = -1;
 				drawable.LightingType = LightingType.None;
 				drawable.PaletteType = PaletteType.Unit;
 			}
@@ -228,10 +227,10 @@ namespace CNCMaps.MapLogic {
 						drawable.LightingType = LightingType.None;
 					}
 					else if (SpecialOverlays.IsHighBridge(ovl)) {
-						offsetHack = OffsetHacks.RA2BridgeOffsets;
-						shadowOffsetHack = OffsetHacks.RA2BridgeShadowOffsets;
-						drawable.HeightOffset = 1; // bridge has height 4 and roughly foundation 3x1 totaling 4
-						//drawable.Foundation = new Size(3, 1);
+						mainProps.OffsetHack = OffsetHacks.RA2BridgeOffsets;
+						mainProps.ShadowOffsetHack = OffsetHacks.RA2BridgeShadowOffsets;
+						drawable.HeightOffset = 4; // for lighting
+						mainProps.ZAdjust = 1 * Drawable.TileHeight;
 					}
 				}
 				else if (_engine <= EngineType.Firestorm) {
@@ -241,10 +240,10 @@ namespace CNCMaps.MapLogic {
 						drawable.IsRemapable = true;
 					}
 					else if (SpecialOverlays.IsTSRails(ovl))
-						offset.Y += 11;
+						mainProps.Offset.Y += 11;
 					else if (SpecialOverlays.IsHighBridge(ovl)) {
-						offsetHack = OffsetHacks.TSBridgeOffsets;
-						shadowOffsetHack = OffsetHacks.TSBridgeShadowOffsets;
+						mainProps.OffsetHack = OffsetHacks.TSBridgeOffsets;
+						mainProps.ShadowOffsetHack = OffsetHacks.TSBridgeShadowOffsets;
 						drawable.HeightOffset = 2;
 					}
 				}
@@ -252,22 +251,16 @@ namespace CNCMaps.MapLogic {
 
 			drawable.Overrides = rulesSection.ReadBool("Overrides", drawable.Overrides);
 
-			AddImageToObject(drawable, imageFileName,
-				new DrawProperties {
-					Offset = offset,
-					HasShadow = shadow,
-					FrameDecider = frameDecider,
-					OffsetHack = offsetHack,
-					ShadowOffsetHack = shadowOffsetHack,
-				});
+			AddImageToObject(drawable, imageFileName, mainProps);
 
 			// Buildings often consist of multiple SHP files
 			if (_collectionType == CollectionType.Building) {
 				var damagedProps = new DrawProperties {
-					HasShadow = shadow,
-					FrameDecider = frameDecider, // this is not an animation with loopstart/loopend yet
+					HasShadow = mainProps.HasShadow,
+					FrameDecider = mainProps.FrameDecider, // this is not an animation with loopstart/loopend yet
 				};
 				drawable.AddDamagedShp(VFS.Open<ShpFile>(imageFileName), damagedProps);
+				var extraFrameDecider = mainProps.FrameDecider;
 
 				foreach (string extraImage in ExtraBuildingImages) {
 					string extraImageDamaged = extraImage + "Damaged";
@@ -285,10 +278,11 @@ namespace CNCMaps.MapLogic {
 							ySort = extraArtSection.ReadInt("YSort", artSection.ReadInt(extraImage + "YSort"));
 							extraShadow = extraArtSection.ReadBool("Shadow", extraShadow);
 							extraImageFileName = extraArtSection.ReadString("Image", extraImageSectionName);
-							frameDecider = FrameDeciders.LoopFrameDecider(
+							extraFrameDecider = FrameDeciders.LoopFrameDecider(
 								extraArtSection.ReadInt("LoopStart"),
 								extraArtSection.ReadInt("LoopEnd", 1));
 						}
+
 						if (theaterExtension)
 							extraImageFileName += Defaults.GetExtension(_theaterType);
 						else
@@ -299,10 +293,10 @@ namespace CNCMaps.MapLogic {
 
 						var props = new DrawProperties {
 							HasShadow = extraShadow,
-							Offset = offset,
-							ShadowOffset = offset,
+							Offset = mainProps.Offset,
+							ShadowOffset = mainProps.Offset,
 							SortIndex = ySort,
-							FrameDecider = frameDecider,
+							FrameDecider = extraFrameDecider,
 							OverridesZbuffer = true,
 						};
 						AddImageToObject(drawable, extraImageFileName, props);
@@ -318,7 +312,7 @@ namespace CNCMaps.MapLogic {
 							ySort = extraArtDamagedSection.ReadInt("YSort", artSection.ReadInt(extraImage + "YSort"));
 							extraShadow = extraArtDamagedSection.ReadBool("Shadow", extraShadow);
 							extraImageDamagedFileName = extraArtDamagedSection.ReadString("Image", extraImageDamagedSectionName);
-							frameDecider = FrameDeciders.LoopFrameDecider(
+							extraFrameDecider = FrameDeciders.LoopFrameDecider(
 								extraArtDamagedSection.ReadInt("LoopStart"),
 								extraArtDamagedSection.ReadInt("LoopEnd", 1));
 						}
@@ -333,9 +327,9 @@ namespace CNCMaps.MapLogic {
 						var props = new DrawProperties {
 							HasShadow = extraShadow,
 							SortIndex = ySort,
-							Offset = offset,
-							ShadowOffset = offset,
-							FrameDecider = frameDecider,
+							Offset = mainProps.Offset,
+							ShadowOffset = mainProps.Offset,
+							FrameDecider = extraFrameDecider,
 							OverridesZbuffer = true,
 						};
 						drawable.AddDamagedShp(VFS.Open(extraImageDamagedFileName) as ShpFile, props);
@@ -383,7 +377,7 @@ namespace CNCMaps.MapLogic {
 				if (rulesSection.ReadBool("Turret") && artSection.ReadBool("Voxel")) {
 					string turretFile = Path.GetFileNameWithoutExtension(imageFileName) + "TUR.vxl";
 					Point voxelOffset = new Point(rulesSection.ReadInt("TurretAnimX"), rulesSection.ReadInt("TurretAnimY"));
-					voxelOffset.Offset(offset);
+					voxelOffset.Offset(mainProps.Offset);
 					var props = new DrawProperties {
 						Offset = voxelOffset,
 					};

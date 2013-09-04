@@ -145,19 +145,19 @@ namespace CNCMaps.FileFormats {
 			int rIdx = 0, x, y = 0;
 			int zIdx = offset.Y * ds.Width + offset.X + halfCx - 2;
 			int cx = 0; // Amount of pixel to copy
-					
+
 			for (; y < halfCy; y++) {
 				cx += 4;
 				for (ushort c = 0; c < cx; c++) {
 					byte paletteValue = img.tileData[rIdx];
 					short zBufVal = (short)((tile.Rx + tile.Ry + tile.Z) * Drawable.TileHeight / 2);// - (img.zData != null ? img.zData[rIdx] : 0));
-					
-					if (w_low <= w && w < w_high) {
+
+					if (w_low <= w && w < w_high && zBufVal >= zBuffer[zIdx]) {
 						*(w + 0) = p.colors[paletteValue].B;
 						*(w + 1) = p.colors[paletteValue].G;
 						*(w + 2) = p.colors[paletteValue].R;
 						zBuffer[zIdx] = zBufVal;
-						heightBuffer[zIdx] = (short) (tile.Z * Drawable.TileHeight / 2);
+						heightBuffer[zIdx] = (short)(tile.Z * Drawable.TileHeight / 2);
 					}
 					w += 3;
 					zIdx++;
@@ -172,9 +172,9 @@ namespace CNCMaps.FileFormats {
 			for (; y < fileHeader.cy; y++) {
 				cx -= 4;
 				for (ushort c = 0; c < cx; c++) {
+					short zBufVal = (short)((tile.Rx + tile.Ry + tile.Z) * Drawable.TileHeight / 2);// - (img.zData != null ? img.zData[rIdx] : 0));
 					byte paletteValue = img.tileData[rIdx];
-					short zBufVal = (short) ((tile.Rx + tile.Ry + tile.Z) * Drawable.TileHeight / 2);// - (img.zData != null ? img.zData[rIdx] : 0));
-					if (w_low <= w && w < w_high) {
+					if (w_low <= w && w < w_high && zBufVal >= zBuffer[zIdx]) {
 						*(w + 0) = p.colors[paletteValue].B;
 						*(w + 1) = p.colors[paletteValue].G;
 						*(w + 2) = p.colors[paletteValue].R;
@@ -217,8 +217,8 @@ namespace CNCMaps.FileFormats {
 					// Checking per line is required because v needs to be checked every time
 					byte paletteValue = img.extraData[rIdx];
 					short zBufVal = (short)((tile.Rx + tile.Ry + tile.Z) * Drawable.TileHeight / 2);
-					
-					if (paletteValue != 0 && w_low <= w && w < w_high) {
+
+					if (paletteValue != 0 && w_low <= w && w < w_high && zBufVal >= zBuffer[zIdx]) {
 						*w++ = p.colors[paletteValue].B;
 						*w++ = p.colors[paletteValue].G;
 						*w++ = p.colors[paletteValue].R;

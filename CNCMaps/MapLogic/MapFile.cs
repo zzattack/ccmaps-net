@@ -853,16 +853,19 @@ namespace CNCMaps.MapLogic {
 				}
 
 				// level, ambient and full benefit from sharing
-				if (lt >= LightingType.Level && pt == PaletteType.Iso)
-					p = _palettePerLevel[obj.Tile.Z];
-				else
-					p = _theater.GetPalette(obj.Drawable).Clone();
-
-				if (lt == LightingType.Ambient || lt == LightingType.Full) {
+				if (lt == LightingType.Full && pt == PaletteType.Iso) {
 					// bridges are attached to a low tile, but their height-offset should be taken into account 
-					// when applying lighting to its palette
 					int z = obj.Tile.Z + (obj.Drawable != null ? obj.Drawable.HeightOffset : 0);
-					p.ApplyLighting(_lighting, z, lt == LightingType.Ambient);
+					p = _palettePerLevel[z];
+				}
+				else if (lt >= LightingType.Level) {
+					// when applying lighting to its palette
+					p = _theater.GetPalette(obj.Drawable).Clone();
+					int z = obj.Tile.Z + (obj.Drawable != null ? obj.Drawable.HeightOffset : 0);
+					p.ApplyLighting(_lighting, z, lt == LightingType.Full);
+				}
+				else {
+					p = _theater.GetPalette(obj.Drawable).Clone();
 				}
 
 				_palettesToBeRecalculated.Add(p);

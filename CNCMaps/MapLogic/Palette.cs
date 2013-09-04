@@ -38,9 +38,9 @@ namespace CNCMaps.MapLogic {
 			return p;
 		}
 
-		public void ApplyLighting(Lighting l, int level = 0, bool ambientOnly = false) {
+		public void ApplyLighting(Lighting l, int level = 0, bool applyTints = true) {
 			ambientMult = (l.Ambient - l.Ground) + l.Level * level;
-			if (!ambientOnly) {
+			if (applyTints) {
 				redMult = l.Red;
 				greenMult = l.Green;
 				blueMult = l.Blue;

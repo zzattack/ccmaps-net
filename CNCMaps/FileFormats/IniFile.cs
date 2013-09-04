@@ -28,13 +28,20 @@ namespace CNCMaps.FileFormats {
 		public IniSection GetOrCreateSection(string sectionName, string insertAfter = null) {
 			var ret = Sections.Find(x => x.Name == sectionName);
 			if (ret == null) {
-				ret = new IniSection(sectionName);
 				int insertIdx = (insertAfter != null) ? Sections.FindIndex(section => section.Name == insertAfter) : -1;
 
-				if (insertIdx != -1)
+				ret = new IniSection(sectionName);
+				if (insertIdx != -1) {
 					Sections.Insert(insertIdx, ret);
-				else
+					ret.Index = insertIdx;
+					// move up all section indices
+					for (int i = insertIdx + 1; i < Sections.Count; i++)
+						Sections[i].Index++;
+				}
+				else {
 					Sections.Add(ret);
+					ret.Index = Sections.Count;
+				}
 			}
 			return ret;
 		}
@@ -53,7 +60,7 @@ namespace CNCMaps.FileFormats {
 			// Test if this line contains start of new section i.e. matches [*]
 			if ((line[0] == '[') && (line[line.Length - 1] == ']')) {
 				string sectionName = line.Substring(1, line.Length - 2);
-				var iniSection = new IniSection(sectionName);
+				var iniSection = new IniSection(sectionName, Sections.Count);
 				logger.Trace("Loading ini section {0}", sectionName);
 				Sections.Add(iniSection);
 				CurrentSection = iniSection;
@@ -93,6 +100,9 @@ namespace CNCMaps.FileFormats {
 		}
 
 		public class IniSection {
+			public int Index { get; set; }
+			public string Name { get; set; }
+
 			public class IniValue {
 				private string value;
 				public IniValue(string value) {
@@ -116,17 +126,16 @@ namespace CNCMaps.FileFormats {
 				}
 			}
 
-			public string Name { get; set; }
-
 			public Dictionary<string, IniValue> SortedEntries { get; set; }
 			public List<KeyValuePair<string, IniValue>> OrderedEntries { get; set; }
 
 			static NumberFormatInfo culture = CultureInfo.InvariantCulture.NumberFormat;
 
-			public IniSection(string name) {
+			public IniSection(string name, int index = -1) {
 				SortedEntries = new Dictionary<string, IniValue>();
 				OrderedEntries = new List<KeyValuePair<string, IniValue>>();
 				Name = name;
+				Index = index;
 			}
 
 			public override string ToString() {
@@ -272,6 +281,7 @@ namespace CNCMaps.FileFormats {
 					sw.WriteLine(kvp.Value);
 				}
 			}
+
 		}
 
 		public void Save(string filename) {

@@ -150,7 +150,7 @@ namespace CNCMaps.FileFormats {
 					continue; // out of bounds
 				}
 
-				short zBufVal = (short)((obj.Tile.Rx + obj.Tile.Ry + obj.Tile.Z + obj.Drawable.HeightOffset) * Drawable.TileHeight / 2);
+				short zBufVal = (short)((obj.Tile.Rx + obj.Tile.Ry + obj.Tile.Z) * Drawable.TileHeight / 2 + props.ZAdjust);
 				// zBufVal += (short)(Header.Height / 2);// + image.Header.y + y);
 				zBufVal += (short)(-Header.Height / 2 + image.Header.y + image.Header.cy);
 
@@ -212,7 +212,7 @@ namespace CNCMaps.FileFormats {
 					continue; // out of bounds
 				}
 
-				short zBufVal = (short)((obj.Tile.Rx + obj.Tile.Ry + obj.Tile.Z + obj.Drawable.HeightOffset) * Drawable.TileHeight / 2);
+				short zBufVal = (short)((obj.Tile.Rx + obj.Tile.Ry + obj.Tile.Z) * Drawable.TileHeight / 2 + props.ZAdjust);
 				zBufVal += (short)(Header.Height / 2);// + image.Header.y + y);
 				// zBufVal += (short)(-Header.Height / 2 + image.Header.y + image.Header.cy);
 				for (int x = 0; x < image.Header.cx; x++) {

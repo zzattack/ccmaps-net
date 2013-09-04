@@ -114,7 +114,7 @@ namespace CNCMaps.MapLogic {
 
 			_palettes.AnimPalette = new Palette(VFS.Open<PalFile>("anim.pal"));
 
-			_tileTypes = new TileCollection(_theaterType);
+			_tileTypes = new TileCollection(_theaterType, _engine, _art);
 
 			_buildingTypes = new ObjectCollection(_rules.GetSection("BuildingTypes"),
 				CollectionType.Building, _theaterType, _engine, _rules, _art, _palettes);
