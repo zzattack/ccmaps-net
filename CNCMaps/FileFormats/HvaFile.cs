@@ -8,6 +8,12 @@ namespace CNCMaps.FileFormats {
 
 	/// <summary>Hva file.</summary>
 	public class HvaFile : VirtualFile {
+		HvaHeader _fileHeader;
+		List<Section> _sections;
+		int _curSection;
+		bool _initialized;
+		static NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
+
 		[StructLayout(LayoutKind.Sequential, Pack = 1)]
 		struct HvaHeader {
 			[MarshalAs(UnmanagedType.ByValArray, SizeConst = 16)]
@@ -17,48 +23,41 @@ namespace CNCMaps.FileFormats {
 		}
 
 		public class Section {
-			public byte[] name;
-			public List<float[]> matrices;
-
+			public byte[] Name;
+			public List<float[]> Matrices;
 			public Section(int numMatrices) {
-				matrices = new List<float[]>(numMatrices);
+				Matrices = new List<float[]>(numMatrices);
 			}
 		}
-
-		HvaHeader fileHeader;
-		List<Section> sections;
-
-		static NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
 		public HvaFile(Stream baseStream, string filename, int baseOffset, int fileSize, bool isBuffered = true)
 			: base(baseStream, filename, baseOffset, fileSize, isBuffered) {
 		}
 
-		bool initialized;
 
 		public void Initialize() {
-			if (initialized) return;
+			if (_initialized) return;
 
 			logger.Debug("Loading HVA file {0}", FileName);
 
-			fileHeader = EzMarshal.ByteArrayToStructure<HvaHeader>(Read(Marshal.SizeOf(typeof(HvaHeader))));
-			sections = new List<Section>((int)fileHeader.numSections);
+			_fileHeader = EzMarshal.ByteArrayToStructure<HvaHeader>(Read(Marshal.SizeOf(typeof(HvaHeader))));
+			_sections = new List<Section>((int)_fileHeader.numSections);
 
-			for (int i = 0; i < fileHeader.numSections; i++) {
-				var s = new Section((int)fileHeader.numFrames);
-				s.name = Read(16);
-				sections.Add(s);
+			for (int i = 0; i < _fileHeader.numSections; i++) {
+				var s = new Section((int)_fileHeader.numFrames);
+				s.Name = Read(16);
+				_sections.Add(s);
 			}
 
-			for (int frame = 0; frame < fileHeader.numFrames; frame++) {
-				for (int section = 0; section < fileHeader.numSections; section++) {
-					sections[section].matrices.Add(ReadMatrix());
+			for (int frame = 0; frame < _fileHeader.numFrames; frame++) {
+				for (int section = 0; section < _fileHeader.numSections; section++) {
+					_sections[section].Matrices.Add(ReadMatrix());
 				}
 			}
 
-			logger.Trace("Loaded HVA file {0} with {1} sections", FileName, sections.Count);
+			logger.Trace("Loaded HVA file {0} with {1} sections", FileName, _sections.Count);
 
-			initialized = true;
+			_initialized = true;
 		}
 
 		private float[] ReadMatrix() {
@@ -70,8 +69,8 @@ namespace CNCMaps.FileFormats {
 		}
 
 		internal void loadGLMatrix(int frame, out float[] transform) {
-			if (!initialized) Initialize();
-			var hvaMatrix = sections[curSection].matrices[frame];
+			if (!_initialized) Initialize();
+			var hvaMatrix = _sections[_curSection].Matrices[frame];
 			transform = new float[16];
 			transform[0] = hvaMatrix[0];
 			transform[1] = hvaMatrix[4];
@@ -90,11 +89,9 @@ namespace CNCMaps.FileFormats {
 			transform[14] = hvaMatrix[11];
 			transform[15] = 1;
 		}
-
-		int curSection;
-
+		
 		internal void SetSection(int section) {
-			curSection = section;
+			_curSection = section;
 		}
 	}
 }

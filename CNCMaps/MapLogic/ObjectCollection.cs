@@ -303,6 +303,7 @@ namespace CNCMaps.MapLogic {
 							ShadowOffset = offset,
 							SortIndex = ySort,
 							FrameDecider = frameDecider,
+							OverridesZbuffer = true,
 						};
 						AddImageToObject(drawable, extraImageFileName, props);
 					}
@@ -335,6 +336,7 @@ namespace CNCMaps.MapLogic {
 							Offset = offset,
 							ShadowOffset = offset,
 							FrameDecider = frameDecider,
+							OverridesZbuffer = true,
 						};
 						drawable.AddDamagedShp(VFS.Open(extraImageDamagedFileName) as ShpFile, props);
 					}

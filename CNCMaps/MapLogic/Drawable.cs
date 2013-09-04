@@ -101,9 +101,11 @@ namespace CNCMaps.MapLogic {
 			var w_low = (byte*)ds.bmd.Scan0;
 			byte* w_high = w_low + ds.bmd.Stride * ds.bmd.Height;
 			var zBuffer = ds.GetZBuffer();
+			int rowsTouched = 0;
 
 			for (int y = 0; y < vxl_ds.Height; y++) {
-				short zBufVal = (short)((obj.BaseTile.Rx + obj.BaseTile.Ry + obj.BaseTile.Z) * TileHeight + vxl_ds.Height - y);
+				short firstRowTouched = short.MaxValue;
+
 				byte* src_row = (byte*)vxl_ds.bmd.Scan0 + vxl_ds.bmd.Stride * (vxl_ds.Height - y - 1);
 				byte* dst_row = ((byte*)ds.bmd.Scan0 + (d.Y + y) * ds.bmd.Stride + d.X * 3);
 				int zIdx = (d.Y + y) * ds.Width + d.X;
@@ -111,11 +113,17 @@ namespace CNCMaps.MapLogic {
 
 				for (int x = 0; x < vxl_ds.Width; x++) {
 					// only non-transparent pixels
-					if (*(src_row + x * 4 + 3) > 0 && zBufVal >= zBuffer[zIdx]) {
+					if (*(src_row + x * 4 + 3) > 0) {
 						*(dst_row + x * 3) = *(src_row + x * 4);
 						*(dst_row + x * 3 + 1) = *(src_row + x * 4 + 1);
 						*(dst_row + x * 3 + 2) = *(src_row + x * 4 + 2);
-						zBuffer[zIdx] = Math.Max(zBufVal, zBuffer[zIdx]);
+
+						if (y < firstRowTouched)
+							firstRowTouched = (short)y;
+
+						short zBufVal = (short)((obj.Tile.Rx + obj.Tile.Ry + obj.Tile.Z) * TileHeight / 2 + y - firstRowTouched);
+						if (zBufVal >= zBuffer[zIdx])
+							zBuffer[zIdx] = zBufVal;
 					}
 					zIdx++;
 				}
@@ -124,7 +132,7 @@ namespace CNCMaps.MapLogic {
 
 		private void DrawFile(GameObject obj, DrawingSurface ds, ShpFile file, DrawProperties props) {
 			if (file == null || obj == null || obj.Tile == null) return;
-			
+
 			file.Draw(obj, props, ds, _globalOffset);
 			if (props.HasShadow) {
 				file.DrawShadow(obj, props, ds, _globalOffset);
