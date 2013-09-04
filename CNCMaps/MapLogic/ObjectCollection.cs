@@ -199,6 +199,7 @@ namespace CNCMaps.MapLogic {
 			}
 			if (rulesSection.ReadString("Land") == "Rock") {
 				mainProps.Offset.Y += Drawable.TileHeight / 2;
+				mainProps.ZAdjust = Drawable.TileHeight / 2;
 			}
 			else if (rulesSection.ReadString("Land") == "Road") {
 				mainProps.Offset.Y = Drawable.TileHeight / 2;
@@ -206,6 +207,8 @@ namespace CNCMaps.MapLogic {
 			}
 			else if (rulesSection.ReadString("Land") == "Railroad") {
 				mainProps.Offset.Y = 14;
+				mainProps.ZAdjust = 14;
+				mainProps.OverridesZbuffer = true;
 				drawable.LightingType = LightingType.Full;
 				drawable.PaletteType = PaletteType.Iso;
 			}

@@ -484,7 +484,7 @@ namespace CNCMaps.MapLogic {
 					OverlayObject o = _overlayObjects[x, y];
 					if (o == null || o.BaseTile != null) continue; // BaseTile set means we've already moved it
 
-					Size foundation = _theater.GetObjectCollection(o).GetDrawable(o).Foundation;
+					Size foundation = o.Drawable.Foundation;
 					if (foundation == System.Drawing.Size.Empty) continue;
 					o.BaseTile = _tiles.GetTileR(o.Tile.Rx + foundation.Width - 1, o.Tile.Ry + foundation.Height - 1);
 
