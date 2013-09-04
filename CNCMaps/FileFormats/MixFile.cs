@@ -20,7 +20,7 @@ using CNCMaps.VirtualFileSystem;
 namespace CNCMaps.FileFormats {
 
 	public class MixFile : VirtualFile, IArchive {
-		Dictionary<uint, MixEntry> index;
+		public Dictionary<uint, MixEntry> Index;
 		bool isRmix, isEncrypted;
 		long dataStart;
 		const long headerStart = 84;
@@ -33,7 +33,7 @@ namespace CNCMaps.FileFormats {
 		}
 
 		public bool ContainsFile(string filename) {
-			return index.ContainsKey(MixEntry.HashFilename(filename));
+			return Index.ContainsKey(MixEntry.HashFilename(filename));
 		}
 
 		private void ParseHeader() {
@@ -46,7 +46,7 @@ namespace CNCMaps.FileFormats {
 			if (isRmix) {
 				isEncrypted = 0 != (signature & (uint)MixFileFlags.Encrypted);
 				if (isEncrypted) {
-					index = ParseRaHeader(this, out dataStart).ToDictionary(x => x.Hash);
+					Index = ParseRaHeader(this, out dataStart).ToDictionary(x => x.Hash);
 					return;
 				}
 			}
@@ -54,7 +54,7 @@ namespace CNCMaps.FileFormats {
 				Seek(0, SeekOrigin.Begin);
 
 			isEncrypted = false;
-			index = ParseTdHeader(this, out dataStart).ToDictionary(x => x.Hash);
+			Index = ParseTdHeader(this, out dataStart).ToDictionary(x => x.Hash);
 		}
 		
 		List<MixEntry> ParseRaHeader(VirtualFile reader, out long dataStart) {
@@ -120,7 +120,7 @@ namespace CNCMaps.FileFormats {
 			return items;
 		}
 
-		class MixEntry {
+		public class MixEntry {
 			public readonly uint Hash;
 			public readonly uint Offset;
 			public readonly uint Length;
@@ -171,14 +171,19 @@ namespace CNCMaps.FileFormats {
 
 		public VirtualFile OpenFile(string filename, FileFormat f = FileFormat.None, CacheMethod m = CacheMethod.Default) {
 			MixEntry e;
-			if (!index.TryGetValue(MixEntry.HashFilename(filename), out e))
+			if (!Index.TryGetValue(MixEntry.HashFilename(filename), out e))
 				return null;
 			else
 				return FormatHelper.OpenAsFormat(BaseStream, filename, (int)(BaseOffset + dataStart + e.Offset), (int)e.Length, f, m);
 		}
 
+		internal VirtualFile OpenFile(uint mixEntry, string filename = "", FileFormat f = FileFormat.None, CacheMethod m = CacheMethod.Default) {
+			var e = Index[mixEntry];
+			return FormatHelper.OpenAsFormat(BaseStream, filename, (int)(BaseOffset + dataStart + e.Offset), (int)e.Length, f, m);
+		}
+
 		public IEnumerable<uint> AllFileHashes() {
-			return index.Keys;
+			return Index.Keys;
 		}
 
 		[Flags]
@@ -186,5 +191,6 @@ namespace CNCMaps.FileFormats {
 			Checksum = 0x10000,
 			Encrypted = 0x20000,
 		}
+
 	}
 }

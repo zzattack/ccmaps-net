@@ -65,7 +65,7 @@ namespace CNCMaps.MapLogic {
 			IniFile.IniSection rulesSection = _rules.GetSection(objName);
 			var drawable = new Drawable(objName);
 			var mainProps = new DrawProperties();
-			
+
 			_drawables.Add(drawable);
 			_drawablesDict[objName] = drawable;
 
@@ -187,7 +187,7 @@ namespace CNCMaps.MapLogic {
 			}
 			if (rulesSection.ReadBool("IsVeins")) {
 				drawable.LightingType = LightingType.None;
-				drawable.PaletteType= PaletteType.Unit;
+				drawable.PaletteType = PaletteType.Unit;
 			}
 			if (rulesSection.ReadBool("IsVeinholeMonster")) {
 				mainProps.Offset.Y = -48; // why is this needed???
@@ -265,6 +265,8 @@ namespace CNCMaps.MapLogic {
 
 			// Buildings often consist of multiple SHP files
 			if (_collectionType == CollectionType.Building) {
+				drawable.InvisibleInGame = rulesSection.ReadBool("InvisibleInGame");
+
 				var damagedProps = new DrawProperties {
 					HasShadow = mainProps.HasShadow,
 					FrameDecider = mainProps.FrameDecider, // this is not an animation with loopstart/loopend yet
@@ -497,6 +499,12 @@ namespace CNCMaps.MapLogic {
 					return null;
 			}
 			throw new ArgumentException();
+		}
+
+		public Drawable GetDrawable(string name) {
+			Drawable ret;
+			_drawablesDict.TryGetValue(name, out ret);
+			return ret;
 		}
 
 		public void Draw(GameObject o, DrawingSurface drawingSurface) {

@@ -15,6 +15,7 @@ namespace CNCMaps.MapLogic {
 		public LightingType LightingType { get; set; }
 		public string CustomPaletteName { get; set; }
 		public bool IsRemapable { get; set; }
+		public bool InvisibleInGame { get; set; }
 
 		internal IniFile.IniSection Rules { get; set; }
 		internal IniFile.IniSection Art { get; set; }
@@ -61,6 +62,8 @@ namespace CNCMaps.MapLogic {
 
 		public virtual void Draw(GameObject obj, DrawingSurface ds) {
 			logger.Trace("Drawing object {0} (type {1})", obj, obj.GetType());
+
+			if (InvisibleInGame) return; // LOL. waste of effort much?
 
 			if (!sorted) Sort();
 

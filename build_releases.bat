@@ -1,4 +1,4 @@
-set VER=2.0beta21
+set VER=2.0beta23
 
 del CNCMaps_*.zip
 del CNCMaps_setup_*.exe
@@ -15,11 +15,11 @@ set MAKENSIS="%PROGRAMFILES(X86)%\nsis\makensis.exe"
  
 cd CNCMaps/bin/Release
 for /D %%f in (CNCMaps.exe NLog.config NLog.dll OpenTK.dll OpenTK.dll.config osmesa.dll) DO (
-	zip -r -j ../../../CNCMaps_v%VER%_win.zip "%%f"
+	# zip -r -j ../../../CNCMaps_v%VER%_win.zip "%%f"
 )
 
 for /D %%f in (CNCMaps.exe NLog.config NLog.dll OpenTK.dll OpenTK.dll.config) DO (
-	zip -r -j ../../../CNCMaps_v%VER%_nix.zip "%%f"
+	# zip -r -j ../../../CNCMaps_v%VER%_nix.zip "%%f"
 )
 
 cd ../../../

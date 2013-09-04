@@ -1,5 +1,7 @@
 ﻿using System.Drawing;
 using System.IO;
+using System.Linq;
+using CNCMaps.FileFormats;
 using CNCMaps.MapLogic;
 using CNCMaps.Utility;
 using CNCMaps.VirtualFileSystem;
@@ -28,10 +30,18 @@ namespace CNCMaps {
 					return 2;
 				}
 
-				var map = new MapFile(
-					File.Open(Settings.InputFile, FileMode.Open, FileAccess.Read, FileShare.ReadWrite),
-					Path.GetFileName(Settings.InputFile));
-				map.FileName = Settings.InputFile;
+				var mapStream = File.Open(Settings.InputFile, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+				VirtualFile mapFile;
+				if (FormatHelper.MixArchiveExtensions.Contains(Path.GetExtension(Settings.InputFile).ToLower())) {
+					var mapArchive = new MixFile(mapStream, Path.GetFileName(Settings.InputFile), true);
+					// grab the largest file in the archive
+					var mixEntry = mapArchive.Index.OrderByDescending(me => me.Value.Length).First();
+					mapFile = mapArchive.OpenFile(mixEntry.Key);
+				}
+				else {
+					mapFile = new VirtualFile(mapStream, Path.GetFileName(Settings.InputFile), true);
+				}
+				var map = new MapFile(mapFile, Path.GetFileName(Settings.InputFile));
 
 				// Code to organize moving of maps in a directory for themselves
 				/*string mapName = map.DetermineMapName(EngineType.Firestorm);

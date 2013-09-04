@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Drawing2D;
@@ -810,14 +811,6 @@ namespace CNCMaps.MapLogic {
 			}
 		}
 
-		private static readonly string[] LampNames = new[] {
-			"REDLAMP", "BLUELAMP", "GRENLAMP", "YELWLAMP", "PURPLAMP", "INORANLAMP", "INGRNLMP", "INREDLMP", "INBLULMP",
-			"INGALITE", "GALITE",
-			"INYELWLAMP", "INPURPLAMP", "NEGLAMP", "NERGRED", "TEMMORLAMP", "TEMPDAYLAMP", "TEMDAYLAMP", "TEMDUSLAMP",
-			"TEMNITLAMP", "SNOMORLAMP",
-			"SNODAYLAMP", "SNODUSLAMP", "SNONITLAMP"
-		};
-
 		private void LoadPalettes() {
 			int before = _palettesToBeRecalculated.Count;
 
@@ -919,19 +912,14 @@ namespace CNCMaps.MapLogic {
 
 		private void LoadLightSources() {
 			Logger.Info("Loading light sources");
-			var forDeletion = new List<StructureObject>();
 			foreach (StructureObject s in _structureObjects) {
 				if (s == null) continue;
-				if (LampNames.Contains(s.Name)) {
+				var section = _rules.GetSection(s.Name);
+				if (section != null && section.HasKey("LightVisibility")) {
 					var ls = new LightSource(_rules.GetSection(s.Name), _lighting);
 					ls.Tile = s.Tile;
 					_lightSources.Add(ls);
-					forDeletion.Add(s);
 				}
-			}
-			// make sure these don't get drawn
-			foreach (var s in forDeletion) {
-				_structureObjects[s.Tile.Dx, s.Tile.Dy / 2] = null;
 			}
 		}
 
@@ -1340,7 +1328,7 @@ namespace CNCMaps.MapLogic {
 			if (basic.ReadBool("Official") == false)
 				return StripPlayersFromName(basic.ReadString("Name", fileNameWithoutExtension));
 
-			string mapExt = Path.GetExtension(FileName);
+			string mapExt = Path.GetExtension(Program.Settings.InputFile);
 			string missionName = "";
 			string mapName = "";
 			PktFile.PktMapEntry pktMapEntry = null;
@@ -1374,10 +1362,10 @@ namespace CNCMaps.MapLogic {
 				string pktEntryName = fileNameWithoutExtension;
 				PktFile pkt = null;
 
-				if (mapExt == ".mmx" || mapExt == ".yro") {
+				if (FormatHelper.MixArchiveExtensions.Contains(mapExt)) {
 					// this is an 'official' map 'archive' containing a PKT file with its name
 					try {
-						var mix = new MixFile(File.Open(FileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite));
+						var mix = new MixFile(File.Open(Program.Settings.InputFile, FileMode.Open, FileAccess.Read, FileShare.ReadWrite));
 						pkt = mix.OpenFile(fileNameWithoutExtension + ".pkt", FileFormat.Pkt) as PktFile;
 						// pkt file is cached by default, so we can close the handle to the file
 						mix.Close();

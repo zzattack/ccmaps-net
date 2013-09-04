@@ -58,8 +58,11 @@ namespace CNCMaps.FileFormats {
 			if (line.Length == 0) return 0;
 
 			// Test if this line contains start of new section i.e. matches [*]
-			if ((line[0] == '[') && (line[line.Length - 1] == ']')) {
-				string sectionName = line.Substring(1, line.Length - 2);
+			// apparently [MultiMaps[BuildingTypes] is parsed as [BuildingTypes]...
+			int openBrace = line.LastIndexOf('[');
+			int closeBrace = line.LastIndexOf(']');
+			if (openBrace < closeBrace) {
+				string sectionName = line.Substring(openBrace + 1, closeBrace - openBrace - 1);
 				var iniSection = new IniSection(sectionName, Sections.Count);
 				logger.Trace("Loading ini section {0}", sectionName);
 				Sections.Add(iniSection);
@@ -207,6 +210,10 @@ namespace CNCMaps.FileFormats {
 				return copy;
 			}
 
+			public bool HasKey(string keyName) {
+				return SortedEntries.ContainsKey(keyName);
+			}
+
 			static readonly string[] TrueValues = { "yes", "1", "true", "on" };
 			static readonly string[] FalseValues = { "no", "0", "false", "off" };
 
@@ -306,7 +313,7 @@ namespace CNCMaps.FileFormats {
 				if (IsObjectArray(v.Name)) {
 					int number = 1 + int.Parse(ownSection.OrderedEntries.Last().Key);
 					foreach (var kvp in v.OrderedEntries)
-						ownSection.SetValue(number++.ToString(), kvp.Value);
+						ownSection.SetValue(number++.ToString(CultureInfo.InvariantCulture), kvp.Value);
 				}
 				else
 					foreach (var kvp in v.OrderedEntries)
