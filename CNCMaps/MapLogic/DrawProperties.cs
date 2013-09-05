@@ -129,7 +129,7 @@ namespace CNCMaps.MapLogic {
 		public static Func<GameObject, Point> TSBridgeOffsets = delegate(GameObject obj) {
 			var bridgeOvl = obj as OverlayObject;
 			if (bridgeOvl.OverlayValue <= 8)
-				return new Point(0, 0);
+				return new Point(0, -1);
 			else
 				return new Point(0, -13);
 		};
