@@ -89,6 +89,8 @@
 			// 
 			// gbMiscOptions
 			// 
+			this.gbMiscOptions.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
 			this.gbMiscOptions.Controls.Add(this.cbOmitSquareMarkers);
 			this.gbMiscOptions.Controls.Add(this.panel1);
 			this.gbMiscOptions.Controls.Add(this.cbReplacePreview);
@@ -327,6 +329,8 @@
 			// 
 			// lblCompression
 			// 
+			this.lblCompression.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
 			this.lblCompression.Controls.Add(this.tbCustomOutput);
 			this.lblCompression.Controls.Add(this.tbRenderProg);
 			this.lblCompression.Controls.Add(this.lblAutoFilenameDescription);
@@ -595,6 +599,9 @@
 			// 
 			// rtbLog
 			// 
+			this.rtbLog.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
 			this.rtbLog.Location = new System.Drawing.Point(9, 19);
 			this.rtbLog.Name = "rtbLog";
 			this.rtbLog.ReadOnly = true;
@@ -609,7 +616,7 @@
             this.lblStatus,
             this.lblFill,
             this.pbProgress});
-			this.statusStrip.Location = new System.Drawing.Point(0, 684);
+			this.statusStrip.Location = new System.Drawing.Point(0, 506);
 			this.statusStrip.Name = "statusStrip";
 			this.statusStrip.Size = new System.Drawing.Size(566, 22);
 			this.statusStrip.TabIndex = 7;
@@ -624,7 +631,7 @@
 			// lblFill
 			// 
 			this.lblFill.Name = "lblFill";
-			this.lblFill.Size = new System.Drawing.Size(376, 17);
+			this.lblFill.Size = new System.Drawing.Size(407, 17);
 			this.lblFill.Spring = true;
 			// 
 			// pbProgress
@@ -638,7 +645,7 @@
 			this.AllowDrop = true;
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-			this.ClientSize = new System.Drawing.Size(566, 706);
+			this.ClientSize = new System.Drawing.Size(566, 528);
 			this.Controls.Add(this.statusStrip);
 			this.Controls.Add(this.cbLog);
 			this.Controls.Add(this.lblCommand);
@@ -646,6 +653,8 @@
 			this.Controls.Add(this.btnRenderExecute);
 			this.Controls.Add(this.gbMiscOptions);
 			this.Controls.Add(this.lblCompression);
+			this.MaximumSize = new System.Drawing.Size(582, 9999);
+			this.MinimumSize = new System.Drawing.Size(582, 500);
 			this.Name = "MainForm";
 			this.Text = "Red Alert 2 and Tiberian Sun map renderer";
 			this.Load += new System.EventHandler(this.MainFormLoad);

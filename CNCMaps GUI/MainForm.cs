@@ -33,6 +33,7 @@ namespace CNCMaps.GUI {
 		}
 
 		private void MainFormLoad(object sender, EventArgs args) {
+			this.Text += " - v" + Assembly.GetEntryAssembly().GetName().Version;
 			tbRenderProg.Text = FindRenderProg();
 			tbMixDir.Text = FindMixDir(true);
 			UpdateCommandline();
@@ -65,13 +66,10 @@ namespace CNCMaps.GUI {
 
 			try {
 				using (var key = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry32))
-					return Path.GetDirectoryName(
-						(string)
-							key.OpenSubKey("SOFTWARE\\Westwood\\" + (RA2 ? "Red Alert 2" : "Tiberian Sun"))
-								.GetValue("InstallPath", string.Empty));
+					return Path.GetDirectoryName((string)key.OpenSubKey("SOFTWARE\\Westwood\\" + (RA2 ? "Red Alert 2" : "Tiberian Sun")).GetValue("InstallPath", string.Empty));
 			}
-			catch (NullReferenceException) {
-			}
+			catch (NullReferenceException) {} // no registry entry
+			catch (ArgumentException) {} // invalid path
 
 			return Environment.CurrentDirectory;
 		}
@@ -374,7 +372,7 @@ namespace CNCMaps.GUI {
 
 				wc.OpenWriteCompleted += (o, args) => UpdateStatus("sending bug report.. connected", 15);
 				wc.UploadProgressChanged += (o, args) => {
-					double pct = 15 + Math.Round(85.0 * args.TotalBytesToSend / args.BytesSent / 100.0, 0);
+					double pct = 15 + Math.Round(85.0 * (args.TotalBytesToSend / args.BytesSent) / 100.0, 0);
 					UpdateStatus("sending bug report.. uploading " + pct + "%", (int)pct);
 				};
 				wc.UploadValuesCompleted += (o, args) => {
@@ -411,7 +409,7 @@ namespace CNCMaps.GUI {
 			if (_showlog)
 				return;
 
-			Height += 180;
+			Height += cbLog.Height + 10;
 			cbLog.Visible = true;
 			_showlog = true;
 		}

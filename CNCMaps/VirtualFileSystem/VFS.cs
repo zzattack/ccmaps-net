@@ -25,7 +25,7 @@ namespace CNCMaps.VirtualFileSystem {
 		}
 
 		public static T Open<T>(string filename, CacheMethod m = CacheMethod.Default) where T : VirtualFile {
-			return Open(filename, GetFormatFromTypeclass(typeof (T)), m) as T;
+			return Open(filename, GetFormatFromTypeclass(typeof(T)), m) as T;
 		}
 
 		public static T Open<T>(string filename, FileFormat f, CacheMethod m) where T : VirtualFile {
@@ -58,7 +58,7 @@ namespace CNCMaps.VirtualFileSystem {
 		public static bool Exists(string imageFileName) {
 			return instance.FileExists(imageFileName);
 		}
-		
+
 		private bool FileExists(string filename) {
 			return _allArchives.Any(v => v != null && v.ContainsFile(filename));
 		}
@@ -112,14 +112,18 @@ namespace CNCMaps.VirtualFileSystem {
 			return true;
 		}
 
-		public bool ScanMixDir(EngineType engine, string installDir = "") {
-			if (string.IsNullOrEmpty(installDir))
-				installDir = engine >= EngineType.RedAlert2 || engine == EngineType.AutoDetect ? RA2InstallDir : TSInstallDir;
-
-			return ScanMixDir(installDir, engine == EngineType.AutoDetect ? EngineType.YurisRevenge : engine);
+		public static string DetermineMixDir(string mixDirOverride, EngineType engine) {
+			if (string.IsNullOrEmpty(mixDirOverride))
+				mixDirOverride = engine >= EngineType.RedAlert2 || engine == EngineType.AutoDetect ? RA2InstallDir : TSInstallDir;
+			return mixDirOverride;
 		}
 
 		public bool ScanMixDir(string mixDir, EngineType engine) {
+			if (engine == EngineType.AutoDetect)
+				engine = EngineType.YurisRevenge;
+			if (string.IsNullOrEmpty(mixDir))
+				mixDir = DetermineMixDir(mixDir, engine);
+
 			if (string.IsNullOrEmpty(mixDir)) {
 				Logger.Fatal("No mix directory detected!");
 				return false;
@@ -235,9 +239,7 @@ namespace CNCMaps.VirtualFileSystem {
 		}
 
 		public static string TSInstallDir {
-			get {
-				return Path.GetDirectoryName(TSInstallPath);
-			}
+			get { return Path.GetDirectoryName(TSInstallPath); }
 		}
 
 		public static string ReadRegistryString(RegistryKey rkey, string regpath, string keyname) {

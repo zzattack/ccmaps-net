@@ -9,11 +9,10 @@ namespace CNCMaps.MapLogic {
 	public class TileLayer : IEnumerable<MapTile> {
 		/* 
 		Coordinate formulas
-
 		dx = rx - ry + mapwidth - 1
 		dy = rx + ry - mapwidth - 1
 
-		rx = (dx + dy) / 2 + 1
+		rx = (dx + dy) / 2 + 1		
 		ry = dy - rx + mapwidth + 1
 		*/
 
@@ -69,14 +68,14 @@ namespace CNCMaps.MapLogic {
 		/// <returns>The tile r.</returns>
 		public MapTile GetTileR(int rx, int ry) {
 			int dx = (rx - ry + fullSize.Width - 1);
-			int dy = (rx + ry - fullSize.Width - 1) / 2;
+			int dy = rx + ry - fullSize.Width - 1;
 
 			if (dx < 0 || dy < 0 || dx >= tiles.GetLength(0) || dy >= tiles.GetLength(1)) {
 				logger.Warn("Referencing empty tile at (rx,ry)=({0},{1}); (dx,dy)=({2},{3})", rx, ry, dx, dy);
 				return null;
 			}
 			else
-				return GetTile(dx, dy);
+				return GetTile(dx, dy / 2);
 		}
 
 		internal MapTile GetTileScreen(Point p) {

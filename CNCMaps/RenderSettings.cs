@@ -9,6 +9,7 @@ namespace CNCMaps {
 		public int PNGQuality { get; set; }
 		public int JPEGCompression { get; set; }
 		public string MixFilesDirectory { get; set; }
+		public string ModMixes { get; set; }
 		public bool ShowHelp { get; set; }
 		public bool MarkOreFields { get; set; }
 		public bool IgnoreLighting { get; set; }
@@ -34,9 +35,11 @@ namespace CNCMaps {
 				InputFile = "",
 				OutputDir = "",
 				OutputFile = "",
-				MixFilesDirectory = ""
+				MixFilesDirectory = "",
+				ModMixes = ""
 			};
 		}
+
 
 	}
 

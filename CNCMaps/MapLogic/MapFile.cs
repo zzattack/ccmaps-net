@@ -216,6 +216,13 @@ namespace CNCMaps.MapLogic {
 				for (int x = 0; x < FullSize.Width * 2 - 1; x++) {
 					var objList = _infantryObjects[x, y];
 					if (objList == null) continue;
+					
+					var tile = _tiles[x, y];
+					foreach (var i in objList) {
+						if (!c.HasObject(i)) {
+							tile.AllObjects.Remove(i);
+						}
+					}
 					objList.RemoveAll(i => !c.HasObject(i));
 				}
 			}
@@ -329,8 +336,8 @@ namespace CNCMaps.MapLogic {
 
 				if (EngineType == EngineType.YurisRevenge) {
 					// add YR mixes to VFS
-					VFS.GetInstance().Clear();
-					VFS.GetInstance().ScanMixDir(EngineType.YurisRevenge);
+					var mixDir = VFS.DetermineMixDir(Program.Settings.MixFilesDirectory, EngineType.YurisRevenge); 
+					VFS.GetInstance().ScanMixDir(mixDir, EngineType.YurisRevenge);
 
 					var rulesmd = VFS.Open<IniFile>("rulesmd.ini");
 					var artmd = VFS.Open<IniFile>("artmd.ini");
@@ -890,7 +897,8 @@ namespace CNCMaps.MapLogic {
 				if (g != null & g.Drawable != null && g.Drawable.IsRemapable) {
 					if (g.Palette.IsShared) // don't wanna touch somebody elses palette..
 						g.Palette = g.Palette.Clone();
-					g.Palette.Remap(_countryColors[obj.Owner]);
+					var color = _countryColors.ContainsKey(obj.Owner) ? _countryColors[obj.Owner] : _countryColors.First().Value;
+					g.Palette.Remap(color);
 					_palettesToBeRecalculated.Add(g.Palette);
 				}
 			}
@@ -1323,7 +1331,7 @@ namespace CNCMaps.MapLogic {
 			}
 
 			Logger.Info("Saving map");
-			this.Save(FileName);
+			this.Save(Program.Settings.InputFile);
 		}
 
 		/// <summary>Gets the determine map name. </summary>
@@ -1405,7 +1413,7 @@ namespace CNCMaps.MapLogic {
 				// fallback for multiplayer maps with, .map extension,
 				// no YR objects so assumed to be ra2, but actually meant to be used on yr
 				if (mapExt == ".map" && pkt != null && !pkt.MapEntries.ContainsKey(pktEntryName) && EngineType >= EngineType.RedAlert2) {
-					VFS.GetInstance().ScanMixDir(EngineType.YurisRevenge, Program.Settings.MixFilesDirectory);
+					VFS.GetInstance().ScanMixDir(Program.Settings.MixFilesDirectory, EngineType.YurisRevenge);
 					pkt = VFS.Open<PktFile>("missionsmd.pkt");
 				}
 
@@ -1420,9 +1428,18 @@ namespace CNCMaps.MapLogic {
 					mapName = pktMapEntry.Description;
 				else if (missionEntry != null) {
 					if (EngineType == EngineType.TiberianSun) {
-						string campaignSide = missionEntry.Briefing.Length >= 3 ? missionEntry.Briefing.Substring(0, 3) : "XXX";
-						string missionNumber = missionEntry.Briefing.Length > 3 ? missionEntry.Briefing.Substring(3) : "";
-						mapName = string.Format("{0} {1} - {2}", campaignSide, missionNumber.TrimEnd('A').PadLeft(2, '0'), missionName);
+						string campaignSide;
+						string missionNumber;
+						
+						if (missionEntry.Briefing.Length >= 3) {
+							campaignSide = missionEntry.Briefing.Substring(0, 3);
+							missionNumber = missionEntry.Briefing.Length > 3 ? missionEntry.Briefing.Substring(3) : "";
+							missionName = "";
+							mapName = string.Format("{0} {1} - {2}", campaignSide, missionNumber.TrimEnd('A').PadLeft(2, '0'), missionName);
+						}
+						else if (missionEntry.Name.Length >= 10) {
+							mapName = missionEntry.Name;
+						}
 					}
 					else {
 						// FS map names are constructed a bit easier
@@ -1484,6 +1501,8 @@ namespace CNCMaps.MapLogic {
 		private static string StripPlayersFromName(string mapName) {
 			if (mapName.IndexOf(" (") != -1)
 				mapName = mapName.Substring(0, mapName.IndexOf(" ("));
+			else if (mapName.IndexOf(" [") != -1)
+				mapName = mapName.Substring(0, mapName.IndexOf(" ["));
 			return mapName;
 		}
 
@@ -1498,7 +1517,7 @@ namespace CNCMaps.MapLogic {
 
 		internal void DebugDrawTile(MapTile tile) {
 			_theater.GetTileCollection().DrawTile(tile, _drawingSurface);
-			foreach (GameObject o in tile.AllObjects)
+			foreach (GameObject o in GetObjectsAt(tile.Dx, tile.Dy))
 				_theater.DrawObject(o, _drawingSurface);
 		}
 

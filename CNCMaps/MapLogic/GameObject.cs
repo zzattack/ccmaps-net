@@ -16,7 +16,7 @@ namespace CNCMaps.MapLogic {
 		}
 		
 		public LightingType Lighting {
-			get { return Drawable.LightingType; }
+			get { return Drawable != null ? Drawable.LightingType : LightingType.Full; }
 		}
 	}
 }

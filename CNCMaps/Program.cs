@@ -25,7 +25,17 @@ namespace CNCMaps {
 			try {
 				_logger.Info("Initializing virtual filesystem");
 				var vfs = VFS.GetInstance();
-				if (!vfs.ScanMixDir(Settings.Engine, Settings.MixFilesDirectory)) {
+
+				var mixDir = VFS.DetermineMixDir(Settings.MixFilesDirectory, Settings.Engine);
+				var modMixes = Settings.ModMixes.Split(new[] {','}, StringSplitOptions.RemoveEmptyEntries);
+				foreach (var modMix in modMixes) {
+					if (File.Exists(Path.Combine(mixDir, modMix))) {
+						_logger.Info("Adding custom mix {0}", modMix);
+						VFS.Add(Path.Combine(mixDir, modMix));
+					}
+				}
+
+				if (!vfs.ScanMixDir(mixDir, Settings.Engine)) {
 					_logger.Fatal("Scanning for mix files failed. If on Linux, specify the --mixdir command line argument");
 					return 2;
 				}
@@ -44,14 +54,17 @@ namespace CNCMaps {
 				}
 				var map = new MapFile(mapFile, Path.GetFileName(Settings.InputFile));
 
+				// ---------------------------------------------------------------
 				// Code to organize moving of maps in a directory for themselves
-				/*string mapName = map.DetermineMapName(EngineType.Firestorm);
-				string dir = Path.Combine(Path.GetDirectoryName(map.FileName), mapName);
+				/*map.EngineType = Settings.Engine;
+				string mapName = map.DetermineMapName();
+				string dir = Path.Combine(Path.GetDirectoryName(Settings.InputFile), mapName);
 				if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
 				map.Close();
 				map.Dispose();
-				File.Move(map.FileName, Path.Combine(dir, Path.GetFileName(map.FileName)));
-				return;*/
+				File.Move(Settings.InputFile, Path.Combine(dir, Path.GetFileName(map.FileName)));
+				return 0;*/
+				// ---------------------------------------------------------------
 
 				if (!map.LoadMap(Settings.Engine)) {
 					_logger.Error("Could not successfully load all required components for this map. Aborting.");
@@ -186,6 +199,7 @@ namespace CNCMaps {
 				{"p|output-png", "Output PNG file", v => Settings.SavePNG = true},
 				{"c|png-compression=", "Set PNG compression level (1-9)", (int v) => Settings.PNGQuality = v}, 
 				{"m|mixdir=", "Specify location of .mix files, read from registry if not specified (win only)",v => Settings.MixFilesDirectory = v},
+				{"M|modmixes=", "Comma-separated list of custom mix filenames, given top-priority when scanning for files",v => Settings.ModMixes = v},
 				{"s|start-pos-tiled", "Mark starting positions in a tiled manner",v => Settings.StartPositionMarking = StartPositionMarking.Tiled},
 				{"S|start-pos-squared", "Mark starting positions in a squared manner",v => Settings.StartPositionMarking = StartPositionMarking.Squared}, 
 				{"r|mark-ore", "Mark ore and gem fields more explicity, looks good when resizing to a preview",v => Settings.MarkOreFields = true},
