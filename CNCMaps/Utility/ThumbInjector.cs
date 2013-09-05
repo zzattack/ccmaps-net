@@ -28,7 +28,7 @@ namespace CNCMaps.Utility {
 
 			// encode
 			byte[] image_compressed = Format5.Encode(image, 5);
-			
+
 			// base64 encode
 			string image_base64 = Convert.ToBase64String(image_compressed, Base64FormattingOptions.None);
 
@@ -37,6 +37,7 @@ namespace CNCMaps.Utility {
 
 			var section = map.GetOrCreateSection("PreviewPack", "Preview");
 			section.Clear();
+			section.Index = 0;
 
 			int rowNum = 1;
 			for (int i = 0; i < image_base64.Length; i += 70) {

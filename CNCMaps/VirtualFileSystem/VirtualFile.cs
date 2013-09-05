@@ -7,7 +7,7 @@ namespace CNCMaps.VirtualFileSystem {
 	/// Virtual file class
 	/// </summary>
 	public class VirtualFile : Stream {
-		protected Stream BaseStream;
+		internal protected Stream BaseStream;
 		protected int BaseOffset;
 		protected long Size;
 		protected long Pos;

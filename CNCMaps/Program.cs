@@ -32,7 +32,8 @@ namespace CNCMaps {
 
 				var mapStream = File.Open(Settings.InputFile, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
 				VirtualFile mapFile;
-				if (FormatHelper.MixArchiveExtensions.Contains(Path.GetExtension(Settings.InputFile).ToLower())) {
+				var mixMap = new MixFile(mapStream, Settings.InputFile, 0, mapStream.Length, false, false);
+				if (mixMap.IsValid()) { // input max is a mix
 					var mapArchive = new MixFile(mapStream, Path.GetFileName(Settings.InputFile), true);
 					// grab the largest file in the archive
 					var mixEntry = mapArchive.Index.OrderByDescending(me => me.Value.Length).First();
@@ -97,8 +98,12 @@ namespace CNCMaps {
 				if (Settings.SavePNG)
 					ds.SavePNG(Path.Combine(Settings.OutputDir, Settings.OutputFile + ".png"), Settings.PNGQuality, saveRect);
 
-				if (Settings.GeneratePreviewPack)
-					map.GeneratePreviewPack(Settings.OmitPreviewPackMarkers);
+				if (Settings.GeneratePreviewPack) {
+					if (mapFile.BaseStream is MixFile)
+						_logger.Error("Cannot inject thumbnail into an archive (.mmx/.yro/.mix)!");
+					else
+						map.GeneratePreviewPack(Settings.OmitPreviewPackMarkers);
+				}
 			}
 			catch (Exception exc) {
 				_logger.Error(string.Format("An unknown fatal exception occured: {0}", exc), exc);

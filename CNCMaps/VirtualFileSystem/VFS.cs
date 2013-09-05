@@ -9,19 +9,23 @@ using Microsoft.Win32;
 namespace CNCMaps.VirtualFileSystem {
 
 	public class VFS {
-		static VFS instance = new VFS();
-		readonly List<IArchive> _allArchives = new List<IArchive>();
-		static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
+		private static VFS instance = new VFS();
+		private readonly List<IArchive> _allArchives = new List<IArchive>();
+		private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
 
-		private VFS() { }
-		public static VFS GetInstance() { return instance; }
+		private VFS() {
+		}
+
+		public static VFS GetInstance() {
+			return instance;
+		}
 
 		public static VirtualFile Open(string filename) {
 			return instance.OpenFile(filename);
 		}
 
 		public static T Open<T>(string filename, CacheMethod m = CacheMethod.Default) where T : VirtualFile {
-			return Open(filename, GetFormatFromTypeclass(typeof(T)), m) as T;
+			return Open(filename, GetFormatFromTypeclass(typeof (T)), m) as T;
 		}
 
 		public static T Open<T>(string filename, FileFormat f, CacheMethod m) where T : VirtualFile {
@@ -54,9 +58,8 @@ namespace CNCMaps.VirtualFileSystem {
 		public static bool Exists(string imageFileName) {
 			return instance.FileExists(imageFileName);
 		}
-
-
-		bool FileExists(string filename) {
+		
+		private bool FileExists(string filename) {
 			return _allArchives.Any(v => v != null && v.ContainsFile(filename));
 		}
 
@@ -205,7 +208,11 @@ namespace CNCMaps.VirtualFileSystem {
 			return true;
 		}
 
-		public void Clear() { _allArchives.Clear(); }
+		public void Clear() {
+			foreach (var arch in _allArchives)
+				arch.Close();
+			_allArchives.Clear();
+		}
 
 		public static string RA2InstallPath {
 			get {
@@ -213,6 +220,7 @@ namespace CNCMaps.VirtualFileSystem {
 				return ReadRegistryString(key, "SOFTWARE\\Westwood\\Red Alert 2", "InstallPath");
 			}
 		}
+
 		public static string TSInstallPath {
 			get {
 				var key = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry32);
@@ -225,6 +233,7 @@ namespace CNCMaps.VirtualFileSystem {
 				return Path.GetDirectoryName(RA2InstallPath);
 			}
 		}
+
 		public static string TSInstallDir {
 			get {
 				return Path.GetDirectoryName(TSInstallPath);

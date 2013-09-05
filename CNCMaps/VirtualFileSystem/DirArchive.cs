@@ -18,5 +18,7 @@ namespace CNCMaps.VirtualFileSystem {
 			var fs = new FileStream(Path.Combine(path, filename), FileMode.Open, FileAccess.Read, FileShare.Read);
 			return FormatHelper.OpenAsFormat(fs, filename, 0, (int)fs.Length, format);
 		}
+
+		public void Close() {}
 	}
 }

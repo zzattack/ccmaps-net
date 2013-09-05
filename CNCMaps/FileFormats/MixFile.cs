@@ -13,6 +13,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.Remoting.Services;
 using System.Text;
 using CNCMaps.Encodings;
 using CNCMaps.VirtualFileSystem;
@@ -25,99 +26,16 @@ namespace CNCMaps.FileFormats {
 		long dataStart;
 		const long headerStart = 84;
 
-		public MixFile(Stream baseStream, string filename = "",  bool isBuffered = false) : this(baseStream, filename, 0, baseStream.Length, isBuffered) { }
+		public MixFile(Stream baseStream, string filename = "", bool isBuffered = false) : this(baseStream, filename, 0, baseStream.Length, isBuffered) { }
 
-		public MixFile(Stream baseStream, string filename, int baseOffset, long fileSize, bool isBuffered = false)
+		public MixFile(Stream baseStream, string filename, int baseOffset, long fileSize, bool isBuffered = false, bool parseHeader = true)
 			: base(baseStream, filename, baseOffset, fileSize, isBuffered) {
-			ParseHeader();
+			if (parseHeader)
+				ParseHeader();
 		}
 
 		public bool ContainsFile(string filename) {
 			return Index.ContainsKey(MixEntry.HashFilename(filename));
-		}
-
-		private void ParseHeader() {
-			Position = 0;
-			var reader = new BinaryReader(this);
-			uint signature = reader.ReadUInt32();
-
-			isRmix = 0 == (signature & ~(uint)(MixFileFlags.Checksum | MixFileFlags.Encrypted));
-
-			if (isRmix) {
-				isEncrypted = 0 != (signature & (uint)MixFileFlags.Encrypted);
-				if (isEncrypted) {
-					Index = ParseRaHeader(this, out dataStart).ToDictionary(x => x.Hash);
-					return;
-				}
-			}
-			else
-				Seek(0, SeekOrigin.Begin);
-
-			isEncrypted = false;
-			Index = ParseTdHeader(this, out dataStart).ToDictionary(x => x.Hash);
-		}
-		
-		List<MixEntry> ParseRaHeader(VirtualFile reader, out long dataStart) {
-			//BinaryReader reader = new BinaryReader(s);
-			byte[] keyblock = reader.Read(80);
-			byte[] blowfishKey = new BlowfishKeyProvider().DecryptKey(keyblock);
-
-			uint[] h = ReadUints(reader, 2);
-
-			var fish = new Blowfish(blowfishKey);
-			MemoryStream ms = Decrypt(h, fish);
-			var reader2 = new BinaryReader(ms);
-
-			ushort numFiles = reader2.ReadUInt16();
-			reader2.ReadUInt32(); /*datasize*/
-
-			reader.Position = headerStart;
-
-			int byteCount = 6 + numFiles * MixEntry.Size;
-			h = ReadUints(reader, (byteCount + 3) / 4);
-
-			ms = Decrypt(h, fish);
-
-			dataStart = headerStart + byteCount + ((~byteCount + 1) & 7);
-
-			long ds;
-			return ParseTdHeader(new VirtualFile(ms), out ds);
-		}
-
-		static MemoryStream Decrypt(uint[] h, Blowfish fish) {
-			uint[] decrypted = fish.Decrypt(h);
-
-			var ms = new MemoryStream();
-			var writer = new BinaryWriter(ms);
-			foreach (uint t in decrypted)
-				writer.Write(t);
-			writer.Flush();
-
-			ms.Position = 0;
-			return ms;
-		}
-
-		uint[] ReadUints(VirtualFile r, int count) {
-			var ret = new uint[count];
-			for (int i = 0; i < ret.Length; i++)
-				ret[i] = r.ReadUInt32();
-
-			return ret;
-		}
-
-		List<MixEntry> ParseTdHeader(VirtualFile s, out long dataStart) {
-			var items = new List<MixEntry>();
-
-			var reader = new BinaryReader(s);
-			ushort numFiles = reader.ReadUInt16();
-			/*uint dataSize = */
-			reader.ReadUInt32();
-
-			for (int i = 0; i < numFiles; i++)
-				items.Add(new MixEntry(reader.ReadUInt32(), reader.ReadUInt32(), reader.ReadUInt32()));
-
-			dataStart = s.Position;
-			return items;
 		}
 
 		public class MixEntry {
@@ -167,6 +85,114 @@ namespace CNCMaps.FileFormats {
 			}
 
 			public const int Size = 12;
+		}
+
+		internal bool IsValid() {
+			Position = 0;
+			uint signature = ReadUInt32();
+			if ((signature & ~(uint)(MixFileFlags.Encrypted | MixFileFlags.Checksum)) != 0)
+				return false;
+			if ((signature & (uint)MixFileFlags.Encrypted) != 0) {
+				byte[] keyblock = Read(80);
+				byte[] blowfishKey = new BlowfishKeyProvider().DecryptKey(keyblock);
+
+				uint[] h = ReadUints(this, 2);
+				var fish = new Blowfish(blowfishKey);
+				MemoryStream ms = Decrypt(h, fish);
+				var reader2 = new BinaryReader(ms);
+
+				ushort numFiles = reader2.ReadUInt16();
+				uint dataSize = reader2.ReadUInt32(); /*datasize*/
+				return numFiles > 0 && 84 + (6 + numFiles * 12 + 7 & ~7) + dataSize + ((signature & (uint)MixFileFlags.Checksum) != 0 ? 20 : 0) == Length;
+			}
+			else {
+				ushort numFiles = ReadUInt16();
+				uint dataSize = ReadUInt32();
+				return numFiles > 0 && 4 + 6 + numFiles * 12 + dataSize + ((signature & (uint)MixFileFlags.Checksum) != 0 ? 20 : 0) == Length;
+			}
+		}
+
+		private void ParseHeader() {
+			Position = 0;
+			var reader = new BinaryReader(this);
+			uint signature = reader.ReadUInt32();
+
+			isRmix = 0 == (signature & ~(uint)(MixFileFlags.Checksum | MixFileFlags.Encrypted));
+
+			if (isRmix) {
+				isEncrypted = (signature & (uint)MixFileFlags.Encrypted) != 0;
+				if (isEncrypted) {
+					Index = ParseRaHeader(this, out dataStart).ToDictionary(x => x.Hash);
+					return;
+				}
+			}
+			else
+				Seek(0, SeekOrigin.Begin);
+
+			isEncrypted = false;
+			Index = ParseTdHeader(this, out dataStart).ToDictionary(x => x.Hash);
+		}
+
+		List<MixEntry> ParseRaHeader(VirtualFile reader, out long dataStart) {
+			//BinaryReader reader = new BinaryReader(s);
+			byte[] keyblock = reader.Read(80);
+			byte[] blowfishKey = new BlowfishKeyProvider().DecryptKey(keyblock);
+
+			uint[] h = ReadUints(reader, 2);
+
+			var fish = new Blowfish(blowfishKey);
+			MemoryStream ms = Decrypt(h, fish);
+			var reader2 = new BinaryReader(ms);
+
+			ushort numFiles = reader2.ReadUInt16();
+			reader2.ReadUInt32(); /*datasize*/
+
+			reader.Position = headerStart;
+
+			int byteCount = 6 + numFiles * MixEntry.Size;
+			h = ReadUints(reader, (byteCount + 3) / 4);
+
+			ms = Decrypt(h, fish);
+
+			dataStart = headerStart + byteCount + ((~byteCount + 1) & 7);
+
+			long ds;
+			return ParseTdHeader(new VirtualFile(ms), out ds);
+		}
+
+		static MemoryStream Decrypt(uint[] h, Blowfish fish) {
+			uint[] decrypted = fish.Decrypt(h);
+
+			var ms = new MemoryStream();
+			var writer = new BinaryWriter(ms);
+			foreach (uint t in decrypted)
+				writer.Write(t);
+			writer.Flush();
+
+			ms.Position = 0;
+			return ms;
+		}
+
+		uint[] ReadUints(VirtualFile r, int count) {
+			var ret = new uint[count];
+			for (int i = 0; i < ret.Length; i++)
+				ret[i] = r.ReadUInt32();
+
+			return ret;
+		}
+
+		static List<MixEntry> ParseTdHeader(VirtualFile s, out long dataStart) {
+			var items = new List<MixEntry>();
+
+			var reader = new BinaryReader(s);
+			ushort numFiles = reader.ReadUInt16();
+			uint dataSize = reader.ReadUInt32();
+
+			for (int i = 0; i < numFiles; i++)
+				items.Add(new MixEntry(reader.ReadUInt32(), reader.ReadUInt32(), reader.ReadUInt32()));
+
+			dataStart = s.Position;
+			return items;
 		}
 
 		public VirtualFile OpenFile(string filename, FileFormat f = FileFormat.None, CacheMethod m = CacheMethod.Default) {
