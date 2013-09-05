@@ -223,7 +223,7 @@ namespace CNCMaps.FileFormats {
 						*w++ = p.colors[paletteValue].G;
 						*w++ = p.colors[paletteValue].R;
 						zBuffer[zIdx] = zBufVal;
-						heightBuffer[zIdx] = (short)(tile.Z * Drawable.TileHeight / 2);
+						heightBuffer[zIdx] = (short)(img.header.cy_extra + tile.Z * Drawable.TileHeight / 2);
 					}
 					else
 						w += 3;

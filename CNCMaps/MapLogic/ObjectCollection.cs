@@ -196,13 +196,15 @@ namespace CNCMaps.MapLogic {
 			}
 			if (_collectionType == CollectionType.Terrain) {
 				mainProps.Offset.Y += Drawable.TileHeight / 2; // trees and such are placed in the middle of their tile
+				mainProps.ZAdjust += Drawable.TileHeight / 2;
 			}
 			if (rulesSection.ReadString("Land") == "Rock") {
 				mainProps.Offset.Y += Drawable.TileHeight / 2;
-				mainProps.ZAdjust = Drawable.TileHeight / 2;
+				mainProps.ZAdjust += Drawable.TileHeight / 2;
 			}
 			else if (rulesSection.ReadString("Land") == "Road") {
-				mainProps.Offset.Y = Drawable.TileHeight / 2;
+				mainProps.Offset.Y += Drawable.TileHeight / 2;
+				mainProps.ZAdjust += Drawable.TileHeight / 2;
 				drawable.Foundation = new Size(3, 1); // ensures bridges are drawn a bit lower than where they're stored
 			}
 			else if (rulesSection.ReadString("Land") == "Railroad") {
@@ -309,7 +311,7 @@ namespace CNCMaps.MapLogic {
 							ShadowOffset = mainProps.Offset,
 							SortIndex = ySort,
 							FrameDecider = extraFrameDecider,
-							OverridesZbuffer = true,
+							ZAdjust = -artSection.ReadInt(extraImage + "ZAdjust"),
 						};
 						AddImageToObject(drawable, extraImageFileName, props);
 					}
@@ -342,7 +344,7 @@ namespace CNCMaps.MapLogic {
 							Offset = mainProps.Offset,
 							ShadowOffset = mainProps.Offset,
 							FrameDecider = extraFrameDecider,
-							OverridesZbuffer = true,
+							ZAdjust = -artSection.ReadInt(extraImage + "ZAdjust"),
 						};
 						drawable.AddDamagedShp(VFS.Open(extraImageDamagedFileName) as ShpFile, props);
 					}
