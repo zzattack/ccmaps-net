@@ -152,7 +152,7 @@ namespace CNCMaps.FileFormats {
 					byte paletteValue = img.tileData[rIdx];
 					short zBufVal = (short)((tile.Rx + tile.Ry + tile.Z) * Drawable.TileHeight / 2);// - (img.zData != null ? img.zData[rIdx] : 0));
 
-					if (w_low <= w && w < w_high && zBufVal >= zBuffer[zIdx]) {
+					if (paletteValue != 0 && w_low <= w && w < w_high && zBufVal >= zBuffer[zIdx]) {
 						*(w + 0) = p.colors[paletteValue].B;
 						*(w + 1) = p.colors[paletteValue].G;
 						*(w + 2) = p.colors[paletteValue].R;
@@ -172,9 +172,10 @@ namespace CNCMaps.FileFormats {
 			for (; y < fileHeader.cy; y++) {
 				cx -= 4;
 				for (ushort c = 0; c < cx; c++) {
-					short zBufVal = (short)((tile.Rx + tile.Ry + tile.Z) * Drawable.TileHeight / 2);// - (img.zData != null ? img.zData[rIdx] : 0));
 					byte paletteValue = img.tileData[rIdx];
-					if (w_low <= w && w < w_high && zBufVal >= zBuffer[zIdx]) {
+					short zBufVal = (short)((tile.Rx + tile.Ry + tile.Z) * Drawable.TileHeight / 2);// - (img.zData != null ? img.zData[rIdx] : 0));
+
+					if (paletteValue != 0 && w_low <= w && w < w_high && zBufVal >= zBuffer[zIdx]) {
 						*(w + 0) = p.colors[paletteValue].B;
 						*(w + 1) = p.colors[paletteValue].G;
 						*(w + 2) = p.colors[paletteValue].R;
