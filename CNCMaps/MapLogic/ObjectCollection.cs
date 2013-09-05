@@ -208,15 +208,10 @@ namespace CNCMaps.MapLogic {
 				drawable.Foundation = new Size(3, 1); // ensures bridges are drawn a bit lower than where they're stored
 			}
 			else if (rulesSection.ReadString("Land") == "Railroad") {
-				if (_engine <= EngineType.Firestorm) {
-					if (_drawables.Count < 44)
-						mainProps.Offset.Y = 11;
-					else
-						mainProps.Offset.Y += 0;
-				}
-				else {
+				if (_engine <= EngineType.Firestorm)
+					mainProps.Offset.Y = 11;
+				else 
 					mainProps.Offset.Y = 14;
-				}
 				mainProps.ZAdjust = 15;
 				drawable.LightingType = LightingType.Full;
 				drawable.PaletteType = PaletteType.Iso;
@@ -251,12 +246,11 @@ namespace CNCMaps.MapLogic {
 						drawable.LightingType = LightingType.None;
 						drawable.IsRemapable = true;
 					}
-					else if (SpecialOverlays.IsTSRails(ovl))
-						mainProps.Offset.Y += 11;
-					else if (SpecialOverlays.IsHighBridge(ovl)) {
+					else if (SpecialOverlays.IsHighBridge(ovl) || SpecialOverlays.IsTSHighRailsBridge(ovl)) {
 						mainProps.OffsetHack = OffsetHacks.TSBridgeOffsets;
 						mainProps.ShadowOffsetHack = OffsetHacks.TSBridgeShadowOffsets;
-						drawable.HeightOffset = 2;
+						drawable.HeightOffset = 4;
+						mainProps.ZAdjust = 1 * Drawable.TileHeight;
 					}
 				}
 			}

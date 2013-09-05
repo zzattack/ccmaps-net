@@ -217,17 +217,10 @@ namespace CNCMaps.MapLogic {
 
 					var drawable = new Drawable(anim);
 
-					int rxOffset, ryOffset;
-					if (engine >= EngineType.RedAlert2) {
-						// in pixels for RA2
-						rxOffset = extraSection.ReadInt(n + "XOffset");
-						ryOffset = Drawable.TileHeight / 2 + extraSection.ReadInt(n + "YOffset");
-					}
-					else {
-						// but in leptons for TS ....
-						rxOffset = (extraSection.ReadInt(n + "XOffset") * Drawable.TileWidth / 256);
-						ryOffset = (extraSection.ReadInt(n + "YOffset") * Drawable.TileHeight / 256);
-					}
+					// in pixels
+					int rxOffset = extraSection.ReadInt(n + "XOffset");
+					int ryOffset = Drawable.TileHeight / 2 + extraSection.ReadInt(n + "YOffset");
+
 					var props = new DrawProperties {
 						Offset = new Point(rxOffset, ryOffset),
 						OverridesZbuffer = true,

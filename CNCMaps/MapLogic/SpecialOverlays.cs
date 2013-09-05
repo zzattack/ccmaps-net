@@ -69,10 +69,15 @@ namespace CNCMaps.MapLogic {
 		private static bool IsTib(OverlayObject o) {
 			return IsTS_Riparius(o) || IsTS_Cruentus(o) || IsTS_Vinifera(o) || IsTS_Aboreus(o);
 		}
-
+		
 		public static bool IsHighBridge(OverlayObject o) {
 			return o.OverlayID == 24 || o.OverlayID == 25 || o.OverlayID == 238 || o.OverlayID == 237;
 		}
+
+		public static bool IsTSHighRailsBridge(OverlayObject o) {
+			return o.OverlayID == 59 || o.OverlayID == 60;
+		}
+
 		public static bool IsTSRails(OverlayObject o) {
 			return 43 <= o.OverlayID && o.OverlayID <= 57;
 		}
