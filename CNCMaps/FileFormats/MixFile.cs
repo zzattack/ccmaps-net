@@ -15,7 +15,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.Remoting.Services;
 using System.Text;
-using CNCMaps.Encodings;
+using CNCMaps.FileFormats.Encodings;
 using CNCMaps.VirtualFileSystem;
 
 namespace CNCMaps.FileFormats {

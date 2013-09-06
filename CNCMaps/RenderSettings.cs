@@ -1,3 +1,5 @@
+using CNCMaps.Game;
+
 namespace CNCMaps {
 	internal struct RenderSettings {
 

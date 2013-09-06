@@ -55,16 +55,17 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Encodings\Blowfish.cs" />
-    <Compile Include="Encodings\BlowfishKeyProvider.cs" />
-    <Compile Include="Encodings\CRC32.cs" />
-    <Compile Include="Encodings\Format2.cs" />
-    <Compile Include="Encodings\Format3.cs" />
-    <Compile Include="Encodings\Format40.cs" />
-    <Compile Include="Encodings\Format5.cs" />
-    <Compile Include="Encodings\Format80.cs" />
-    <Compile Include="Encodings\MiniLZO.cs" />
-    <Compile Include="EngineType.cs" />
+    <Compile Include="FileFormats\Encodings\Blowfish.cs" />
+    <Compile Include="FileFormats\Encodings\BlowfishKeyProvider.cs" />
+    <Compile Include="FileFormats\Encodings\CRC32.cs" />
+    <Compile Include="FileFormats\Encodings\Format2.cs" />
+    <Compile Include="FileFormats\Encodings\Format3.cs" />
+    <Compile Include="FileFormats\Encodings\Format40.cs" />
+    <Compile Include="FileFormats\Encodings\Format5.cs" />
+    <Compile Include="FileFormats\Encodings\Format80.cs" />
+    <Compile Include="FileFormats\Encodings\MiniLZO.cs" />
+    <Compile Include="Game\EngineType.cs" />
+    <Compile Include="FileFormats\VplFile.cs" />
     <Compile Include="FileFormats\CsfFile.cs" />
     <Compile Include="FileFormats\FileFormat.cs" />
     <Compile Include="FileFormats\FormatHelper.cs" />
@@ -74,40 +75,25 @@
     <Compile Include="FileFormats\PalFile.cs" />
     <Compile Include="FileFormats\PktFile.cs" />
     <Compile Include="FileFormats\ShpFile.cs" />
-    <Compile Include="MapLogic\AircraftObject.cs" />
-    <Compile Include="MapLogic\CollectionType.cs" />
-    <Compile Include="MapLogic\Drawable.cs" />
-    <Compile Include="MapLogic\DrawProperties.cs" />
-    <Compile Include="MapLogic\InfantryObject.cs" />
-    <Compile Include="MapLogic\Lighting.cs" />
-    <Compile Include="MapLogic\LightSource.cs" />
-    <Compile Include="MapLogic\MapFile.cs" />
-    <Compile Include="MapLogic\NamedObject.cs" />
-    <Compile Include="MapLogic\NumberedObject.cs" />
-    <Compile Include="MapLogic\OverlayObject.cs" />
-    <Compile Include="MapLogic\OwnableObject.cs" />
-    <Compile Include="MapLogic\Palette.cs" />
-    <Compile Include="MapLogic\PaletteCollection.cs" />
-    <Compile Include="MapLogic\PaletteOwner.cs" />
-    <Compile Include="MapLogic\PaletteType.cs" />
-    <Compile Include="MapLogic\GameObject.cs" />
-    <Compile Include="MapLogic\SmudgeObject.cs" />
-    <Compile Include="MapLogic\StructureObject.cs" />
-    <Compile Include="MapLogic\TerrainObject.cs" />
-    <Compile Include="MapLogic\Defaults.cs" />
+    <Compile Include="Game\Drawable.cs" />
+    <Compile Include="Game\DrawProperties.cs" />
+    <Compile Include="Map\MapObjects.cs" />
+    <Compile Include="Map\Lighting.cs" />
+    <Compile Include="Map\MapFile.cs" />
+    <Compile Include="Rendering\Palette.cs" />
+    <Compile Include="Rendering\PaletteCollection.cs" />
+    <Compile Include="Rendering\PaletteType.cs" />
+    <Compile Include="Game\Defaults.cs" />
     <Compile Include="FileFormats\TmpFile.cs" />
     <Compile Include="FileFormats\VxlFile.cs" />
-    <Compile Include="MapLogic\MapTile.cs" />
-    <Compile Include="MapLogic\TheaterType.cs" />
-    <Compile Include="MapLogic\SpecialOverlays.cs" />
-    <Compile Include="MapLogic\TileDirection.cs" />
-    <Compile Include="MapLogic\TileLayer.cs" />
-    <Compile Include="MapLogic\UnitObject.cs" />
-    <Compile Include="MapLogic\VoxelRenderer.cs" />
+    <Compile Include="Map\MapTile.cs" />
+    <Compile Include="Game\SpecialOverlays.cs" />
+    <Compile Include="Map\TileLayer.cs" />
+    <Compile Include="Rendering\VoxelRenderer.cs" />
     <Compile Include="Program.cs" />
-    <Compile Include="MapLogic\ObjectCollection.cs" />
-    <Compile Include="MapLogic\Theater.cs" />
-    <Compile Include="MapLogic\TileCollection.cs" />
+    <Compile Include="Game\ObjectCollection.cs" />
+    <Compile Include="Game\Theater.cs" />
+    <Compile Include="Game\TileCollection.cs" />
     <Compile Include="FileFormats\MixFile.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Properties\AssemblyInfoGlobal.cs" />
@@ -119,12 +105,12 @@
     <Compile Include="Utility\DebugDrawingSurfaceWindow.Designer.cs">
       <DependentUpon>DebugDrawingSurfaceWindow.cs</DependentUpon>
     </Compile>
-    <Compile Include="Utility\DrawingSurface.cs" />
+    <Compile Include="Rendering\DrawingSurface.cs" />
     <Compile Include="Utility\EzMarshal.cs" />
-    <Compile Include="Utility\HsvColor.cs" />
+    <Compile Include="Rendering\HsvColor.cs" />
     <Compile Include="Utility\Logger.cs" />
     <Compile Include="Utility\Option.cs" />
-    <Compile Include="Utility\ThumbInjector.cs" />
+    <Compile Include="Map\ThumbInjector.cs" />
     <Compile Include="VirtualFileSystem\IArchive.cs" />
     <Compile Include="VirtualFileSystem\DirArchive.cs" />
     <Compile Include="VirtualFileSystem\MemoryFile.cs" />
@@ -158,7 +144,7 @@
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <ProjectExtensions>
     <VisualStudio>
-      <UserProperties BuildVersion_UpdateFileVersion="True" BuildVersion_UpdateAssemblyVersion="True" BuildVersion_UseGlobalSettings="True" BuildVersion_AssemblyInfoFilename="CNCMaps\Properties\AssemblyInfoGlobal.cs" />
+      <UserProperties BuildVersion_AssemblyInfoFilename="CNCMaps\Properties\AssemblyInfoGlobal.cs" BuildVersion_UseGlobalSettings="True" BuildVersion_UpdateAssemblyVersion="True" BuildVersion_UpdateFileVersion="True" />
     </VisualStudio>
   </ProjectExtensions>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

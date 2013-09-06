@@ -1,9 +1,10 @@
 using System;
 using System.Drawing;
-using System.Security.Cryptography.X509Certificates;
 using CNCMaps.FileFormats;
+using CNCMaps.Map;
+using CNCMaps.Rendering;
 
-namespace CNCMaps.MapLogic {
+namespace CNCMaps.Game {
 	public enum DrawFrame : int {
 		DirectionBased = -1,
 		Random = -2,

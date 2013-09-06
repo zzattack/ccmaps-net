@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace CNCMaps.MapLogic {
+namespace CNCMaps.Map {
 
 	public class MapTile : GameObject { // inherit from gameobject to receive palette properties and such
 

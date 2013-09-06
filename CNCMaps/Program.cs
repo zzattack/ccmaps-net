@@ -2,7 +2,9 @@
 using System.IO;
 using System.Linq;
 using CNCMaps.FileFormats;
-using CNCMaps.MapLogic;
+using CNCMaps.Game;
+using CNCMaps.Map;
+using CNCMaps.Rendering;
 using CNCMaps.Utility;
 using CNCMaps.VirtualFileSystem;
 using System;

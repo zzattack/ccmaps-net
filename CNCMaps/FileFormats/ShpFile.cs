@@ -5,8 +5,10 @@ using System.Drawing;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Runtime.Remoting.Messaging;
-using CNCMaps.Encodings;
-using CNCMaps.MapLogic;
+using CNCMaps.FileFormats.Encodings;
+using CNCMaps.Game;
+using CNCMaps.Map;
+using CNCMaps.Rendering;
 using CNCMaps.Utility;
 using CNCMaps.VirtualFileSystem;
 
