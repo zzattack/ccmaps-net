@@ -70,7 +70,7 @@ namespace CNCMaps.MapLogic {
 			int dx = (rx - ry + fullSize.Width - 1);
 			int dy = rx + ry - fullSize.Width - 1;
 
-			if (dx < 0 || dy < 0 || dx >= tiles.GetLength(0) || dy >= tiles.GetLength(1)) {
+			if (dx < 0 || dy < 0 || dx >= tiles.GetLength(0) || (dy / 2) >= tiles.GetLength(1)) {
 				logger.Warn("Referencing empty tile at (rx,ry)=({0},{1}); (dx,dy)=({2},{3})", rx, ry, dx, dy);
 				return null;
 			}

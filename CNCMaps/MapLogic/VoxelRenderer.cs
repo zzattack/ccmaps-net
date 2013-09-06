@@ -8,8 +8,8 @@ using OpenTK.Graphics;
 namespace CNCMaps.MapLogic {
 	public class VoxelRenderer : IDisposable {
 		static NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
-		GraphicsContext ctx;
-		GameWindow gw;
+		GraphicsContext _ctx;
+		GameWindow _gw;
 
 		float[] lightPos = { 5f, 5f, 10f, 0f };
 		float[] lightSpec = { 1f, 0.5f, 0f, 0f };
@@ -26,7 +26,6 @@ namespace CNCMaps.MapLogic {
 		double _objectRotation;
 		bool _canRender;
 		bool _isInit;
-
 
 		public void Initialize() {
 			logger.Info("Initializing voxel renderer");
@@ -47,6 +46,7 @@ namespace CNCMaps.MapLogic {
 				GL.Enable(EnableCap.Lighting);
 				GL.Enable(EnableCap.ColorMaterial);
 				GL.Enable(EnableCap.Normalize);
+				GL.Disable(EnableCap.RescaleNormal);
 				GL.Enable(EnableCap.Blend);
 				GL.ShadeModel(ShadingModel.Smooth);
 
@@ -61,8 +61,7 @@ namespace CNCMaps.MapLogic {
 			}
 
 			catch (Exception exc) {
-				logger.Error("Voxel rendering will not be available because an exception occurred while initializing OpenGL: {0}",
-							 exc.ToString());
+				logger.Error("Voxel rendering will not be available because an exception occurred while initializing OpenGL: {0}", exc.ToString());
 			}
 		}
 
@@ -78,7 +77,7 @@ namespace CNCMaps.MapLogic {
 
 		private bool CreateGameWindow() {
 			try {
-				gw = new GameWindow(200, 200, GraphicsMode.Default, "", GameWindowFlags.Default);
+				_gw = new GameWindow(200, 200, GraphicsMode.Default, "", GameWindowFlags.Default);
 				return true;
 			}
 			catch {
@@ -89,11 +88,11 @@ namespace CNCMaps.MapLogic {
 
 		private bool CreateMesaContext() {
 			try {
-				ctx = GraphicsContext.CreateMesaContext();
-				long ctxPtr = long.Parse(ctx.ToString()); // cannot access private .Context
+				_ctx = GraphicsContext.CreateMesaContext();
+				long ctxPtr = long.Parse(_ctx.ToString()); // cannot access private .Context
 				if (ctxPtr != 0) {
-					ctx.MakeCurrent(new OpenTK.Platform.Mesa.BitmapWindowInfo(vxl_ds.bmd));
-					if (!ctx.IsCurrent) {
+					_ctx.MakeCurrent(new OpenTK.Platform.Mesa.BitmapWindowInfo(vxl_ds.bmd));
+					if (!_ctx.IsCurrent) {
 						logger.Warn("Could not make context current");
 						throw new InvalidOperationException("Mesa context could not be made current");
 					}
@@ -109,8 +108,8 @@ namespace CNCMaps.MapLogic {
 
 		public void Dispose() {
 			vxl_ds.Dispose();
-			if (ctx != null) ctx.Dispose();
-			if (gw != null) gw.Dispose();
+			if (_ctx != null) _ctx.Dispose();
+			if (_gw != null) _gw.Dispose();
 		}
 		
 		public DrawingSurface Render(VxlFile vxlFile, HvaFile hvaFile, double objectRotation, Palette palette) {
@@ -135,7 +134,7 @@ namespace CNCMaps.MapLogic {
 			for (int i = 0; i != vxlFile.NumSections(); i++) {
 				vxlFile.SetSection(i);
 				hvaFile.SetSection(i);
-				renderSection();
+				RenderSection();
 			}
 
 			GL.ReadPixels(0, 0, vxl_ds.bmd.Width, vxl_ds.bmd.Height, PixelFormat.Bgra, PixelType.UnsignedByte, vxl_ds.bmd.Scan0);
@@ -187,14 +186,14 @@ namespace CNCMaps.MapLogic {
 			GL.Scale(0.075, 0.075, 0.075);
 		}
 
-		void renderSection() {
+		void RenderSection() {
 			GL.PushMatrix();
 
 			byte xs, ys, zs;
-			_vxlFile.getSize(out xs, out ys, out zs);
+			_vxlFile.GetSize(out xs, out ys, out zs);
 
 			float[] min, max;
-			_vxlFile.getBounds(out min, out max);
+			_vxlFile.GetBounds(out min, out max);
 
 			/* Calculate the screen units / voxel ratio for scaling */
 			max[0] -= min[0];
@@ -209,14 +208,14 @@ namespace CNCMaps.MapLogic {
 			float[] transform;
 			_hvaFile.loadGLMatrix(frame, out transform);
 			// The HVA transformation matrices have to be scaled
-			transform[12] *= _vxlFile.getScale() * sectionScale[0];
-			transform[13] *= _vxlFile.getScale() * sectionScale[1];
-			transform[14] *= _vxlFile.getScale() * sectionScale[2];
+			transform[12] *= _vxlFile.GetScale() * sectionScale[0];
+			transform[13] *= _vxlFile.GetScale() * sectionScale[1];
+			transform[14] *= _vxlFile.GetScale() * sectionScale[2];
 
 			// Apply the transform for this frame
 			GL.MultMatrix(transform);
 
-			/* Translate to the bottom left of the section's bounding box */
+			// Translate to the bottom left of the section's bounding box
 			GL.Translate(min[0], min[1], min[2]);
 
 			VxlFile.LimbBody.Span.Voxel vx;
@@ -225,12 +224,13 @@ namespace CNCMaps.MapLogic {
 			for (uint x = 0; x != xs; x++) {
 				for (uint y = 0; y != ys; y++) {
 					for (uint z = 0; z != zs; z++) {
-						if (_vxlFile.getVoxel(x, y, z, out vx)) {
+						if (_vxlFile.GetVoxel(x, y, z, out vx)) {
 							GL.Color3(_palette.colors[vx.colour]);
 							var normal = new float[3];
-							_vxlFile.getXYZNormal(vx.normal, out normal);
+							_vxlFile.GetXYZNormal(vx.normal, out normal);
 							GL.Normal3(normal);
-							renderVoxel(x * sectionScale[0], y * sectionScale[1], z * sectionScale[2], (1.0f - pitch) / 2.0f);
+
+							RenderVoxel(x * sectionScale[0], y * sectionScale[0], z * sectionScale[0], (1.0f - pitch) / 1.0f);
 						}
 					}
 				}
@@ -238,13 +238,15 @@ namespace CNCMaps.MapLogic {
 			GL.End();
 			GL.PopMatrix();
 		}
-		void renderVoxel(float cx, float cy, float cz, float r) {
+
+		public void RenderVoxel(float cx, float cy, float cz, float r) {
 			float left = cx - r;
 			float right = cx + r;
 			float fbase = cy - r;
 			float top = cy + r;
 			float front = cz - r;
 			float back = cz + r;
+
 			// Base
 			GL.Vertex3(left, fbase, front);
 			GL.Vertex3(right, fbase, front);

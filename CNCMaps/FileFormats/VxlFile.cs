@@ -8,7 +8,7 @@ namespace CNCMaps.FileFormats {
 
 	public class VxlFile : VirtualFile {
 
-		static NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
+		static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
 
 		public VxlFile(Stream baseStream, string filename, int baseOffset, int fileSize, bool isBuffered = false)
 			: base(baseStream, filename, baseOffset, fileSize, isBuffered) {
@@ -89,8 +89,8 @@ namespace CNCMaps.FileFormats {
 		public void Initialize() {
 			if (initialized) return;
 
-			logger.Debug("Initializing Voxel data for file {0}", FileName);
-			
+			Logger.Debug("Initializing Voxel data for file {0}", FileName);
+
 			fileHeader = EzMarshal.ByteArrayToStructure<VxlFileHeader>(Read(Marshal.SizeOf(typeof(VxlFileHeader))));
 			limbHeaders = new List<LimbHeader>((int)fileHeader.numLimbs);
 			limbBodies = new List<LimbBody>((int)fileHeader.numLimbs);
@@ -113,9 +113,9 @@ namespace CNCMaps.FileFormats {
 				ReadLimbBody(i);
 			}
 
-			logger.Trace("Loaded voxel {0}; header: {1}, bodies: {2}, tailers: {3}",
+			Logger.Trace("Loaded voxel {0}; header: {1}, bodies: {2}, tailers: {3}",
 				FileName, limbHeaders.Count, limbBodies.Count, limbTailers.Count);
-			
+
 			initialized = true;
 		}
 
@@ -141,14 +141,15 @@ namespace CNCMaps.FileFormats {
 
 				Position = bodiesStartOff + b.spanStart[j];
 				b.span[j] = new LimbBody.Span();
-				decompressVoxels(b.span[j], limbTailers[n].zSize);
+				DecompressVoxels(b.span[j], limbTailers[n].zSize);
 			}
 			limbBodies.Add(b);
 		}
 
-		private void decompressVoxels(LimbBody.Span span, byte zSz) {
+		private void DecompressVoxels(LimbBody.Span span, byte zSz) {
 			uint z = 0;
-			byte skip, nv, nv2, numZ = 0;
+			byte skip;
+			byte nv2, numZ = 0;
 
 			span.voxels = new LimbBody.Span.Voxel[zSz];
 
@@ -158,7 +159,7 @@ namespace CNCMaps.FileFormats {
 				if (z >= zSz)
 					break;
 
-				nv = ReadByte();
+				byte nv = ReadByte();
 
 				for (uint i = 0; i != nv; i++) {
 					span.voxels[z].colour = ReadByte();
@@ -462,27 +463,26 @@ namespace CNCMaps.FileFormats {
 		};
 		#endregion
 
-
-		int curSection;
+		int _curSection;
 		internal void SetSection(int section) {
-			curSection = section;
+			_curSection = section;
 		}
 
-		internal float getScale() {
-			return limbTailers[curSection].scale;
+		internal float GetScale() {
+			return limbTailers[_curSection].scale;
 		}
 
-		internal bool getVoxel(uint x, uint y, uint z, out LimbBody.Span.Voxel vx) {
-			uint sn = (y * limbTailers[curSection].xSize) + x;
-			if (limbBodies[curSection].spanStart[sn] == -1 || limbBodies[curSection].spanEnd[sn] == -1) {
+		internal bool GetVoxel(uint x, uint y, uint z, out LimbBody.Span.Voxel vx) {
+			uint sn = (y * limbTailers[_curSection].xSize) + x;
+			if (limbBodies[_curSection].spanStart[sn] == -1 || limbBodies[_curSection].spanEnd[sn] == -1) {
 				vx = new LimbBody.Span.Voxel();
 				return false;
 			}
-			if (z >= limbBodies[curSection].span[sn].numVoxels) {
+			if (z >= limbBodies[_curSection].span[sn].numVoxels) {
 				vx = new LimbBody.Span.Voxel();
 				return false;
 			}
-			var tmp = limbBodies[curSection].span[sn].voxels[z];
+			var tmp = limbBodies[_curSection].span[sn].voxels[z];
 			if (tmp.used) {
 				vx = tmp;
 				return true;
@@ -493,43 +493,42 @@ namespace CNCMaps.FileFormats {
 			}
 		}
 
-		internal void getXYZNormal(byte normalNum, out float[] normal) {
+		internal void GetXYZNormal(byte normalNum, out float[] normal) {
 			normal = new float[3];
 
-            if (limbTailers[curSection].normalType == 2) {
-                if (normalNum >= TS_NUM_NORMALS)
-                    normalNum = TS_NUM_NORMALS - 1;
+			if (limbTailers[_curSection].normalType == 2) {
+				if (normalNum >= TS_NUM_NORMALS)
+					normalNum = TS_NUM_NORMALS - 1;
 				normal[0] = TSNormals[normalNum, 0];
 				normal[1] = TSNormals[normalNum, 1];
 				normal[2] = TSNormals[normalNum, 2];
 			}
-            else if (limbTailers[curSection].normalType == 4) {
-                if (normalNum >= RA2_NUM_NORMALS)
-                    normalNum = RA2_NUM_NORMALS - 1;
+			else if (limbTailers[_curSection].normalType == 4) {
+				if (normalNum >= RA2_NUM_NORMALS)
+					normalNum = RA2_NUM_NORMALS - 1;
 				normal[0] = RA2Normals[normalNum, 0];
 				normal[1] = RA2Normals[normalNum, 1];
 				normal[2] = RA2Normals[normalNum, 2];
 			}
 		}
 
-		internal void getBounds(out float[] min, out float[] max) {
+		internal void GetBounds(out float[] min, out float[] max) {
 			min = new float[3];
 			max = new float[3];
-			min[0] = limbTailers[curSection].minBounds[0];
-			min[1] = limbTailers[curSection].minBounds[1];
-			min[2] = limbTailers[curSection].minBounds[2];
+			min[0] = limbTailers[_curSection].minBounds[0];
+			min[1] = limbTailers[_curSection].minBounds[1];
+			min[2] = limbTailers[_curSection].minBounds[2];
 
-			max[0] = limbTailers[curSection].maxBounds[0];
-			max[1] = limbTailers[curSection].maxBounds[1];
-			max[2] = limbTailers[curSection].maxBounds[2];
+			max[0] = limbTailers[_curSection].maxBounds[0];
+			max[1] = limbTailers[_curSection].maxBounds[1];
+			max[2] = limbTailers[_curSection].maxBounds[2];
 		}
 
-		internal void getSize(out byte xs, out byte ys, out byte zs) {
-			xs = limbTailers[curSection].xSize;
-			ys = limbTailers[curSection].ySize;
-			zs = limbTailers[curSection].zSize;
+		internal void GetSize(out byte xs, out byte ys, out byte zs) {
+			xs = limbTailers[_curSection].xSize;
+			ys = limbTailers[_curSection].ySize;
+			zs = limbTailers[_curSection].zSize;
 		}
-
 
 		internal int NumSections() {
 			return (int)fileHeader.numLimbs;

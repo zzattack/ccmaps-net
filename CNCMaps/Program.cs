@@ -12,9 +12,9 @@ using NLog.Targets;
 
 namespace CNCMaps {
 	class Program {
-		static OptionSet options;
-		public static RenderSettings Settings;
+		static OptionSet _options;
 		static Logger _logger;
+		public static RenderSettings Settings;
 
 		public static int Main(string[] args) {
 			InitLoggerConfig();
@@ -80,10 +80,10 @@ namespace CNCMaps {
 				map.DrawMap();
 
 				// ====================================================================================
-				//using (var form = new DebugDrawingSurfaceWindow(map.GetDrawingSurface(), map.GetTiles(), map.GetTheater(), map)) {
-				//	form.RequestTileEvaluate += map.DebugDrawTile;
-				//	form.ShowDialog();
-				//}
+				using (var form = new DebugDrawingSurfaceWindow(map.GetDrawingSurface(), map.GetTiles(), map.GetTheater(), map)) {
+					form.RequestTileEvaluate += map.DebugDrawTile;
+					form.ShowDialog();
+				}
 				// ====================================================================================
 
 				if (Settings.StartPositionMarking == StartPositionMarking.Squared)
@@ -185,7 +185,7 @@ namespace CNCMaps {
 
 		private static void InitSettings(string[] args) {
 			Settings = RenderSettings.CreateDefaults();
-			options = new OptionSet {
+			_options = new OptionSet {
 				{"h|help", "Show this short help text", v => Settings.ShowHelp = true},
 				{"i|infile=", "Input file", v => Settings.InputFile = v},
 				{"o|outfile=", "Output file, without extension, read from map if not specified.", v => Settings.OutputFile = v},
@@ -217,7 +217,7 @@ namespace CNCMaps {
 				{"g|graphics-osmesa", "Attempt rendering voxels using OSMesa context first", v => Settings.PreferOSMesa = true},
 			};
 
-			options.Parse(args);
+			_options.Parse(args);
 		}
 
 		private static bool ValidateSettings() {
@@ -246,7 +246,7 @@ namespace CNCMaps {
 			Console.WriteLine("");
 			var sb = new System.Text.StringBuilder();
 			var sw = new StringWriter(sb);
-			options.WriteOptionDescriptions(sw);
+			_options.WriteOptionDescriptions(sw);
 			Console.WriteLine(sb.ToString());
 		}
 

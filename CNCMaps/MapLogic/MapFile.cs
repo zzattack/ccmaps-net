@@ -1517,7 +1517,7 @@ namespace CNCMaps.MapLogic {
 
 		internal void DebugDrawTile(MapTile tile) {
 			_theater.GetTileCollection().DrawTile(tile, _drawingSurface);
-			foreach (GameObject o in GetObjectsAt(tile.Dx, tile.Dy))
+			foreach (GameObject o in GetObjectsAt(tile.Dx, tile.Dy / 2))
 				_theater.DrawObject(o, _drawingSurface);
 		}
 
