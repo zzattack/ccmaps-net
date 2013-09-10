@@ -155,6 +155,8 @@ namespace CNCMaps.FileFormats {
 				short zBufVal = (short)((obj.Tile.Rx + obj.Tile.Ry + obj.Tile.Z) * Drawable.TileHeight / 2 + props.ZAdjust);
 				// zBufVal += (short)(Header.Height / 2);// + image.Header.y + y);
 				zBufVal += (short)(-Header.Height / 2 + image.Header.y + image.Header.cy);
+				if (!obj.Drawable.DrawFlat)
+					zBufVal += (short)(image.Header.cy - y);
 
 				for (int x = 0; x < image.Header.cx; x++) {
 					byte paletteValue = image.ImageData[rIdx];

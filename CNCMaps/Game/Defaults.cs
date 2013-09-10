@@ -105,7 +105,7 @@ namespace CNCMaps.Game {
 			}
 			return GetExtension(t);
 		}
-
+		
 		public static bool GetShadowAssumption(CollectionType t) {
 			switch (t) {
 				case CollectionType.Overlay:
@@ -126,6 +126,27 @@ namespace CNCMaps.Game {
 					return false;
 			}
 		}
+		public static bool GetFlatnessAssumption(CollectionType t) {
+			switch (t) {
+				case CollectionType.Overlay:
+					return true;
+				case CollectionType.Smudge:
+					return true;
+				case CollectionType.Building:
+					return false;
+				case CollectionType.Aircraft:
+					return false;
+				case CollectionType.Infantry:
+					return false;
+				case CollectionType.Terrain:
+					return false;
+				case CollectionType.Vehicle:
+					return false;
+				default:
+					return true;
+			}
+		}
+		
 
 		public static IEnumerable<string> GetTheaterMixes(TheaterType theaterType) {
 			var ret = new List<string>();

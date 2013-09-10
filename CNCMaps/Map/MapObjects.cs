@@ -139,6 +139,7 @@ namespace CNCMaps.Map {
 		public SmudgeObject(string name) {
 			Name = name;
 		}
+		public override MapTile BaseTile { get; set; }
 	}
 	public class StructureObject : NamedObject, OwnableObject {
 

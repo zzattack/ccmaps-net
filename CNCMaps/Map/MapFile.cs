@@ -211,7 +211,7 @@ namespace CNCMaps.Map {
 				for (int x = 0; x < FullSize.Width * 2 - 1; x++) {
 					var objList = _infantryObjects[x, y];
 					if (objList == null) continue;
-					
+
 					var tile = _tiles[x, y];
 					foreach (var i in objList) {
 						if (!c.HasObject(i)) {
@@ -331,7 +331,7 @@ namespace CNCMaps.Map {
 
 				if (EngineType == EngineType.YurisRevenge) {
 					// add YR mixes to VFS
-					var mixDir = VFS.DetermineMixDir(Program.Settings.MixFilesDirectory, EngineType.YurisRevenge); 
+					var mixDir = VFS.DetermineMixDir(Program.Settings.MixFilesDirectory, EngineType.YurisRevenge);
 					VFS.GetInstance().ScanMixDir(mixDir, EngineType.YurisRevenge);
 
 					var rulesmd = VFS.Open<IniFile>("rulesmd.ini");
@@ -385,8 +385,6 @@ namespace CNCMaps.Map {
 			_theater.Initialize();
 			RemoveUnknownObjects();
 
-			// turns out this probably wasn't ever needed
-			SetStructuresBaseTile();
 			LoadColors();
 			if (EngineType >= EngineType.RedAlert2)
 				LoadCountries();
@@ -406,6 +404,8 @@ namespace CNCMaps.Map {
 				ApplyLightSources();
 			}
 
+			SetStructuresBaseTile(); // requires .Drawable set on objects
+			
 			// first preparing all palettes as above, and only now recalculating them 
 			// could save a large amount of work in total
 			RecalculatePalettes();
@@ -468,42 +468,37 @@ namespace CNCMaps.Map {
 			// we need foundations from the theater to place the structures at the correct tile,
 			for (int y = 0; y < _structureObjects.GetLength(1); y++) {
 				for (int x = 0; x < _structureObjects.GetLength(0); x++) {
+
 					StructureObject s = _structureObjects[x, y];
-					if (s == null || s.BaseTile != null) continue; // s.BaseTile set means we've already moved it
+					if (s != null && s.BaseTile == null) {
+						// s.BaseTile set means we've already moved it
+						Size foundation = _theater.GetFoundation(s);
+						if (foundation != System.Drawing.Size.Empty) {
+							var baseTile = _tiles.GetTileR(s.Tile.Rx + foundation.Width - 1, s.Tile.Ry + foundation.Height - 1);
+							if (baseTile != null) s.BaseTile = baseTile; // make sure we don't null it
+						}
+					}
 
-					Size foundation = _theater.GetFoundation(s);
-					if (foundation == System.Drawing.Size.Empty) continue;
-					s.BaseTile = _tiles.GetTileR(s.Tile.Rx + foundation.Width - 1, s.Tile.Ry + foundation.Height - 1);
-
-					// move structure
-					//_structureObjects[x, y] = null;
-					//s.Tile.AllObjects.Remove(s);
-					//_structureObjects[s.BaseTile.Dx, s.BaseTile.Dy / 2] = s;
-					//s.BaseTile.AllObjects.Add(s);
-				}
-			}
-
-			// bridges too
-			for (int y = 0; y < _overlayObjects.GetLength(1); y++) {
-				for (int x = 0; x < _overlayObjects.GetLength(0); x++) {
+					// bridges too
 					OverlayObject o = _overlayObjects[x, y];
-					if (o == null || o.BaseTile != null || o.Drawable == null) continue; // BaseTile set means we've already moved it
+					if (o != null && o.BaseTile == null && o.Drawable != null) {
+						Size foundation = o.Drawable.Foundation;
+						if (foundation != System.Drawing.Size.Empty) {
+							var baseTile = _tiles.GetTileR(o.Tile.Rx + foundation.Width - 1, o.Tile.Ry + foundation.Height - 1);
+							if (baseTile != null) o.BaseTile = baseTile; // make sure we don't null it
+						}
+					}
 
-					Size foundation = o.Drawable.Foundation;
-					if (foundation == System.Drawing.Size.Empty) continue;
-					o.BaseTile = _tiles.GetTileR(o.Tile.Rx + foundation.Width - 1, o.Tile.Ry + foundation.Height - 1);
+					// and smudges					
+					SmudgeObject sm = _smudgeObjects[x, y];
+					if (sm != null && sm.BaseTile == null && sm.Drawable != null) {
+						Size foundation = sm.Drawable.Foundation;
+						if (foundation != System.Drawing.Size.Empty) {
+							var baseTile = _tiles.GetTileR(sm.Tile.Rx + foundation.Width - 1, sm.Tile.Ry + foundation.Height - 1);
+							if (baseTile != null) sm.BaseTile = baseTile; // make sure we don't null it
+						}
+					}
 
-					if (o.BaseTile == null)
-						o.BaseTile = new MapTile(0, 0,
-							(ushort)(o.Tile.Rx + foundation.Width - 1),
-							(ushort)(o.Tile.Ry + foundation.Height - 1),
-							o.Tile.Z, 0, 0, _tiles);
-
-					//if (o.BaseTile != null) {
-					//	// move structure
-					//	_overlayObjects[x, y] = null;
-					//	_overlayObjects[o.BaseTile.Dx, o.BaseTile.Dy / 2] = o;
-					//}
 				}
 			}
 		}
@@ -1425,7 +1420,7 @@ namespace CNCMaps.Map {
 					if (EngineType == EngineType.TiberianSun) {
 						string campaignSide;
 						string missionNumber;
-						
+
 						if (missionEntry.Briefing.Length >= 3) {
 							campaignSide = missionEntry.Briefing.Substring(0, 3);
 							missionNumber = missionEntry.Briefing.Length > 3 ? missionEntry.Briefing.Substring(3) : "";

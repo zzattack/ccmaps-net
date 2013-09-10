@@ -13,8 +13,8 @@ namespace CNCMaps.Rendering {
 
 		readonly float[] _lightPos = { 0f, 0f, 10f, 1.0f };
 		readonly float[] _lightSpec = { 1f, 0.5f, 0f, 0f };
-		readonly float[] _lightDiffuse = { 0.4f, 0.4f, 0.4f, 1f };
-		readonly float[] _lightAmb = { 0.6f, 0.6f, 0.6f, 1f };
+		readonly float[] _lightDiffuse = { 0.8f, 0.8f, 0.8f, 1f };
+		readonly float[] _lightAmb = { 0.8f, 0.8f, 0.8f, 1f };
 
 		DrawingSurface vxl_ds;
 		VxlFile _vxlFile;

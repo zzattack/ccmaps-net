@@ -44,6 +44,7 @@ namespace CNCMaps.Game {
 		public bool IsGate { get; set; }
 		public bool IsVeins { get; set; }
 		public int HeightOffset { get; set; }
+		public bool DrawFlat { get; set; }
 
 		// below are all the different kinds of drawables that a Drawable can consist of
 		readonly List<DrawableFile<VxlFile>> _voxels = new List<DrawableFile<VxlFile>>();

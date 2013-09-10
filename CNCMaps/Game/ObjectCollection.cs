@@ -121,17 +121,24 @@ namespace CNCMaps.Game {
 			else imageFileName += Defaults.GetExtension(_theaterType, _collectionType);
 
 			// Find out foundation, now with custom foundation support (Ares feature).
-			string foundation = artSection.ReadString("Foundation", "1x1");
-			if (!foundation.Equals("custom", StringComparison.InvariantCultureIgnoreCase)) {
-				int fx = foundation[0] - '0';
-				int fy = foundation[2] - '0';
-				drawable.Foundation = new Size(fx, fy);
+			if (_collectionType == CollectionType.Building) {
+				string foundation = artSection.ReadString("Foundation", "1x1");
+				if (!foundation.Equals("custom", StringComparison.InvariantCultureIgnoreCase)) {
+					int fx = foundation[0] - '0';
+					int fy = foundation[2] - '0';
+					drawable.Foundation = new Size(fx, fy);
+				}
+				else {
+					int fx = artSection.ReadInt("Foundation.X", 1);
+					int fy = artSection.ReadInt("Foundation.Y", 1);
+					drawable.Foundation = new Size(fx, fy);
+				}
 			}
-			else {
-				int fx = artSection.ReadInt("Foundation.X", 1);
-				int fy = artSection.ReadInt("Foundation.Y", 1);
-				drawable.Foundation = new Size(fx, fy);
+			else if (_collectionType == CollectionType.Smudge) {
+				drawable.Foundation = new Size(rulesSection.ReadInt("Width", 1), rulesSection.ReadInt("Height", 1));
 			}
+			else
+				drawable.Foundation = new Size(1, 1);
 
 			bool newTheater = artSection.ReadBool("NewTheater");
 			// See if a theater-specific image is used
@@ -190,8 +197,7 @@ namespace CNCMaps.Game {
 			}
 
 			mainProps.HasShadow = artSection.ReadBool("Shadow", Defaults.GetShadowAssumption(_collectionType));
-			if (!rulesSection.ReadBool("DrawFlat", true))
-				mainProps.HasShadow = true;
+			drawable.DrawFlat = rulesSection.ReadBool("DrawFlat", Defaults.GetFlatnessAssumption(_collectionType));
 
 			if (rulesSection.ReadBool("BridgeRepairHut")) {
 				// xOffset = yOffset = 0; // TOOD: check we really don't need this
@@ -221,7 +227,7 @@ namespace CNCMaps.Game {
 			else if (rulesSection.ReadString("Land") == "Railroad") {
 				if (_engine <= EngineType.Firestorm)
 					mainProps.Offset.Y = 11;
-				else 
+				else
 					mainProps.Offset.Y = 14;
 				mainProps.ZAdjust = 15;
 				drawable.LightingType = LightingType.Full;
@@ -316,7 +322,7 @@ namespace CNCMaps.Game {
 							ShadowOffset = mainProps.Offset,
 							SortIndex = ySort,
 							FrameDecider = extraFrameDecider,
-							ZAdjust = -artSection.ReadInt(extraImage + "ZAdjust"),
+							ZAdjust = -2 * artSection.ReadInt(extraImage + "ZAdjust"),
 						};
 						AddImageToObject(drawable, extraImageFileName, props);
 					}
