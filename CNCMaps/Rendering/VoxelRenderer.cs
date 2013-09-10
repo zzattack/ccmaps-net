@@ -1,5 +1,6 @@
 ﻿using System;
 using CNCMaps.FileFormats;
+using CNCMaps.VirtualFileSystem;
 using OpenTK;
 using OpenTK.Graphics;
 using OpenTK.Graphics.OpenGL;
@@ -10,15 +11,16 @@ namespace CNCMaps.Rendering {
 		GraphicsContext _ctx;
 		GameWindow _gw;
 
-		float[] lightPos = { 5f, 5f, 10f, 0f };
-		float[] lightSpec = { 1f, 0.5f, 0f, 0f };
-		float[] lightDiffuse = { 0.95f, 0.95f, 0.95f, 1f };
-		float[] lightAmb = { 0.6f, 0.6f, 0.6f, 1f };
+		readonly float[] _lightPos = { 0f, 0f, 10f, 1.0f };
+		readonly float[] _lightSpec = { 1f, 0.5f, 0f, 0f };
+		readonly float[] _lightDiffuse = { 0.4f, 0.4f, 0.4f, 1f };
+		readonly float[] _lightAmb = { 0.6f, 0.6f, 0.6f, 1f };
 
 		DrawingSurface vxl_ds;
 		VxlFile _vxlFile;
 		HvaFile _hvaFile;
 		Palette _palette;
+		VplFile _vplFile;
 
 		int frame;
 		int pitch;
@@ -26,6 +28,10 @@ namespace CNCMaps.Rendering {
 		bool _canRender;
 		bool _isInit;
 
+		int _vertexShader;
+		int _fragmentShader;
+		int _program;
+				
 		public void Initialize() {
 			logger.Info("Initializing voxel renderer");
 			_isInit = true;
@@ -45,17 +51,17 @@ namespace CNCMaps.Rendering {
 				GL.Enable(EnableCap.Lighting);
 				GL.Enable(EnableCap.ColorMaterial);
 				GL.Enable(EnableCap.Normalize);
-				GL.Disable(EnableCap.RescaleNormal);
-				GL.Enable(EnableCap.Blend);
+				//GL.Enable(EnableCap.Blend);
 				GL.ShadeModel(ShadingModel.Smooth);
 
-				GL.Light(LightName.Light0, LightParameter.Position, lightPos);
-				GL.Light(LightName.Light0, LightParameter.Specular, lightSpec);
-				GL.Light(LightName.Light0, LightParameter.Ambient, lightAmb);
-				GL.Light(LightName.Light0, LightParameter.Diffuse, lightDiffuse);
+				GL.Light(LightName.Light0, LightParameter.Position, _lightPos);
+				GL.Light(LightName.Light0, LightParameter.Specular, _lightSpec);
+				GL.Light(LightName.Light0, LightParameter.Ambient, _lightAmb);
+				GL.Light(LightName.Light0, LightParameter.Diffuse, _lightDiffuse);
 				GL.Enable(EnableCap.Light0);
 				GL.ClearColor(0.5f, 0.9f, 0.3f, 0.0f);
 
+				// _vplFile = VFS.Open<VplFile>("voxels.vpl"); 
 				_canRender = SetupFramebuffer();
 			}
 
@@ -63,8 +69,7 @@ namespace CNCMaps.Rendering {
 				logger.Error("Voxel rendering will not be available because an exception occurred while initializing OpenGL: {0}", exc.ToString());
 			}
 		}
-
-
+		
 		private bool CreateContext() {
 			logger.Debug("Creating graphics context, trying {0} first", Program.Settings.PreferOSMesa ? "OSMesa" : "Window Manager");
 
@@ -217,19 +222,20 @@ namespace CNCMaps.Rendering {
 			// Translate to the bottom left of the section's bounding box
 			GL.Translate(min[0], min[1], min[2]);
 
-			VxlFile.LimbBody.Span.Voxel vx;
-
 			GL.Begin(BeginMode.Quads);
 			for (uint x = 0; x != xs; x++) {
 				for (uint y = 0; y != ys; y++) {
 					for (uint z = 0; z != zs; z++) {
+						VxlFile.LimbBody.Span.Voxel vx;
 						if (_vxlFile.GetVoxel(x, y, z, out vx)) {
-							GL.Color3(_palette.colors[vx.colour]);
-							var normal = new float[3];
+							byte colorIdx = _vplFile != null ? _vplFile.GetPaletteIndex(vx.normal, _vxlFile.NumNormals(), vx.colour) : vx.colour;
+							GL.Color3(_palette.Colors[colorIdx]);
+
+							float[] normal;
 							_vxlFile.GetXYZNormal(vx.normal, out normal);
 							GL.Normal3(normal);
 
-							RenderVoxel(x * sectionScale[0], y * sectionScale[0], z * sectionScale[0], (1.0f - pitch) / 1.0f);
+							RenderVoxel(x * sectionScale[0], y * sectionScale[0], z * sectionScale[0], (1.0f - pitch) / 2.0f);
 						}
 					}
 				}
