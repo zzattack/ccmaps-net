@@ -1,4 +1,4 @@
-namespace CNCMaps {
+namespace CNCMaps.Game {
 	public enum EngineType {
         AutoDetect = 0,
         TiberianSun = 1,

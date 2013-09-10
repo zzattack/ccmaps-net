@@ -1,7 +1,9 @@
 using System;
 using CNCMaps.FileFormats;
+using CNCMaps.Game;
+using CNCMaps.Rendering;
 
-namespace CNCMaps.MapLogic {
+namespace CNCMaps.Map {
 
 	interface OwnableObject {
 		string Owner { get; set; }

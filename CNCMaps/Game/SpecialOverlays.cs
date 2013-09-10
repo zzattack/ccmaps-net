@@ -1,10 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.Sockets;
-using System.Text;
+﻿using CNCMaps.Map;
 
-namespace CNCMaps.MapLogic {
+namespace CNCMaps.Game {
 
 	public enum OverlayTibType {
 		Riparius = 0, // note: don't change the indices of 0-3! they're hardcoded in the game too!

@@ -18,7 +18,7 @@ namespace CNCMaps.VirtualFileSystem {
 			get { return !Eof; }
 		}
 
-		public string ReadLine() {
+		public virtual string ReadLine() {
 			// works for ascii only!
 			var builder = new StringBuilder(80);
 			while (CanRead) {

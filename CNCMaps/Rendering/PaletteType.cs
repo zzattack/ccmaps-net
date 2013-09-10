@@ -1,4 +1,4 @@
-namespace CNCMaps.MapLogic {
+namespace CNCMaps.Rendering {
 	public enum PaletteType {
 		None, // implies unchosen
 		Iso, // for tiles and stuff

@@ -3,7 +3,7 @@
 using System;
 using System.Drawing;
 
-namespace CNCMaps.Utility {
+namespace CNCMaps.Rendering {
 
 	// My HSV considers Hue Sat and Val as values from 0 - 255.
 	public class HsvColor {

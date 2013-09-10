@@ -2,10 +2,10 @@
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.Globalization;
-using CNCMaps.Encodings;
 using CNCMaps.FileFormats;
+using CNCMaps.FileFormats.Encodings;
 
-namespace CNCMaps.Utility {
+namespace CNCMaps.Map {
 	class ThumbInjector {
 		public static unsafe void InjectThumb(Bitmap preview, IniFile map) {
 			BitmapData bmd = preview.LockBits(new Rectangle(0, 0, preview.Width, preview.Height), ImageLockMode.ReadOnly, PixelFormat.Format24bppRgb);

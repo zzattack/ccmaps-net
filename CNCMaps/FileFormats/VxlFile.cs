@@ -512,6 +512,12 @@ namespace CNCMaps.FileFormats {
 			}
 		}
 
+		public byte NumNormals() {
+			if (limbTailers[_curSection].normalType == 2) return TS_NUM_NORMALS;
+			else if (limbTailers[_curSection].normalType == 4) return RA2_NUM_NORMALS;
+			return 0;
+		}
+
 		internal void GetBounds(out float[] min, out float[] max) {
 			min = new float[3];
 			max = new float[3];

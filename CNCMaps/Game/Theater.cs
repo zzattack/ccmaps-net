@@ -1,10 +1,11 @@
 ﻿using System;
 using System.Drawing;
 using CNCMaps.FileFormats;
-using CNCMaps.Utility;
+using CNCMaps.Map;
+using CNCMaps.Rendering;
 using CNCMaps.VirtualFileSystem;
 
-namespace CNCMaps.MapLogic {
+namespace CNCMaps.Game {
 	public enum TheaterType {
 		Temperate, TemperateYR,
 		Urban, UrbanYR,

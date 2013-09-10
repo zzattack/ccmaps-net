@@ -41,8 +41,12 @@ namespace CNCMaps {
 				ModMixes = ""
 			};
 		}
+	}
 
-
+	public enum StartPositionMarking {
+		None,
+		Tiled,
+		Squared
 	}
 
 }

@@ -2,13 +2,14 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
-using System.Text;
 using System.Linq;
+using System.Text;
 using CNCMaps.FileFormats;
-using CNCMaps.Utility;
+using CNCMaps.Map;
+using CNCMaps.Rendering;
 using CNCMaps.VirtualFileSystem;
 
-namespace CNCMaps.MapLogic {
+namespace CNCMaps.Game {
 	public enum CollectionType {
 		Aircraft,
 		Building,

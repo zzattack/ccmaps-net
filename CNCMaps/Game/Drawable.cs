@@ -1,12 +1,12 @@
-using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using CNCMaps.FileFormats;
-using CNCMaps.Utility;
+using CNCMaps.Map;
+using CNCMaps.Rendering;
 using CNCMaps.VirtualFileSystem;
 
-namespace CNCMaps.MapLogic {
+namespace CNCMaps.Game {
 	public class Drawable {
 		static NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 		internal static readonly VoxelRenderer VoxelRenderer = new VoxelRenderer();

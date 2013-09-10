@@ -1,6 +1,6 @@
 ﻿using CNCMaps.FileFormats;
 
-namespace CNCMaps.MapLogic {
+namespace CNCMaps.Map {
 	public class Lighting {
 		public double Level { get; set; }
 		public double Ambient { get; set; }

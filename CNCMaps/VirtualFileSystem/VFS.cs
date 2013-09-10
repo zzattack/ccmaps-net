@@ -10,7 +10,7 @@ using Microsoft.Win32;
 namespace CNCMaps.VirtualFileSystem {
 
 	public class VFS {
-		private static VFS instance = new VFS();
+		private static readonly VFS Instance = new VFS();
 		private readonly List<IArchive> _allArchives = new List<IArchive>();
 		private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
 
@@ -18,11 +18,11 @@ namespace CNCMaps.VirtualFileSystem {
 		}
 
 		public static VFS GetInstance() {
-			return instance;
+			return Instance;
 		}
 
 		public static VirtualFile Open(string filename) {
-			return instance.OpenFile(filename);
+			return Instance.OpenFile(filename);
 		}
 
 		public static T Open<T>(string filename, CacheMethod m = CacheMethod.Default) where T : VirtualFile {
@@ -44,20 +44,21 @@ namespace CNCMaps.VirtualFileSystem {
 			if (t == typeof(PktFile)) return FileFormat.Pkt;
 			if (t == typeof(ShpFile)) return FileFormat.Shp;
 			if (t == typeof(TmpFile)) return FileFormat.Tmp;
+			if (t == typeof(VplFile)) return FileFormat.Vpl;
 			if (t == typeof(VxlFile)) return FileFormat.Vxl;
 			return FileFormat.Ukn;
 		}
 
 		public static VirtualFile Open(string filename, FileFormat f, CacheMethod m) {
-			return instance.OpenFile(filename, f, m);
+			return Instance.OpenFile(filename, f, m);
 		}
 
 		public static bool Add(string filename, CacheMethod cache = CacheMethod.Default) {
-			return instance.AddFile(filename, cache);
+			return Instance.AddFile(filename, cache);
 		}
 
 		public static bool Exists(string imageFileName) {
-			return instance.FileExists(imageFileName);
+			return Instance.FileExists(imageFileName);
 		}
 
 		private bool FileExists(string filename) {

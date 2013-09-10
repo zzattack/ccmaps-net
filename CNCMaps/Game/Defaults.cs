@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using CNCMaps.Map;
+using CNCMaps.Rendering;
 
-namespace CNCMaps.MapLogic {
+namespace CNCMaps.Game {
 
 	public static class Defaults {
 		// Managed at:

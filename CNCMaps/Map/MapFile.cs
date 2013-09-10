@@ -1,23 +1,18 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Configuration;
-using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.IO;
-using System.IO.Pipes;
 using System.Linq;
-using System.Security.Permissions;
 using System.Text.RegularExpressions;
-using CNCMaps.Encodings;
 using CNCMaps.FileFormats;
-using CNCMaps.Utility;
+using CNCMaps.FileFormats.Encodings;
+using CNCMaps.Game;
+using CNCMaps.Rendering;
 using CNCMaps.VirtualFileSystem;
-using OpenTK.Graphics.ES20;
 using PixelFormat = System.Drawing.Imaging.PixelFormat;
 
-namespace CNCMaps.MapLogic {
+namespace CNCMaps.Map {
 
 	/// <summary>Map file.</summary>
 	public class MapFile : IniFile {

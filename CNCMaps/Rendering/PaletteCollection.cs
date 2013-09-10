@@ -2,12 +2,11 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Security.AccessControl;
 using CNCMaps.FileFormats;
-using CNCMaps.Utility;
+using CNCMaps.Game;
 using CNCMaps.VirtualFileSystem;
 
-namespace CNCMaps.MapLogic {
+namespace CNCMaps.Rendering {
 	public class PaletteCollection : IEnumerable<Palette> {
 		private TheaterType _theaterType; // needed for custom palettes
 		public List<Palette> CustomPalettes = new List<Palette>();

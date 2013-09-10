@@ -10,77 +10,81 @@ namespace CNCMaps.Rendering {
 		// Starkku: Name of the palette file, without .pal extension. Mostly for debug purposes, but can also be used to identify certain types of palettes semi-reliably.
 		public string Name { get; set; }
 
-		public Color[] colors = new Color[256];
-		PalFile originalPalette;
-		byte[] origColors;
+		public Color[] Colors = new Color[256];
+		readonly PalFile _originalPalette;
+		bool _originalColorsLoaded;
+		byte[] _origColors;
 		public bool IsShared { get; set; }
 
-		double redMult = 1.0,
-			greenMult = 1.0,
-			blueMult = 1.0,
-			ambientMult = 1.0;
+		double _redMult = 1.0,
+			_greenMult = 1.0,
+			_blueMult = 1.0,
+			_ambientMult = 1.0;
 
 		public Palette() {
 			Name = "wtF?";
 		}
 
 		public Palette(PalFile originalPalette, string name = "") {
-			this.originalPalette = originalPalette;
+			this._originalPalette = originalPalette;
 			if (!string.IsNullOrEmpty(name))
 				this.Name = name;
 			else
 				Name = Path.GetFileNameWithoutExtension(originalPalette.FileName);
 		}
 
+		public Palette(byte[] colors, string name) {
+			_origColors = colors;
+			Name = name;
+		}
+
 		internal Palette Clone() {
 			var p = (Palette)MemberwiseClone();
-			p.colors = new Color[256];
+			p.Colors = new Color[256];
 			p.IsShared = false;
 			return p;
 		}
 
 		public void ApplyLighting(Lighting l, int level = 0, bool applyTints = true) {
-			ambientMult = (l.Ambient - l.Ground) + l.Level * level;
+			_ambientMult = (l.Ambient - l.Ground) + l.Level * level;
 			if (applyTints) {
-				redMult = l.Red;
-				greenMult = l.Green;
-				blueMult = l.Blue;
+				_redMult = l.Red;
+				_greenMult = l.Green;
+				_blueMult = l.Blue;
 			}
 		}
 
 		public void ApplyLamp(LightSource lamp, double lsEffect, bool ambientOnly = false) {
-			ambientMult += lsEffect * lamp.LightIntensity;
+			_ambientMult += lsEffect * lamp.LightIntensity;
 			if (!ambientOnly) {
-				redMult += lsEffect * lamp.LightRedTint;
-				greenMult += lsEffect * lamp.LightGreenTint;
-				blueMult += lsEffect * lamp.LightBlueTint;
+				_redMult += lsEffect * lamp.LightRedTint;
+				_greenMult += lsEffect * lamp.LightGreenTint;
+				_blueMult += lsEffect * lamp.LightBlueTint;
 			}
 		}
 
 
-		bool originalColorsLoaded;
-
 		private void LoadOriginalColors() {
-			if (originalPalette != null) {
-				origColors = originalPalette.GetOriginalColors();
-				originalColorsLoaded = true;
+			if (!_originalColorsLoaded && _originalPalette != null) {
+				_origColors = _originalPalette.GetOriginalColors();
+				_originalColorsLoaded = true;
 			}
 		}
 
 		public void Recalculate() {
-			if (!originalColorsLoaded) LoadOriginalColors();
-			if (!originalColorsLoaded) return;
+			if (!_originalColorsLoaded) LoadOriginalColors();
+			if (!_originalColorsLoaded) return;
 
 			const double clipMult = 1.3;
-			ambientMult = Math.Min(Math.Max(ambientMult, -clipMult), clipMult);
-			redMult = Math.Min(Math.Max(redMult, -clipMult), clipMult);
-			greenMult = Math.Min(Math.Max(greenMult, -clipMult), clipMult);
-			blueMult = Math.Min(Math.Max(blueMult, -clipMult), clipMult);
+			_ambientMult = Math.Min(Math.Max(_ambientMult, -clipMult), clipMult);
+			_redMult = Math.Min(Math.Max(_redMult, -clipMult), clipMult);
+			_greenMult = Math.Min(Math.Max(_greenMult, -clipMult), clipMult);
+			_blueMult = Math.Min(Math.Max(_blueMult, -clipMult), clipMult);
 			for (int i = 0; i < 256; i++) {
-				var r = (byte)Math.Min(255, origColors[i * 3 + 0] * (ambientMult * redMult) / 63.0 * 255.0);
-				var g = (byte)Math.Min(255, origColors[i * 3 + 1] * (ambientMult * greenMult) / 63.0 * 255.0);
-				var b = (byte)Math.Min(255, origColors[i * 3 + 2] * (ambientMult * blueMult) / 63.0 * 255.0);
-				colors[i] = Color.FromArgb(r, g, b);
+				var r = (byte)Math.Min(255, _origColors[i * 3 + 0] * (_ambientMult * _redMult) / 63.0 * 255.0);
+				var g = (byte)Math.Min(255, _origColors[i * 3 + 1] * (_ambientMult * _greenMult) / 63.0 * 255.0);
+				var b = (byte)Math.Min(255, _origColors[i * 3 + 2] * (_ambientMult * _blueMult) / 63.0 * 255.0);
+				Colors[i] = Color.FromArgb(r, g, b);
 			}
 		}
 
@@ -88,8 +92,8 @@ namespace CNCMaps.Rendering {
 			// be sure not to call recalculate on this
 			var p = new Palette();
 			for (int i = 0; i < 256; i++)
-				p.colors[i] = c;
-			p.originalColorsLoaded = true;
+				p.Colors[i] = c;
+			p._originalColorsLoaded = true;
 			return p;
 		}
 
@@ -99,16 +103,16 @@ namespace CNCMaps.Rendering {
 			// and be sure not to call recalculate on this
 			var p = new Palette();
 			for (int i = 0; i < 256; i++)
-				p.colors[i] = Color.FromArgb(
-					(int)(A.colors[i].R * opacity + B.colors[i].R * (1.0 - opacity)),
-					(int)(A.colors[i].G * opacity + B.colors[i].G * (1.0 - opacity)),
-					(int)(A.colors[i].B * opacity + B.colors[i].B * (1.0 - opacity)));
+				p.Colors[i] = Color.FromArgb(
+					(int)(A.Colors[i].R * opacity + B.Colors[i].R * (1.0 - opacity)),
+					(int)(A.Colors[i].G * opacity + B.Colors[i].G * (1.0 - opacity)),
+					(int)(A.Colors[i].B * opacity + B.Colors[i].B * (1.0 - opacity)));
 			return p;
 		}
 
 
 		internal void Remap(Color color) {
-			if (!originalColorsLoaded)
+			if (!_originalColorsLoaded)
 				LoadOriginalColors();
 			double[] mults = { 0xFC >> 2, 0xEC >> 2, 0xDC >> 2, 0xD0 >> 2,
 						0xC0 >> 2, 0xB0 >> 2, 0xA4 >> 2, 0x94 >> 2,
@@ -116,24 +120,24 @@ namespace CNCMaps.Rendering {
 						0x4C >> 2, 0x3C >> 2, 0x2C >> 2, 0x20 >> 2 };
 
 			for (int i = 16; i < 32; i++) {
-				origColors[i * 3 + 0] = (byte)(color.R / 255.0 * mults[i - 16]);
-				origColors[i * 3 + 1] = (byte)(color.G / 255.0 * mults[i - 16]);
-				origColors[i * 3 + 2] = (byte)(color.B / 255.0 * mults[i - 16]);
+				_origColors[i * 3 + 0] = (byte)(color.R / 255.0 * mults[i - 16]);
+				_origColors[i * 3 + 1] = (byte)(color.G / 255.0 * mults[i - 16]);
+				_origColors[i * 3 + 2] = (byte)(color.B / 255.0 * mults[i - 16]);
 			}
 		}
 
 		internal Lighting GetLighting(bool ambientOnly = false) {
 			if (!ambientOnly)
 				return new Lighting {
-					Ambient = ambientMult,
-					Red = redMult,
-					Green = greenMult,
-					Blue = blueMult,
+					Ambient = _ambientMult,
+					Red = _redMult,
+					Green = _greenMult,
+					Blue = _blueMult,
 					Ground = 0,
 					Level = 0,
 				};
 			return new Lighting {
-				Ambient = ambientMult,
+				Ambient = _ambientMult,
 				Red = 1.0,
 				Green = 1.0,
 				Blue = 1.0,

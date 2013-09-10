@@ -1,13 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.Windows.Forms;
 using CNCMaps.FileFormats;
-using CNCMaps.Utility;
+using CNCMaps.Map;
+using CNCMaps.Rendering;
 using CNCMaps.VirtualFileSystem;
-using OpenTK.Graphics.ES20;
 
-namespace CNCMaps.MapLogic {
+namespace CNCMaps.Game {
 
 	class TileCollection {
 		static NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();

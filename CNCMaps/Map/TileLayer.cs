@@ -3,9 +3,9 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
-using System.Drawing.Drawing2D;
+using CNCMaps.Game;
 
-namespace CNCMaps.MapLogic {
+namespace CNCMaps.Map {
 	public class TileLayer : IEnumerable<MapTile> {
 		/* 
 		Coordinate formulas

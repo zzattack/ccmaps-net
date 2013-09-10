@@ -159,9 +159,9 @@ namespace CNCMaps.FileFormats {
 				for (int x = 0; x < image.Header.cx; x++) {
 					byte paletteValue = image.ImageData[rIdx];
 					if (paletteValue != 0 && w_low <= w && w < w_high && (props.OverridesZbuffer || zBufVal >= zBuffer[zIdx])) {
-						*(w + 0) = p.colors[paletteValue].B;
-						*(w + 1) = p.colors[paletteValue].G;
-						*(w + 2) = p.colors[paletteValue].R;
+						*(w + 0) = p.Colors[paletteValue].B;
+						*(w + 1) = p.Colors[paletteValue].G;
+						*(w + 2) = p.Colors[paletteValue].R;
 						zBuffer[zIdx] = Math.Max(zBufVal, zBuffer[zIdx]);
 						heightBuffer[zIdx] = (short)(image.Header.cy + obj.Tile.Z * Drawable.TileHeight / 2);
 					}
