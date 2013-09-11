@@ -249,7 +249,7 @@ namespace CNCMaps.FileFormats {
 
 			public double ReadDouble(string key, double defaultValue = 0.0) {
 				double ret;
-				if (double.TryParse(ReadString(key), NumberStyles.Any, culture, out ret))
+				if (double.TryParse(ReadString(key).Replace(',', '.'), NumberStyles.Any, culture, out ret))
 					return ret;
 				else
 					return defaultValue;

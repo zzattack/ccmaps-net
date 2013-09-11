@@ -86,7 +86,8 @@ namespace CNCMaps.Map {
 			int fy = h * (-1 - Width);
 			int rx = (p.X * h + p.Y * w - fx * h - fy * w) / (2 * w * h);
 			int ry = (p.X * -h + p.Y * w + fx * h - fy * w) / (2 * w * h);
-			return GetTileR(rx, ry);
+			var tile_noheight = GetTileR(rx, ry);
+			return tile_noheight != null ? tiles[tile_noheight.Dx, (tile_noheight.Dy + tile_noheight.Z) / 2] : null;
 		}
 
 		#region neighbouring tiles tests (auto-lat tests)

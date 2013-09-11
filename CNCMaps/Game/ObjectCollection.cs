@@ -183,8 +183,14 @@ namespace CNCMaps.Game {
 					drawable.SetAlphaImage(VFS.Open(alphaImageFile) as ShpFile);
 			}
 
+			mainProps.HasShadow = artSection.ReadBool("Shadow", Defaults.GetShadowAssumption(_collectionType));
+			drawable.DrawFlat = rulesSection.ReadBool("DrawFlat", Defaults.GetFlatnessAssumption(_collectionType));
+
 			if (rulesSection.ReadBool("Wall")) {
 				drawable.IsWall = true;
+				drawable.DrawFlat = false;
+				mainProps.ZAdjust += 60;
+				drawable.AddOffset(0, 3);
 				drawable.PaletteType = PaletteType.Unit;
 				drawable.LightingType = LightingType.Ambient;
 				mainProps.FrameDecider = FrameDeciders.OverlayValueFrameDecider;
@@ -192,12 +198,10 @@ namespace CNCMaps.Game {
 
 			if (rulesSection.ReadBool("Gate")) {
 				drawable.IsGate = true;
+				drawable.DrawFlat = false;
 				drawable.PaletteType = PaletteType.Unit;
 				mainProps.FrameDecider = FrameDeciders.NullFrameDecider;
 			}
-
-			mainProps.HasShadow = artSection.ReadBool("Shadow", Defaults.GetShadowAssumption(_collectionType));
-			drawable.DrawFlat = rulesSection.ReadBool("DrawFlat", Defaults.GetFlatnessAssumption(_collectionType));
 
 			if (rulesSection.ReadBool("BridgeRepairHut")) {
 				// xOffset = yOffset = 0; // TOOD: check we really don't need this
@@ -211,13 +215,19 @@ namespace CNCMaps.Game {
 				drawable.LightingType = LightingType.None;
 				drawable.PaletteType = PaletteType.Unit;
 			}
+
 			if (_collectionType == CollectionType.Terrain) {
 				mainProps.Offset.Y += Drawable.TileHeight / 2; // trees and such are placed in the middle of their tile
-				mainProps.ZAdjust += Drawable.TileHeight / 2;
+				//mainProps.ZAdjust += Drawable.TileHeight / 2;
 			}
+			else if (_collectionType == CollectionType.Infantry) {
+				mainProps.Offset.X += Drawable.TileWidth / 2; 
+				mainProps.Offset.Y += Drawable.TileHeight / 2;
+			}
+
 			if (rulesSection.ReadString("Land") == "Rock") {
 				mainProps.Offset.Y += Drawable.TileHeight / 2;
-				mainProps.ZAdjust += Drawable.TileHeight / 2;
+				//mainProps.ZAdjust += Drawable.TileHeight / 2;
 			}
 			else if (rulesSection.ReadString("Land") == "Road") {
 				mainProps.Offset.Y += Drawable.TileHeight / 2;
@@ -254,7 +264,7 @@ namespace CNCMaps.Game {
 						mainProps.OffsetHack = OffsetHacks.RA2BridgeOffsets;
 						mainProps.ShadowOffsetHack = OffsetHacks.RA2BridgeShadowOffsets;
 						drawable.HeightOffset = 4; // for lighting
-						mainProps.ZAdjust = 1 * Drawable.TileHeight;
+						mainProps.ZAdjust = Drawable.TileHeight;
 					}
 				}
 				else if (_engine <= EngineType.Firestorm) {
@@ -322,7 +332,7 @@ namespace CNCMaps.Game {
 							ShadowOffset = mainProps.Offset,
 							SortIndex = ySort,
 							FrameDecider = extraFrameDecider,
-							ZAdjust = -2 * artSection.ReadInt(extraImage + "ZAdjust"),
+							//ZAdjust = artSection.ReadInt(extraImage + "ZAdjust") + mainProps.Offset.Y,
 						};
 						AddImageToObject(drawable, extraImageFileName, props);
 					}
@@ -355,7 +365,7 @@ namespace CNCMaps.Game {
 							Offset = mainProps.Offset,
 							ShadowOffset = mainProps.Offset,
 							FrameDecider = extraFrameDecider,
-							ZAdjust = -artSection.ReadInt(extraImage + "ZAdjust"),
+							//ZAdjust = -artSection.ReadInt(extraImage + "ZAdjust"),
 						};
 						drawable.AddDamagedShp(VFS.Open(extraImageDamagedFileName) as ShpFile, props);
 					}
@@ -518,11 +528,6 @@ namespace CNCMaps.Game {
 			Drawable ret;
 			_drawablesDict.TryGetValue(name, out ret);
 			return ret;
-		}
-
-		public void Draw(GameObject o, DrawingSurface drawingSurface) {
-			Drawable d = GetDrawable(o);
-			d.Draw(o, drawingSurface);
 		}
 
 		public bool HasObject(GameObject o) {

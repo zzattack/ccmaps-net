@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Runtime.InteropServices;
-using System.Runtime.Remoting.Messaging;
 using CNCMaps.FileFormats.Encodings;
 using CNCMaps.Game;
 using CNCMaps.Map;
@@ -152,11 +150,10 @@ namespace CNCMaps.FileFormats {
 					continue; // out of bounds
 				}
 
-				short zBufVal = (short)((obj.Tile.Rx + obj.Tile.Ry + obj.Tile.Z) * Drawable.TileHeight / 2 + props.ZAdjust);
-				// zBufVal += (short)(Header.Height / 2);// + image.Header.y + y);
-				zBufVal += (short)(-Header.Height / 2 + image.Header.y + image.Header.cy);
-				if (!obj.Drawable.DrawFlat)
-					zBufVal += (short)(image.Header.cy - y);
+				short zBufVal = (short)((obj.BaseTile.Rx + obj.BaseTile.Ry + obj.BaseTile.Z) * Drawable.TileHeight / 2 + props.ZAdjust);
+				//zBufVal += (short)(Header.Height / 2);
+				 if (!obj.Drawable.DrawFlat)
+					zBufVal += (short)(Header.Height - image.Header.y - y);
 
 				for (int x = 0; x < image.Header.cx; x++) {
 					byte paletteValue = image.ImageData[rIdx];
@@ -165,7 +162,7 @@ namespace CNCMaps.FileFormats {
 						*(w + 1) = p.Colors[paletteValue].G;
 						*(w + 2) = p.Colors[paletteValue].R;
 						zBuffer[zIdx] = Math.Max(zBufVal, zBuffer[zIdx]);
-						heightBuffer[zIdx] = (short)(image.Header.cy + obj.Tile.Z * Drawable.TileHeight / 2);
+						heightBuffer[zIdx] = (short)(Header.Height + obj.Tile.Z * Drawable.TileHeight / 2);
 					}
 					// Up to the next pixel
 					rIdx++;

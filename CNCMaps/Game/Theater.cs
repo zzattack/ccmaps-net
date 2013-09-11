@@ -191,10 +191,6 @@ namespace CNCMaps.Game {
 			else return null;
 		}
 
-		internal void DrawObject(GameObject o, DrawingSurface drawingSurface) {
-			GetObjectCollection(o).Draw(o, drawingSurface);
-		}
-
 		internal Size GetFoundation(NamedObject v) {
 			if (_buildingTypes.HasObject(v))
 				return _buildingTypes.GetDrawable(v).Foundation;

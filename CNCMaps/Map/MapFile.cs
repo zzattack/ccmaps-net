@@ -405,7 +405,7 @@ namespace CNCMaps.Map {
 			}
 
 			SetStructuresBaseTile(); // requires .Drawable set on objects
-			
+
 			// first preparing all palettes as above, and only now recalculating them 
 			// could save a large amount of work in total
 			RecalculatePalettes();
@@ -472,21 +472,17 @@ namespace CNCMaps.Map {
 					StructureObject s = _structureObjects[x, y];
 					if (s != null && s.BaseTile == null) {
 						// s.BaseTile set means we've already moved it
-						Size foundation = _theater.GetFoundation(s);
-						if (foundation != System.Drawing.Size.Empty) {
-							var baseTile = _tiles.GetTileR(s.Tile.Rx + foundation.Width - 1, s.Tile.Ry + foundation.Height - 1);
-							if (baseTile != null) s.BaseTile = baseTile; // make sure we don't null it
-						}
+						var foundation = s.Drawable.Foundation;
+						var baseTile = _tiles.GetTileR(s.Tile.Rx + foundation.Width - 1, s.Tile.Ry + foundation.Height - 1);
+						s.BaseTile = baseTile ?? s.Tile;
 					}
 
 					// bridges too
 					OverlayObject o = _overlayObjects[x, y];
 					if (o != null && o.BaseTile == null && o.Drawable != null) {
 						Size foundation = o.Drawable.Foundation;
-						if (foundation != System.Drawing.Size.Empty) {
-							var baseTile = _tiles.GetTileR(o.Tile.Rx + foundation.Width - 1, o.Tile.Ry + foundation.Height - 1);
-							if (baseTile != null) o.BaseTile = baseTile; // make sure we don't null it
-						}
+						var baseTile = _tiles.GetTileR(o.Tile.Rx + foundation.Width - 1, o.Tile.Ry + foundation.Height - 1);
+						o.BaseTile = baseTile ?? o.Tile;
 					}
 
 					// and smudges					
@@ -495,7 +491,7 @@ namespace CNCMaps.Map {
 						Size foundation = sm.Drawable.Foundation;
 						if (foundation != System.Drawing.Size.Empty) {
 							var baseTile = _tiles.GetTileR(sm.Tile.Rx + foundation.Width - 1, sm.Tile.Ry + foundation.Height - 1);
-							if (baseTile != null) sm.BaseTile = baseTile; // make sure we don't null it
+							sm.BaseTile = baseTile ?? o.Tile;
 						}
 					}
 
@@ -1020,7 +1016,7 @@ namespace CNCMaps.Map {
 						// redraw objects on here
 						List<GameObject> objs = GetObjectsAt(t.Dx, t.Dy / 2);
 						foreach (GameObject o in objs)
-							_theater.DrawObject(o, _drawingSurface);
+							o.Drawable.Draw(o, _drawingSurface);
 					}
 				}
 			}
@@ -1183,13 +1179,13 @@ namespace CNCMaps.Map {
 					if (_overlayObjects[x, y] == null || !checkFunc(_overlayObjects[x, y])) continue;
 					List<GameObject> objs = GetObjectsAt(x, y);
 					foreach (GameObject o in objs)
-						_theater.DrawObject(o, _drawingSurface);
+						o.Drawable.Draw(o, _drawingSurface);
 				}
 				for (int x = FullSize.Width * 2 - 3; x >= 0; x -= 2) {
 					if (_overlayObjects[x, y] == null || !checkFunc(_overlayObjects[x, y])) continue;
 					List<GameObject> objs = GetObjectsAt(x, y);
 					foreach (GameObject o in objs)
-						_theater.DrawObject(o, _drawingSurface);
+						o.Drawable.Draw(o, _drawingSurface);
 				}
 			}
 		}
@@ -1224,12 +1220,12 @@ namespace CNCMaps.Map {
 				for (int x = FullSize.Width * 2 - 2; x >= 0; x -= 2) {
 					List<GameObject> objs = GetObjectsAt(x, y);
 					foreach (GameObject o in objs)
-						_theater.DrawObject(o, _drawingSurface);
+						o.Drawable.Draw(o, _drawingSurface);
 				}
 				for (int x = FullSize.Width * 2 - 3; x >= 0; x -= 2) {
 					List<GameObject> objs = GetObjectsAt(x, y);
 					foreach (GameObject o in objs)
-						_theater.DrawObject(o, _drawingSurface);
+						o.Drawable.Draw(o, _drawingSurface);
 				}
 
 				double pct = 50 + 50.0 * y / FullSize.Height;
@@ -1508,11 +1504,11 @@ namespace CNCMaps.Map {
 		internal void DebugDrawTile(MapTile tile) {
 			_theater.GetTileCollection().DrawTile(tile, _drawingSurface);
 			foreach (GameObject o in GetObjectsAt(tile.Dx, tile.Dy / 2))
-				_theater.DrawObject(o, _drawingSurface);
+				o.Drawable.Draw(o, _drawingSurface);
 		}
 
 
-		private List<GameObject> GetObjectsAt(int dx, int dy) {
+		internal List<GameObject> GetObjectsAt(int dx, int dy) {
 			var ret = new List<GameObject>();
 
 			if (_smudgeObjects[dx, dy] != null)

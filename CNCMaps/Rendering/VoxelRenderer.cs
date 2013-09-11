@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Drawing.Drawing2D;
 using CNCMaps.FileFormats;
 using CNCMaps.VirtualFileSystem;
 using OpenTK;
@@ -11,10 +12,8 @@ namespace CNCMaps.Rendering {
 		GraphicsContext _ctx;
 		GameWindow _gw;
 
-		readonly float[] _lightPos = { 0f, 0f, 10f, 1.0f };
-		readonly float[] _lightSpec = { 1f, 0.5f, 0f, 0f };
-		readonly float[] _lightDiffuse = { 0.8f, 0.8f, 0.8f, 1f };
-		readonly float[] _lightAmb = { 0.8f, 0.8f, 0.8f, 1f };
+		readonly Vector3 _diffuse = new Vector3(1.0f, 1.0f, 1.0f);
+		readonly Vector3 _ambient = new Vector3(0.8f, 0.8f, 0.8f);
 
 		DrawingSurface vxl_ds;
 		VxlFile _vxlFile;
@@ -23,7 +22,6 @@ namespace CNCMaps.Rendering {
 		VplFile _vplFile;
 
 		int frame;
-		int pitch;
 		double _objectRotation;
 		bool _canRender;
 		bool _isInit;
@@ -31,12 +29,12 @@ namespace CNCMaps.Rendering {
 		int _vertexShader;
 		int _fragmentShader;
 		int _program;
-				
+
 		public void Initialize() {
 			logger.Info("Initializing voxel renderer");
 			_isInit = true;
 
-			vxl_ds = new DrawingSurface(200, 200, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
+			vxl_ds = new DrawingSurface(400, 400, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
 			if (!CreateContext()) {
 				logger.Error("No graphics context could not be initialized, voxel rendering will be unavailable");
 				return;
@@ -48,20 +46,9 @@ namespace CNCMaps.Rendering {
 				logger.Debug("GL functions loaded");
 
 				GL.Enable(EnableCap.DepthTest);
-				GL.Enable(EnableCap.Lighting);
 				GL.Enable(EnableCap.ColorMaterial);
-				GL.Enable(EnableCap.Normalize);
-				//GL.Enable(EnableCap.Blend);
-				GL.ShadeModel(ShadingModel.Smooth);
 
-				GL.Light(LightName.Light0, LightParameter.Position, _lightPos);
-				GL.Light(LightName.Light0, LightParameter.Specular, _lightSpec);
-				GL.Light(LightName.Light0, LightParameter.Ambient, _lightAmb);
-				GL.Light(LightName.Light0, LightParameter.Diffuse, _lightDiffuse);
-				GL.Enable(EnableCap.Light0);
-				GL.ClearColor(0.5f, 0.9f, 0.3f, 0.0f);
-
-				// _vplFile = VFS.Open<VplFile>("voxels.vpl"); 
+				//_vplFile = VFS.Open<VplFile>("voxels.vpl"); 
 				_canRender = SetupFramebuffer();
 			}
 
@@ -69,7 +56,7 @@ namespace CNCMaps.Rendering {
 				logger.Error("Voxel rendering will not be available because an exception occurred while initializing OpenGL: {0}", exc.ToString());
 			}
 		}
-		
+
 		private bool CreateContext() {
 			logger.Debug("Creating graphics context, trying {0} first", Program.Settings.PreferOSMesa ? "OSMesa" : "Window Manager");
 
@@ -81,7 +68,7 @@ namespace CNCMaps.Rendering {
 
 		private bool CreateGameWindow() {
 			try {
-				_gw = new GameWindow(200, 200, GraphicsMode.Default, "", GameWindowFlags.Default);
+				_gw = new GameWindow(vxl_ds.Width, vxl_ds.Height, GraphicsMode.Default, "", GameWindowFlags.Default);
 				return true;
 			}
 			catch {
@@ -115,7 +102,7 @@ namespace CNCMaps.Rendering {
 			if (_ctx != null) _ctx.Dispose();
 			if (_gw != null) _gw.Dispose();
 		}
-		
+
 		public DrawingSurface Render(VxlFile vxlFile, HvaFile hvaFile, double objectRotation, Palette palette) {
 			if (!_isInit) Initialize();
 			if (!_canRender) {
@@ -175,7 +162,7 @@ namespace CNCMaps.Rendering {
 		private void SetupFrameRender() {
 			GL.Viewport(0, 0, vxl_ds.bmd.Width, vxl_ds.bmd.Height);
 			GL.MatrixMode(MatrixMode.Projection);
-			var persp = Matrix4.CreatePerspectiveFieldOfView(45f / 180f * (float)Math.PI, vxl_ds.bmd.Width / (float)vxl_ds.bmd.Height, 2, vxl_ds.bmd.Height);
+			var persp = Matrix4.CreatePerspectiveFieldOfView(30f / 180f * (float)Math.PI, vxl_ds.bmd.Width / (float)vxl_ds.bmd.Height, 2, vxl_ds.bmd.Height);
 			GL.LoadMatrix(ref persp);
 
 			GL.MatrixMode(MatrixMode.Modelview);
@@ -187,7 +174,7 @@ namespace CNCMaps.Rendering {
 			GL.Rotate(180, 0, 1, 0);
 			GL.Rotate(_objectRotation, 0, 0, 1);
 
-			GL.Scale(0.075, 0.075, 0.075);
+			GL.Scale(0.028, 0.028, 0.028);
 		}
 
 		void RenderSection() {
@@ -222,20 +209,34 @@ namespace CNCMaps.Rendering {
 			// Translate to the bottom left of the section's bounding box
 			GL.Translate(min[0], min[1], min[2]);
 
+			float pitch = 50.0f / 180.0f * (float)Math.PI;
+			float yaw = 240.0f / 180.0f * (float)Math.PI;
+			Matrix4 lightDir = Matrix4.Mult(Matrix4.CreateRotationX(pitch), Matrix4.CreateRotationY(yaw));
+			Matrix4 modelView;
+			GL.GetFloat(GetPName.ModelviewMatrix, out modelView);
+
+			var lightTransform = Matrix4.Mult(Matrix4.Invert(modelView), lightDir);
+			var lightDirVec = ExtractRotationVector(ToOpenGL(Matrix4.Mult(Matrix4.Invert(modelView), lightTransform)));
+
 			GL.Begin(BeginMode.Quads);
 			for (uint x = 0; x != xs; x++) {
 				for (uint y = 0; y != ys; y++) {
 					for (uint z = 0; z != zs; z++) {
 						VxlFile.LimbBody.Span.Voxel vx;
 						if (_vxlFile.GetVoxel(x, y, z, out vx)) {
-							byte colorIdx = _vplFile != null ? _vplFile.GetPaletteIndex(vx.normal, _vxlFile.NumNormals(), vx.colour) : vx.colour;
-							GL.Color3(_palette.Colors[colorIdx]);
+							float[] normalf = new float[3];
+							_vxlFile.GetXYZNormal(vx.normal, out normalf);
 
-							float[] normal;
-							_vxlFile.GetXYZNormal(vx.normal, out normal);
-							GL.Normal3(normal);
+							var color = _palette.Colors[vx.colour];
+							Vector3 normal = new Vector3(normalf[0], normalf[1], normalf[2]);
 
-							RenderVoxel(x * sectionScale[0], y * sectionScale[0], z * sectionScale[0], (1.0f - pitch) / 2.0f);
+							Vector3 colorMult = Vector3.Add(_ambient, _diffuse * Math.Max(Vector3.Dot(normal, lightDirVec), 0f));
+							GL.Color3(
+								(byte)Math.Min(255, color.R * colorMult.X), 
+								(byte)Math.Min(255, color.G * colorMult.Y),
+								(byte)Math.Min(255, color.B * colorMult.Z));
+
+							RenderVoxel(x * sectionScale[0], y * sectionScale[0], z * sectionScale[0]);
 						}
 					}
 				}
@@ -244,7 +245,59 @@ namespace CNCMaps.Rendering {
 			GL.PopMatrix();
 		}
 
-		public void RenderVoxel(float cx, float cy, float cz, float r) {
+		static readonly float[] zeroVector = { 0, 0, 0, 1 };
+		static readonly float[] zVector = { 0, 0, 1, 1 };
+		static Vector3 ExtractRotationVector(float[] mtx) {
+			var tVec = MatrixVectorMultiply(mtx, zVector);
+			var tOrigin = MatrixVectorMultiply(mtx, zeroVector);
+			tVec[0] -= tOrigin[0] * tVec[3] / tOrigin[3];
+			tVec[1] -= tOrigin[1] * tVec[3] / tOrigin[3];
+			tVec[2] -= tOrigin[2] * tVec[3] / tOrigin[3];
+
+			// Renormalize
+			var w = (float)Math.Sqrt(tVec[0] * tVec[0] + tVec[1] * tVec[1] + tVec[2] * tVec[2]);
+			tVec[0] /= w;
+			tVec[1] /= w;
+			tVec[2] /= w;
+			tVec[3] = 1f;
+
+			return new Vector3(tVec[0], tVec[1], tVec[2]);
+		}
+
+		static float[] ToOpenGL(Matrix4 source) {
+			var destination = new float[16];
+			destination[00] = source.Column0.X;
+			destination[01] = source.Column1.X;
+			destination[02] = source.Column2.X;
+			destination[03] = source.Column3.X;
+			destination[04] = source.Column0.Y;
+			destination[05] = source.Column1.Y;
+			destination[06] = source.Column2.Y;
+			destination[07] = source.Column3.Y;
+			destination[08] = source.Column0.Z;
+			destination[09] = source.Column1.Z;
+			destination[10] = source.Column2.Z;
+			destination[11] = source.Column3.Z;
+			destination[12] = source.Column0.W;
+			destination[13] = source.Column1.W;
+			destination[14] = source.Column2.W;
+			destination[15] = source.Column3.W;
+			return destination;
+		}
+
+		static float[] MatrixVectorMultiply(float[] mtx, float[] vec) {
+			var ret = new float[4];
+			for (var j = 0; j < 4; j++) {
+				ret[j] = 0;
+				for (var k = 0; k < 4; k++)
+					ret[j] += mtx[4 * k + j] * vec[k];
+			}
+
+			return ret;
+		}
+
+		public void RenderVoxel(float cx, float cy, float cz) {
+			float r = 0.33f;
 			float left = cx - r;
 			float right = cx + r;
 			float fbase = cy - r;

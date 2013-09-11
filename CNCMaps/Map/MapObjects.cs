@@ -61,7 +61,7 @@ namespace CNCMaps.Map {
 		public short Direction { get; set; }
 		public string Owner { get; set; }
 	}
-	public class LightSource : GameObject {
+	public class LightSource : NamedObject {
 		public double LightVisibility { get; set; }
 		public double LightIntensity { get; set; }
 		public double LightRedTint { get; set; }
@@ -75,6 +75,7 @@ namespace CNCMaps.Map {
 
 		public LightSource() { }
 		public LightSource(IniFile.IniSection lamp, Lighting scenario) {
+			Name = lamp.Name;
 			Initialize(lamp, scenario);
 		}
 
