@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Text;
 
 namespace CNCMaps.VirtualFileSystem {
 
@@ -63,6 +65,15 @@ namespace CNCMaps.VirtualFileSystem {
 			}
 			Pos += count;
 			return count;
+		}
+
+		public string ReadCString(int count) {
+			var arr = Read(count);
+			var sb = new StringBuilder();
+			int i = 0;
+			while (i < count && arr[i] != 0)
+				sb.Append((char)arr[i++]);
+			return sb.ToString();
 		}
 
 		public unsafe int Read(byte* buffer, int count) {
@@ -165,11 +176,11 @@ namespace CNCMaps.VirtualFileSystem {
 		}
 
 		public long Remaining {
-			get {return Length - Pos;}
+			get { return Length - Pos; }
 		}
 
 		public bool Eof {
-			get {return Remaining <= 0;}
+			get { return Remaining <= 0; }
 		}
 
 		public override bool CanSeek {

@@ -1,543 +1,642 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
-using System.Runtime.InteropServices;
-using CNCMaps.Utility;
+using CNCMaps.Rendering;
 using CNCMaps.VirtualFileSystem;
+using OpenTK;
 
 namespace CNCMaps.FileFormats {
+	/// <summary>
+	/// Based on descriptions in Red Alert 2 File Format Descriptions by Shiny
+	/// http://www.ppmsite.com/forum/viewtopic.php?t=29369&sid=12b41f85a5578715a87fc323bf834cca
+	/// Uses some helper functions by DCoder1337 from https://github.com/DCoderLT/cncpp/blob/master/CCClasses/FileFormats/Binary/VXL.cs
+	/// </summary>
 
 	public class VxlFile : VirtualFile {
-
 		static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
+		private bool _initialized, _valid = false;
+
+		public FileHeader Header = new FileHeader();
+		public List<Section> Sections = new List<Section>();
 
 		public VxlFile(Stream baseStream, string filename, int baseOffset, int fileSize, bool isBuffered = false)
-			: base(baseStream, filename, baseOffset, fileSize, isBuffered) {
-		}
-
+			: base(baseStream, filename, baseOffset, fileSize, isBuffered) { }
 		public VxlFile(Stream baseStream, string filename = "", bool isBuffered = true)
-			: base(baseStream, filename, isBuffered) {
-		}
+			: base(baseStream, filename, isBuffered) { }
 
-		[StructLayout(LayoutKind.Sequential, Pack = 1)]
-		struct VxlFileHeader {
-			[MarshalAs(UnmanagedType.ByValArray, SizeConst = 16)]
-			public byte[] fileType;	/* "Voxel Animation" */
-			uint unknown;		/* == 1 */
-			public uint numLimbs;		/* Number of limbs/bodies/tailers */
-			public uint numLimbs2;		/* == numLimbs */
-			public uint bodySize;		/* Total size in bytes of all limb bodies */
-			public byte startPaletteRemap;	/* (?) Palette remapping for player colours (?) */
-			public byte endPaletteRemap;
-			[MarshalAs(UnmanagedType.ByValArray, SizeConst = 768)]
-			public byte[] palette;		/* RGB colour palette */
-		}
+		public bool Initialize() {
+			if (_initialized) return _valid;
+			_initialized = true;
 
-		[StructLayout(LayoutKind.Sequential, Pack = 1)]
-		struct LimbHeader {
-			[MarshalAs(UnmanagedType.ByValArray, SizeConst = 16)]
-			public byte[] name;		/* Limb name (Zero terminated) */
-			public uint number;		/* Limb number */
-			uint unknown;		/* == 1 */
-			uint unknown2;		/* == 0 or == 2 (Documentation is contradictory) */
-		}
-
-		[StructLayout(LayoutKind.Sequential, Pack = 1)]
-		struct LimbTailer {
-			public uint spanStartOff;		/* Offset into body section to span start list */
-			public uint spanEndOff;		/* Offset into body section to span end list */
-			public uint spanDataOff;		/* Offset into body section to span data */
-			public float scale;			/* Scale factor for the section always seems to be 0.083333 */
-			[MarshalAs(UnmanagedType.ByValArray, SizeConst = 3 * 4)]
-			public float[] transform;		/* Transformation matrix */
-			[MarshalAs(UnmanagedType.ByValArray, SizeConst = 3)]
-			public float[] minBounds;		/* Voxel bounding box */
-			[MarshalAs(UnmanagedType.ByValArray, SizeConst = 3)]
-			public float[] maxBounds;
-			public byte xSize;			/* Width of voxel limb */
-			public byte ySize;			/* Breadth of voxel limb */
-			public byte zSize;			/* Height of voxel limb */
-			public byte normalType;		/* 2 == TS Normals, 4 == RA2 Normals */
-		}
-
-		public class LimbBody {
-			public int[] spanStart;
-			public int[] spanEnd;
-			public class Span {
-				public byte numVoxels;
-				public struct Voxel {
-					public byte colour;
-					public byte normal;
-					public bool used;
-				}
-				public Voxel[] voxels;
-			}
-			public Span[] span;
-
-			public LimbBody(int nSpans) {
-				span = new Span[nSpans];
-				spanStart = new int[nSpans];
-				spanEnd = new int[nSpans];
-			}
-		}
-
-		bool initialized;
-		VxlFileHeader fileHeader;
-		List<LimbHeader> limbHeaders;
-		List<LimbBody> limbBodies;
-		List<LimbTailer> limbTailers;
-
-		public void Initialize() {
-			if (initialized) return;
-
-			Logger.Debug("Initializing Voxel data for file {0}", FileName);
-
-			fileHeader = EzMarshal.ByteArrayToStructure<VxlFileHeader>(Read(Marshal.SizeOf(typeof(VxlFileHeader))));
-			limbHeaders = new List<LimbHeader>((int)fileHeader.numLimbs);
-			limbBodies = new List<LimbBody>((int)fileHeader.numLimbs);
-			limbTailers = new List<LimbTailer>((int)fileHeader.numLimbs);
-
-			for (int i = 0; i < fileHeader.numLimbs; i++)
-				limbHeaders.Add(EzMarshal.ByteArrayToStructure<LimbHeader>(Read(Marshal.SizeOf(typeof(LimbHeader)))));
-
-			// Save file position after all limb headers (start of limb bodies) */
-			long spansPos = Position;
-			// Skip the limb bodies for now (need the tailers first)
-			Position += fileHeader.bodySize;
-
-			/* Read all the limb tailers */
-			for (int i = 0; i < fileHeader.numLimbs; i++)
-				limbTailers.Add(EzMarshal.ByteArrayToStructure<LimbTailer>(Read(Marshal.SizeOf(typeof(LimbTailer)))));
-
-			for (int i = 0; i < fileHeader.numLimbs; i++) {
-				Position = spansPos;
-				ReadLimbBody(i);
-			}
-
-			Logger.Trace("Loaded voxel {0}; header: {1}, bodies: {2}, tailers: {3}",
-				FileName, limbHeaders.Count, limbBodies.Count, limbTailers.Count);
-
-			initialized = true;
-		}
-
-		unsafe private void ReadLimbBody(int n) {
-			Position += limbTailers[n].spanStartOff;
-			// Calculate the number of spans in the body
-			int nSpans = limbTailers[n].xSize * limbTailers[n].ySize;
-			var b = new LimbBody(nSpans);
-			fixed (int* spans = b.spanStart) {
-				var bSpans = (byte*)spans;
-				Read(bSpans, nSpans * sizeof(int));
-			}
-			fixed (int* spans = b.spanEnd) {
-				var bSpans = (byte*)spans;
-				Read(bSpans, nSpans * sizeof(int));
-			}
-
-			long bodiesStartOff = Position;
-			for (uint j = 0; j < nSpans; j++) {
-				/* Skip any null spans */
-				if (b.spanStart[j] == -1 || b.spanEnd[j] == -1)
-					continue;
-
-				Position = bodiesStartOff + b.spanStart[j];
-				b.span[j] = new LimbBody.Span();
-				DecompressVoxels(b.span[j], limbTailers[n].zSize);
-			}
-			limbBodies.Add(b);
-		}
-
-		private void DecompressVoxels(LimbBody.Span span, byte zSz) {
-			uint z = 0;
-			byte skip;
-			byte nv2, numZ = 0;
-
-			span.voxels = new LimbBody.Span.Voxel[zSz];
-
-			while (z != zSz) {
-				skip = ReadByte();
-				z += skip;
-				if (z >= zSz)
-					break;
-
-				byte nv = ReadByte();
-
-				for (uint i = 0; i != nv; i++) {
-					span.voxels[z].colour = ReadByte();
-					span.voxels[z].normal = ReadByte();
-					span.voxels[z].used = true;
-					z++;
-				}
-				numZ = (byte)z;
-				nv2 = ReadByte();
-			}
-			span.numVoxels = numZ;
-		}
-
-		#region RA2 and TS normals
-		const int RA2_NUM_NORMALS = 244;
-		static float[,] RA2Normals = {
-			{ 0.526578009128571f, -0.359620988368988f, -0.770317018032074f },
-			{ 0.150481998920441f, 0.43598398566246f, 0.887283980846405f },
-			{ 0.414195001125336f, 0.738255023956299f, -0.532374024391174f },
-			{ 0.0751520022749901f, 0.916248977184296f, -0.393498003482819f },
-			{ -0.316148996353149f, 0.930736005306244f, -0.183792993426323f },
-			{ -0.773819029331207f, 0.623333990573883f, -0.112510003149509f },
-			{ -0.900842010974884f, 0.428537011146545f, -0.0695680007338524f },
-			{ -0.998942017555237f, -0.010971000418067f, 0.0446650013327599f },
-			{ -0.979761004447937f, -0.157670006155968f, -0.123323999345303f },
-			{ -0.911274015903473f, -0.362370997667313f, -0.195620000362396f },
-			{ -0.624068975448608f, -0.720941007137299f, -0.301301002502441f },
-			{ -0.310173004865646f, -0.809345006942749f, -0.498751997947693f },
-			{ 0.146613001823425f, -0.815819025039673f, -0.559414029121399f },
-			{ -0.716516017913818f, -0.694356024265289f, -0.0668879970908165f },
-			{ 0.503971993923187f, -0.114202000200748f, -0.856136977672577f },
-			{ 0.455491006374359f, 0.872627019882202f, -0.176210999488831f },
-			{ -0.00500999996438622f, -0.114372998476028f, -0.993425011634827f },
-			{ -0.104675002396107f, -0.32770100235939f, -0.938965022563934f },
-			{ 0.560411989688873f, 0.752588987350464f, -0.345755994319916f },
-			{ -0.0605759993195534f, 0.821627974510193f, -0.566796004772186f },
-			{ -0.302341014146805f, 0.797007024288178f, -0.52284699678421f },
-			{ -0.671543002128601f, 0.670740008354187f, -0.314862996339798f },
-			{ -0.778401017189026f, -0.128356993198395f, 0.614504992961884f },
-			{ -0.924049973487854f, 0.278382003307343f, -0.261985003948212f },
-			{ -0.699773013591766f, -0.550490975379944f, -0.455278009176254f },
-			{ -0.568247973918915f, -0.517189025878906f, -0.640007972717285f },
-			{ 0.0540979988873005f, -0.932864010334015f, -0.356142997741699f },
-			{ 0.758382022380829f, 0.572893023490906f, -0.31088799238205f },
-			{ 0.00362000009045005f, 0.305025994777679f, -0.952337026596069f },
-			{ -0.0608499981462956f, -0.986886024475098f, -0.149510994553566f },
-			{ 0.635230004787445f, 0.0454780012369156f, -0.770982980728149f },
-			{ 0.521704971790314f, 0.241309002041817f, -0.818287014961243f },
-			{ 0.269403994083405f, 0.635424971580505f, -0.723640978336334f },
-			{ 0.0456760004162788f, 0.672753989696503f, -0.73845499753952f },
-			{ -0.180510997772217f, 0.674656987190247f, -0.715718984603882f },
-			{ -0.397130995988846f, 0.636640012264252f, -0.661041975021362f },
-			{ -0.552003979682922f, 0.472514986991882f, -0.687038004398346f },
-			{ -0.772170007228851f, 0.0830899998545647f, -0.629960000514984f },
-			{ -0.669818997383118f, -0.119533002376556f, -0.732840001583099f },
-			{ -0.540454983711243f, -0.318444013595581f, -0.77878201007843f },
-			{ -0.386135011911392f, -0.522789001464844f, -0.759993970394135f },
-			{ -0.26146599650383f, -0.688566982746124f, -0.676394999027252f },
-			{ -0.0194119997322559f, -0.696102976799011f, -0.717679977416992f },
-			{ 0.303568989038467f, -0.481844007968903f, -0.821992993354797f },
-			{ 0.681939005851746f, -0.195129007101059f, -0.704900026321411f },
-			{ -0.244889006018639f, -0.116562001407146f, -0.962518990039825f },
-			{ 0.800759017467499f, -0.0229790005832911f, -0.598546028137207f },
-			{ -0.370274990797043f, 0.0955839976668358f, -0.923991024494171f },
-			{ -0.330671012401581f, -0.326577991247177f, -0.885439991950989f },
-			{ -0.163220003247261f, -0.527579009532928f, -0.833679020404816f },
-			{ 0.126389995217323f, -0.313145995140076f, -0.941256999969482f },
-			{ 0.349548012018204f, -0.272226005792618f, -0.896498024463654f },
-			{ 0.239917993545532f, -0.0858250036835671f, -0.966992020606995f },
-			{ 0.390845000743866f, 0.0815370008349419f, -0.916837990283966f },
-			{ 0.2552669942379f, 0.268696993589401f, -0.928785026073456f },
-			{ 0.146245002746582f, 0.480437994003296f, -0.864749014377594f },
-			{ -0.326016008853912f, 0.478455990552902f, -0.815348982810974f },
-			{ -0.46968200802803f, -0.112519003450871f, -0.875635981559753f },
-			{ 0.818440020084381f, -0.258520007133484f, -0.513150990009308f },
-			{ -0.474317997694015f, 0.292237997055054f, -0.830433011054993f },
-			{ 0.778943002223969f, 0.395841985940933f, -0.486371010541916f },
-			{ 0.624094009399414f, 0.39377298951149f, -0.674870014190674f },
-			{ 0.740885972976685f, 0.203833997249603f, -0.639953017234802f },
-			{ 0.480217009782791f, 0.565768003463745f, -0.670297026634216f },
-			{ 0.380930006504059f, 0.424535006284714f, -0.821377992630005f },
-			{ -0.0934220030903816f, 0.501124024391174f, -0.860318005084991f },
-			{ -0.236485004425049f, 0.296198010444641f, -0.925387024879456f },
-			{ -0.131531000137329f, 0.0939590036869049f, -0.986849009990692f },
-			{ -0.823562026023865f, 0.29577699303627f, -0.484005987644196f },
-			{ 0.611065983772278f, -0.624303996562958f, -0.486663997173309f },
-			{ 0.0694959983229637f, -0.520330011844635f, -0.851132988929748f },
-			{ 0.226521998643875f, -0.664879024028778f, -0.711775004863739f },
-			{ 0.471307992935181f, -0.568903982639313f, -0.673956990242004f },
-			{ 0.38842499256134f, -0.74262398481369f, -0.545560002326965f },
-			{ 0.783675014972687f, -0.480729013681412f, -0.393384993076324f },
-			{ 0.962393999099731f, 0.135675996541977f, -0.235348999500275f },
-			{ 0.876607000827789f, 0.172033995389938f, -0.449405997991562f },
-			{ 0.633405029773712f, 0.589793026447296f, -0.500940978527069f },
-			{ 0.182275995612144f, 0.800657987594605f, -0.570720970630646f },
-			{ 0.177002996206284f, 0.764133989810944f, 0.620297014713287f },
-			{ -0.544016003608704f, 0.675514996051788f, -0.497720986604691f },
-			{ -0.679296970367432f, 0.286466985940933f, -0.675642013549805f },
-			{ -0.590390980243683f, 0.0913690030574799f, -0.801928997039795f },
-			{ -0.824360013008118f, -0.133123993873596f, -0.550189018249512f },
-			{ -0.715794026851654f, -0.334542006254196f, -0.612960994243622f },
-			{ 0.174285992980003f, -0.8924840092659f, 0.416049003601074f },
-			{ -0.0825280025601387f, -0.837122976779938f, -0.54075300693512f },
-			{ 0.283331006765366f, -0.88087397813797f, -0.379189014434814f },
-			{ 0.675134003162384f, -0.42662701010704f, -0.601817011833191f },
-			{ 0.843720018863678f, -0.512335002422333f, -0.16015599668026f },
-			{ 0.977303981781006f, -0.0985559970140457f, -0.187519997358322f },
-			{ 0.84629499912262f, 0.52267199754715f, -0.102946996688843f },
-			{ 0.677141010761261f, 0.721324980258942f, -0.145501002669334f },
-			{ 0.320964992046356f, 0.870891988277435f, -0.372193992137909f },
-			{ -0.178977996110916f, 0.911532998085022f, -0.37023600935936f },
-			{ -0.447169005870819f, 0.826700985431671f, -0.341473996639252f },
-			{ -0.703203022480011f, 0.496327996253967f, -0.50908100605011f },
-			{ -0.977181017398834f, 0.0635629966855049f, -0.202674001455307f },
-			{ -0.878170013427734f, -0.412937998771667f, 0.241455003619194f },
-			{ -0.835830986499786f, -0.358550012111664f, -0.415728002786636f },
-			{ -0.499173998832703f, -0.693432986736298f, -0.519591987133026f },
-			{ -0.188788995146751f, -0.923753023147583f, -0.333225011825562f },
-			{ 0.19225400686264f, -0.969361007213593f, -0.152896001935005f },
-			{ 0.515940010547638f, -0.783906996250153f, -0.345391988754272f },
-			{ 0.90592497587204f, -0.300951987504959f, -0.297870993614197f },
-			{ 0.991111993789673f, -0.127746000885963f, 0.0371069982647896f },
-			{ 0.995135009288788f, 0.0984240025281906f, -0.0043830000795424f },
-			{ 0.760123014450073f, 0.646277010440826f, 0.0673670023679733f },
-			{ 0.205220997333527f, 0.95958000421524f, -0.192590996623039f },
-			{ -0.0427500009536743f, 0.979512989521027f, -0.196790993213654f },
-			{ -0.438017010688782f, 0.898926973342895f, 0.00849200040102005f },
-			{ -0.821994006633759f, 0.480785012245178f, -0.305238991975784f },
-			{ -0.899917006492615f, 0.0817100033164024f, -0.428337007761002f },
-			{ -0.926612019538879f, -0.144618004560471f, -0.347095996141434f },
-			{ -0.79365998506546f, -0.557792007923126f, -0.242838993668556f },
-			{ -0.431349992752075f, -0.847778975963593f, -0.308557987213135f },
-			{ -0.00549199990928173f, -0.964999973773956f, 0.262192994356155f },
-			{ 0.587904989719391f, -0.804026007652283f, -0.0889400020241737f },
-			{ 0.699492990970612f, -0.667685985565186f, -0.254765003919601f },
-			{ 0.889303028583527f, 0.35979500412941f, -0.282290995121002f },
-			{ 0.780972003936768f, 0.197036996483803f, 0.592671990394592f },
-			{ 0.520120978355408f, 0.506695985794067f, 0.687556982040405f },
-			{ 0.403894990682602f, 0.693961024284363f, 0.59605997800827f },
-			{ -0.154982998967171f, 0.899236023426056f, 0.409090012311935f },
-			{ -0.65733802318573f, 0.537168025970459f, 0.528542995452881f },
-			{ -0.746195018291473f, 0.334091007709503f, 0.57582700252533f },
-			{ -0.624952018260956f, -0.0491439998149872f, 0.77911502122879f },
-			{ 0.318141013383865f, -0.254714995622635f, 0.913185000419617f },
-			{ -0.555896997451782f, 0.405294001102447f, 0.725751996040344f },
-			{ -0.794434010982513f, 0.0994059965014458f, 0.599160015583038f },
-			{ -0.64036101102829f, -0.689463019371033f, 0.3384949862957f },
-			{ -0.126712992787361f, -0.734094977378845f, 0.667119979858398f },
-			{ 0.105457000434399f, -0.780816972255707f, 0.615795016288757f },
-			{ 0.407992988824844f, -0.480915993452072f, 0.776054978370666f },
-			{ 0.69513601064682f, -0.545120000839233f, 0.468647003173828f },
-			{ 0.973191022872925f, -0.00648899981752038f, 0.229908004403114f },
-			{ 0.946893990039825f, 0.31750899553299f, -0.0507990010082722f },
-			{ 0.563583016395569f, 0.825612008571625f, 0.0271829999983311f },
-			{ 0.325773000717163f, 0.945423007011414f, 0.00694900006055832f },
-			{ -0.171820998191834f, 0.985096991062164f, -0.00781499966979027f },
-			{ -0.670440971851349f, 0.739938974380493f, 0.0547689981758594f },
-			{ -0.822980999946594f, 0.554961979389191f, 0.121321998536587f },
-			{ -0.96619302034378f, 0.117857001721859f, 0.229306995868683f },
-			{ -0.953769028186798f, -0.294703990221024f, 0.0589450001716614f },
-			{ -0.864386975765228f, -0.50272798538208f, -0.0100149996578693f },
-			{ -0.530609011650085f, -0.842006027698517f, -0.0973659977316856f },
-			{ -0.16261799633503f, -0.984075009822845f, 0.071772001683712f },
-			{ 0.081446997821331f, -0.996011018753052f, 0.0364390015602112f },
-			{ 0.745984017848968f, -0.665962994098663f, 0.000761999981477857f },
-			{ 0.942057013511658f, -0.329268991947174f, -0.0641060024499893f },
-			{ 0.939701974391937f, -0.2810899913311f, 0.19480299949646f },
-			{ 0.771214008331299f, 0.550670027732849f, 0.319362998008728f },
-			{ 0.641348004341126f, 0.730690002441406f, 0.234020993113518f },
-			{ 0.0806820020079613f, 0.996690988540649f, 0.00987899955362082f },
-			{ -0.0467250011861324f, 0.976643025875092f, 0.209725007414818f },
-			{ -0.531076014041901f, 0.821000993251801f, 0.209562003612518f },
-			{ -0.695815026760101f, 0.65599000453949f, 0.292434990406036f },
-			{ -0.97612202167511f, 0.21670900285244f, -0.0149130001664162f },
-			{ -0.961660981178284f, -0.144128993153572f, 0.233313992619514f },
-			{ -0.77208399772644f, -0.613646984100342f, 0.165298998355865f },
-			{ -0.449600011110306f, -0.836059987545013f, 0.314426004886627f },
-			{ -0.392699986696243f, -0.914615988731384f, 0.0962470024824142f },
-			{ 0.390588998794556f, -0.919470012187958f, 0.0448900014162064f },
-			{ 0.582529008388519f, -0.799197971820831f, 0.148127004504204f },
-			{ 0.866430997848511f, -0.489811986684799f, 0.0968639999628067f },
-			{ 0.904586970806122f, 0.11149799823761f, 0.411449998617172f },
-			{ 0.953536987304687f, 0.232329994440079f, 0.191806003451347f },
-			{ 0.497310996055603f, 0.770802974700928f, 0.398176997900009f },
-			{ 0.194066002964973f, 0.956319987773895f, 0.218611001968384f },
-			{ 0.422876000404358f, 0.882275998592377f, 0.206797003746033f },
-			{ -0.373796999454498f, 0.849565982818604f, 0.372173994779587f },
-			{ -0.534497022628784f, 0.714022994041443f, 0.452199995517731f },
-			{ -0.881826996803284f, 0.237159997224808f, 0.407597988843918f },
-			{ -0.904947996139526f, -0.0140690002590418f, 0.425289005041122f },
-			{ -0.751827001571655f, -0.512817025184631f, 0.414458006620407f },
-			{ -0.50101500749588f, -0.697916984558105f, 0.511758029460907f },
-			{ -0.235190004110336f, -0.925922989845276f, 0.295554995536804f },
-			{ 0.228982999920845f, -0.953939974308014f, 0.193819001317024f },
-			{ 0.734025001525879f, -0.634898006916046f, 0.241062000393867f },
-			{ 0.913752973079681f, -0.0632530003786087f, -0.401315987110138f },
-			{ 0.905735015869141f, -0.161486998200417f, 0.391874998807907f },
-			{ 0.858929991722107f, 0.342445999383926f, 0.380748987197876f },
-			{ 0.624486029148102f, 0.60758101940155f, 0.490776985883713f },
-			{ 0.289263993501663f, 0.857478976249695f, 0.425507992506027f },
-			{ 0.0699680000543594f, 0.902168989181519f, 0.425671011209488f },
-			{ -0.28617998957634f, 0.940699994564056f, 0.182164996862411f },
-			{ -0.574012994766235f, 0.805118978023529f, -0.149308994412422f },
-			{ 0.111258000135422f, 0.0997179970145225f, -0.988776028156281f },
-			{ -0.305393010377884f, -0.944227993488312f, -0.123159997165203f },
-			{ -0.601166009902954f, -0.78957599401474f, 0.123162999749184f },
-			{ -0.290645003318787f, -0.812139987945557f, 0.505918979644775f },
-			{ -0.064920000731945f, -0.877162992954254f, 0.475784987211227f },
-			{ 0.408300995826721f, -0.862215995788574f, 0.299789011478424f },
-			{ 0.566097021102905f, -0.725566029548645f, 0.391263991594315f },
-			{ 0.839363992214203f, -0.427386999130249f, 0.335869014263153f },
-			{ 0.818899989128113f, -0.0413050018250942f, 0.572448015213013f },
-			{ 0.719784021377564f, 0.414997011423111f, 0.556496977806091f },
-			{ 0.881744027137756f, 0.450269997119904f, 0.140659004449844f },
-			{ 0.40182301402092f, -0.898220002651215f, -0.178151994943619f },
-			{ -0.0540199987590313f, 0.791343986988068f, 0.608980000019074f },
-			{ -0.293774008750916f, 0.763993978500366f, 0.574464976787567f },
-			{ -0.450798004865646f, 0.610346972942352f, 0.651350975036621f },
-			{ -0.638221025466919f, 0.186693996191025f, 0.746873021125793f },
-			{ -0.872870028018951f, -0.257126986980438f, 0.414707988500595f },
-			{ -0.587257027626038f, -0.521709978580475f, 0.618827998638153f },
-			{ -0.353657990694046f, -0.641973972320557f, 0.680290997028351f },
-			{ 0.0416489988565445f, -0.611272990703583f, 0.79032301902771f },
-			{ 0.348342001438141f, -0.779182970523834f, 0.521086990833282f },
-			{ 0.499166995286942f, -0.622440993785858f, 0.602825999259949f },
-			{ 0.790018975734711f, -0.3038310110569f, 0.53250002861023f },
-			{ 0.660117983818054f, 0.0607330016791821f, 0.748701989650726f },
-			{ 0.604920983314514f, 0.29416099190712f, 0.739960014820099f },
-			{ 0.38569700717926f, 0.379346013069153f, 0.841032028198242f },
-			{ 0.239693000912666f, 0.207875996828079f, 0.948332011699677f },
-			{ 0.012622999958694f, 0.258531987667084f, 0.965919971466065f },
-			{ -0.100556999444962f, 0.457147002220154f, 0.883687973022461f },
-			{ 0.0469669997692108f, 0.628588020801544f, 0.776319026947021f },
-			{ -0.430391013622284f, -0.445405006408691f, 0.785097002983093f },
-			{ -0.434291005134583f, -0.196227997541428f, 0.879139006137848f },
-			{ -0.256637006998062f, -0.33686700463295f, 0.905902028083801f },
-			{ -0.131372004747391f, -0.158910006284714f, 0.978514015674591f },
-			{ 0.102379001677036f, -0.208766996860504f, 0.972591996192932f },
-			{ 0.195686995983124f, -0.450129002332687f, 0.871258020401001f },
-			{ 0.627318978309631f, -0.42314800620079f, 0.653770983219147f },
-			{ 0.687439024448395f, -0.171582996845245f, 0.70568197965622f },
-			{ 0.275920003652573f, -0.021254999563098f, 0.960946023464203f },
-			{ 0.459367007017136f, 0.157465994358063f, 0.874177992343903f },
-			{ 0.285394996404648f, 0.583184003829956f, 0.760555982589722f },
-			{ -0.812174022197723f, 0.460303008556366f, 0.358460992574692f },
-			{ -0.189068004488945f, 0.641223013401032f, 0.743698000907898f },
-			{ -0.338874995708466f, 0.476480007171631f, 0.811251997947693f },
-			{ -0.920993983745575f, 0.347185999155045f, 0.176726996898651f },
-			{ 0.0406389981508255f, 0.024465000256896f, 0.998874008655548f },
-			{ -0.739131987094879f, -0.353747010231018f, 0.573189973831177f },
-			{ -0.603511989116669f, -0.286615014076233f, 0.744059979915619f },
-			{ -0.188675999641418f, -0.547058999538422f, 0.815554022789001f },
-			{ -0.0260450001806021f, -0.397819995880127f, 0.917093992233276f },
-			{ 0.267897009849548f, -0.649040997028351f, 0.712023019790649f },
-			{ 0.518245995044708f, -0.28489100933075f, 0.806385993957519f },
-			{ 0.493450999259949f, -0.0665329992771149f, 0.867224991321564f },
-			{ -0.328188002109528f, 0.140250995755196f, 0.934143006801605f },
-			{ -0.328188002109528f, 0.140250995755196f, 0.934143006801605f },
-			{ -0.328188002109528f, 0.140250995755196f, 0.934143006801605f },
-			{ -0.328188002109528f, 0.140250995755196f, 0.934143006801605f }
-		};
-
-		const int TS_NUM_NORMALS = 36;
-		static float[,] TSNormals = {
-			{ 0.671213984489441f, 0.198492005467415f, -0.714193999767303f, },
-			{ 0.269643008708954f, 0.584393978118897f, -0.765359997749329f, },
-			{ -0.0405460000038147f, 0.0969879999756813f, -0.994458973407745f, },
-			{ -0.572427988052368f, -0.0919139981269836f, -0.814786970615387f, },
-			{ -0.171400994062424f, -0.572709977626801f, -0.801639020442963f, },
-			{ 0.362556993961334f, -0.30299898982048f, -0.881331026554108f, },
-			{ 0.810347020626068f, -0.348971992731094f, -0.470697999000549f, },
-			{ 0.103961996734142f, 0.938672006130218f, -0.328767001628876f, },
-			{ -0.32404699921608f, 0.587669014930725f, -0.741375982761383f, },
-			{ -0.800864994525909f, 0.340460985898972f, -0.492646992206574f, },
-			{ -0.665498018264771f, -0.590147018432617f, -0.456988990306854f, },
-			{ 0.314767003059387f, -0.803001999855042f, -0.506072998046875f, },
-			{ 0.972629010677338f, 0.151076003909111f, -0.176550000905991f, },
-			{ 0.680290997028351f, 0.684235990047455f, -0.262726992368698f, },
-			{ -0.520079016685486f, 0.827777028083801f, -0.210482999682426f, },
-			{ -0.961643993854523f, -0.179001003503799f, -0.207846999168396f, },
-			{ -0.262713998556137f, -0.937451004981995f, -0.228401005268097f, },
-			{ 0.219706997275352f, -0.971301019191742f, 0.0911249965429306f, },
-			{ 0.923807978630066f, -0.229975000023842f, 0.306086987257004f, },
-			{ -0.0824889987707138f, 0.970659971237183f, 0.225866004824638f, },
-			{ -0.591798007488251f, 0.696789979934692f, 0.405288994312286f, },
-			{ -0.925296008586884f, 0.36660099029541f, 0.0971110016107559f, },
-			{ -0.705051004886627f, -0.687775015830994f, 0.172828003764153f, },
-			{ 0.732400000095367f, -0.680366992950439f, -0.0263049993664026f, },
-			{ 0.855162024497986f, 0.37458199262619f, 0.358310997486114f, },
-			{ 0.473006010055542f, 0.836480021476746f, 0.276704996824265f, },
-			{ -0.0976170003414154f, 0.654111981391907f, 0.750072002410889f, },
-			{ -0.904124021530151f, -0.153724998235703f, 0.398658007383347f, },
-			{ -0.211915999650955f, -0.858089983463287f, 0.467732012271881f, },
-			{ 0.500226974487305f, -0.67440801858902f, 0.543090999126434f, },
-			{ 0.584538996219635f, -0.110248997807503f, 0.8038409948349f, },
-			{ 0.437373012304306f, 0.454643994569778f, 0.775888979434967f, },
-			{ -0.0424409992992878f, 0.0833180025219917f, 0.995618999004364f, },
-			{ -0.596251010894775f, 0.220131993293762f, 0.772028028964996f, },
-			{ -0.50645500421524f, -0.396977007389069f, 0.765448987483978f, },
-			{ 0.0705690011382103f, -0.478473991155624f, 0.875262022018433f, },
-		};
-		#endregion
-
-		int _curSection;
-		internal void SetSection(int section) {
-			_curSection = section;
-		}
-
-		internal float GetScale() {
-			return limbTailers[_curSection].scale;
-		}
-
-		internal bool GetVoxel(uint x, uint y, uint z, out LimbBody.Span.Voxel vx) {
-			uint sn = (y * limbTailers[_curSection].xSize) + x;
-			if (limbBodies[_curSection].spanStart[sn] == -1 || limbBodies[_curSection].spanEnd[sn] == -1) {
-				vx = new LimbBody.Span.Voxel();
+			if (Length < FileHeader.Size)
 				return false;
-			}
-			if (z >= limbBodies[_curSection].span[sn].numVoxels) {
-				vx = new LimbBody.Span.Voxel();
+
+			Header.Read(this);
+			if (Header.HeaderCount == 0 || Header.TailerCount == 0 || Header.TailerCount != Header.HeaderCount)
 				return false;
+
+			// start with headers
+			for (int i = 0; i < Header.HeaderCount; ++i) {
+				Sections.Add(new Section(i));
+				Sections[i].ReadHeader(this);
 			}
-			var tmp = limbBodies[_curSection].span[sn].voxels[z];
-			if (tmp.used) {
-				vx = tmp;
+
+			// then we need tailers before before bodies can be constructed
+			long bodyStart = this.Position;
+			Seek(Header.BodySize, SeekOrigin.Current);
+			for (int i = 0; i < Header.TailerCount; ++i)
+				Sections[i].ReadTailer(this);
+
+			for (int i = 0; i < Header.HeaderCount; ++i) {
+				Seek(bodyStart, SeekOrigin.Begin);
+				Sections[i].ReadBodySpans(this);
+			}
+
+			_valid = true;
+			return _valid;
+		}
+
+		public class FileHeader {
+			public const int Size = 32;
+
+			public string FileName;
+			public uint PaletteCount;
+			public uint HeaderCount;
+			public uint TailerCount;
+			public uint BodySize;
+			public byte PaletteRemapStart;
+			public byte PaletteRemapEnd;
+			public Palette Palette; // not actually used
+
+			public bool Read(VxlFile f) {
+				FileName = f.ReadCString(16);
+				PaletteCount = f.ReadUInt32();
+				HeaderCount = f.ReadUInt32();
+				TailerCount = f.ReadUInt32();
+				Debug.Assert(HeaderCount == TailerCount);
+				BodySize = f.ReadUInt32();
+				PaletteRemapStart = f.ReadByte();
+				PaletteRemapEnd = f.ReadByte();
+				Palette = new Palette(f.Read(768), "voxel palette");
 				return true;
 			}
-			else {
-				vx = new LimbBody.Span.Voxel();
-				return false;
+
+		};
+
+		public class Voxel {
+			public byte X, Y;
+			public byte Z;
+			public byte ColorIndex;
+			public byte NormalIndex;
+		};
+
+		public class SectionSpan {
+			public byte X, Y;
+			public int StartIndex;
+			public int EndIndex;
+
+			public byte Height;
+
+			public List<Voxel> Voxels = new List<Voxel>();
+
+			public int SpanLength {
+				get { return (EndIndex - StartIndex) + 1; }
 			}
-		}
 
-		internal void GetXYZNormal(byte normalNum, out float[] normal) {
-			normal = new float[3];
+			public void Read(VirtualFile f) {
+				if (StartIndex == -1 || EndIndex == -1)
+					return;
 
-			if (limbTailers[_curSection].normalType == 2) {
-				if (normalNum >= TS_NUM_NORMALS)
-					normalNum = TS_NUM_NORMALS - 1;
-				normal[0] = TSNormals[normalNum, 0];
-				normal[1] = TSNormals[normalNum, 1];
-				normal[2] = TSNormals[normalNum, 2];
+				for (byte z = 0; z < Height;) {
+					z += f.ReadByte(); // skip
+					byte c = f.ReadByte(); // numvoxels
+					for (var i = 0; i < c; ++i)
+						Voxels.Add(new Voxel { X = X, Y = Y, Z = z++, ColorIndex = f.ReadByte(), NormalIndex = f.ReadByte() });
+					byte c2 = f.ReadByte(); // numvoxels, repeated
+				}
 			}
-			else if (limbTailers[_curSection].normalType == 4) {
-				if (normalNum >= RA2_NUM_NORMALS)
-					normalNum = RA2_NUM_NORMALS - 1;
-				normal[0] = RA2Normals[normalNum, 0];
-				normal[1] = RA2Normals[normalNum, 1];
-				normal[2] = RA2Normals[normalNum, 2];
+		};
+
+		public class TransfMatrix {
+			public Vector4[] V = new Vector4[3];
+
+			public void Read(VxlFile f) {
+				for (var i = 0; i < 3; ++i) {
+					V[i].X = f.ReadFloat();
+					V[i].Y = f.ReadFloat();
+					V[i].Z = f.ReadFloat();
+					V[i].W = f.ReadFloat();
+				}
 			}
-		}
+		};
 
-		public byte NumNormals() {
-			if (limbTailers[_curSection].normalType == 2) return TS_NUM_NORMALS;
-			else if (limbTailers[_curSection].normalType == 4) return RA2_NUM_NORMALS;
-			return 0;
-		}
+		public class Section {
+			public Section(int index) {
+				Index = index;
+			}
 
-		internal void GetBounds(out float[] min, out float[] max) {
-			min = new float[3];
-			max = new float[3];
-			min[0] = limbTailers[_curSection].minBounds[0];
-			min[1] = limbTailers[_curSection].minBounds[1];
-			min[2] = limbTailers[_curSection].minBounds[2];
+			public int Index;
+			// header
+			public string Name;
+			public uint LimbNumber;
+			public uint unknown1;
+			public uint unknown2;
 
-			max[0] = limbTailers[_curSection].maxBounds[0];
-			max[1] = limbTailers[_curSection].maxBounds[1];
-			max[2] = limbTailers[_curSection].maxBounds[2];
-		}
+			// body
+			public SectionSpan[,] Spans;
 
-		internal void GetSize(out byte xs, out byte ys, out byte zs) {
-			xs = limbTailers[_curSection].xSize;
-			ys = limbTailers[_curSection].ySize;
-			zs = limbTailers[_curSection].zSize;
-		}
+			// tailer
+			public UInt32 StartingSpanOffset;
+			public UInt32 EndingSpanOffset;
+			public UInt32 DataSpanOffset;
+			public float HVAMultiplier;
+			public TransfMatrix TM = new TransfMatrix();
+			public Vector3 MinBounds = new Vector3();
+			public Vector3 MaxBounds = new Vector3();
+			public byte SizeX;
+			public byte SizeY;
+			public byte SizeZ;
+			public byte NormalsMode;
 
-		internal int NumSections() {
-			return (int)fileHeader.numLimbs;
-		}
+			public float SpanX {
+				get { return MaxBounds.X - MinBounds.X; }
+			}
+			public float SpanY {
+				get { return MaxBounds.Y - MinBounds.Y; }
+			}
+			public float SpanZ {
+				get { return MaxBounds.Z - MinBounds.Z; }
+			}
+			public float ScaleX {
+				get { return SpanX * 1.0f / SizeX; }
+			}
+			public float ScaleY {
+				get { return SpanY * 1.0f / SizeY; }
+			}
+			public float ScaleZ {
+				get { return SpanZ * 1.0f / SizeZ; }
+			}
+			public Vector3 Scale {
+				get { return new Vector3(ScaleX, ScaleY, ScaleZ); }
+			}
+
+			public bool ReadHeader(VxlFile f) {
+				Name = f.ReadCString(16);
+				LimbNumber = f.ReadUInt32();
+				unknown1 = f.ReadUInt32();
+				unknown2 = f.ReadUInt32();
+				return true;
+			}
+
+			public void ReadBodySpans(VxlFile f) {
+				// need to have position at start of bodies
+				f.Seek(StartingSpanOffset, SeekOrigin.Current);
+				Spans = new SectionSpan[SizeX, SizeY];
+
+				for (byte y = 0; y < SizeY; ++y) {
+					for (byte x = 0; x < SizeX; ++x) {
+						var s = new SectionSpan();
+						s.StartIndex = f.ReadInt32();
+						s.Height = SizeZ;
+						s.X = x;
+						s.Y = y;
+						Spans[x, y] = s;
+					}
+				}
+				for (byte y = 0; y < SizeY; ++y)
+					for (byte x = 0; x < SizeX; ++x)
+						Spans[x, y].EndIndex = f.ReadInt32();
+
+				for (byte y = 0; y < SizeY; ++y) {
+					for (byte x = 0; x < SizeX; ++x) {
+						Spans[x, y].Read(f);
+					}
+				}
+			}
+
+			public bool ReadTailer(VxlFile f) {
+				StartingSpanOffset = f.ReadUInt32();
+				EndingSpanOffset = f.ReadUInt32();
+				DataSpanOffset = f.ReadUInt32();
+				HVAMultiplier = f.ReadFloat();
+				TM.Read(f);
+				MinBounds.X = f.ReadFloat();
+				MinBounds.Y = f.ReadFloat();
+				MinBounds.Z = f.ReadFloat();
+				MaxBounds.X = f.ReadFloat();
+				MaxBounds.Y = f.ReadFloat();
+				MaxBounds.Z = f.ReadFloat();
+
+				SizeX = f.ReadByte();
+				SizeY = f.ReadByte();
+				SizeZ = f.ReadByte();
+				NormalsMode = f.ReadByte();
+
+				return true;
+			}
+
+			public Vector3[] GetNormals() {
+				switch (NormalsMode) {
+					case 1:
+						return Normals1;
+					case 2:
+						return Normals2;
+					case 3:
+						return Normals3;
+					case 4:
+						return Normals4;
+					default:
+						throw new ArgumentException();
+				}
+			}
+
+			public Voxel GetVoxel(uint x, uint y, uint z) {
+				if (x < Spans.GetLength(0) && y < Spans.GetLength(1) && z < Spans[x, y].Voxels.Count)
+					return Spans[x, y].Voxels[(int)z];
+				return null;
+			}
+		};
+
+
+
+		#region Normal Tables
+
+		public static readonly Vector3[] Normals1 = new Vector3[] {
+            new Vector3(0.54946297f, -0.000183f, -0.835518f),
+            new Vector3(0.00014400001f, 0.54940403f, -0.83555698f),
+            new Vector3(-0.54940403f, -0.000068000001f, -0.83555698f),
+            new Vector3(0.000106f, -0.54946297f, -0.835518f),
+            new Vector3(0.94900799f, 0.00031599999f, -0.31525001f),
+            new Vector3(-0.000186f, 0.94899702f, -0.31528401f),
+            new Vector3(-0.94899702f, 0.00031800001f, -0.31528401f),
+            new Vector3(-0.000447f, -0.94900799f, -0.31525001f),
+            new Vector3(0.95084399f, -0.000279f, 0.30967101f),
+            new Vector3(0.000202f, 0.95084798f, 0.30965701f),
+            new Vector3(-0.95084798f, -0.000070000002f, 0.30965701f),
+            new Vector3(0.000147f, -0.95084399f, 0.30967101f),
+            new Vector3(0.55237001f, -0.000011f, 0.83359897f),
+            new Vector3(0.000019999999f, 0.55238003f, 0.833592f),
+            new Vector3(-0.55238003f, 0.000057000001f, 0.83359301f),
+            new Vector3(-0.000066000001f, -0.55237001f, 0.83359897f),
+        };
+
+		public static readonly Vector3[] Normals2 = new Vector3[] {
+            new Vector3(0.67121398f, 0.19849201f, -0.714194f),
+            new Vector3(0.26964301f, 0.58439398f, -0.76536f),
+            new Vector3(-0.040546f, 0.096988f, -0.99445897f),
+            new Vector3(-0.57242799f, -0.091913998f, -0.81478697f),
+            new Vector3(-0.17140099f, -0.57270998f, -0.80163902f),
+            new Vector3(0.36255699f, -0.30299899f, -0.88133103f),
+            new Vector3(0.81034702f, -0.34897199f, -0.470698f),
+            new Vector3(0.103962f, 0.93867201f, -0.328767f),
+            new Vector3(-0.324047f, 0.58766901f, -0.74137598f),
+            new Vector3(-0.80086499f, 0.34046099f, -0.49264699f),
+            new Vector3(-0.66549802f, -0.59014702f, -0.45698899f),
+            new Vector3(0.314767f, -0.803002f, -0.506073f),
+            new Vector3(0.97262901f, 0.151076f, -0.17655f),
+            new Vector3(0.680291f, 0.68423599f, -0.26272699f),
+            new Vector3(-0.52007902f, 0.82777703f, -0.210483f),
+            new Vector3(-0.96164399f, -0.179001f, -0.207847f),
+            new Vector3(-0.262714f, -0.937451f, -0.22840101f),
+            new Vector3(0.219707f, -0.97130102f, 0.091124997f),
+            new Vector3(0.92380798f, -0.229975f, 0.30608699f),
+            new Vector3(-0.082488999f, 0.97065997f, 0.225866f),
+            new Vector3(-0.59179801f, 0.69678998f, 0.40528899f),
+            new Vector3(-0.92529601f, 0.36660099f, 0.097111002f),
+            new Vector3(-0.705051f, -0.68777502f, 0.172828f),
+            new Vector3(0.7324f, -0.68036699f, -0.026304999f),
+            new Vector3(0.85516202f, 0.37458199f, 0.358311f),
+            new Vector3(0.47300601f, 0.83648002f, 0.276705f),
+            new Vector3(-0.097617f, 0.65411198f, 0.750072f),
+            new Vector3(-0.90412402f, -0.153725f, 0.39865801f),
+            new Vector3(-0.211916f, -0.85808998f, 0.46773201f),
+            new Vector3(0.50022697f, -0.67440802f, 0.543091f),
+            new Vector3(0.584539f, -0.110249f, 0.80384099f),
+            new Vector3(0.43737301f, 0.45464399f, 0.77588898f),
+            new Vector3(-0.042440999f, 0.083318003f, 0.995619f),
+            new Vector3(-0.59625101f, 0.22013199f, 0.77202803f),
+            new Vector3(-0.506455f, -0.39697701f, 0.76544899f),
+            new Vector3(0.070569001f, -0.47847399f, 0.87526202f),
+        };
+
+		public static readonly Vector3[] Normals3 = new Vector3[] {
+            new Vector3(0.45651099f, -0.073968001f, -0.88663799f),
+            new Vector3(0.50769401f, 0.38511699f, -0.77067f),
+            new Vector3(0.095431998f, 0.22666401f, -0.96928602f),
+            new Vector3(-0.35876599f, 0.54318798f, -0.75910097f),
+            new Vector3(-0.361276f, 0.13299499f, -0.92292601f),
+            new Vector3(-0.48311701f, -0.32406601f, -0.813375f),
+            new Vector3(-0.018073f, -0.197559f, -0.980124f),
+            new Vector3(0.3211f, -0.501477f, -0.80337799f),
+            new Vector3(0.79949099f, 0.069615997f, -0.59662998f),
+            new Vector3(0.390971f, 0.77130598f, -0.50222403f),
+            new Vector3(0.080782004f, 0.61448997f, -0.784778f),
+            new Vector3(-0.73275f, 0.41143101f, -0.54203498f),
+            new Vector3(-0.73525399f, 0.0091019999f, -0.67773098f),
+            new Vector3(-0.80249399f, -0.39490801f, -0.44727099f),
+            new Vector3(-0.13413f, -0.58915502f, -0.79680902f),
+            new Vector3(0.71955299f, -0.37622699f, -0.58369303f),
+            new Vector3(0.96687502f, 0.173593f, -0.187132f),
+            new Vector3(0.760831f, 0.51910597f, -0.38944301f),
+            new Vector3(-0.114642f, 0.87551898f, -0.46938601f),
+            new Vector3(-0.53236699f, 0.76885903f, -0.354177f),
+            new Vector3(-0.96226698f, 0.024977f, -0.27095801f),
+            new Vector3(-0.46738699f, -0.721986f, -0.51018202f),
+            new Vector3(0.058449998f, -0.85235399f, -0.51968902f),
+            new Vector3(0.49823299f, -0.74374002f, -0.44566301f),
+            new Vector3(0.93915099f, -0.27024499f, -0.212044f),
+            new Vector3(0.58393198f, 0.80944198f, -0.061857f),
+            new Vector3(0.183797f, 0.97322798f, -0.138007f),
+            new Vector3(-0.88435501f, 0.45221901f, -0.115822f),
+            new Vector3(-0.943178f, -0.33206701f, 0.012138f),
+            new Vector3(-0.69844002f, -0.70656699f, -0.113772f),
+            new Vector3(-0.228411f, -0.95470601f, -0.190694f),
+            new Vector3(0.73156399f, -0.675861f, -0.089588001f),
+            new Vector3(0.96925098f, 0.046804f, 0.24158201f),
+            new Vector3(0.85564703f, 0.50347698f, 0.119916f),
+            new Vector3(-0.25115299f, 0.96794701f, -0.000080999998f),
+            new Vector3(-0.64779502f, 0.75674897f, 0.087711997f),
+            new Vector3(-0.96916401f, 0.14519399f, 0.1991f),
+            new Vector3(-0.41479301f, -0.88896698f, 0.194126f),
+            new Vector3(0.25077501f, -0.961178f, -0.115109f),
+            new Vector3(0.47862899f, -0.84259301f, 0.246883f),
+            new Vector3(0.89004397f, -0.39614201f, 0.225595f),
+            new Vector3(0.52405101f, 0.76235998f, 0.37970701f),
+            new Vector3(0.11962f, 0.94548202f, 0.30291f),
+            new Vector3(-0.76085001f, 0.49007499f, 0.42536199f),
+            new Vector3(-0.86978501f, -0.20215f, 0.450122f),
+            new Vector3(-0.70946699f, -0.60242403f, 0.36570701f),
+            new Vector3(0.019308999f, -0.95887101f, 0.28318599f),
+            new Vector3(0.626113f, -0.564677f, 0.53770101f),
+            new Vector3(0.769943f, -0.126663f, 0.62541503f),
+            new Vector3(0.76419097f, 0.35070199f, 0.54131401f),
+            new Vector3(-0.001878f, 0.74136698f, 0.67109799f),
+            new Vector3(-0.37088001f, 0.81836802f, 0.43900099f),
+            new Vector3(-0.71390897f, 0.12865201f, 0.68831801f),
+            new Vector3(-0.295165f, -0.73866397f, 0.60601401f),
+            new Vector3(0.186195f, -0.73836899f, 0.648184f),
+            new Vector3(0.387523f, -0.35878301f, 0.84917599f),
+            new Vector3(0.481022f, 0.124846f, 0.86777401f),
+            new Vector3(0.391808f, 0.54505599f, 0.741216f),
+            new Vector3(-0.0035359999f, 0.36559799f, 0.93076599f),
+            new Vector3(-0.42049801f, 0.484961f, 0.76680797f),
+            new Vector3(-0.35490301f, 0.019470001f, 0.93470001f),
+            new Vector3(-0.54783702f, -0.35920799f, 0.75554299f),
+            new Vector3(-0.106662f, -0.445115f, 0.88909799f),
+            new Vector3(0.086796001f, -0.059307002f, 0.99445897f),
+        };
+
+		public static readonly Vector3[] Normals4 = new Vector3[] {
+            new Vector3(0.52657801f, -0.35962099f, -0.77031702f),
+            new Vector3(0.150482f, 0.43598399f, 0.88728398f),
+            new Vector3(0.414195f, 0.73825502f, -0.53237402f),
+            new Vector3(0.075152002f, 0.91624898f, -0.393498f),
+            new Vector3(-0.316149f, 0.93073601f, -0.18379299f),
+            new Vector3(-0.77381903f, 0.62333399f, -0.11251f),
+            new Vector3(-0.90084201f, 0.42853701f, -0.069568001f),
+            new Vector3(-0.99894202f, -0.010971f, 0.044665001f),
+            new Vector3(-0.979761f, -0.15767001f, -0.123324f),
+            new Vector3(-0.91127402f, -0.362371f, -0.19562f),
+            new Vector3(-0.62406898f, -0.72094101f, -0.301301f),
+            new Vector3(-0.310173f, -0.80934501f, -0.498752f),
+            new Vector3(0.146613f, -0.81581903f, -0.55941403f),
+            new Vector3(-0.71651602f, -0.69435602f, -0.066887997f),
+            new Vector3(0.50397199f, -0.114202f, -0.85613698f),
+            new Vector3(0.45549101f, 0.87262702f, -0.176211f),
+            new Vector3(-0.00501f, -0.114373f, -0.99342501f),
+            new Vector3(-0.104675f, -0.327701f, -0.93896502f),
+            new Vector3(0.56041199f, 0.75258899f, -0.34575599f),
+            new Vector3(-0.060575999f, 0.82162797f, -0.566796f),
+            new Vector3(-0.30234101f, 0.79700702f, -0.522847f),
+            new Vector3(-0.671543f, 0.67074001f, -0.314863f),
+            new Vector3(-0.77840102f, -0.12835699f, 0.61450499f),
+            new Vector3(-0.92404997f, 0.278382f, -0.261985f),
+            new Vector3(-0.69977301f, -0.55049098f, -0.45527801f),
+            new Vector3(-0.56824797f, -0.51718903f, -0.64000797f),
+            new Vector3(0.054097999f, -0.93286401f, -0.356143f),
+            new Vector3(0.75838202f, 0.57289302f, -0.31088799f),
+            new Vector3(0.0036200001f, 0.30502599f, -0.95233703f),
+            new Vector3(-0.060849998f, -0.98688602f, -0.14951099f),
+            new Vector3(0.63523f, 0.045478001f, -0.77098298f),
+            new Vector3(0.52170497f, 0.241309f, -0.81828701f),
+            new Vector3(0.26940399f, 0.63542497f, -0.72364098f),
+            new Vector3(0.045676f, 0.67275399f, -0.738455f),
+            new Vector3(-0.180511f, 0.67465699f, -0.71571898f),
+            new Vector3(-0.397131f, 0.63664001f, -0.66104198f),
+            new Vector3(-0.55200398f, 0.47251499f, -0.687038f),
+            new Vector3(-0.77217001f, 0.08309f, -0.62996f),
+            new Vector3(-0.669819f, -0.119533f, -0.73284f),
+            new Vector3(-0.54045498f, -0.31844401f, -0.77878201f),
+            new Vector3(-0.38613501f, -0.522789f, -0.75999397f),
+            new Vector3(-0.261466f, -0.68856698f, -0.676395f),
+            new Vector3(-0.019412f, -0.69610298f, -0.71767998f),
+            new Vector3(0.30356899f, -0.48184401f, -0.82199299f),
+            new Vector3(0.68193901f, -0.19512901f, -0.70490003f),
+            new Vector3(-0.24488901f, -0.116562f, -0.96251899f),
+            new Vector3(0.80075902f, -0.022979001f, -0.59854603f),
+            new Vector3(-0.37027499f, 0.095583998f, -0.92399102f),
+            new Vector3(-0.33067101f, -0.32657799f, -0.88543999f),
+            new Vector3(-0.16322f, -0.52757901f, -0.83367902f),
+            new Vector3(0.12639f, -0.313146f, -0.941257f),
+            new Vector3(0.34954801f, -0.27222601f, -0.89649802f),
+            new Vector3(0.23991799f, -0.085825004f, -0.96699202f),
+            new Vector3(0.390845f, 0.081537001f, -0.91683799f),
+            new Vector3(0.25526699f, 0.26869699f, -0.92878503f),
+            new Vector3(0.146245f, 0.48043799f, -0.86474901f),
+            new Vector3(-0.32601601f, 0.47845599f, -0.81534898f),
+            new Vector3(-0.46968201f, -0.112519f, -0.87563598f),
+            new Vector3(0.81844002f, -0.25852001f, -0.51315099f),
+            new Vector3(-0.474318f, 0.292238f, -0.83043301f),
+            new Vector3(0.778943f, 0.39584199f, -0.48637101f),
+            new Vector3(0.62409401f, 0.39377299f, -0.67487001f),
+            new Vector3(0.74088597f, 0.203834f, -0.63995302f),
+            new Vector3(0.48021701f, 0.565768f, -0.67029703f),
+            new Vector3(0.38093001f, 0.42453501f, -0.82137799f),
+            new Vector3(-0.093422003f, 0.50112402f, -0.86031801f),
+            new Vector3(-0.236485f, 0.29619801f, -0.92538702f),
+            new Vector3(-0.131531f, 0.093959004f, -0.98684901f),
+            new Vector3(-0.82356203f, 0.29577699f, -0.48400599f),
+            new Vector3(0.61106598f, -0.624304f, -0.486664f),
+            new Vector3(0.069495998f, -0.52033001f, -0.85113299f),
+            new Vector3(0.226522f, -0.66487902f, -0.711775f),
+            new Vector3(0.47130799f, -0.56890398f, -0.67395699f),
+            new Vector3(0.38842499f, -0.74262398f, -0.54556f),
+            new Vector3(0.78367501f, -0.48072901f, -0.39338499f),
+            new Vector3(0.962394f, 0.135676f, -0.235349f),
+            new Vector3(0.876607f, 0.172034f, -0.449406f),
+            new Vector3(0.63340503f, 0.58979303f, -0.50094098f),
+            new Vector3(0.182276f, 0.80065799f, -0.57072097f),
+            new Vector3(0.177003f, 0.76413399f, 0.62029701f),
+            new Vector3(-0.544016f, 0.675515f, -0.49772099f),
+            new Vector3(-0.67929697f, 0.28646699f, -0.67564201f),
+            new Vector3(-0.59039098f, 0.091369003f, -0.801929f),
+            new Vector3(-0.82436001f, -0.13312399f, -0.55018902f),
+            new Vector3(-0.71579403f, -0.33454201f, -0.61296099f),
+            new Vector3(0.17428599f, -0.89248401f, 0.416049f),
+            new Vector3(-0.082528003f, -0.83712298f, -0.54075301f),
+            new Vector3(0.28333101f, -0.88087398f, -0.37918901f),
+            new Vector3(0.675134f, -0.42662701f, -0.60181701f),
+            new Vector3(0.84372002f, -0.512335f, -0.160156f),
+            new Vector3(0.97730398f, -0.098555997f, -0.18752f),
+            new Vector3(0.846295f, 0.522672f, -0.102947f),
+            new Vector3(0.67714101f, 0.72132498f, -0.145501f),
+            new Vector3(0.32096499f, 0.87089199f, -0.37219399f),
+            new Vector3(-0.178978f, 0.911533f, -0.37023601f),
+            new Vector3(-0.44716901f, 0.82670099f, -0.341474f),
+            new Vector3(-0.70320302f, 0.496328f, -0.50908101f),
+            new Vector3(-0.97718102f, 0.063562997f, -0.202674f),
+            new Vector3(-0.87817001f, -0.412938f, 0.241455f),
+            new Vector3(-0.83583099f, -0.35855001f, -0.415728f),
+            new Vector3(-0.499174f, -0.69343299f, -0.51959199f),
+            new Vector3(-0.188789f, -0.92375302f, -0.33322501f),
+            new Vector3(0.19225401f, -0.96936101f, -0.152896f),
+            new Vector3(0.51594001f, -0.783907f, -0.34539199f),
+            new Vector3(0.90592498f, -0.30095199f, -0.29787099f),
+            new Vector3(0.99111199f, -0.127746f, 0.037106998f),
+            new Vector3(0.99513501f, 0.098424003f, -0.0043830001f),
+            new Vector3(0.76012301f, 0.64627701f, 0.067367002f),
+            new Vector3(0.205221f, 0.95958f, -0.192591f),
+            new Vector3(-0.042750001f, 0.97951299f, -0.19679099f),
+            new Vector3(-0.43801701f, 0.89892697f, 0.0084920004f),
+            new Vector3(-0.82199401f, 0.48078501f, -0.30523899f),
+            new Vector3(-0.89991701f, 0.081710003f, -0.42833701f),
+            new Vector3(-0.92661202f, -0.144618f, -0.347096f),
+            new Vector3(-0.79365999f, -0.55779201f, -0.24283899f),
+            new Vector3(-0.43134999f, -0.84777898f, -0.30855799f),
+            new Vector3(-0.0054919999f, -0.96499997f, 0.26219299f),
+            new Vector3(0.58790499f, -0.80402601f, -0.088940002f),
+            new Vector3(0.69949299f, -0.66768599f, -0.254765f),
+            new Vector3(0.88930303f, 0.359795f, -0.282291f),
+            new Vector3(0.780972f, 0.197037f, 0.59267199f),
+            new Vector3(0.52012098f, 0.50669599f, 0.68755698f),
+            new Vector3(0.40389499f, 0.69396102f, 0.59605998f),
+            new Vector3(-0.154983f, 0.89923602f, 0.40909001f),
+            new Vector3(-0.65733802f, 0.53716803f, 0.528543f),
+            new Vector3(-0.74619502f, 0.33409101f, 0.575827f),
+            new Vector3(-0.62495202f, -0.049144f, 0.77911502f),
+            new Vector3(0.31814101f, -0.254715f, 0.913185f),
+            new Vector3(-0.555897f, 0.405294f, 0.725752f),
+            new Vector3(-0.79443401f, 0.099405997f, 0.59916002f),
+            new Vector3(-0.64036101f, -0.68946302f, 0.33849499f),
+            new Vector3(-0.12671299f, -0.73409498f, 0.66711998f),
+            new Vector3(0.105457f, -0.78081697f, 0.61579502f),
+            new Vector3(0.40799299f, -0.48091599f, 0.77605498f),
+            new Vector3(0.69513601f, -0.54512f, 0.468647f),
+            new Vector3(0.97319102f, -0.0064889998f, 0.229908f),
+            new Vector3(0.94689399f, 0.317509f, -0.050799001f),
+            new Vector3(0.56358302f, 0.82561201f, 0.027183f),
+            new Vector3(0.325773f, 0.94542301f, 0.0069490001f),
+            new Vector3(-0.171821f, 0.98509699f, -0.0078149997f),
+            new Vector3(-0.67044097f, 0.73993897f, 0.054768998f),
+            new Vector3(-0.822981f, 0.55496198f, 0.121322f),
+            new Vector3(-0.96619302f, 0.117857f, 0.229307f),
+            new Vector3(-0.95376903f, -0.29470399f, 0.058945f),
+            new Vector3(-0.86438698f, -0.50272799f, -0.010015f),
+            new Vector3(-0.53060901f, -0.84200603f, -0.097365998f),
+            new Vector3(-0.162618f, -0.98407501f, 0.071772002f),
+            new Vector3(0.081446998f, -0.99601102f, 0.036439002f),
+            new Vector3(0.74598402f, -0.66596299f, 0.00076199998f),
+            new Vector3(0.94205701f, -0.32926899f, -0.064106002f),
+            new Vector3(0.93970197f, -0.28108999f, 0.194803f),
+            new Vector3(0.77121401f, 0.55067003f, 0.319363f),
+            new Vector3(0.641348f, 0.73069f, 0.23402099f),
+            new Vector3(0.080682002f, 0.99669099f, 0.0098789996f),
+            new Vector3(-0.046725001f, 0.97664303f, 0.20972501f),
+            new Vector3(-0.53107601f, 0.82100099f, 0.209562f),
+            new Vector3(-0.69581503f, 0.65599f, 0.29243499f),
+            new Vector3(-0.97612202f, 0.216709f, -0.014913f),
+            new Vector3(-0.96166098f, -0.14412899f, 0.23331399f),
+            new Vector3(-0.772084f, -0.61364698f, 0.165299f),
+            new Vector3(-0.44960001f, -0.83605999f, 0.314426f),
+            new Vector3(-0.39269999f, -0.91461599f, 0.096247002f),
+            new Vector3(0.390589f, -0.91947001f, 0.044890001f),
+            new Vector3(0.58252901f, -0.79919797f, 0.148127f),
+            new Vector3(0.866431f, -0.48981199f, 0.096864f),
+            new Vector3(0.90458697f, 0.111498f, 0.41145f),
+            new Vector3(0.95353699f, 0.23232999f, 0.191806f),
+            new Vector3(0.497311f, 0.77080297f, 0.398177f),
+            new Vector3(0.194066f, 0.95631999f, 0.218611f),
+            new Vector3(0.422876f, 0.882276f, 0.206797f),
+            new Vector3(-0.373797f, 0.84956598f, 0.37217399f),
+            new Vector3(-0.53449702f, 0.71402299f, 0.4522f),
+            new Vector3(-0.881827f, 0.23716f, 0.40759799f),
+            new Vector3(-0.904948f, -0.014069f, 0.42528901f),
+            new Vector3(-0.751827f, -0.51281703f, 0.41445801f),
+            new Vector3(-0.50101501f, -0.69791698f, 0.51175803f),
+            new Vector3(-0.23519f, -0.92592299f, 0.295555f),
+            new Vector3(0.228983f, -0.95393997f, 0.193819f),
+            new Vector3(0.734025f, -0.63489801f, 0.241062f),
+            new Vector3(0.91375297f, -0.063253f, -0.40131599f),
+            new Vector3(0.90573502f, -0.161487f, 0.391875f),
+            new Vector3(0.85892999f, 0.342446f, 0.38074899f),
+            new Vector3(0.62448603f, 0.60758102f, 0.49077699f),
+            new Vector3(0.28926399f, 0.85747898f, 0.42550799f),
+            new Vector3(0.069968f, 0.90216899f, 0.42567101f),
+            new Vector3(-0.28617999f, 0.94069999f, 0.182165f),
+            new Vector3(-0.57401299f, 0.80511898f, -0.14930899f),
+            new Vector3(0.111258f, 0.099717997f, -0.98877603f),
+            new Vector3(-0.30539301f, -0.94422799f, -0.12316f),
+            new Vector3(-0.60116601f, -0.78957599f, 0.123163f),
+            new Vector3(-0.290645f, -0.81213999f, 0.50591898f),
+            new Vector3(-0.064920001f, -0.87716299f, 0.47578499f),
+            new Vector3(0.408301f, -0.862216f, 0.29978901f),
+            new Vector3(0.56609702f, -0.72556603f, 0.39126399f),
+            new Vector3(0.83936399f, -0.427387f, 0.33586901f),
+            new Vector3(0.81889999f, -0.041305002f, 0.57244802f),
+            new Vector3(0.71978402f, 0.41499701f, 0.55649698f),
+            new Vector3(0.88174403f, 0.45027f, 0.140659f),
+            new Vector3(0.40182301f, -0.89822f, -0.17815199f),
+            new Vector3(-0.054019999f, 0.79134399f, 0.60898f),
+            new Vector3(-0.29377401f, 0.76399398f, 0.57446498f),
+            new Vector3(-0.450798f, 0.61034697f, 0.65135098f),
+            new Vector3(-0.63822103f, 0.186694f, 0.74687302f),
+            new Vector3(-0.87287003f, -0.25712699f, 0.41470799f),
+            new Vector3(-0.58725703f, -0.52170998f, 0.618828f),
+            new Vector3(-0.35365799f, -0.64197397f, 0.680291f),
+            new Vector3(0.041648999f, -0.61127299f, 0.79032302f),
+            new Vector3(0.348342f, -0.77918297f, 0.52108699f),
+            new Vector3(0.499167f, -0.62244099f, 0.602826f),
+            new Vector3(0.79001898f, -0.30383101f, 0.53250003f),
+            new Vector3(0.66011798f, 0.060733002f, 0.74870199f),
+            new Vector3(0.60492098f, 0.29416099f, 0.73996001f),
+            new Vector3(0.38569701f, 0.37934601f, 0.84103203f),
+            new Vector3(0.239693f, 0.207876f, 0.94833201f),
+            new Vector3(0.012623f, 0.25853199f, 0.96591997f),
+            new Vector3(-0.100557f, 0.457147f, 0.88368797f),
+            new Vector3(0.046967f, 0.62858802f, 0.77631903f),
+            new Vector3(-0.43039101f, -0.44540501f, 0.785097f),
+            new Vector3(-0.43429101f, -0.196228f, 0.87913901f),
+            new Vector3(-0.25663701f, -0.336867f, 0.90590203f),
+            new Vector3(-0.131372f, -0.15891001f, 0.97851402f),
+            new Vector3(0.102379f, -0.208767f, 0.972592f),
+            new Vector3(0.195687f, -0.450129f, 0.87125802f),
+            new Vector3(0.62731898f, -0.42314801f, 0.65377098f),
+            new Vector3(0.68743902f, -0.171583f, 0.70568198f),
+            new Vector3(0.27592f, -0.021255f, 0.96094602f),
+            new Vector3(0.45936701f, 0.15746599f, 0.87417799f),
+            new Vector3(0.285395f, 0.583184f, 0.76055598f),
+            new Vector3(-0.81217402f, 0.46030301f, 0.35846099f),
+            new Vector3(-0.189068f, 0.64122301f, 0.743698f),
+            new Vector3(-0.338875f, 0.47648001f, 0.811252f),
+            new Vector3(-0.92099398f, 0.347186f, 0.176727f),
+            new Vector3(0.040638998f, 0.024465f, 0.99887401f),
+            new Vector3(-0.73913199f, -0.35374701f, 0.57318997f),
+            new Vector3(-0.60351199f, -0.28661501f, 0.74405998f),
+            new Vector3(-0.188676f, -0.547059f, 0.81555402f),
+            new Vector3(-0.026045f, -0.39782f, 0.91709399f),
+            new Vector3(0.26789701f, -0.649041f, 0.71202302f),
+            new Vector3(0.518246f, -0.28489101f, 0.80638599f),
+            new Vector3(0.493451f, -0.066532999f, 0.86722499f),
+            new Vector3(-0.328188f, 0.140251f, 0.93414301f),
+            new Vector3(0.328188f, 0.140251f, 0.93414301f),
+            new Vector3(-0.328188f, 0.140251f, 0.93414301f),
+            new Vector3(-0.328188f, 0.140251f, 0.93414301f),
+            new Vector3(-0.328188f, 0.140251f, 0.93414301f),
+        };
+
+		#endregion
+
+
 	}
 }

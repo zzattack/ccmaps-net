@@ -88,7 +88,7 @@ namespace CNCMaps.Game {
 
 			for (int i = 0; i < _voxels.Count; i++) {
 				// render voxel
-				DrawingSurface vxl_ds = VoxelRenderer.Render(_voxels[i].File, _hvas[i], -(double)direction / 256.0 * 360 + 45, obj.Palette);
+				DrawingSurface vxl_ds = VoxelRenderer.Render(_voxels[i].File, _hvas[i], obj, _voxels[i].Props);
 				if (vxl_ds != null)
 					BlitVoxelToSurface(ds, vxl_ds, obj, _voxels[i].Props);
 			}

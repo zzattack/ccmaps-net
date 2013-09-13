@@ -189,7 +189,7 @@ namespace CNCMaps.Game {
 			if (rulesSection.ReadBool("Wall")) {
 				drawable.IsWall = true;
 				drawable.DrawFlat = false;
-				mainProps.ZAdjust += 60;
+				mainProps.ZBufferAdjust += 60;
 				drawable.AddOffset(0, 3);
 				drawable.PaletteType = PaletteType.Unit;
 				drawable.LightingType = LightingType.Ambient;
@@ -218,7 +218,7 @@ namespace CNCMaps.Game {
 
 			if (_collectionType == CollectionType.Terrain) {
 				mainProps.Offset.Y += Drawable.TileHeight / 2; // trees and such are placed in the middle of their tile
-				//mainProps.ZAdjust += Drawable.TileHeight / 2;
+				//mainProps.ZBufferAdjust += Drawable.TileHeight / 2;
 			}
 			else if (_collectionType == CollectionType.Infantry) {
 				mainProps.Offset.X += Drawable.TileWidth / 2; 
@@ -227,11 +227,11 @@ namespace CNCMaps.Game {
 
 			if (rulesSection.ReadString("Land") == "Rock") {
 				mainProps.Offset.Y += Drawable.TileHeight / 2;
-				//mainProps.ZAdjust += Drawable.TileHeight / 2;
+				//mainProps.ZBufferAdjust += Drawable.TileHeight / 2;
 			}
 			else if (rulesSection.ReadString("Land") == "Road") {
 				mainProps.Offset.Y += Drawable.TileHeight / 2;
-				mainProps.ZAdjust += Drawable.TileHeight / 2;
+				mainProps.ZBufferAdjust += Drawable.TileHeight / 2;
 				drawable.Foundation = new Size(3, 1); // ensures bridges are drawn a bit lower than where they're stored
 			}
 			else if (rulesSection.ReadString("Land") == "Railroad") {
@@ -239,7 +239,7 @@ namespace CNCMaps.Game {
 					mainProps.Offset.Y = 11;
 				else
 					mainProps.Offset.Y = 14;
-				mainProps.ZAdjust = 15;
+				mainProps.ZBufferAdjust = 15;
 				drawable.LightingType = LightingType.Full;
 				drawable.PaletteType = PaletteType.Iso;
 			}
@@ -264,7 +264,7 @@ namespace CNCMaps.Game {
 						mainProps.OffsetHack = OffsetHacks.RA2BridgeOffsets;
 						mainProps.ShadowOffsetHack = OffsetHacks.RA2BridgeShadowOffsets;
 						drawable.HeightOffset = 4; // for lighting
-						mainProps.ZAdjust = Drawable.TileHeight;
+						mainProps.ZBufferAdjust = Drawable.TileHeight;
 					}
 				}
 				else if (_engine <= EngineType.Firestorm) {
@@ -277,7 +277,7 @@ namespace CNCMaps.Game {
 						mainProps.OffsetHack = OffsetHacks.TSBridgeOffsets;
 						mainProps.ShadowOffsetHack = OffsetHacks.TSBridgeShadowOffsets;
 						drawable.HeightOffset = 4;
-						mainProps.ZAdjust = 1 * Drawable.TileHeight;
+						mainProps.ZBufferAdjust = 1 * Drawable.TileHeight;
 					}
 				}
 			}
@@ -332,7 +332,7 @@ namespace CNCMaps.Game {
 							ShadowOffset = mainProps.Offset,
 							SortIndex = ySort,
 							FrameDecider = extraFrameDecider,
-							//ZAdjust = artSection.ReadInt(extraImage + "ZAdjust") + mainProps.Offset.Y,
+							//ZBufferAdjust = artSection.ReadInt(extraImage + "ZBufferAdjust") + mainProps.Offset.Y,
 						};
 						AddImageToObject(drawable, extraImageFileName, props);
 					}
@@ -365,7 +365,7 @@ namespace CNCMaps.Game {
 							Offset = mainProps.Offset,
 							ShadowOffset = mainProps.Offset,
 							FrameDecider = extraFrameDecider,
-							//ZAdjust = -artSection.ReadInt(extraImage + "ZAdjust"),
+							//ZBufferAdjust = -artSection.ReadInt(extraImage + "ZBufferAdjust"),
 						};
 						drawable.AddDamagedShp(VFS.Open(extraImageDamagedFileName) as ShpFile, props);
 					}
@@ -385,11 +385,8 @@ namespace CNCMaps.Game {
 						ApplyNewTheaterIfNeeded(img, ref img);
 					}
 					var turretOffset = new Point(rulesSection.ReadInt("TurretAnimX"), rulesSection.ReadInt("TurretAnimY"));
-					if (voxel) {
+					if (voxel) 
 						turretOffset.Offset(Drawable.TileWidth / 2, 0);
-						if (_collectionType == CollectionType.Vehicle)
-							turretOffset.Y += (int)((turretart.ReadDouble("TurretOffset") * Drawable.TileHeight) / 256);
-					}
 
 					var props = new DrawProperties {
 						Offset = turretOffset,
@@ -415,6 +412,7 @@ namespace CNCMaps.Game {
 					voxelOffset.Offset(mainProps.Offset);
 					var props = new DrawProperties {
 						Offset = voxelOffset,
+						TurretVoxelOffset = artSection.ReadFloat("TurretOffset"),
 					};
 					AddImageToObject(drawable, turretFile, props);
 

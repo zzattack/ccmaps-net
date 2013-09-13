@@ -20,7 +20,8 @@ namespace CNCMaps.Game {
 		public Func<GameObject, Point> ShadowOffsetHack { get; set; } // used to reposition bridges based on their overlay value
 		public Point Offset;
 		public Point ShadowOffset;
-		public int ZAdjust { get; set; }
+		public int ZBufferAdjust { get; set; }
+		public float TurretVoxelOffset { get; set; }
 		
 		public Point GetOffset(GameObject obj) {
 			var ret = Offset;

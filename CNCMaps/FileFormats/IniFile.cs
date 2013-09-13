@@ -247,6 +247,14 @@ namespace CNCMaps.FileFormats {
 					return defaultValue;
 			}
 
+			public float ReadFloat(string key, float defaultValue = 0.0f) {
+				float ret;
+				if (float.TryParse(ReadString(key).Replace(',', '.'), NumberStyles.Any, culture, out ret))
+					return ret;
+				else
+					return defaultValue;
+			}
+
 			public double ReadDouble(string key, double defaultValue = 0.0) {
 				double ret;
 				if (double.TryParse(ReadString(key).Replace(',', '.'), NumberStyles.Any, culture, out ret))
