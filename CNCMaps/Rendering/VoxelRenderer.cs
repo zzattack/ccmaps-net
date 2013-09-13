@@ -19,7 +19,7 @@ namespace CNCMaps.Rendering {
 
 		// color contributors; the standard voxels.vpl already adds a lot of ambient,
 		// that's why these seem high
-		private static readonly Vector3 _diffuse = new Vector3(1.2f);
+		private static readonly Vector3 _diffuse = new Vector3(1.3f);
 		private static readonly Vector3 _ambient = new Vector3(0.8f);
 
 		DrawingSurface _surface;
@@ -120,7 +120,7 @@ namespace CNCMaps.Rendering {
 			GL.MatrixMode(MatrixMode.Modelview);
 			var lookat = Matrix4.LookAt(0, 0, -10, 0, 0, 0, 0, 1, 0);
 			GL.LoadMatrix(ref lookat);
-			GL.Scale(0.0145, 0.0145, 0.0145); // seems to work well enough for all voxels
+			GL.Scale(0.0142, 0.0142, 0.0142); // seems to work well enough for all voxels
 			GL.Translate(0, 0, 10);
 
 			float direction = (obj is OwnableObject) ? (obj as OwnableObject).Direction : 0;
@@ -137,14 +137,14 @@ namespace CNCMaps.Rendering {
 			float pitch = MathHelper.DegreesToRadians(210);
 			float yaw = MathHelper.DegreesToRadians(120);
 
-			/* helps to find good pitch/yaw
-			var colors = new[] { Color.Red, Color.Green, Color.Blue, Color.Yellow, Color.Orange, Color.Black, Color.Purple, Color.SlateBlue, Color.DimGray, Color.White, Color.Teal, Color.Tan };
+			// helps to find good pitch/yaw
+			/*var colors = new[] { Color.Red, Color.Green, Color.Blue, Color.Yellow, Color.Orange, Color.Black, Color.Purple, Color.SlateBlue, Color.DimGray, Color.White, Color.Teal, Color.Tan };
 			for (int i = 0; i < 360; i += 30) {
 				for (int j = 0; j < 360; j += 30) {
 					GL.Color3(colors[i / 30]);
 					var shadowTransform2 =
-						Matrix4.CreateRotationZ(MathHelper.DegreesToRadians(i))
-						* Matrix4.CreateRotationY(MathHelper.DegreesToRadians(j));
+						Matrix4.CreateRotationZ(MathHelper.DegreesToRadians(210))
+						* Matrix4.CreateRotationY(MathHelper.DegreesToRadians(120));
 					GL.LineWidth(2);
 					GL.Begin(BeginMode.Lines);
 					GL.Vertex3(0, 0, 0);
@@ -170,7 +170,7 @@ namespace CNCMaps.Rendering {
 
 				// undo world transformations on light direction
 				var lightDirection = ExtractRotationVector(ToOpenGL(Matrix4.Invert(world * frame * shadowTransform)));
-
+					
 				/* draw line in direction light comes from
 				GL.LineWidth(2);
 				GL.Begin(BeginMode.Lines);
@@ -184,7 +184,7 @@ namespace CNCMaps.Rendering {
 					for (uint y = 0; y != section.SizeY; y++) {
 						foreach (VxlFile.Voxel vx in section.Spans[x, y].Voxels) {
 							Color color = obj.Palette.Colors[vx.ColorIndex];
-							Vector3 normal = section.GetNormals()[vx.NormalIndex];
+							Vector3 normal = section.GetNormal(vx.NormalIndex);
 							// shader function taken from https://github.com/OpenRA/OpenRA/blob/bleed/cg/vxl.fx
 							// thanks to pchote for a LOT of help getting it right
 							Vector3 colorMult = Vector3.Add(_ambient, _diffuse * Math.Max(Vector3.Dot(normal, lightDirection), 0f));
