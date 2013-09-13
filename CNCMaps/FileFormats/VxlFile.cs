@@ -108,7 +108,7 @@ namespace CNCMaps.FileFormats {
 				if (StartIndex == -1 || EndIndex == -1)
 					return;
 
-				for (byte z = 0; z < Height;) {
+				for (byte z = 0; z < Height; ) {
 					z += f.ReadByte(); // skip
 					byte c = f.ReadByte(); // numvoxels
 					for (var i = 0; i < c; ++i)
@@ -255,6 +255,11 @@ namespace CNCMaps.FileFormats {
 				if (x < Spans.GetLength(0) && y < Spans.GetLength(1) && z < Spans[x, y].Voxels.Count)
 					return Spans[x, y].Voxels[(int)z];
 				return null;
+			}
+
+			internal Vector3 GetNormal(byte p) {
+				var normals = GetNormals();
+				return normals[p < normals.Length ? p : normals.Length - 1];
 			}
 		};
 

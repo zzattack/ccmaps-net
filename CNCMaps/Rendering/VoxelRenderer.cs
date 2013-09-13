@@ -134,8 +134,25 @@ namespace CNCMaps.Rendering {
 			GL.MultMatrix(ref world);
 
 			// direction of light vector given by pitch & yaw
-			float pitch = MathHelper.DegreesToRadians(200);
-			float yaw = MathHelper.DegreesToRadians(-60);
+			float pitch = MathHelper.DegreesToRadians(210);
+			float yaw = MathHelper.DegreesToRadians(120);
+
+			/* helps to find good pitch/yaw
+			var colors = new[] { Color.Red, Color.Green, Color.Blue, Color.Yellow, Color.Orange, Color.Black, Color.Purple, Color.SlateBlue, Color.DimGray, Color.White, Color.Teal, Color.Tan };
+			for (int i = 0; i < 360; i += 30) {
+				for (int j = 0; j < 360; j += 30) {
+					GL.Color3(colors[i / 30]);
+					var shadowTransform2 =
+						Matrix4.CreateRotationZ(MathHelper.DegreesToRadians(i))
+						* Matrix4.CreateRotationY(MathHelper.DegreesToRadians(j));
+					GL.LineWidth(2);
+					GL.Begin(BeginMode.Lines);
+					GL.Vertex3(0, 0, 0);
+					GL.Vertex3(Vector3.Multiply(ExtractRotationVector(ToOpenGL(Matrix4.Invert(world * shadowTransform2))), 100f));
+					GL.End();
+				}
+			}*/
+
 			var shadowTransform = Matrix4.CreateRotationZ(pitch) * Matrix4.CreateRotationY(yaw);
 
 			foreach (var section in vxl.Sections) {
@@ -152,7 +169,16 @@ namespace CNCMaps.Rendering {
 				GL.MultMatrix(ref frame);
 
 				// undo world transformations on light direction
-				var lightDirection = ExtractRotationVector(ToOpenGL(Matrix4.Invert(world * frame) * Matrix4.Invert(shadowTransform)));
+				var lightDirection = ExtractRotationVector(ToOpenGL(Matrix4.Invert(world * frame * shadowTransform)));
+
+				/* draw line in direction light comes from
+				GL.LineWidth(2);
+				GL.Begin(BeginMode.Lines);
+				GL.Vertex3(0, 0, 0);
+				GL.Vertex3(Vector3.Multiply(lightDirection, 100f));
+				GL.End();
+				*/
+
 				GL.Begin(BeginMode.Quads);
 				for (uint x = 0; x != section.SizeX; x++) {
 					for (uint y = 0; y != section.SizeY; y++) {
@@ -169,6 +195,18 @@ namespace CNCMaps.Rendering {
 
 							Vector3 vxlPos = Vector3.Multiply(new Vector3(x, y, vx.Z), section.Scale);
 							RenderVoxel(vxlPos);
+
+							/* draw line in normal direction
+							if (r.Next(100) == 4) {
+								float m = Math.Max(Vector3.Dot(normal, lightDirection), 0f);
+								GL.Color3(m, m, m);
+								GL.LineWidth(1);
+								GL.Begin(BeginMode.Lines);
+								GL.Vertex3(new Vector3(x, y, vx.Z));
+								GL.Vertex3(new Vector3(x, y, vx.Z) + Vector3.Multiply(normal, 100f));
+								GL.End();
+							}*/
+
 						}
 					}
 				}
