@@ -34,20 +34,29 @@ namespace CNCMaps.Game {
 		private static string[] _fires;
 		private static readonly Random R = new Random();
 		static readonly string[] ExtraBuildingImages = {
-			"IdleAnim", // you don't want ProductionAnims on map renders // Why not? look at NACNST, the crane is missing!
+			// "ProductionAnim",  // you don't want ProductionAnims on map renders, but IdleAnim instead
+			"IdleAnim",
 			"SuperAnim",
 			// "Turret",
 			"BibShape",
-			"SpecialAnimFour",
-			"SpecialAnimThree",
-			"SpecialAnimTwo",
-			"SpecialAnim",
+			//"SpecialAnimFour",
+			//"SpecialAnimThree",
+			//"SpecialAnimTwo",
+			//"SpecialAnim",
 			"ActiveAnimFour",
 			"ActiveAnimThree",
 			"ActiveAnimTwo",
 			"ActiveAnim"
 		};
 		#endregion
+
+		private static readonly string[] LampNames = new[] {
+			"REDLAMP", "BLUELAMP", "GRENLAMP", "YELWLAMP", "PURPLAMP", "INORANLAMP", "INGRNLMP", "INREDLMP", "INBLULMP",
+			"INGALITE", "GALITE",
+			"INYELWLAMP", "INPURPLAMP", "NEGLAMP", "NERGRED", "TEMMORLAMP", "TEMPDAYLAMP", "TEMDAYLAMP", "TEMDUSLAMP",
+			"TEMNITLAMP", "SNOMORLAMP",
+			"SNODAYLAMP", "SNODUSLAMP", "SNONITLAMP"
+		};
 
 		static NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
@@ -140,8 +149,8 @@ namespace CNCMaps.Game {
 			else
 				drawable.Foundation = new Size(1, 1);
 
-			bool newTheater = artSection.ReadBool("NewTheater");
-			// See if a theater-specific image is used
+			bool newTheater = _engine >= EngineType.RedAlert2 || artSection.ReadBool("NewTheater");
+			// See if a theater-specific image is used, always try it on RA2
 			if (newTheater) {
 				// http://modenc.renegadeprojects.com/NewTheater
 				ApplyNewTheaterIfNeeded(artSectionName, ref imageFileName);
@@ -189,8 +198,11 @@ namespace CNCMaps.Game {
 			if (rulesSection.ReadBool("Wall")) {
 				drawable.IsWall = true;
 				drawable.DrawFlat = false;
-				mainProps.ZBufferAdjust += 60;
-				drawable.AddOffset(0, 3);
+				// RA2 walls appear a bit higher
+				if (_engine >= EngineType.RedAlert2) {
+					mainProps.ZBufferAdjust += 40;
+					drawable.AddOffset(0, 3); // seems walls are located 3 pixels lower
+				}
 				drawable.PaletteType = PaletteType.Unit;
 				drawable.LightingType = LightingType.Ambient;
 				mainProps.FrameDecider = FrameDeciders.OverlayValueFrameDecider;
@@ -221,7 +233,7 @@ namespace CNCMaps.Game {
 				//mainProps.ZBufferAdjust += Drawable.TileHeight / 2;
 			}
 			else if (_collectionType == CollectionType.Infantry) {
-				mainProps.Offset.X += Drawable.TileWidth / 2; 
+				mainProps.Offset.X += Drawable.TileWidth / 2;
 				mainProps.Offset.Y += Drawable.TileHeight / 2;
 			}
 
@@ -288,7 +300,9 @@ namespace CNCMaps.Game {
 
 			// Buildings often consist of multiple SHP files
 			if (_collectionType == CollectionType.Building) {
-				drawable.InvisibleInGame = rulesSection.ReadBool("InvisibleInGame");
+				drawable.InvisibleInGame = rulesSection.ReadBool("InvisibleInGame") ||
+					// TS/FS have hardcoded lamps
+					_engine <= EngineType.Firestorm && LampNames.Contains(objName.ToUpper());
 
 				var damagedProps = new DrawProperties {
 					HasShadow = mainProps.HasShadow,
@@ -332,7 +346,8 @@ namespace CNCMaps.Game {
 							ShadowOffset = mainProps.Offset,
 							SortIndex = ySort,
 							FrameDecider = extraFrameDecider,
-							//ZBufferAdjust = artSection.ReadInt(extraImage + "ZBufferAdjust") + mainProps.Offset.Y,
+							//OverridesZbuffer = true,
+							ZBufferAdjust = artSection.ReadInt(extraImage + "ZAdjust") + mainProps.Offset.Y,
 						};
 						AddImageToObject(drawable, extraImageFileName, props);
 					}
@@ -365,7 +380,8 @@ namespace CNCMaps.Game {
 							Offset = mainProps.Offset,
 							ShadowOffset = mainProps.Offset,
 							FrameDecider = extraFrameDecider,
-							//ZBufferAdjust = -artSection.ReadInt(extraImage + "ZBufferAdjust"),
+							OverridesZbuffer = true,
+							ZBufferAdjust = -artSection.ReadInt(extraImage + "ZBufferAdjust"),
 						};
 						drawable.AddDamagedShp(VFS.Open(extraImageDamagedFileName) as ShpFile, props);
 					}
@@ -385,7 +401,7 @@ namespace CNCMaps.Game {
 						ApplyNewTheaterIfNeeded(img, ref img);
 					}
 					var turretOffset = new Point(rulesSection.ReadInt("TurretAnimX"), rulesSection.ReadInt("TurretAnimY"));
-					if (voxel) 
+					if (voxel)
 						turretOffset.Offset(Drawable.TileWidth / 2, 0);
 
 					var props = new DrawProperties {
@@ -400,7 +416,17 @@ namespace CNCMaps.Game {
 					if (VFS.Exists(barrelFile)) {
 						AddImageToObject(drawable, barrelFile, props);
 					}
+				}
 
+				// Powerup slots, at most 3
+				for (int i = 1; i <= 3; i++) {
+					if (!artSection.HasKey(string.Format("PowerUp{0}LocXX", i))) break;
+					drawable.PowerupSlots.Add(new Drawable.PowerupSlot() {
+						X = artSection.ReadInt(string.Format("PowerUp{0}LocXX", i)),
+						Y = artSection.ReadInt(string.Format("PowerUp{0}LocYY", i)),
+						Z = artSection.ReadInt(string.Format("PowerUp{0}LocZZ", i)),
+						YSort = artSection.ReadInt(string.Format("PowerUp{0}LocYSort", i)),
+					});
 				}
 			}
 

@@ -650,6 +650,9 @@ namespace CNCMaps.Map {
 					short direction = short.Parse(entries[5]);
 					var s = new StructureObject(owner, name, health, direction);
 					s.Tile = _tiles.GetTileR(rx, ry);
+					s.Upgrade1 = entries[12];
+					s.Upgrade2 = entries[13];
+					s.Upgrade3 = entries[14];
 					if (s.Tile != null)
 						_structureObjects[s.Tile.Dx, s.Tile.Dy / 2] = s;
 				}
@@ -1016,7 +1019,7 @@ namespace CNCMaps.Map {
 						// redraw objects on here
 						List<GameObject> objs = GetObjectsAt(t.Dx, t.Dy / 2);
 						foreach (GameObject o in objs)
-							o.Drawable.Draw(o, _drawingSurface);
+							_theater.Draw(o, _drawingSurface);
 					}
 				}
 			}
@@ -1179,13 +1182,13 @@ namespace CNCMaps.Map {
 					if (_overlayObjects[x, y] == null || !checkFunc(_overlayObjects[x, y])) continue;
 					List<GameObject> objs = GetObjectsAt(x, y);
 					foreach (GameObject o in objs)
-						o.Drawable.Draw(o, _drawingSurface);
+						_theater.Draw(o, _drawingSurface);
 				}
 				for (int x = FullSize.Width * 2 - 3; x >= 0; x -= 2) {
 					if (_overlayObjects[x, y] == null || !checkFunc(_overlayObjects[x, y])) continue;
 					List<GameObject> objs = GetObjectsAt(x, y);
 					foreach (GameObject o in objs)
-						o.Drawable.Draw(o, _drawingSurface);
+						_theater.Draw(o, _drawingSurface);
 				}
 			}
 		}
@@ -1220,12 +1223,12 @@ namespace CNCMaps.Map {
 				for (int x = FullSize.Width * 2 - 2; x >= 0; x -= 2) {
 					List<GameObject> objs = GetObjectsAt(x, y);
 					foreach (GameObject o in objs)
-						o.Drawable.Draw(o, _drawingSurface);
+						_theater.Draw(o, _drawingSurface);
 				}
 				for (int x = FullSize.Width * 2 - 3; x >= 0; x -= 2) {
 					List<GameObject> objs = GetObjectsAt(x, y);
 					foreach (GameObject o in objs)
-						o.Drawable.Draw(o, _drawingSurface);
+						_theater.Draw(o, _drawingSurface);
 				}
 
 				double pct = 50 + 50.0 * y / FullSize.Height;
@@ -1504,7 +1507,7 @@ namespace CNCMaps.Map {
 		internal void DebugDrawTile(MapTile tile) {
 			_theater.GetTileCollection().DrawTile(tile, _drawingSurface);
 			foreach (GameObject o in GetObjectsAt(tile.Dx, tile.Dy / 2))
-				o.Drawable.Draw(o, _drawingSurface);
+				_theater.Draw(o, _drawingSurface);
 		}
 
 

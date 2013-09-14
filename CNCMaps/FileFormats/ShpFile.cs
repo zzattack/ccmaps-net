@@ -151,9 +151,9 @@ namespace CNCMaps.FileFormats {
 				}
 
 				short zBufVal = (short)((obj.BaseTile.Rx + obj.BaseTile.Ry + obj.BaseTile.Z) * Drawable.TileHeight / 2 + props.ZBufferAdjust);
-				//zBufVal += (short)(Header.Height / 2);
-				 if (!obj.Drawable.DrawFlat)
+				if (obj.Drawable != null && !obj.Drawable.DrawFlat) // nullcheck, animated tiles do not have drawabale set
 					zBufVal += (short)(Header.Height - image.Header.y - y);
+					// zBufVal += (short)(image.Header.cy - y);
 
 				for (int x = 0; x < image.Header.cx; x++) {
 					byte paletteValue = image.ImageData[rIdx];
@@ -161,7 +161,7 @@ namespace CNCMaps.FileFormats {
 						*(w + 0) = p.Colors[paletteValue].B;
 						*(w + 1) = p.Colors[paletteValue].G;
 						*(w + 2) = p.Colors[paletteValue].R;
-						zBuffer[zIdx] = Math.Max(zBufVal, zBuffer[zIdx]);
+						zBuffer[zIdx] = zBufVal;
 						heightBuffer[zIdx] = (short)(Header.Height + obj.Tile.Z * Drawable.TileHeight / 2);
 					}
 					// Up to the next pixel

@@ -29,7 +29,7 @@ namespace CNCMaps {
 				var vfs = VFS.GetInstance();
 
 				var mixDir = VFS.DetermineMixDir(Settings.MixFilesDirectory, Settings.Engine);
-				var modMixes = Settings.ModMixes.Split(new[] {','}, StringSplitOptions.RemoveEmptyEntries);
+				var modMixes = Settings.ModMixes.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
 				foreach (var modMix in modMixes) {
 					if (File.Exists(Path.Combine(mixDir, modMix))) {
 						_logger.Info("Adding custom mix {0}", modMix);

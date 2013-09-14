@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
@@ -20,23 +21,20 @@ namespace CNCMaps.Game {
 		internal IniFile.IniSection Rules { get; set; }
 		internal IniFile.IniSection Art { get; set; }
 
+		public List<PowerupSlot> PowerupSlots = new List<PowerupSlot>();
+		public class PowerupSlot {
+			public int X { get; set; }
+			public int Y { get; set; }
+			public int Z { get; set; }
+			public int YSort { get; set; }
+		}
+
 		public Drawable(string name) {
 			Name = name;
 			Foundation = new Size(1, 1);
 		}
 
-		bool sorted;
-		void Sort() {
-			// orderby() is stable sort, .sort() isnt
-			_fires = _fires.OrderBy(s => s.Props.SortIndex).ToList();
-			_shps = _shps.OrderBy(s => s.Props.SortIndex).ToList();
-			_damagedShps = _damagedShps.OrderBy(s => s.Props.SortIndex).ToList();
-			//  _voxels.Sort();
-			sorted = true;
-		}
-
 		Point _globalOffset = new Point(0, 0);
-
 		public string Name { get; private set; }
 		public Size Foundation { get; set; }
 		public bool Overrides { get; set; }
@@ -65,26 +63,19 @@ namespace CNCMaps.Game {
 			logger.Trace("Drawing object {0} (type {1})", obj, obj.GetType());
 
 			if (InvisibleInGame) return; // LOL. waste of effort much?
-
-			if (!sorted) Sort();
-
-			int direction = 0;
-			if (obj is OwnableObject)
-				direction = (obj as OwnableObject).Direction;
-
+			var shpsToDraw = new List<DrawableFile<ShpFile>>();
 			if (obj is StructureObject && (obj as StructureObject).Health < 128) {
-				foreach (var v in _damagedShps)
-					DrawFile(obj, ds, v.File, v.Props);
-				foreach (var v in _fires)
-					DrawFile(obj, ds, v.File, v.Props);
+				shpsToDraw.AddRange(_damagedShps);
+				shpsToDraw.AddRange(_fires);
 			}
-			else {
-				foreach (var v in _shps)
-					DrawFile(obj, ds, v.File, v.Props);
+			else
+				shpsToDraw.AddRange(_shps);
 
-				if (_alphaImage != null)
-					_alphaImage.File.DrawAlpha(obj, _alphaImage.Props, ds, _globalOffset);
-			}
+			foreach (var shp in shpsToDraw.OrderBy(shp => -shp.Props.SortIndex))
+				DrawFile(obj, ds, shp.File, shp.Props);
+
+			if (_alphaImage != null)
+				_alphaImage.File.DrawAlpha(obj, _alphaImage.Props, ds, _globalOffset);
 
 			for (int i = 0; i < _voxels.Count; i++) {
 				// render voxel
@@ -93,6 +84,28 @@ namespace CNCMaps.Game {
 					BlitVoxelToSurface(ds, vxl_ds, obj, _voxels[i].Props);
 			}
 
+		}
+
+		private void DrawFile(GameObject obj, DrawingSurface ds, ShpFile file, DrawProperties props) {
+			if (file == null || obj == null || obj.Tile == null) return;
+
+			file.Draw(obj, props, ds, _globalOffset);
+			if (props.HasShadow) {
+				file.DrawShadow(obj, props, ds, _globalOffset);
+			}
+		}
+
+		public void DrawPowerup(GameObject obj, Drawable powerup, int slot, DrawingSurface ds) {
+			if (slot >= PowerupSlots.Count)
+				throw new InvalidOperationException("Building does not have requested slot ");
+			foreach (var shp in powerup._shps) {
+				var powerupOffset = new Point(PowerupSlots[slot].X, PowerupSlots[slot].Y);
+				// add offset of powerup slot to properties
+				shp.Props.Offset.Offset(powerupOffset);
+				powerup.DrawFile(obj, ds, shp.File, shp.Props);
+				// undo offset
+				shp.Props.Offset.Offset(-powerupOffset.X, -powerupOffset.Y);
+			}
 		}
 
 		private unsafe void BlitVoxelToSurface(DrawingSurface ds, DrawingSurface vxl_ds, GameObject obj, DrawProperties props) {
@@ -107,8 +120,8 @@ namespace CNCMaps.Game {
 			var zBuffer = ds.GetZBuffer();
 			int rowsTouched = 0;
 
+			short firstRowTouched = short.MaxValue;
 			for (int y = 0; y < vxl_ds.Height; y++) {
-				short firstRowTouched = short.MaxValue;
 
 				byte* src_row = (byte*)vxl_ds.bmd.Scan0 + vxl_ds.bmd.Stride * (vxl_ds.Height - y - 1);
 				byte* dst_row = ((byte*)ds.bmd.Scan0 + (d.Y + y) * ds.bmd.Stride + d.X * 3);
@@ -125,7 +138,7 @@ namespace CNCMaps.Game {
 						if (y < firstRowTouched)
 							firstRowTouched = (short)y;
 
-						short zBufVal = (short)((obj.Tile.Rx + obj.Tile.Ry + obj.Tile.Z) * TileHeight / 2 + y - firstRowTouched);
+						short zBufVal = (short)((obj.Tile.Rx + obj.Tile.Ry + obj.Tile.Z) * TileHeight / 2 + y - firstRowTouched + props.ZBufferAdjust);
 						if (zBufVal >= zBuffer[zIdx])
 							zBuffer[zIdx] = zBufVal;
 					}
@@ -134,14 +147,6 @@ namespace CNCMaps.Game {
 			}
 		}
 
-		private void DrawFile(GameObject obj, DrawingSurface ds, ShpFile file, DrawProperties props) {
-			if (file == null || obj == null || obj.Tile == null) return;
-
-			file.Draw(obj, props, ds, _globalOffset);
-			if (props.HasShadow) {
-				file.DrawShadow(obj, props, ds, _globalOffset);
-			}
-		}
 		internal void SetOffset(int xOffset, int yOffset) {
 			_globalOffset.X = xOffset;
 			_globalOffset.Y = yOffset;
@@ -177,7 +182,6 @@ namespace CNCMaps.Game {
 		public override string ToString() {
 			return Name;
 		}
-
 	}
 
 	class DrawableFile<T> : System.IComparable where T : VirtualFile {
