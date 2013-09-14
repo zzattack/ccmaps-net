@@ -23,6 +23,7 @@
 		/// the contents of this method with the code editor.
 		/// </summary>
 		private void InitializeComponent() {
+			this.components = new System.ComponentModel.Container();
 			System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
 			this.gbMiscOptions = new System.Windows.Forms.GroupBox();
 			this.cbOmitSquareMarkers = new System.Windows.Forms.CheckBox();
@@ -45,7 +46,7 @@
 			this.cbSquaredStartPositions = new System.Windows.Forms.CheckBox();
 			this.cbTiledStartPositions = new System.Windows.Forms.CheckBox();
 			this.cbEmphasizeOre = new System.Windows.Forms.CheckBox();
-			this.lblCompression = new System.Windows.Forms.GroupBox();
+			this.gbInputOutput = new System.Windows.Forms.GroupBox();
 			this.tbCustomOutput = new System.Windows.Forms.TextBox();
 			this.tbRenderProg = new System.Windows.Forms.TextBox();
 			this.lblAutoFilenameDescription = new System.Windows.Forms.Label();
@@ -76,11 +77,14 @@
 			this.lblStatus = new System.Windows.Forms.ToolStripStatusLabel();
 			this.lblFill = new System.Windows.Forms.ToolStripStatusLabel();
 			this.pbProgress = new System.Windows.Forms.ToolStripProgressBar();
+			this.cbAdditionalMixes = new System.Windows.Forms.CheckBox();
+			this.tbAdditionalMixes = new System.Windows.Forms.TextBox();
+			this.toolTip = new System.Windows.Forms.ToolTip(this.components);
 			this.gbMiscOptions.SuspendLayout();
 			this.panel1.SuspendLayout();
 			this.pnlMapSize.SuspendLayout();
 			this.pnlEngine.SuspendLayout();
-			this.lblCompression.SuspendLayout();
+			this.gbInputOutput.SuspendLayout();
 			((System.ComponentModel.ISupportInitialize)(this.nudEncodingQuality)).BeginInit();
 			((System.ComponentModel.ISupportInitialize)(this.nudCompression)).BeginInit();
 			this.cbLog.SuspendLayout();
@@ -102,9 +106,9 @@
 			this.gbMiscOptions.Controls.Add(this.cbSquaredStartPositions);
 			this.gbMiscOptions.Controls.Add(this.cbTiledStartPositions);
 			this.gbMiscOptions.Controls.Add(this.cbEmphasizeOre);
-			this.gbMiscOptions.Location = new System.Drawing.Point(12, 209);
+			this.gbMiscOptions.Location = new System.Drawing.Point(12, 229);
 			this.gbMiscOptions.Name = "gbMiscOptions";
-			this.gbMiscOptions.Size = new System.Drawing.Size(541, 267);
+			this.gbMiscOptions.Size = new System.Drawing.Size(541, 259);
 			this.gbMiscOptions.TabIndex = 1;
 			this.gbMiscOptions.TabStop = false;
 			this.gbMiscOptions.Text = "Misc. Options";
@@ -141,6 +145,9 @@
 			this.rbPreferHardwareRendering.TabIndex = 10;
 			this.rbPreferHardwareRendering.TabStop = true;
 			this.rbPreferHardwareRendering.Text = "Prefer hardware voxel rendering";
+			this.toolTip.SetToolTip(this.rbPreferHardwareRendering, "Attempts to render voxels on the hardware graphics card. If you have many\r\nvoxels" +
+        " on your map, this will likely be faster, although some additional startup\r\ntime" +
+        " is incurred over software rendering. ");
 			this.rbPreferHardwareRendering.UseVisualStyleBackColor = true;
 			this.rbPreferHardwareRendering.CheckedChanged += new System.EventHandler(this.UIChanged);
 			// 
@@ -152,6 +159,9 @@
 			this.rbPreferSoftwareRendering.Size = new System.Drawing.Size(209, 17);
 			this.rbPreferSoftwareRendering.TabIndex = 11;
 			this.rbPreferSoftwareRendering.Text = "Prefer software rendering (compatibility)";
+			this.toolTip.SetToolTip(this.rbPreferSoftwareRendering, "Attempts to render voxels using a software implementation. If you have many\r\nvoxe" +
+        "ls on your map, this will likely be slower, although no additional startup\r\ntime" +
+        " is incurred over hardware rendering. ");
 			this.rbPreferSoftwareRendering.UseVisualStyleBackColor = true;
 			this.rbPreferSoftwareRendering.CheckedChanged += new System.EventHandler(this.UIChanged);
 			// 
@@ -163,6 +173,7 @@
 			this.cbReplacePreview.Size = new System.Drawing.Size(284, 17);
 			this.cbReplacePreview.TabIndex = 15;
 			this.cbReplacePreview.Text = "Replace map preview with thumbnail of resulting image";
+			this.toolTip.SetToolTip(this.cbReplacePreview, resources.GetString("cbReplacePreview.ToolTip"));
 			this.cbReplacePreview.UseVisualStyleBackColor = true;
 			this.cbReplacePreview.CheckedChanged += new System.EventHandler(this.CbReplacePreviewCheckedChanged);
 			// 
@@ -185,6 +196,7 @@
 			this.rbSizeLocal.TabIndex = 10;
 			this.rbSizeLocal.TabStop = true;
 			this.rbSizeLocal.Text = "Use map localsize";
+			this.toolTip.SetToolTip(this.rbSizeLocal, "Saves the portion of the map that is visible in game.");
 			this.rbSizeLocal.UseVisualStyleBackColor = true;
 			this.rbSizeLocal.CheckedChanged += new System.EventHandler(this.UIChanged);
 			// 
@@ -196,6 +208,9 @@
 			this.rbSizeFullmap.Size = new System.Drawing.Size(175, 17);
 			this.rbSizeFullmap.TabIndex = 11;
 			this.rbSizeFullmap.Text = "Use full size (useful for missions)";
+			this.toolTip.SetToolTip(this.rbSizeFullmap, "Saves the entire map without cutting off the parts outside the LocalSize entry.\r\n" +
+        "This is especially useful for campaign maps where the map expands after\r\nachievi" +
+        "ng some objective.");
 			this.rbSizeFullmap.UseVisualStyleBackColor = true;
 			this.rbSizeFullmap.CheckedChanged += new System.EventHandler(this.UIChanged);
 			// 
@@ -243,6 +258,7 @@
 			this.rbEngineAuto.TabIndex = 10;
 			this.rbEngineAuto.TabStop = true;
 			this.rbEngineAuto.Text = "Automatic engine rules";
+			this.toolTip.SetToolTip(this.rbEngineAuto, resources.GetString("rbEngineAuto.ToolTip"));
 			this.rbEngineAuto.UseVisualStyleBackColor = true;
 			this.rbEngineAuto.CheckedChanged += new System.EventHandler(this.RbEngineCheckedChanged);
 			// 
@@ -290,7 +306,7 @@
 			// 
 			this.lblOreEmphasisDescription.Location = new System.Drawing.Point(12, 37);
 			this.lblOreEmphasisDescription.Name = "lblOreEmphasisDescription";
-			this.lblOreEmphasisDescription.Size = new System.Drawing.Size(498, 32);
+			this.lblOreEmphasisDescription.Size = new System.Drawing.Size(498, 29);
 			this.lblOreEmphasisDescription.TabIndex = 1;
 			this.lblOreEmphasisDescription.Text = resources.GetString("lblOreEmphasisDescription.Text");
 			// 
@@ -327,41 +343,43 @@
 			this.cbEmphasizeOre.UseVisualStyleBackColor = true;
 			this.cbEmphasizeOre.CheckedChanged += new System.EventHandler(this.UIChanged);
 			// 
-			// lblCompression
+			// gbInputOutput
 			// 
-			this.lblCompression.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+			this.gbInputOutput.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-			this.lblCompression.Controls.Add(this.tbCustomOutput);
-			this.lblCompression.Controls.Add(this.tbRenderProg);
-			this.lblCompression.Controls.Add(this.lblAutoFilenameDescription);
-			this.lblCompression.Controls.Add(this.lblMapRenderer);
-			this.lblCompression.Controls.Add(this.rbCustomFilename);
-			this.lblCompression.Controls.Add(this.btnBrowseRenderer);
-			this.lblCompression.Controls.Add(this.rbAutoFilename);
-			this.lblCompression.Controls.Add(this.tbMixDir);
-			this.lblCompression.Controls.Add(this.lblMixFiles);
-			this.lblCompression.Controls.Add(this.btnBrowseMixDir);
-			this.lblCompression.Controls.Add(this.lblQuality);
-			this.lblCompression.Controls.Add(this.tbInput);
-			this.lblCompression.Controls.Add(this.label1);
-			this.lblCompression.Controls.Add(this.lblInputMap);
-			this.lblCompression.Controls.Add(this.nudEncodingQuality);
-			this.lblCompression.Controls.Add(this.btnBrowseInput);
-			this.lblCompression.Controls.Add(this.cbOutputJPG);
-			this.lblCompression.Controls.Add(this.cbOutputPNG);
-			this.lblCompression.Controls.Add(this.nudCompression);
-			this.lblCompression.Location = new System.Drawing.Point(12, 9);
-			this.lblCompression.Name = "lblCompression";
-			this.lblCompression.Size = new System.Drawing.Size(544, 194);
-			this.lblCompression.TabIndex = 0;
-			this.lblCompression.TabStop = false;
-			this.lblCompression.Text = "Input";
-			this.lblCompression.DragDrop += new System.Windows.Forms.DragEventHandler(this.InputDragDrop);
-			this.lblCompression.DragEnter += new System.Windows.Forms.DragEventHandler(this.InputDragEnter);
+			this.gbInputOutput.Controls.Add(this.tbAdditionalMixes);
+			this.gbInputOutput.Controls.Add(this.cbAdditionalMixes);
+			this.gbInputOutput.Controls.Add(this.tbCustomOutput);
+			this.gbInputOutput.Controls.Add(this.tbRenderProg);
+			this.gbInputOutput.Controls.Add(this.lblAutoFilenameDescription);
+			this.gbInputOutput.Controls.Add(this.lblMapRenderer);
+			this.gbInputOutput.Controls.Add(this.rbCustomFilename);
+			this.gbInputOutput.Controls.Add(this.btnBrowseRenderer);
+			this.gbInputOutput.Controls.Add(this.rbAutoFilename);
+			this.gbInputOutput.Controls.Add(this.tbMixDir);
+			this.gbInputOutput.Controls.Add(this.lblMixFiles);
+			this.gbInputOutput.Controls.Add(this.btnBrowseMixDir);
+			this.gbInputOutput.Controls.Add(this.lblQuality);
+			this.gbInputOutput.Controls.Add(this.tbInput);
+			this.gbInputOutput.Controls.Add(this.label1);
+			this.gbInputOutput.Controls.Add(this.lblInputMap);
+			this.gbInputOutput.Controls.Add(this.nudEncodingQuality);
+			this.gbInputOutput.Controls.Add(this.btnBrowseInput);
+			this.gbInputOutput.Controls.Add(this.cbOutputJPG);
+			this.gbInputOutput.Controls.Add(this.cbOutputPNG);
+			this.gbInputOutput.Controls.Add(this.nudCompression);
+			this.gbInputOutput.Location = new System.Drawing.Point(12, 9);
+			this.gbInputOutput.Name = "gbInputOutput";
+			this.gbInputOutput.Size = new System.Drawing.Size(544, 214);
+			this.gbInputOutput.TabIndex = 0;
+			this.gbInputOutput.TabStop = false;
+			this.gbInputOutput.Text = "Input & output";
+			this.gbInputOutput.DragDrop += new System.Windows.Forms.DragEventHandler(this.InputDragDrop);
+			this.gbInputOutput.DragEnter += new System.Windows.Forms.DragEventHandler(this.InputDragEnter);
 			// 
 			// tbCustomOutput
 			// 
-			this.tbCustomOutput.Location = new System.Drawing.Point(302, 142);
+			this.tbCustomOutput.Location = new System.Drawing.Point(302, 147);
 			this.tbCustomOutput.Name = "tbCustomOutput";
 			this.tbCustomOutput.Size = new System.Drawing.Size(219, 20);
 			this.tbCustomOutput.TabIndex = 10;
@@ -378,7 +396,7 @@
 			// 
 			// lblAutoFilenameDescription
 			// 
-			this.lblAutoFilenameDescription.Location = new System.Drawing.Point(14, 165);
+			this.lblAutoFilenameDescription.Location = new System.Drawing.Point(14, 170);
 			this.lblAutoFilenameDescription.Name = "lblAutoFilenameDescription";
 			this.lblAutoFilenameDescription.Size = new System.Drawing.Size(515, 17);
 			this.lblAutoFilenameDescription.TabIndex = 11;
@@ -397,11 +415,13 @@
 			// rbCustomFilename
 			// 
 			this.rbCustomFilename.AutoSize = true;
-			this.rbCustomFilename.Location = new System.Drawing.Point(173, 143);
+			this.rbCustomFilename.Location = new System.Drawing.Point(173, 148);
 			this.rbCustomFilename.Name = "rbCustomFilename";
 			this.rbCustomFilename.Size = new System.Drawing.Size(102, 17);
 			this.rbCustomFilename.TabIndex = 9;
 			this.rbCustomFilename.Text = "Custom filename";
+			this.toolTip.SetToolTip(this.rbCustomFilename, "Overrides the output name instead of using the automatic filename resolution sche" +
+        "me.\r\nThe .jpg and .png extensions are automatically added.");
 			this.rbCustomFilename.UseVisualStyleBackColor = true;
 			this.rbCustomFilename.CheckedChanged += new System.EventHandler(this.OutputNameCheckedChanged);
 			// 
@@ -419,12 +439,13 @@
 			// 
 			this.rbAutoFilename.AutoSize = true;
 			this.rbAutoFilename.Checked = true;
-			this.rbAutoFilename.Location = new System.Drawing.Point(31, 143);
+			this.rbAutoFilename.Location = new System.Drawing.Point(31, 148);
 			this.rbAutoFilename.Name = "rbAutoFilename";
 			this.rbAutoFilename.Size = new System.Drawing.Size(114, 17);
 			this.rbAutoFilename.TabIndex = 8;
 			this.rbAutoFilename.TabStop = true;
 			this.rbAutoFilename.Text = "Automatic filename";
+			this.toolTip.SetToolTip(this.rbAutoFilename, resources.GetString("rbAutoFilename.ToolTip"));
 			this.rbAutoFilename.UseVisualStyleBackColor = true;
 			this.rbAutoFilename.CheckedChanged += new System.EventHandler(this.OutputNameCheckedChanged);
 			// 
@@ -444,6 +465,9 @@
 			this.lblMixFiles.Size = new System.Drawing.Size(44, 13);
 			this.lblMixFiles.TabIndex = 3;
 			this.lblMixFiles.Text = "Mix files";
+			this.toolTip.SetToolTip(this.lblMixFiles, "Set this to the folder where you have your game mix files stored.\r\nIf possible, t" +
+        "his will be determined from information in the registry,\r\nmeaning you can leave " +
+        "this empty.");
 			// 
 			// btnBrowseMixDir
 			// 
@@ -463,6 +487,8 @@
 			this.lblQuality.Size = new System.Drawing.Size(85, 13);
 			this.lblQuality.TabIndex = 5;
 			this.lblQuality.Text = "Encoding quality";
+			this.toolTip.SetToolTip(this.lblQuality, "JPEG encoding quality, between 1-100 with 100 resulting in the largest file in th" +
+        "e highest quality.");
 			// 
 			// tbInput
 			// 
@@ -480,6 +506,8 @@
 			this.label1.Size = new System.Drawing.Size(92, 13);
 			this.label1.TabIndex = 1;
 			this.label1.Text = "Compression level";
+			this.toolTip.SetToolTip(this.label1, "PNG compression level ranging from 1-9, 9 resulting in the smallest file but also" +
+        " in longest loading time.");
 			this.label1.Visible = false;
 			// 
 			// lblInputMap
@@ -490,6 +518,8 @@
 			this.lblInputMap.Size = new System.Drawing.Size(54, 13);
 			this.lblInputMap.TabIndex = 0;
 			this.lblInputMap.Text = "Input map";
+			this.toolTip.SetToolTip(this.lblInputMap, "Full path the to input map.\r\nValid filetypes are *.mpr, *.map, *.yrm, *.mmx, *.yr" +
+        "o.");
 			// 
 			// nudEncodingQuality
 			// 
@@ -524,6 +554,8 @@
 			this.cbOutputJPG.Size = new System.Drawing.Size(81, 17);
 			this.cbOutputJPG.TabIndex = 4;
 			this.cbOutputJPG.Text = "Output JPG";
+			this.toolTip.SetToolTip(this.cbOutputJPG, "Specifies whether or not a JPEG compressed image is saved.\r\nImages are always sav" +
+        "ed in the same directory as the input map.");
 			this.cbOutputJPG.UseVisualStyleBackColor = true;
 			this.cbOutputJPG.CheckedChanged += new System.EventHandler(this.JpegOutputCheckedChanged);
 			// 
@@ -535,6 +567,7 @@
 			this.cbOutputPNG.Size = new System.Drawing.Size(84, 17);
 			this.cbOutputPNG.TabIndex = 0;
 			this.cbOutputPNG.Text = "Output PNG";
+			this.toolTip.SetToolTip(this.cbOutputPNG, "Specifies whether or not a JPEG compressed image is saved.");
 			this.cbOutputPNG.UseVisualStyleBackColor = true;
 			this.cbOutputPNG.CheckedChanged += new System.EventHandler(this.PngOutputCheckedChanged);
 			// 
@@ -559,7 +592,7 @@
 			// 
 			// btnRenderExecute
 			// 
-			this.btnRenderExecute.Location = new System.Drawing.Point(462, 482);
+			this.btnRenderExecute.Location = new System.Drawing.Point(458, 490);
 			this.btnRenderExecute.Name = "btnRenderExecute";
 			this.btnRenderExecute.Size = new System.Drawing.Size(75, 23);
 			this.btnRenderExecute.TabIndex = 5;
@@ -569,14 +602,14 @@
 			// 
 			// tbCommandPreview
 			// 
-			this.tbCommandPreview.Location = new System.Drawing.Point(84, 482);
+			this.tbCommandPreview.Location = new System.Drawing.Point(84, 493);
 			this.tbCommandPreview.Name = "tbCommandPreview";
 			this.tbCommandPreview.Size = new System.Drawing.Size(361, 20);
 			this.tbCommandPreview.TabIndex = 4;
 			// 
 			// lblCommand
 			// 
-			this.lblCommand.Location = new System.Drawing.Point(22, 485);
+			this.lblCommand.Location = new System.Drawing.Point(16, 495);
 			this.lblCommand.Name = "lblCommand";
 			this.lblCommand.Size = new System.Drawing.Size(62, 17);
 			this.lblCommand.TabIndex = 3;
@@ -589,7 +622,7 @@
 			// cbLog
 			// 
 			this.cbLog.Controls.Add(this.rtbLog);
-			this.cbLog.Location = new System.Drawing.Point(16, 506);
+			this.cbLog.Location = new System.Drawing.Point(16, 516);
 			this.cbLog.Name = "cbLog";
 			this.cbLog.Size = new System.Drawing.Size(542, 176);
 			this.cbLog.TabIndex = 6;
@@ -616,7 +649,7 @@
             this.lblStatus,
             this.lblFill,
             this.pbProgress});
-			this.statusStrip.Location = new System.Drawing.Point(0, 506);
+			this.statusStrip.Location = new System.Drawing.Point(0, 515);
 			this.statusStrip.Name = "statusStrip";
 			this.statusStrip.Size = new System.Drawing.Size(566, 22);
 			this.statusStrip.TabIndex = 7;
@@ -640,21 +673,42 @@
 			this.pbProgress.Size = new System.Drawing.Size(100, 16);
 			this.pbProgress.Style = System.Windows.Forms.ProgressBarStyle.Continuous;
 			// 
+			// cbAdditionalMixes
+			// 
+			this.cbAdditionalMixes.AutoSize = true;
+			this.cbAdditionalMixes.Location = new System.Drawing.Point(42, 191);
+			this.cbAdditionalMixes.Name = "cbAdditionalMixes";
+			this.cbAdditionalMixes.Size = new System.Drawing.Size(137, 17);
+			this.cbAdditionalMixes.TabIndex = 12;
+			this.cbAdditionalMixes.Text = "Load additional mix files";
+			this.toolTip.SetToolTip(this.cbAdditionalMixes, resources.GetString("cbAdditionalMixes.ToolTip"));
+			this.cbAdditionalMixes.UseVisualStyleBackColor = true;
+			this.cbAdditionalMixes.CheckedChanged += new System.EventHandler(this.cbAdditionalMixes_CheckedChanged);
+			// 
+			// tbAdditionalMixes
+			// 
+			this.tbAdditionalMixes.Location = new System.Drawing.Point(185, 188);
+			this.tbAdditionalMixes.Name = "tbAdditionalMixes";
+			this.tbAdditionalMixes.Size = new System.Drawing.Size(336, 20);
+			this.tbAdditionalMixes.TabIndex = 13;
+			this.tbAdditionalMixes.Visible = false;
+			this.tbAdditionalMixes.TextChanged += new System.EventHandler(this.UIChanged);
+			// 
 			// MainForm
 			// 
 			this.AllowDrop = true;
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-			this.ClientSize = new System.Drawing.Size(566, 528);
+			this.ClientSize = new System.Drawing.Size(566, 537);
 			this.Controls.Add(this.statusStrip);
 			this.Controls.Add(this.cbLog);
 			this.Controls.Add(this.lblCommand);
 			this.Controls.Add(this.tbCommandPreview);
 			this.Controls.Add(this.btnRenderExecute);
 			this.Controls.Add(this.gbMiscOptions);
-			this.Controls.Add(this.lblCompression);
+			this.Controls.Add(this.gbInputOutput);
 			this.MaximumSize = new System.Drawing.Size(582, 9999);
-			this.MinimumSize = new System.Drawing.Size(582, 500);
+			this.MinimumSize = new System.Drawing.Size(582, 575);
 			this.Name = "MainForm";
 			this.Text = "Red Alert 2 and Tiberian Sun map renderer";
 			this.Load += new System.EventHandler(this.MainFormLoad);
@@ -668,8 +722,8 @@
 			this.pnlMapSize.PerformLayout();
 			this.pnlEngine.ResumeLayout(false);
 			this.pnlEngine.PerformLayout();
-			this.lblCompression.ResumeLayout(false);
-			this.lblCompression.PerformLayout();
+			this.gbInputOutput.ResumeLayout(false);
+			this.gbInputOutput.PerformLayout();
 			((System.ComponentModel.ISupportInitialize)(this.nudEncodingQuality)).EndInit();
 			((System.ComponentModel.ISupportInitialize)(this.nudCompression)).EndInit();
 			this.cbLog.ResumeLayout(false);
@@ -689,7 +743,7 @@
 		private System.Windows.Forms.Label lblOreEmphasisDescription;
 		private System.Windows.Forms.Label lblTiledSquaredPosDescription;
 		private System.Windows.Forms.Label lblSquaredStartPosDescription;
-		private System.Windows.Forms.GroupBox lblCompression;
+		private System.Windows.Forms.GroupBox gbInputOutput;
 		private System.Windows.Forms.Button btnBrowseInput;
 		private System.Windows.Forms.TextBox tbRenderProg;
 		private System.Windows.Forms.Label lblMapRenderer;
@@ -734,6 +788,9 @@
 		private System.Windows.Forms.ToolStripStatusLabel lblFill;
 		private System.Windows.Forms.ToolStripProgressBar pbProgress;
 		private System.Windows.Forms.ToolStripStatusLabel lblStatus;
+		private System.Windows.Forms.TextBox tbAdditionalMixes;
+		private System.Windows.Forms.CheckBox cbAdditionalMixes;
+		private System.Windows.Forms.ToolTip toolTip;
 
 	}
 }

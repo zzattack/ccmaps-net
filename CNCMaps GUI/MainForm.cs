@@ -68,8 +68,8 @@ namespace CNCMaps.GUI {
 				using (var key = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry32))
 					return Path.GetDirectoryName((string)key.OpenSubKey("SOFTWARE\\Westwood\\" + (RA2 ? "Red Alert 2" : "Tiberian Sun")).GetValue("InstallPath", string.Empty));
 			}
-			catch (NullReferenceException) {} // no registry entry
-			catch (ArgumentException) {} // invalid path
+			catch (NullReferenceException) { } // no registry entry
+			catch (ArgumentException) { } // invalid path
 
 			return Environment.CurrentDirectory;
 		}
@@ -157,6 +157,11 @@ namespace CNCMaps.GUI {
 		}
 		private void OutputNameCheckedChanged(object sender, EventArgs e) {
 			tbCustomOutput.Visible = rbCustomFilename.Checked;
+			UpdateCommandline();
+		}
+
+		private void cbAdditionalMixes_CheckedChanged(object sender, EventArgs e) {
+			tbAdditionalMixes.Visible = cbAdditionalMixes.Checked;
 			UpdateCommandline();
 		}
 
@@ -262,6 +267,9 @@ namespace CNCMaps.GUI {
 
 			if (tbMixDir.Text != FindMixDir(rbEngineAuto.Checked || rbEngineRA2.Checked || rbEngineYR.Checked))
 				cmd += "-m " + "\"" + tbMixDir.Text + "\" ";
+			if (cbAdditionalMixes.Checked)
+				cmd += "-M \"" + tbAdditionalMixes.Text + "\"";
+		
 			if (cbEmphasizeOre.Checked) cmd += "-r ";
 			if (cbTiledStartPositions.Checked) cmd += "-s ";
 			if (cbSquaredStartPositions.Checked) cmd += "-S ";
@@ -448,6 +456,7 @@ namespace CNCMaps.GUI {
 			{90, "Map drawing completed"},
 		};
 		#endregion
+
 
 	}
 }
