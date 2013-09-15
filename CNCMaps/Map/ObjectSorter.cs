@@ -53,7 +53,7 @@ namespace CNCMaps.Map {
 				
 				foreach (var obj2 in tile2.AllObjects) {
 					var front = GetFrontBlock(obj, obj2);
-					if (front == obj && !dependenciesFullfilled.Contains(obj2))
+					if (front == obj && !dependenciesFullfilled.Contains(obj2) && !obj.Drawable.DrawFlat)
 						AddDependency(obj, obj2);
 					else if (front == obj2) {
 						// if we already have drawn obj2.. well then we shouldnt have
