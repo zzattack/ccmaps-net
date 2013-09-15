@@ -10,6 +10,7 @@ using CNCMaps.FileFormats.Encodings;
 using CNCMaps.Game;
 using CNCMaps.Rendering;
 using CNCMaps.VirtualFileSystem;
+
 using PixelFormat = System.Drawing.Imaging.PixelFormat;
 
 namespace CNCMaps.Map {
@@ -404,7 +405,7 @@ namespace CNCMaps.Map {
 				ApplyLightSources();
 			}
 
-			SetStructuresBaseTile(); // requires .Drawable set on objects
+			SetBaseTiles(); // requires .Drawable set on objects
 
 			// first preparing all palettes as above, and only now recalculating them 
 			// could save a large amount of work in total
@@ -464,7 +465,7 @@ namespace CNCMaps.Map {
 			}
 		}
 
-		private void SetStructuresBaseTile() {
+		private void SetBaseTiles() {
 			// we need foundations from the theater to place the structures at the correct tile,
 			for (int y = 0; y < _structureObjects.GetLength(1); y++) {
 				for (int x = 0; x < _structureObjects.GetLength(0); x++) {
@@ -641,7 +642,7 @@ namespace CNCMaps.Map {
 			}
 			foreach (var v in structsSection.OrderedEntries) {
 				try {
-					string[] entries = ((string)v.Value).Split(',');
+					string[] entries = ((string) v.Value).Split(',');
 					string owner = entries[0];
 					string name = entries[1];
 					short health = short.Parse(entries[2]);
@@ -653,8 +654,10 @@ namespace CNCMaps.Map {
 					s.Upgrade1 = entries[12];
 					s.Upgrade2 = entries[13];
 					s.Upgrade3 = entries[14];
-					if (s.Tile != null)
-						_structureObjects[s.Tile.Dx, s.Tile.Dy / 2] = s;
+					if (s.Tile != null) {
+						_structureObjects[s.Tile.Dx, s.Tile.Dy/2] = s;
+						s.Tile.AddObject(s);
+					}
 				}
 				catch (IndexOutOfRangeException) {
 				} // catch invalid entries
@@ -1196,8 +1199,12 @@ namespace CNCMaps.Map {
 		public void DrawMap() {
 			Logger.Info("Drawing map");
 			_drawingSurface = new DrawingSurface(FullSize.Width * TileWidth, FullSize.Height * TileHeight, PixelFormat.Format24bppRgb);
+			ObjectSorter sorter = new ObjectSorter(_theater, _tiles);
+			foreach (var obj in sorter.GetOrderedObjects())
+				_theater.Draw(obj, _drawingSurface);
+			
+			/*
 			var tileCollection = _theater.GetTileCollection();
-
 			// zig-zag drawing technique explanation: http://stackoverflow.com/questions/892811/drawing-isometric-game-worlds
 			double lastReported = 0.0;
 			for (int y = 0; y < FullSize.Height; y++) {
@@ -1237,7 +1244,7 @@ namespace CNCMaps.Map {
 					lastReported = pct;
 				}
 			}
-
+			*/
 			Logger.Info("Map drawing completed");
 		}
 

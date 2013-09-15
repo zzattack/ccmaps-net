@@ -51,9 +51,8 @@ Acknowledgments
 Special thanks go out to authors of several modding tools that have greatly benefited the community as well as development of this program:
 
 * Olaf van der Spek for XCC and XWIS
-* Matthias Wagner for FinalAlert
+* The OpenRA project
 * All contributors to [ModEnc](http://modenc.renegadeprojects.com), especially the people from \#renproj@Freenode
-* [Strike-Team community](http://strike-team.net/) for testing and support
 
 License
 -------

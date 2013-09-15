@@ -71,7 +71,7 @@ namespace CNCMaps.Game {
 			else
 				shpsToDraw.AddRange(_shps);
 
-			foreach (var shp in shpsToDraw.OrderBy(shp => -shp.Props.SortIndex))
+			foreach (var shp in shpsToDraw.OrderBy(shp => shp.Props.SortIndex))
 				DrawFile(obj, ds, shp.File, shp.Props);
 
 			if (_alphaImage != null)
@@ -117,7 +117,6 @@ namespace CNCMaps.Game {
 			// rows inverted!
 			var w_low = (byte*)ds.bmd.Scan0;
 			byte* w_high = w_low + ds.bmd.Stride * ds.bmd.Height;
-			var zBuffer = ds.GetZBuffer();
 			int rowsTouched = 0;
 
 			short firstRowTouched = short.MaxValue;
@@ -137,10 +136,6 @@ namespace CNCMaps.Game {
 
 						if (y < firstRowTouched)
 							firstRowTouched = (short)y;
-
-						short zBufVal = (short)((obj.Tile.Rx + obj.Tile.Ry + obj.Tile.Z) * TileHeight / 2 + y - firstRowTouched + props.ZBufferAdjust);
-						if (zBufVal >= zBuffer[zIdx])
-							zBuffer[zIdx] = zBufVal;
 					}
 					zIdx++;
 				}
@@ -182,9 +177,19 @@ namespace CNCMaps.Game {
 		public override string ToString() {
 			return Name;
 		}
+
+		public Rectangle GetBounds(GameObject obj) {
+			Rectangle bounds = Rectangle.Empty;
+			foreach (var shp in _shps) {
+				if (bounds == Rectangle.Empty) bounds = shp.File.GetBounds();
+				else bounds = Rectangle.Union(bounds, shp.File.GetBounds());
+			}
+			bounds.Offset(obj.Tile.Dx * TileWidth / 2, (obj.Tile.Dy - obj.Tile.Z) * TileHeight / 2);
+			return bounds;
+		}
 	}
 
-	class DrawableFile<T> : System.IComparable where T : VirtualFile {
+	class DrawableFile<T> : IComparable where T : VirtualFile {
 		public DrawProperties Props;
 		public T File;
 

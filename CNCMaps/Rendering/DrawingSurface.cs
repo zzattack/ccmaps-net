@@ -9,7 +9,6 @@ namespace CNCMaps.Rendering {
 		public int Width { get; private set; } // prevents repeated (slow) lookups in bm.Width
 		public int Height { get; private set; } // prevents repeated (slow) lookups in bm.Width
 
-		short[] zBuffer;
 		short[] heightBuffer;
 		bool[] shadowBuffer;
 
@@ -21,7 +20,6 @@ namespace CNCMaps.Rendering {
 			Width = width;
 			Height = height;
 			Lock(bm.PixelFormat);
-			zBuffer = new short[width * height];
 			heightBuffer = new short[width * height];
 			shadowBuffer = new bool[width * height];
 		}
@@ -48,10 +46,6 @@ namespace CNCMaps.Rendering {
 
 		public bool[] GetShadows() {
 			return shadowBuffer;
-		}
-
-		public short[] GetZBuffer() {
-			return zBuffer;
 		}
 
 		public short[] GetHeightBuffer() {
@@ -98,7 +92,6 @@ namespace CNCMaps.Rendering {
 
 
 		internal void FreeNonBitmap() {
-			this.zBuffer = null;
 			this.shadowBuffer = null;
 			this.heightBuffer = null;
 		}
@@ -106,7 +99,6 @@ namespace CNCMaps.Rendering {
 
 		internal void Dispose() {
 			Unlock();
-			this.zBuffer = null;
 			this.shadowBuffer = null;
 			bm.Dispose();
 		}

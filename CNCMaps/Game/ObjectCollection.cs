@@ -277,6 +277,7 @@ namespace CNCMaps.Game {
 						mainProps.ShadowOffsetHack = OffsetHacks.RA2BridgeShadowOffsets;
 						drawable.HeightOffset = 4; // for lighting
 						mainProps.ZBufferAdjust = Drawable.TileHeight;
+						drawable.Foundation = new Size(3, 1);
 					}
 				}
 				else if (_engine <= EngineType.Firestorm) {

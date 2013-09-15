@@ -100,7 +100,7 @@ namespace CNCMaps.Game {
 				if (obj is OwnableObject)
 					direction = (obj as OwnableObject).Direction;
 				shp.Initialize(); // header needs to be loaded at least
-				int imgCount = shp.Header.NumImages;
+				int imgCount = shp.NumImages;
 				if (imgCount % 8 == 0)
 					return (imgCount / 8) * (direction / 32);
 				else

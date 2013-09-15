@@ -80,6 +80,8 @@
     <Compile Include="Map\MapObjects.cs" />
     <Compile Include="Map\Lighting.cs" />
     <Compile Include="Map\MapFile.cs" />
+    <Compile Include="Map\ObjectSorter.cs" />
+    <Compile Include="Rendering\Hexagon.cs" />
     <Compile Include="Rendering\Palette.cs" />
     <Compile Include="Rendering\PaletteCollection.cs" />
     <Compile Include="Rendering\PaletteType.cs" />
@@ -143,7 +145,7 @@
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <ProjectExtensions>
     <VisualStudio>
-      <UserProperties BuildVersion_UpdateFileVersion="True" BuildVersion_UpdateAssemblyVersion="True" BuildVersion_UseGlobalSettings="True" BuildVersion_AssemblyInfoFilename="CNCMaps\Properties\AssemblyInfoGlobal.cs" />
+      <UserProperties BuildVersion_AssemblyInfoFilename="CNCMaps\Properties\AssemblyInfoGlobal.cs" BuildVersion_UseGlobalSettings="True" BuildVersion_UpdateAssemblyVersion="True" BuildVersion_UpdateFileVersion="True" />
     </VisualStudio>
   </ProjectExtensions>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

@@ -12,69 +12,93 @@ using CNCMaps.VirtualFileSystem;
 namespace CNCMaps.FileFormats {
 
 	class TmpFile : VirtualFile {
-
+		bool _isInitialized;
 		static NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
-		bool isInitialized;
-		TmpFileHeader fileHeader;
-		List<TmpImage> images;
+		// header stuff
+		public int Width;                  // width of blocks
+		public int Height;                 // height in blocks
+		public int BlockWidth;             // width of each block
+		public int BlockHeight;            // height of each block
 
-		[StructLayout(LayoutKind.Sequential, Pack = 1)]
-		struct TmpFileHeader {
-			public int cblocks_x;                  // width of blocks
-			public int cblocks_y;                  // height in blocks
-			public int cx;                         // width of each block
-			public int cy;                         // height of each block
-		};
+		public List<TmpImage> Images;
 
-		[StructLayout(LayoutKind.Sequential, Pack = 1)]
-		struct TmpImageHeader {
-			public int x;
-			public int y;
-			public int extra_ofs;
-			public int z_ofs;
-			public int extra_z_ofs;
-			public int x_extra;
-			public int y_extra;
-			public int cx_extra;
-			public int cy_extra;
-			private uint datapresency;
-			public byte height;
-			public byte terrain_type;
-			public byte ramp_type;
-			public sbyte radar_red_left;
-			public sbyte radar_green_left;
-			public sbyte radar_blue_left;
-			public sbyte radar_red_right;
-			public sbyte radar_green_right;
-			public sbyte radar_blue_right;
-			public byte pad1;
-			public byte pad2;
-			public byte pad3;
+		public class TmpImage {
+			// header stuff
+			public int X;
+			public int Y;
+			private int _extraDataOffset;
+			private int _zDataOffset;
+			private int _extraZDataOffset;
+			public int ExtraX;
+			public int ExtraY;
+			public int ExtraWidth;
+			public int ExtraHeight;
+			private DataPrecencyFlags _dataPrecencyFlags;
+			public byte Height;
+			public byte TerrainType;
+			public byte RampType;
+			public sbyte RadarRedLeft;
+			public sbyte RadarGreenLeft;
+			public sbyte RadarBlueLeft;
+			public sbyte RadarRedRight;
+			public sbyte RadarGreenRight;
+			public sbyte RadarBlueRight;
+
+			public byte[] TileData; // always available
+			public byte[] ExtraData; // available is presency flags says so
+			public byte[] ZData; // available is presency flags says so
+			public byte[] ExtraZData; // available is presency flags says so
+
+			public void Read(TmpFile f) {
+				X = f.ReadInt32();
+				Y = f.ReadInt32();
+				_extraDataOffset = f.ReadInt32();
+				_zDataOffset = f.ReadInt32();
+				_extraZDataOffset = f.ReadInt32();
+				ExtraX = f.ReadInt32();
+				ExtraY = f.ReadInt32();
+				ExtraWidth = f.ReadInt32();
+				ExtraHeight = f.ReadInt32();
+				_dataPrecencyFlags = (DataPrecencyFlags)f.ReadUInt32();
+				Height = f.ReadByte();
+				TerrainType = f.ReadByte();
+				RampType = f.ReadByte();
+				RadarRedLeft = f.ReadSByte();
+				RadarGreenLeft = f.ReadSByte(); ;
+				RadarBlueLeft = f.ReadSByte(); ;
+				RadarRedRight = f.ReadSByte(); ;
+				RadarGreenRight = f.ReadSByte(); ;
+				RadarBlueRight = f.ReadSByte(); ;
+				f.Read(3); // discard padding
+
+				TileData = f.Read(f.BlockWidth * f.BlockHeight / 2);
+				if (HasZData)
+					ZData = f.Read(f.BlockWidth * f.BlockHeight / 2);
+
+				if (HasExtraData)
+					ExtraData = f.Read(Math.Abs(ExtraWidth * ExtraHeight));
+
+				if (HasZData && HasExtraData && 0 < _extraZDataOffset && _extraZDataOffset < f.Length)
+					ExtraZData = f.Read(Math.Abs(ExtraWidth * ExtraHeight));
+			}
+
+			[Flags]
+			private enum DataPrecencyFlags : uint {
+				ExtraData = 0x01,
+				ZData = 0x02,
+				DamagedData = 0x04,
+			}
 
 			public bool HasExtraData {
-				get {
-					return (datapresency & 0x01) == 0x01;
-				}
+				get { return (_dataPrecencyFlags & DataPrecencyFlags.ExtraData) == DataPrecencyFlags.ExtraData; }
 			}
 			public bool HasZData {
-				get {
-					return (datapresency & 0x02) == 0x02;
-				}
+				get { return (_dataPrecencyFlags & DataPrecencyFlags.ZData) == DataPrecencyFlags.ZData; }
 			}
 			public bool HasDamagedData {
-				get {
-					return (datapresency & 0x04) == 0x04;
-				}
+				get { return (_dataPrecencyFlags & DataPrecencyFlags.DamagedData) == DataPrecencyFlags.DamagedData; }
 			}
-		}
-
-		class TmpImage {
-			public TmpImageHeader header;
-			public byte[] tileData;
-			public byte[] extraData;
-			public byte[] zData;
-			public byte[] extraZData;
 		}
 
 		public TmpFile(Stream baseStream, string filename, int baseOffset, int fileSize, bool isBuffered = true)
@@ -82,48 +106,56 @@ namespace CNCMaps.FileFormats {
 		}
 
 		public void Initialize() {
+			if (_isInitialized) return;
+
 			logger.Debug("Initializing TMP data for file {0}", FileName);
-
-			isInitialized = true;
+			_isInitialized = true;
 			Position = 0;
-			byte[] header = Read(Marshal.SizeOf(typeof(TmpFileHeader)));
-			fileHeader = EzMarshal.ByteArrayToStructure<TmpFileHeader>(header);
-			byte[] index = Read(fileHeader.cblocks_x * fileHeader.cblocks_y * sizeof(int));
 
-			images = new List<TmpImage>(fileHeader.cblocks_x * fileHeader.cblocks_y);
-			for (int x = 0; x < fileHeader.cblocks_x * fileHeader.cblocks_y; x++) {
+			Width = ReadInt32();
+			Height = ReadInt32();
+			BlockWidth = ReadInt32();
+			BlockHeight = ReadInt32();
+
+			byte[] index = Read(Width * Height * sizeof(int));
+			Images = new List<TmpImage>(Width * Height);
+			for (int x = 0; x < Width * Height; x++) {
 				int imageData = BitConverter.ToInt32(index, x * 4);
-				Position = imageData;
+				Seek(imageData, SeekOrigin.Begin);
 				var img = new TmpImage();
-				img.header = EzMarshal.ByteArrayToStructure<TmpImageHeader>(Read(Marshal.SizeOf(typeof(TmpImageHeader))));
-				img.tileData = Read(fileHeader.cx * fileHeader.cy / 2);
-				if (img.header.HasZData) {
-					img.zData = Read(fileHeader.cx * fileHeader.cy / 2);
-				}
-				if (img.header.HasExtraData) {
-					img.extraData = Read(Math.Abs(img.header.cx_extra * img.header.cy_extra));
-				}
-				if (img.header.HasZData && img.header.HasExtraData && 0 < img.header.extra_z_ofs && img.header.extra_z_ofs < Length) {
-					img.extraZData = Read(Math.Abs(img.header.cx_extra * img.header.cy_extra));
-				}
-				images.Add(img);
+				img.Read(this);
+				Images.Add(img);
 			}
 		}
 
+		public Rectangle GetBounds(MapTile tile) {
+			Initialize();
+			var img = Images[tile.SubTile];
+
+			int left = tile.Dx * BlockWidth / 2;
+			int top = (tile.Dy - tile.Z) * BlockHeight / 2;
+			int width = BlockWidth;
+			int height = BlockHeight;
+			if (img.HasExtraData) {
+				if (img.ExtraX < 0) { left += img.ExtraX; width -= img.ExtraX; }
+				if (img.ExtraY < 0) { top += img.ExtraY; height -= img.ExtraY; }
+				width = Math.Max(width, img.ExtraWidth);
+				height = Math.Max(height, img.ExtraHeight);
+			}
+
+			return new Rectangle(left, top, width, height);
+		}
 
 		unsafe public void Draw(MapTile tile, DrawingSurface ds) {
-			if (!isInitialized) Initialize();
+			Initialize();
 
-			logger.Trace("Initializing TMP data for file {0}", FileName);
-
-			if (tile.SubTile >= images.Count) return;
-			TmpImage img = images[tile.SubTile];
-			var zBuffer = ds.GetZBuffer();
+			if (tile.SubTile >= Images.Count) return;
+			TmpImage img = Images[tile.SubTile];
 			var heightBuffer = ds.GetHeightBuffer();
 			Palette p = tile.Palette;
 
 			// calculate tile index -> pixel index
-			Point offset = new Point(tile.Dx * fileHeader.cx / 2, (tile.Dy - tile.Z) * fileHeader.cy / 2);
+			Point offset = new Point(tile.Dx * BlockWidth / 2, (tile.Dy - tile.Z) * BlockHeight / 2);
 
 			// make touched tiles (used for determining image cutoff)
 			int gx = tile.Dx, gy = (tile.Dy - tile.Z) / 2;
@@ -136,8 +168,8 @@ namespace CNCMaps.FileFormats {
 
 			int stride = ds.bmd.Stride;
 
-			int halfCx = fileHeader.cx / 2,
-				halfCy = fileHeader.cy / 2;
+			int halfCx = BlockWidth / 2,
+				halfCy = BlockHeight / 2;
 
 			// writing bounds
 			var w_low = (byte*)ds.bmd.Scan0;
@@ -151,14 +183,12 @@ namespace CNCMaps.FileFormats {
 			for (; y < halfCy; y++) {
 				cx += 4;
 				for (ushort c = 0; c < cx; c++) {
-					byte paletteValue = img.tileData[rIdx];
-					short zBufVal = (short)((tile.Rx + tile.Ry + tile.Z) * Drawable.TileHeight / 2);// - (img.zData != null ? img.zData[rIdx] : 0));
-
-					if (paletteValue != 0 && w_low <= w && w < w_high && zBufVal >= zBuffer[zIdx]) {
+					byte paletteValue = img.TileData[rIdx];
+					
+					if (paletteValue != 0 && w_low <= w && w < w_high) {
 						*(w + 0) = p.Colors[paletteValue].B;
 						*(w + 1) = p.Colors[paletteValue].G;
 						*(w + 2) = p.Colors[paletteValue].R;
-						zBuffer[zIdx] = zBufVal;
 						heightBuffer[zIdx] = (short)(tile.Z * Drawable.TileHeight / 2);
 					}
 					w += 3;
@@ -171,17 +201,15 @@ namespace CNCMaps.FileFormats {
 
 			w += 12;
 			zIdx += 4;
-			for (; y < fileHeader.cy; y++) {
+			for (; y < BlockHeight; y++) {
 				cx -= 4;
 				for (ushort c = 0; c < cx; c++) {
-					byte paletteValue = img.tileData[rIdx];
-					short zBufVal = (short)((tile.Rx + tile.Ry + tile.Z) * Drawable.TileHeight / 2);// - (img.zData != null ? img.zData[rIdx] : 0));
-
-					if (paletteValue != 0 && w_low <= w && w < w_high && zBufVal >= zBuffer[zIdx]) {
+					byte paletteValue = img.TileData[rIdx];
+					
+					if (paletteValue != 0 && w_low <= w && w < w_high) {
 						*(w + 0) = p.Colors[paletteValue].B;
 						*(w + 1) = p.Colors[paletteValue].G;
 						*(w + 2) = p.Colors[paletteValue].R;
-						zBuffer[zIdx] = zBufVal;
 						heightBuffer[zIdx] = (short)(tile.Z * Drawable.TileHeight / 2);
 					}
 					w += 3;
@@ -192,20 +220,20 @@ namespace CNCMaps.FileFormats {
 				zIdx += ds.Width - (cx - 2);
 			}
 
-			if (!img.header.HasExtraData) return; // we're done now
+			if (!img.HasExtraData) return; // we're done now
 
-			offset.X += img.header.x_extra - img.header.x;
-			offset.Y += img.header.y_extra - img.header.y;
+			offset.X += img.ExtraX - img.X;
+			offset.Y += img.ExtraY - img.Y;
 			w = w_low + stride * offset.Y + 3 * offset.X;
 			zIdx = offset.X + offset.Y * ds.Width;
 			rIdx = 0;
 
 			// identify extra-data affected tiles for cutoff
 			var extraBounds = Rectangle.FromLTRB(
-				Math.Max(0, (int)Math.Floor(offset.X / (fileHeader.cx / 2.0))),
-				Math.Max(0, (int)Math.Floor(offset.Y / (fileHeader.cy / 2.0))),
-				Math.Min(tile.Layer.Width - 1, (int)Math.Ceiling((offset.X + img.header.cx_extra) / (fileHeader.cx / 2.0))),
-				Math.Min((tile.Layer.Height - 1) * 2, (int)Math.Ceiling((offset.X + img.header.cy_extra) / (fileHeader.cy / 2.0))));
+				Math.Max(0, (int)Math.Floor(offset.X / (BlockWidth / 2.0))),
+				Math.Max(0, (int)Math.Floor(offset.Y / (BlockHeight / 2.0))),
+				Math.Min(tile.Layer.Width - 1, (int)Math.Ceiling((offset.X + img.ExtraWidth) / (BlockWidth / 2.0))),
+				Math.Min((tile.Layer.Height - 1) * 2, (int)Math.Ceiling((offset.X + img.ExtraHeight) / (BlockHeight / 2.0))));
 			for (int by = extraBounds.Top; by < extraBounds.Bottom; by++) {
 				for (int bx = extraBounds.Left; bx < extraBounds.Right; bx++) {
 					logger.Trace("Tile at ({0},{1}) has extradata affecting ({2},{3})", tile.Dx, tile.Dy, bx, by);
@@ -215,26 +243,24 @@ namespace CNCMaps.FileFormats {
 			}
 
 			// Extra graphics are just a square
-			for (y = 0; y < img.header.cy_extra; y++) {
-				for (x = 0; x < img.header.cx_extra; x++) {
+			for (y = 0; y < img.ExtraHeight; y++) {
+				for (x = 0; x < img.ExtraWidth; x++) {
 					// Checking per line is required because v needs to be checked every time
-					byte paletteValue = img.extraData[rIdx];
-					short zBufVal = (short)((tile.Rx + tile.Ry + tile.Z) * Drawable.TileHeight / 2);
-
-					if (paletteValue != 0 && w_low <= w && w < w_high && zBufVal >= zBuffer[zIdx]) {
+					byte paletteValue = img.ExtraData[rIdx];
+					
+					if (paletteValue != 0 && w_low <= w && w < w_high) {
 						*w++ = p.Colors[paletteValue].B;
 						*w++ = p.Colors[paletteValue].G;
 						*w++ = p.Colors[paletteValue].R;
-						zBuffer[zIdx] = zBufVal;
-						heightBuffer[zIdx] = (short)(img.header.cy_extra + tile.Z * Drawable.TileHeight / 2);
+						heightBuffer[zIdx] = (short)(img.ExtraHeight + tile.Z * Drawable.TileHeight / 2);
 					}
 					else
 						w += 3;
 					zIdx++;
 					rIdx++;
 				}
-				w += stride - img.header.cx_extra * 3;
-				zIdx += ds.Width - img.header.cx_extra;
+				w += stride - img.ExtraWidth * 3;
+				zIdx += ds.Width - img.ExtraWidth;
 			}
 		}
 	}
