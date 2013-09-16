@@ -180,10 +180,18 @@ namespace CNCMaps.Game {
 
 		public Rectangle GetBounds(GameObject obj) {
 			Rectangle bounds = Rectangle.Empty;
+			if (InvisibleInGame) return bounds;
+
 			foreach (var shp in _shps) {
 				if (bounds == Rectangle.Empty) bounds = shp.File.GetBounds();
 				else bounds = Rectangle.Union(bounds, shp.File.GetBounds());
 			}
+			if (_voxels.Any()) {
+				var vxlBounds = new Rectangle(-100, -100, 200, 200);
+				if (bounds == Rectangle.Empty) bounds = vxlBounds;
+				else bounds = Rectangle.Union(bounds, vxlBounds);
+			}
+
 			bounds.Offset(obj.Tile.Dx * TileWidth / 2, (obj.Tile.Dy - obj.Tile.Z) * TileHeight / 2);
 			return bounds;
 		}

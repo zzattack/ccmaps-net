@@ -12,7 +12,11 @@ namespace CNCMaps.Map {
 	}
 	public class GameObject {
 		public virtual MapTile Tile { get; set; }
-		public virtual MapTile BaseTile {
+		public virtual MapTile BottomTile {
+			get { return Tile; }
+			set { }
+		}
+		public virtual MapTile TopTile {
 			get { return Tile; }
 			set { }
 		}
@@ -44,7 +48,8 @@ namespace CNCMaps.Map {
 			Health = health;
 			Direction = direction;
 		}
-
+		public override MapTile BottomTile { get; set; }
+		public override MapTile TopTile { get; set; }
 		public short Health { get; set; }
 		public short Direction { get; set; }
 		public string Owner { get; set; }
@@ -56,12 +61,11 @@ namespace CNCMaps.Map {
 			Health = health;
 			Direction = direction;
 		}
-
 		public short Health { get; set; }
 		public short Direction { get; set; }
 		public string Owner { get; set; }
 	}
-	public class LightSource : NamedObject {
+	public class LightSource : StructureObject {
 		public double LightVisibility { get; set; }
 		public double LightIntensity { get; set; }
 		public double LightRedTint { get; set; }
@@ -73,9 +77,8 @@ namespace CNCMaps.Map {
 
 		static NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
-		public LightSource() { }
-		public LightSource(IniFile.IniSection lamp, Lighting scenario) {
-			Name = lamp.Name;
+		public LightSource() : base("nobody", "", 0, 0) { }
+		public LightSource(IniFile.IniSection lamp, Lighting scenario) : base("nobody", lamp.Name, 0, 0) {
 			Initialize(lamp, scenario);
 		}
 
@@ -129,7 +132,8 @@ namespace CNCMaps.Map {
 		}
 
 		public byte OverlayValue { get; set; }
-		public override MapTile BaseTile { get; set; }
+		public override MapTile BottomTile { get; set; }
+		public override MapTile TopTile { get; set; }
 
 		public OverlayObject(byte overlayID, byte overlayValue) {
 			OverlayID = overlayID;
@@ -140,7 +144,8 @@ namespace CNCMaps.Map {
 		public SmudgeObject(string name) {
 			Name = name;
 		}
-		public override MapTile BaseTile { get; set; }
+		public override MapTile BottomTile { get; set; }
+		public override MapTile TopTile { get; set; }
 	}
 	public class StructureObject : NamedObject, OwnableObject {
 		public StructureObject(string owner, string name, short health, short direction) {
@@ -150,7 +155,8 @@ namespace CNCMaps.Map {
 			Direction = direction;
 		}
 
-		public override MapTile BaseTile { get; set; }
+		public override MapTile BottomTile { get; set; }
+		public override MapTile TopTile { get; set; }
 		public short Health { get; set; }
 		public short Direction { get; set; }
 		public string Owner { get; set; }
@@ -165,14 +171,14 @@ namespace CNCMaps.Map {
 		}
 	}
 	public class UnitObject : NamedObject, OwnableObject {
-
 		public UnitObject(string owner, string name, short health, short direction) {
 			Owner = owner;
 			Name = name;
 			Health = health;
 			Direction = direction;
 		}
-
+		public override MapTile BottomTile { get; set; }
+		public override MapTile TopTile { get; set; }
 		public short Health { get; set; }
 		public short Direction { get; set; }
 		public string Owner { get; set; }

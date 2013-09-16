@@ -200,7 +200,6 @@ namespace CNCMaps.Game {
 				drawable.DrawFlat = false;
 				// RA2 walls appear a bit higher
 				if (_engine >= EngineType.RedAlert2) {
-					mainProps.ZBufferAdjust += 40;
 					drawable.AddOffset(0, 3); // seems walls are located 3 pixels lower
 				}
 				drawable.PaletteType = PaletteType.Unit;
@@ -233,8 +232,7 @@ namespace CNCMaps.Game {
 				//mainProps.ZBufferAdjust += Drawable.TileHeight / 2;
 			}
 			else if (_collectionType == CollectionType.Infantry) {
-				mainProps.Offset.X += Drawable.TileWidth / 2;
-				mainProps.Offset.Y += Drawable.TileHeight / 2;
+				mainProps.Offset.X += Drawable.TileWidth / 2; // todo: align these properly
 			}
 
 			if (rulesSection.ReadString("Land") == "Rock") {
@@ -243,7 +241,6 @@ namespace CNCMaps.Game {
 			}
 			else if (rulesSection.ReadString("Land") == "Road") {
 				mainProps.Offset.Y += Drawable.TileHeight / 2;
-				mainProps.ZBufferAdjust += Drawable.TileHeight / 2;
 				drawable.Foundation = new Size(3, 1); // ensures bridges are drawn a bit lower than where they're stored
 			}
 			else if (rulesSection.ReadString("Land") == "Railroad") {
@@ -251,7 +248,6 @@ namespace CNCMaps.Game {
 					mainProps.Offset.Y = 11;
 				else
 					mainProps.Offset.Y = 14;
-				mainProps.ZBufferAdjust = 15;
 				drawable.LightingType = LightingType.Full;
 				drawable.PaletteType = PaletteType.Iso;
 			}
@@ -260,6 +256,9 @@ namespace CNCMaps.Game {
 				mainProps.Offset.Y = -1;
 				drawable.LightingType = LightingType.None;
 				drawable.PaletteType = PaletteType.Unit;
+			}
+			if (rulesSection.HasKey("JumpjetHeight")) {
+				drawable.AddOffset(0, (int)(-rulesSection.ReadInt("JumpjetHeight") / 256.0 * Drawable.TileHeight));
 			}
 
 			if (_collectionType == CollectionType.Overlay) {
@@ -276,7 +275,6 @@ namespace CNCMaps.Game {
 						mainProps.OffsetHack = OffsetHacks.RA2BridgeOffsets;
 						mainProps.ShadowOffsetHack = OffsetHacks.RA2BridgeShadowOffsets;
 						drawable.HeightOffset = 4; // for lighting
-						mainProps.ZBufferAdjust = Drawable.TileHeight;
 						drawable.Foundation = new Size(3, 1);
 					}
 				}
@@ -290,7 +288,6 @@ namespace CNCMaps.Game {
 						mainProps.OffsetHack = OffsetHacks.TSBridgeOffsets;
 						mainProps.ShadowOffsetHack = OffsetHacks.TSBridgeShadowOffsets;
 						drawable.HeightOffset = 4;
-						mainProps.ZBufferAdjust = 1 * Drawable.TileHeight;
 					}
 				}
 			}
@@ -347,8 +344,6 @@ namespace CNCMaps.Game {
 							ShadowOffset = mainProps.Offset,
 							SortIndex = ySort,
 							FrameDecider = extraFrameDecider,
-							//OverridesZbuffer = true,
-							ZBufferAdjust = artSection.ReadInt(extraImage + "ZAdjust") + mainProps.Offset.Y,
 						};
 						AddImageToObject(drawable, extraImageFileName, props);
 					}
@@ -381,8 +376,7 @@ namespace CNCMaps.Game {
 							Offset = mainProps.Offset,
 							ShadowOffset = mainProps.Offset,
 							FrameDecider = extraFrameDecider,
-							OverridesZbuffer = true,
-							ZBufferAdjust = -artSection.ReadInt(extraImage + "ZBufferAdjust"),
+							// TODO: figure out if this needs to be added to y offset = -artSection.ReadInt(extraImage + "ZAdjust"),
 						};
 						drawable.AddDamagedShp(VFS.Open(extraImageDamagedFileName) as ShpFile, props);
 					}
