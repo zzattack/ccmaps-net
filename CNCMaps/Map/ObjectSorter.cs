@@ -93,7 +93,7 @@ namespace CNCMaps.Map {
 				}
 			};
 
-			for (int y = obj.TopTile.Dy - 0; y <= obj.BottomTile.Dy + 4; y++) {
+			for (int y = obj.TopTile.Dy - 2; y <= obj.BottomTile.Dy + 4; y++) {
 				for (int x = obj.TopTile.Dx - 4; x <= obj.TopTile.Dx + 4; x += 2) {
 					if (x >= 0 && y >= 0)
 						examine(_map[x + (y + obj.TopTile.Dy) % 2, y / 2]);

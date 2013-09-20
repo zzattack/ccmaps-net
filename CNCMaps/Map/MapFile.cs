@@ -562,7 +562,8 @@ namespace CNCMaps.Map {
 					int rx = int.Parse(entries[3]);
 					int ry = int.Parse(entries[4]);
 					short direction = short.Parse(entries[5]);
-					var s = new StructureObject(owner, name, health, direction);
+					bool onBridge = entries[10] == "1";
+					var s = new StructureObject(owner, name, health, direction, onBridge);
 					s.Tile = _tiles.GetTileR(rx, ry);
 					s.Upgrade1 = entries[12];
 					s.Upgrade2 = entries[13];
@@ -596,7 +597,8 @@ namespace CNCMaps.Map {
 				int rx = int.Parse(entries[3]);
 				int ry = int.Parse(entries[4]);
 				short direction = short.Parse(entries[7]);
-				var i = new InfantryObject(owner, name, health, direction);
+				bool onBridge = entries[11] == "1";
+				var i = new InfantryObject(owner, name, health, direction, onBridge);
 				var tile = _tiles.GetTileR(rx, ry);
 				if (tile != null) {
 					tile.AddObject(i);
@@ -624,7 +626,8 @@ namespace CNCMaps.Map {
 				int rx = int.Parse(entries[3]);
 				int ry = int.Parse(entries[4]);
 				short direction = short.Parse(entries[5]);
-				var u = new UnitObject(owner, name, health, direction);
+				bool onBridge = entries[10] == "1";
+				var u = new UnitObject(owner, name, health, direction, onBridge);
 				var tile = _tiles.GetTileR(rx, ry);
 				if (tile != null) {
 					tile.AddObject(u);
@@ -649,7 +652,8 @@ namespace CNCMaps.Map {
 				int rx = int.Parse(entries[3]);
 				int ry = int.Parse(entries[4]);
 				short direction = short.Parse(entries[5]);
-				var a = new AircraftObject(owner, name, health, direction);
+				bool onBridge = entries[entries.Length - 4] == "1";
+				var a = new AircraftObject(owner, name, health, direction, onBridge);
 				var tile = _tiles.GetTileR(rx, ry);
 				if (tile != null) {
 					tile.AddObject(a);
@@ -754,13 +758,13 @@ namespace CNCMaps.Map {
 					// level, ambient and full benefit from sharing
 					if (lt == LightingType.Full && pt == PaletteType.Iso) {
 						// bridges are attached to a low tile, but their height-offset should be taken into account 
-						int z = obj.Tile.Z + (obj.Drawable != null ? obj.Drawable.HeightOffset : 0);
+						int z = obj.Tile.Z + (obj.Drawable != null ? obj.Drawable.TileElevation : 0);
 						p = _palettePerLevel[z];
 					}
 					else if (lt >= LightingType.Level) {
 						// when applying lighting to its palette
 						p = _theater.GetPalette(obj.Drawable).Clone();
-						int z = obj.Tile.Z + (obj.Drawable != null ? obj.Drawable.HeightOffset : 0);
+						int z = obj.Tile.Z + (obj.Drawable != null ? obj.Drawable.TileElevation : 0);
 						p.ApplyLighting(_lighting, z, lt == LightingType.Full);
 					}
 					else {

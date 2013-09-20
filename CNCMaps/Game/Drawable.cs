@@ -41,7 +41,7 @@ namespace CNCMaps.Game {
 		public bool IsWall { get; set; }
 		public bool IsGate { get; set; }
 		public bool IsVeins { get; set; }
-		public int HeightOffset { get; set; }
+		public int TileElevation { get; set; }
 		public bool DrawFlat { get; set; }
 
 		// below are all the different kinds of drawables that a Drawable can consist of
@@ -89,9 +89,16 @@ namespace CNCMaps.Game {
 		private void DrawFile(GameObject obj, DrawingSurface ds, ShpFile file, DrawProperties props) {
 			if (file == null || obj == null || obj.Tile == null) return;
 
+			Size heightOffset = Size.Empty;
+			if (obj is OwnableObject && (obj as OwnableObject).OnBridge) {
+				// moving stuff can be 'on' a bridge
+				if (obj.Tile.AllObjects.OfType<OverlayObject>().Any(SpecialOverlays.IsHighBridge))
+					heightOffset = new Size(0, -4 * TileHeight / 2);
+			}
+
 			file.Draw(obj, props, ds, _globalOffset);
 			if (props.HasShadow) {
-				file.DrawShadow(obj, props, ds, _globalOffset);
+				file.DrawShadow(obj, props, ds, _globalOffset + heightOffset);
 			}
 		}
 

@@ -246,6 +246,7 @@ namespace CNCMaps.Game {
 					mainProps.Offset.Y = 14;
 				drawable.LightingType = LightingType.Full;
 				drawable.PaletteType = PaletteType.Iso;
+				drawable.Foundation = new Size(2, 1); // ensures these too are drawn one tile lower than they are stored
 			}
 			if (rulesSection.ReadBool("SpawnsTiberium")) {
 				// For example on TIBTRE / Ore Poles
@@ -270,7 +271,7 @@ namespace CNCMaps.Game {
 					else if (SpecialOverlays.IsHighBridge(ovl)) {
 						mainProps.OffsetHack = OffsetHacks.RA2BridgeOffsets;
 						mainProps.ShadowOffsetHack = OffsetHacks.RA2BridgeShadowOffsets;
-						drawable.HeightOffset = 4; // for lighting
+						drawable.TileElevation = 4; // for lighting
 						drawable.Foundation = new Size(3, 1); // ensures they're drawn later --> fixes overlap
 					}
 				}
@@ -283,7 +284,7 @@ namespace CNCMaps.Game {
 					else if (SpecialOverlays.IsHighBridge(ovl) || SpecialOverlays.IsTSHighRailsBridge(ovl)) {
 						mainProps.OffsetHack = OffsetHacks.TSBridgeOffsets;
 						mainProps.ShadowOffsetHack = OffsetHacks.TSBridgeShadowOffsets;
-						drawable.HeightOffset = 4; // for lighting
+						drawable.TileElevation = 4; // for lighting
 						drawable.Foundation = new Size(3, 1); // ensures they're drawn later --> fixes overlap
 					}
 				}
