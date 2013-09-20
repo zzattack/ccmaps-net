@@ -39,13 +39,14 @@ namespace CNCMaps.Map {
 				}
 			};
 
-			/* for (int y = 0; y < _map.Height; y++) {
+			for (int y = 0; y < _map.Height; y++) {
 				for (int x = _map.Width * 2 - 2; x >= 0; x -= 2)
 					processTile(_map[x, y]);
 				for (int x = _map.Width * 2 - 3; x >= 0; x -= 2)
 					processTile(_map[x, y]);
 			}
 
+			/*
 			// assert no cyclics (one level deep)
 			foreach (var entry in _graph) {
 				foreach (var dep in entry.Value) {

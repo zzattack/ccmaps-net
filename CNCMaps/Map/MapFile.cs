@@ -966,6 +966,7 @@ namespace CNCMaps.Map {
 			// searches in 10 rows, starting from the bottom up, for the first fully tiled row
 			int y;
 
+#if DEBUG
 			// print map:
 			var tileTouchGrid = _tiles.GridTouched;
 			var sb = new System.Text.StringBuilder();
@@ -980,7 +981,8 @@ namespace CNCMaps.Map {
 				}
 				sb.AppendLine();
 			}
-			File.WriteAllText("cutoffmap.txt", sb.ToString());
+			// File.WriteAllText("cutoffmap.txt", sb.ToString());
+#endif
 
 			for (y = FullSize.Height - 1; y > FullSize.Height - 10; y--) {
 				bool isRowFilled = true;

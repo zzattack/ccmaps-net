@@ -237,9 +237,12 @@ namespace CNCMaps.FileFormats {
 			for (int by = extraScreenBounds.Top; by < extraScreenBounds.Bottom; by += BlockHeight / 2) {
 				for (int bx = extraScreenBounds.Left; bx < extraScreenBounds.Right; bx += BlockWidth / 2) {
 					var gridTileNoZ = tile.Layer.GetTileScreenNoZ(new Point(bx, by));
-					logger.Trace("Tile at ({0},{1}) has extradata affecting ({2},{3})", tile.Dx, tile.Dy, gridTileNoZ.Dx, gridTileNoZ.Dy);
-					tile.Layer.GridTouched[gridTileNoZ.Dx, gridTileNoZ.Dy / 2] |= TileLayer.TouchType.ByExtraData;
-					tile.Layer.GridTouchedBy[gridTileNoZ.Dx, gridTileNoZ.Dy / 2] = tile;
+					if (gridTileNoZ != null) {
+						logger.Trace("Tile at ({0},{1}) has extradata affecting ({2},{3})", tile.Dx, tile.Dy, gridTileNoZ.Dx,
+							gridTileNoZ.Dy);
+						tile.Layer.GridTouched[gridTileNoZ.Dx, gridTileNoZ.Dy / 2] |= TileLayer.TouchType.ByExtraData;
+						tile.Layer.GridTouchedBy[gridTileNoZ.Dx, gridTileNoZ.Dy / 2] = tile;
+					}
 				}
 			}
 
