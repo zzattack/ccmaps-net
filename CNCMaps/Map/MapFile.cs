@@ -1096,19 +1096,19 @@ namespace CNCMaps.Map {
 		public void DrawMap() {
 			Logger.Info("Drawing map");
 			_drawingSurface = new DrawingSurface(FullSize.Width * TileWidth, FullSize.Height * TileHeight, PixelFormat.Format24bppRgb);
-			ObjectSorter sorter = new ObjectSorter(_theater, _tiles);
+			var sorter = new ObjectSorter(_theater, _tiles);
 			var orderedObjs = sorter.GetOrderedObjects();
 			foreach (var obj in orderedObjs)
 				_theater.Draw(obj, _drawingSurface);
 
-			/* // test that my bounds make some kind of sense
-			_drawingSurface.Unlock();
+			// test that my bounds make some kind of sense
+			/*_drawingSurface.Unlock();
 			using (Graphics gfx = Graphics.FromImage(_drawingSurface.bm)) {
 				foreach (var obj in orderedObjs)
 					if (obj.Drawable != null)
-						obj.Drawable.DrawBounds(obj, gfx);
-			}
-			*/
+						obj.Drawable.DrawBoundingBox(obj, gfx);
+			}*/
+
 
 			/*
 			var tileCollection = _theater.GetTileCollection();

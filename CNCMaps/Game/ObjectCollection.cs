@@ -519,9 +519,12 @@ namespace CNCMaps.Game {
 
 		private void ApplyNewTheater(ref string imageFileName) {
 			var sb = new StringBuilder(imageFileName);
+
 			sb[1] = Defaults.GetTheaterPrefix(_theaterType);
 			if (!VFS.Exists(sb.ToString())) {
 				sb[1] = 'G'; // generic
+				if (!VFS.Exists(sb.ToString()))
+					sb[1] = imageFileName[1]; // fallback to original
 			}
 			imageFileName = sb.ToString();
 		}

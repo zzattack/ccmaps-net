@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
+using System.Windows.Forms;
 using CNCMaps.FileFormats;
 using CNCMaps.Map;
 using CNCMaps.Rendering;
@@ -71,6 +72,14 @@ namespace CNCMaps.Game {
 			else
 				shpsToDraw.AddRange(_shps);
 
+			Point heightOffset = Point.Empty;
+			if (obj is OwnableObject && (obj as OwnableObject).OnBridge) {
+				// moving stuff can be 'on' a bridge
+				// if (obj.Tile.AllObjects.OfType<OverlayObject>().Any(SpecialOverlays.IsHighBridge))
+				heightOffset = new Point(0, -4 * TileHeight / 2);
+			}
+			_globalOffset.Offset(heightOffset);
+
 			foreach (var shp in shpsToDraw.OrderBy(shp => shp.Props.SortIndex))
 				DrawFile(obj, ds, shp.File, shp.Props);
 
@@ -84,21 +93,16 @@ namespace CNCMaps.Game {
 					BlitVoxelToSurface(ds, vxl_ds, obj, _voxels[i].Props);
 			}
 
+			_globalOffset.Offset(-heightOffset.X, -heightOffset.Y);
+
 		}
 
 		private void DrawFile(GameObject obj, DrawingSurface ds, ShpFile file, DrawProperties props) {
 			if (file == null || obj == null || obj.Tile == null) return;
 
-			Size heightOffset = Size.Empty;
-			if (obj is OwnableObject && (obj as OwnableObject).OnBridge) {
-				// moving stuff can be 'on' a bridge
-				if (obj.Tile.AllObjects.OfType<OverlayObject>().Any(SpecialOverlays.IsHighBridge))
-					heightOffset = new Size(0, -4 * TileHeight / 2);
-			}
-
 			file.Draw(obj, props, ds, _globalOffset);
 			if (props.HasShadow) {
-				file.DrawShadow(obj, props, ds, _globalOffset + heightOffset);
+				file.DrawShadow(obj, props, ds, _globalOffset);
 			}
 		}
 
@@ -189,7 +193,7 @@ namespace CNCMaps.Game {
 			Rectangle bounds = Rectangle.Empty;
 
 			if (IsVoxel) {
-				var vxlBounds = new Rectangle(-100, -50, 200, 100);
+				var vxlBounds = new Rectangle(-100, -100, 200, 200);
 				if (bounds == Rectangle.Empty) bounds = vxlBounds;
 				else bounds = Rectangle.Union(bounds, vxlBounds);
 			}
@@ -197,21 +201,23 @@ namespace CNCMaps.Game {
 				foreach (var shp in _shps) {
 					if (bounds == Rectangle.Empty) bounds = shp.File.GetBounds(obj, shp.Props);
 					else bounds = Rectangle.Union(bounds, shp.File.GetBounds(obj, shp.Props));
-				} 
+				}
 			}
 			bounds.Offset(obj.Tile.Dx * TileWidth / 2 + TileWidth / 2, (obj.Tile.Dy - obj.Tile.Z) * TileHeight / 2);
 			bounds.Offset(_globalOffset);
+			if (obj is OwnableObject && (obj as OwnableObject).OnBridge)
+				bounds.Offset(0, -4 * TileHeight / 2);
 			return bounds;
 		}
 
-		/*private static Pen boundsRectPenVoxel = new Pen(Color.Blue);
+		private static Pen boundsRectPenVoxel = new Pen(Color.Blue);
 		private static Pen boundsRectPenSHP = new Pen(Color.Red);
-		public void DrawBounds(GameObject obj, Graphics gfx) {
+		public void DrawBoundingBox(GameObject obj, Graphics gfx) {
 			if (IsVoxel)
 				gfx.DrawRectangle(boundsRectPenVoxel, GetBounds(obj));
 			else
 				gfx.DrawRectangle(boundsRectPenSHP, GetBounds(obj));
-		}*/
+		}
 
 		public bool IsVoxel { get; set; }
 	}

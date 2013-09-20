@@ -3,21 +3,18 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
-using System.Text;
 using CNCMaps.Game;
 using CNCMaps.Rendering;
-using CNCMaps.Utility;
 
 namespace CNCMaps.Map {
 	class ObjectSorter {
-		private TileLayer _map;
-		private Theater _t;
+		private readonly TileLayer _map;
+		private readonly Theater _t;
 		// graph of (v, Adj[v])
-		new Dictionary<GameObject, HashSet<GameObject>> _graph = new Dictionary<GameObject, HashSet<GameObject>>();
+		private readonly Dictionary<GameObject, HashSet<GameObject>> _graph = new Dictionary<GameObject, HashSet<GameObject>>();
 		// objects with empty all their dependencies
-		HashSet<GameObject> _hist = new HashSet<GameObject>();
-		// private List<MapTile> processedTiles = new List<MapTile>();
-
+		private readonly HashSet<GameObject> _hist = new HashSet<GameObject>();
+		
 		public ObjectSorter(Theater t, TileLayer map) {
 			this._map = map;
 			this._t = t;
@@ -28,15 +25,9 @@ namespace CNCMaps.Map {
 
 			Action<MapTile> processTile = tile => {
 				if (tile == null) return;
-				// processedTiles.Add(tile);
-
 				foreach (var obj in tile.AllObjects) {
 					// every object depends on its bottom-most host tile at least
 					AddDependency(obj, obj.BottomTile, "Bottom tile");
-					// and on the topmost tile too, but that may be drawn already
-					if (obj.TopTile != obj.BottomTile && !_hist.Contains(obj.TopTile))
-						AddDependency(obj, obj.TopTile);
-
 					ExamineNeighbourhood(obj);
 				}
 
@@ -55,26 +46,27 @@ namespace CNCMaps.Map {
 					processTile(_map[x, y]);
 			}
 
-			// assert no cyclics
-			/*foreach (var entry in _graph) {
+			// assert no cyclics (one level deep)
+			foreach (var entry in _graph) {
 				foreach (var dep in entry.Value) {
-					Debug.Assert(!_graph.ContainsKey(dep) || !_graph[dep].Contains(entry.Key), "", "cyclic dependency found betwen {0} and {1}", entry.Key, dep);
-					GetFrontBlock(dep, entry.Key);
-					GetFrontBlock(entry.Key, dep);
+					Debug.Assert(!_graph.ContainsKey(dep) || !_graph[dep].Contains(entry.Key), "", "cyclic dependency found between {0} and {1}", entry.Key, dep);
 				}
 			}
-			// Debug.Assert(_map.AsEnumerable().Except(processedTiles).Any() == false);
-			Debug.Assert(_graph.Count == 0); // everything eventually resolved
-			*/
+
+			// in a world where everything is perfectly drawable this should hold
+			// Debug.Assert(_graph.Count == 0);
+			while (_graph.Count != 0)
+				ret.AddRange(MarkDependencies(_graph.First().Key));
 			return ret;
 		}
 
 		private void ExamineNeighbourhood(GameObject obj) {
-			// Debug.WriteLine("Examining neighhourhood of " + tile + " at row " + tile.Dy + " for object " + obj);
-			// Debug.Assert(!_hist.Contains(obj), "examining neighbourhood for an object that's already in the draw list");
+			// Debug.WriteLine("Examining neighhourhood of " + obj);
+			Debug.Assert(!_hist.Contains(obj), "examining neighbourhood for an object that's already in the draw list");
 
 			Action<MapTile> examine = tile2 => {
 				if (tile2 == null) return;
+				// Debug.WriteLine("neighhourhood tile " + tile2 + " of obj " + obj + " at " + obj.Tile);
 
 				// Debug.WriteLine("..EXAMINING " + obj);
 				foreach (var obj2 in tile2.AllObjects) {
@@ -93,12 +85,13 @@ namespace CNCMaps.Map {
 				}
 			};
 
-			for (int y = obj.TopTile.Dy - 2; y <= obj.BottomTile.Dy + 4; y++) {
+			for (int y = obj.TopTile.Dy - 0; y <= obj.BottomTile.Dy + 4; y++) {
 				for (int x = obj.TopTile.Dx - 4; x <= obj.TopTile.Dx + 4; x += 2) {
 					if (x >= 0 && y >= 0)
 						examine(_map[x + (y + obj.TopTile.Dy) % 2, y / 2]);
 				}
 			}
+
 		}
 
 		private void AddDependency(GameObject obj, GameObject dependency, string reason = "") {
@@ -121,15 +114,7 @@ namespace CNCMaps.Map {
 				// Debug.WriteLine("Inserting object " + mark + "@" + mark.Tile + " to hist");
 
 				var prune = new List<GameObject> { };
-				foreach (var tuple in _graph) {
-					if (tuple.Value.Remove(mark)) {
-						// Debug.WriteLine("dependency (" + tuple.Key + "@" + tuple.Key.Tile + "," + mark + "@" + mark.Tile + ") removed");
-						if (tuple.Value.Count == 0) {
-							prune.Add(tuple.Key);
-							// Debug.WriteLine("dependencies satisfied for " + tuple.Key + " @ " + tuple.Key.Tile);
-						}
-					}
-				}
+				prune.AddRange(from tuple in _graph where tuple.Value.Remove(mark) where tuple.Value.Count == 0 select tuple.Key);
 				// prune newly satisfied
 				foreach (var obj in prune) {
 					_graph.Remove(obj);
@@ -145,7 +130,7 @@ namespace CNCMaps.Map {
 			// any kind of randomness or antisymmetry in this function
 			// will lead to cyclic dependencies in the drawing order graph, 
 			// resulting in neither object every being drawn.
-			
+
 			var boxA = GetBoundingBox(objA);
 			var boxB = GetBoundingBox(objB);
 			if (!boxA.IntersectsWith(boxB)) return null;
@@ -158,7 +143,7 @@ namespace CNCMaps.Map {
 					if (hexA.xMin > hexB.xMax) return objA;
 					else if (hexA.xMin < hexB.xMax) return objB;
 					break;
-				case Axis.Y: 
+				case Axis.Y:
 					if (hexA.yMin > hexB.yMax) return objA;
 					else if (hexA.yMin < hexB.yMax) return objB;
 					break;
@@ -168,6 +153,12 @@ namespace CNCMaps.Map {
 					break;
 			}
 
+			// units on bridges can only be drawn after the bridge
+			if (objA is OverlayObject && SpecialOverlays.IsHighBridge(objA as OverlayObject)
+				&& objB is OwnableObject && (objB as OwnableObject).OnBridge) return objB;
+			else if (objB is OverlayObject && SpecialOverlays.IsHighBridge(objB as OverlayObject)
+				&& objA is OwnableObject && (objA as OwnableObject).OnBridge) return objA;
+
 			// no proper separation is possible, if one of both
 			// objects is flat then mark the other one as in front,
 			// otherwise use the one with lowest y
@@ -176,7 +167,7 @@ namespace CNCMaps.Map {
 
 			// try to make distinction based on object type
 			// tile, smudge, overlay, terrain, unit/building, aircraft
-			Dictionary<Type, int> priorities = new Dictionary<Type, int> {
+			var priorities = new Dictionary<Type, int> {
 				{ typeof(MapTile), 0 },
 				{ typeof(SmudgeObject), 1 },
 				{ typeof(OverlayObject), 2 },
@@ -188,13 +179,13 @@ namespace CNCMaps.Map {
 			};
 			int prioA = priorities[objA.GetType()];
 			int prioB = priorities[objB.GetType()];
-				
-			if (prioA < prioB) return objA;
-			else if (prioB < prioA) return objB;
+
+			if (prioA > prioB) return objA;
+			else if (prioA < prioB) return objB;
 
 			// finally try the minimal y coordinate
-			if (hexA.yMin < hexB.yMin) return objA;
-			else if (hexA.yMin > hexB.yMin) return objB;
+			if (hexA.yMin > hexB.yMin) return objA;
+			else if (hexA.yMin < hexB.yMin) return objB;
 
 			// finally if nothing worked up to here, which is very unlikely,
 			// we'll use a tie-breaker that is at least guaranteed to yield
@@ -219,15 +210,28 @@ namespace CNCMaps.Map {
 				yMin = obj.Tile.Ry,
 				yMax = obj.Tile.Ry,
 				zMin = obj.Tile.Z,
+				zMax = obj.Tile.Z,
 			};
-
-			else return new Hexagon {
-				xMin = obj.Tile.Rx,
-				xMax = obj.Tile.Rx + obj.Drawable.Foundation.Width - 1,
-				yMin = obj.Tile.Ry,
-				yMax = obj.Tile.Ry + obj.Drawable.Foundation.Height - 1,
-				zMin = obj.Tile.Z,
-			};
+			else if (obj is OwnableObject) {
+				var oObj = obj as OwnableObject;
+				return new Hexagon {
+					xMin = obj.TopTile.Rx,
+					xMax = obj.BottomTile.Rx,
+					yMin = obj.TopTile.Ry,
+					yMax = obj.BottomTile.Ry,
+					zMin = obj.Tile.Z,
+					zMax = obj.Tile.Z + (oObj.OnBridge ? 4 : 0),
+				};
+			}
+			else
+				return new Hexagon {
+					xMin = obj.TopTile.Rx,
+					xMax = obj.BottomTile.Rx,
+					yMin = obj.TopTile.Ry,
+					yMax = obj.BottomTile.Ry,
+					zMin = obj.Tile.Z,
+					zMax = obj.Tile.Z + obj.Drawable.TileElevation,
+				};
 		}
 
 	}
