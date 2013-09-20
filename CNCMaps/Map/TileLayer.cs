@@ -44,7 +44,7 @@ namespace CNCMaps.Map {
 
 		public MapTile this[int x, int y] {
 			get {
-				if (x < tiles.GetLength(0) && y < tiles.GetLength(1))
+				if (0 <= x && x < tiles.GetLength(0) && 0 <= y && y < tiles.GetLength(1))
 					return tiles[x, y];
 				else
 					return null;

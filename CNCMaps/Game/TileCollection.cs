@@ -224,7 +224,7 @@ namespace CNCMaps.Game {
 						Offset = new Point(rxOffset, ryOffset),
 						OverridesZbuffer = true,
 						FrameDecider = FrameDeciders.LoopFrameDecider(artSection.ReadInt("LoopStart"), artSection.ReadInt("LoopEnd", 1)),
-						ZBufferAdjust = -extraSection.ReadInt(n + "ZBufferAdjust"),
+						// todo: figure out if this needs to be added to y offset ZBufferAdjust = -extraSection.ReadInt(n + "ZAdjust"),
 					};
 
 					string filename = anim;

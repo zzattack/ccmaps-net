@@ -41,15 +41,15 @@ namespace CNCMaps.Game {
 		public bool IsWall { get; set; }
 		public bool IsGate { get; set; }
 		public bool IsVeins { get; set; }
-		public int HeightOffset { get; set; }
+		public int TileElevation { get; set; }
 		public bool DrawFlat { get; set; }
 
 		// below are all the different kinds of drawables that a Drawable can consist of
 		readonly List<DrawableFile<VxlFile>> _voxels = new List<DrawableFile<VxlFile>>();
 		readonly List<HvaFile> _hvas = new List<HvaFile>();
-		List<DrawableFile<ShpFile>> _shps = new List<DrawableFile<ShpFile>>();
-		List<DrawableFile<ShpFile>> _fires = new List<DrawableFile<ShpFile>>();
-		List<DrawableFile<ShpFile>> _damagedShps = new List<DrawableFile<ShpFile>>();
+		readonly List<DrawableFile<ShpFile>> _shps = new List<DrawableFile<ShpFile>>();
+		readonly List<DrawableFile<ShpFile>> _fires = new List<DrawableFile<ShpFile>>();
+		readonly List<DrawableFile<ShpFile>> _damagedShps = new List<DrawableFile<ShpFile>>();
 		private DrawableFile<ShpFile> _alphaImage;
 
 		internal void SetAlphaImage(ShpFile alphaSHP) {
@@ -71,7 +71,7 @@ namespace CNCMaps.Game {
 			else
 				shpsToDraw.AddRange(_shps);
 
-			foreach (var shp in shpsToDraw.OrderBy(shp => -shp.Props.SortIndex))
+			foreach (var shp in shpsToDraw.OrderBy(shp => shp.Props.SortIndex))
 				DrawFile(obj, ds, shp.File, shp.Props);
 
 			if (_alphaImage != null)
@@ -89,9 +89,16 @@ namespace CNCMaps.Game {
 		private void DrawFile(GameObject obj, DrawingSurface ds, ShpFile file, DrawProperties props) {
 			if (file == null || obj == null || obj.Tile == null) return;
 
+			Size heightOffset = Size.Empty;
+			if (obj is OwnableObject && (obj as OwnableObject).OnBridge) {
+				// moving stuff can be 'on' a bridge
+				if (obj.Tile.AllObjects.OfType<OverlayObject>().Any(SpecialOverlays.IsHighBridge))
+					heightOffset = new Size(0, -4 * TileHeight / 2);
+			}
+
 			file.Draw(obj, props, ds, _globalOffset);
 			if (props.HasShadow) {
-				file.DrawShadow(obj, props, ds, _globalOffset);
+				file.DrawShadow(obj, props, ds, _globalOffset + heightOffset);
 			}
 		}
 
@@ -117,7 +124,6 @@ namespace CNCMaps.Game {
 			// rows inverted!
 			var w_low = (byte*)ds.bmd.Scan0;
 			byte* w_high = w_low + ds.bmd.Stride * ds.bmd.Height;
-			var zBuffer = ds.GetZBuffer();
 			int rowsTouched = 0;
 
 			short firstRowTouched = short.MaxValue;
@@ -137,10 +143,6 @@ namespace CNCMaps.Game {
 
 						if (y < firstRowTouched)
 							firstRowTouched = (short)y;
-
-						short zBufVal = (short)((obj.Tile.Rx + obj.Tile.Ry + obj.Tile.Z) * TileHeight / 2 + y - firstRowTouched + props.ZBufferAdjust);
-						if (zBufVal >= zBuffer[zIdx])
-							zBuffer[zIdx] = zBufVal;
 					}
 					zIdx++;
 				}
@@ -182,9 +184,39 @@ namespace CNCMaps.Game {
 		public override string ToString() {
 			return Name;
 		}
+
+		public Rectangle GetBounds(GameObject obj) {
+			Rectangle bounds = Rectangle.Empty;
+
+			if (IsVoxel) {
+				var vxlBounds = new Rectangle(-100, -50, 200, 100);
+				if (bounds == Rectangle.Empty) bounds = vxlBounds;
+				else bounds = Rectangle.Union(bounds, vxlBounds);
+			}
+			else {
+				foreach (var shp in _shps) {
+					if (bounds == Rectangle.Empty) bounds = shp.File.GetBounds(obj, shp.Props);
+					else bounds = Rectangle.Union(bounds, shp.File.GetBounds(obj, shp.Props));
+				} 
+			}
+			bounds.Offset(obj.Tile.Dx * TileWidth / 2 + TileWidth / 2, (obj.Tile.Dy - obj.Tile.Z) * TileHeight / 2);
+			bounds.Offset(_globalOffset);
+			return bounds;
+		}
+
+		/*private static Pen boundsRectPenVoxel = new Pen(Color.Blue);
+		private static Pen boundsRectPenSHP = new Pen(Color.Red);
+		public void DrawBounds(GameObject obj, Graphics gfx) {
+			if (IsVoxel)
+				gfx.DrawRectangle(boundsRectPenVoxel, GetBounds(obj));
+			else
+				gfx.DrawRectangle(boundsRectPenSHP, GetBounds(obj));
+		}*/
+
+		public bool IsVoxel { get; set; }
 	}
 
-	class DrawableFile<T> : System.IComparable where T : VirtualFile {
+	class DrawableFile<T> : IComparable where T : VirtualFile {
 		public DrawProperties Props;
 		public T File;
 

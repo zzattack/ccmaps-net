@@ -1,4 +1,5 @@
 ﻿using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 using System.Linq;
 
@@ -9,7 +10,6 @@ namespace CNCMaps.Rendering {
 		public int Width { get; private set; } // prevents repeated (slow) lookups in bm.Width
 		public int Height { get; private set; } // prevents repeated (slow) lookups in bm.Width
 
-		short[] zBuffer;
 		short[] heightBuffer;
 		bool[] shadowBuffer;
 
@@ -21,7 +21,6 @@ namespace CNCMaps.Rendering {
 			Width = width;
 			Height = height;
 			Lock(bm.PixelFormat);
-			zBuffer = new short[width * height];
 			heightBuffer = new short[width * height];
 			shadowBuffer = new bool[width * height];
 		}
@@ -48,10 +47,6 @@ namespace CNCMaps.Rendering {
 
 		public bool[] GetShadows() {
 			return shadowBuffer;
-		}
-
-		public short[] GetZBuffer() {
-			return zBuffer;
 		}
 
 		public short[] GetHeightBuffer() {
@@ -96,9 +91,29 @@ namespace CNCMaps.Rendering {
 					cutRect.Save(path, encoder, encoderParams);
 		}
 
+		public void SaveThumb(Size dimensions, Rectangle cutout, string path) {
+			Unlock();
+
+			using (var thumb = new Bitmap(dimensions.Width, dimensions.Height, PixelFormat.Format24bppRgb)) {
+				using (Graphics gfx = Graphics.FromImage(thumb)) {
+					// use high-quality scaling
+					gfx.InterpolationMode = InterpolationMode.HighQualityBicubic;
+					gfx.SmoothingMode = SmoothingMode.HighQuality;
+					gfx.PixelOffsetMode = PixelOffsetMode.HighQuality;
+					gfx.CompositingQuality = CompositingQuality.HighQuality;
+
+					var srcRect = cutout;
+					var dstRect = new Rectangle(0, 0, thumb.Width, thumb.Height);
+					gfx.DrawImage(bm, dstRect, srcRect, GraphicsUnit.Pixel);
+				}
+				ImageCodecInfo encoder = ImageCodecInfo.GetImageEncoders().First(e => e.FormatID == ImageFormat.Jpeg.Guid);
+				var encoderParams = new EncoderParameters(1);
+				encoderParams.Param[0] = new EncoderParameter(Encoder.Quality, 95L);
+				thumb.Save(path, encoder, encoderParams);
+			}
+		}
 
 		internal void FreeNonBitmap() {
-			this.zBuffer = null;
 			this.shadowBuffer = null;
 			this.heightBuffer = null;
 		}
@@ -106,9 +121,9 @@ namespace CNCMaps.Rendering {
 
 		internal void Dispose() {
 			Unlock();
-			this.zBuffer = null;
 			this.shadowBuffer = null;
 			bm.Dispose();
 		}
+
 	}
 }

@@ -4,12 +4,14 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using CNCMaps.FileFormats;
 using CNCMaps.FileFormats.Encodings;
 using CNCMaps.Game;
 using CNCMaps.Rendering;
 using CNCMaps.VirtualFileSystem;
+
 using PixelFormat = System.Drawing.Imaging.PixelFormat;
 
 namespace CNCMaps.Map {
@@ -24,13 +26,13 @@ namespace CNCMaps.Map {
 		private IniFile _art;
 
 		private TileLayer _tiles;
-		private OverlayObject[,] _overlayObjects;
-		private SmudgeObject[,] _smudgeObjects;
-		private TerrainObject[,] _terrainObjects;
-		private StructureObject[,] _structureObjects;
-		private List<InfantryObject>[,] _infantryObjects;
-		private UnitObject[,] _unitObjects;
-		private AircraftObject[,] _aircraftObjects;
+		private List<OverlayObject> _overlayObjects = new List<OverlayObject>();
+		private List<SmudgeObject> _smudgeObjects = new List<SmudgeObject>();
+		private List<TerrainObject> _terrainObjects = new List<TerrainObject>();
+		private List<StructureObject> _structureObjects = new List<StructureObject>();
+		private List<InfantryObject> _infantryObjects = new List<InfantryObject>();
+		private List<UnitObject> _unitObjects = new List<UnitObject>();
+		private List<AircraftObject> _aircraftObjects = new List<AircraftObject>();
 
 		private readonly Dictionary<string, Color> _countryColors = new Dictionary<string, Color>();
 		private readonly Dictionary<string, Color> _namedColors = new Dictionary<string, Color>();
@@ -61,64 +63,42 @@ namespace CNCMaps.Map {
 		/// <returns>True if all objects are from RA2, else false.</returns>
 		private bool AllObjectsFromRA2(IniFile rules) {
 			foreach (var obj in _overlayObjects)
-				if (obj != null && obj.OverlayID > 246) return false;
+				if (obj.OverlayID > 246) return false;
+
 			IniSection objSection = rules.GetSection("TerrainTypes");
-			for (int y = 0; y < FullSize.Height; y++) {
-				for (int x = 0; x < FullSize.Width * 2 - 1; x++) {
-					var obj = _terrainObjects[x, y];
-					if (obj == null) continue;
-					int idx = objSection.FindValueIndex(obj.Name);
-					if (idx == -1 || idx > 73) return false;
-				}
+			foreach (var obj in _terrainObjects) {
+				int idx = objSection.FindValueIndex(obj.Name);
+				if (idx == -1 || idx > 73) return false;
 			}
 
 			objSection = rules.GetSection("InfantryTypes");
-			for (int y = 0; y < FullSize.Height; y++) {
-				for (int x = 0; x < FullSize.Width * 2 - 1; x++) {
-					var objList = _infantryObjects[x, y];
-					if (objList == null) continue;
-					foreach (var obj in objList) {
-						int idx = objSection.FindValueIndex(obj.Name);
-						if (idx == -1 || idx > 45) return false;
-					}
-				}
+			foreach (var obj in _infantryObjects) {
+				int idx = objSection.FindValueIndex(obj.Name);
+				if (idx == -1 || idx > 45) return false;
 			}
 
 			objSection = rules.GetSection("VehicleTypes");
-			for (int y = 0; y < FullSize.Height; y++) {
-				for (int x = 0; x < FullSize.Width * 2 - 1; x++) {
-					var obj = _unitObjects[x, y];
-					if (obj == null) continue;
-					int idx = objSection.FindValueIndex(obj.Name);
-					if (idx == -1 || idx > 57) return false;
-				}
+			foreach (var obj in _unitObjects) {
+				int idx = objSection.FindValueIndex(obj.Name);
+				if (idx == -1 || idx > 57) return false;
 			}
 
 			objSection = rules.GetSection("AircraftTypes");
-			for (int y = 0; y < FullSize.Height; y++) {
-				for (int x = 0; x < FullSize.Width * 2 - 1; x++) {
-					var obj = _aircraftObjects[x, y];
-					if (obj == null) continue;
-					int idx = objSection.FindValueIndex(obj.Name);
-					if (idx == -1 || idx > 9) return false;
-				}
+			foreach (var obj in _aircraftObjects) {
+				int idx = objSection.FindValueIndex(obj.Name);
+				if (idx == -1 || idx > 9) return false;
 			}
-
 
 			objSection = rules.GetSection("BuildingTypes");
 			IniSection objSectionAlt = rules.GetSection("OverlayTypes");
-			for (int y = 0; y < FullSize.Height; y++) {
-				for (int x = 0; x < FullSize.Width * 2 - 1; x++) {
-					var obj = _structureObjects[x, y];
-					if (obj == null) continue;
-					int idx1 = objSection.FindValueIndex(obj.Name);
-					int idx2 = objSectionAlt.FindValueIndex(obj.Name);
-					if (idx1 == -1 && idx2 == -1) return false;
-					else if (idx1 != -1 && idx1 > 303)
-						return false;
-					else if (idx2 != -1 && idx2 > 246)
-						return false;
-				}
+			foreach (var obj in _structureObjects) {
+				int idx1 = objSection.FindValueIndex(obj.Name);
+				int idx2 = objSectionAlt.FindValueIndex(obj.Name);
+				if (idx1 == -1 && idx2 == -1) return false;
+				else if (idx1 != -1 && idx1 > 303)
+					return false;
+				else if (idx2 != -1 && idx2 > 246)
+					return false;
 			}
 
 			// no need to test smudge types as no new ones were introduced with yr
@@ -126,152 +106,100 @@ namespace CNCMaps.Map {
 		}
 
 		private void RemoveYRObjects() {
-			for (int y = 0; y < FullSize.Height; y++) {
-				for (int x = 0; x < FullSize.Width * 2 - 1; x++) {
-					var obj = _overlayObjects[x, y];
-					if (obj != null && obj.OverlayID > 246) _overlayObjects[x, y] = null;
-				}
+			foreach (var obj in _overlayObjects.Where(obj => obj.OverlayID > 246).ToList()) {
+				_overlayObjects.Remove(obj);
+				obj.Tile.RemoveObject(obj);
 			}
 
 			IniSection objSection = _rules.GetSection("TerrainTypes");
-			for (int y = 0; y < FullSize.Height; y++) {
-				for (int x = 0; x < FullSize.Width * 2 - 1; x++) {
-					var obj = _terrainObjects[x, y];
-					if (obj == null) continue;
-					int idx = objSection.FindValueIndex(obj.Name);
-					if (idx == -1 || idx > 73) _terrainObjects[x, y] = null;
+			foreach (var obj in _terrainObjects.ToList()) {
+				int idx = objSection.FindValueIndex(obj.Name);
+				if (idx == -1 || idx > 73) {
+					_terrainObjects.Remove(obj);
+					obj.Tile.RemoveObject(obj);
 				}
 			}
 
 			objSection = _rules.GetSection("InfantryTypes");
-			for (int y = 0; y < FullSize.Height; y++) {
-				for (int x = 0; x < FullSize.Width * 2 - 1; x++) {
-					var objList = _infantryObjects[x, y];
-					if (objList == null) continue;
-
-					objList.RemoveAll(i => objSection.FindValueIndex(i.Name) > 45 || objSection.FindValueIndex(i.Name) == -1);
+			foreach (var obj in _infantryObjects.ToList()) {
+				int idx = objSection.FindValueIndex(obj.Name);
+				if (idx == -1 || idx > 45) {
+					_infantryObjects.Remove(obj);
+					obj.Tile.RemoveObject(obj);
 				}
 			}
 
 			objSection = _rules.GetSection("VehicleTypes");
-			for (int y = 0; y < FullSize.Height; y++) {
-				for (int x = 0; x < FullSize.Width * 2 - 1; x++) {
-					var obj = _unitObjects[x, y];
-					if (obj == null) continue;
-					int idx = objSection.FindValueIndex(obj.Name);
-					if (idx == -1 || idx > 57) _unitObjects[x, y] = null;
+			foreach (var obj in _unitObjects.ToList()) {
+				int idx = objSection.FindValueIndex(obj.Name);
+				if (idx == -1 || idx > 57) {
+					_unitObjects.Remove(obj);
+					obj.Tile.RemoveObject(obj);
 				}
 			}
 
 			objSection = _rules.GetSection("AircraftTypes");
-			for (int y = 0; y < FullSize.Height; y++) {
-				for (int x = 0; x < FullSize.Width * 2 - 1; x++) {
-					var obj = _aircraftObjects[x, y];
-					if (obj == null) continue;
-					int idx = objSection.FindValueIndex(obj.Name);
-					if (idx == -1 || idx > 9) _aircraftObjects[x, y] = null;
+			foreach (var obj in _aircraftObjects.ToList()) {
+				int idx = objSection.FindValueIndex(obj.Name);
+				if (idx == -1 || idx > 9) {
+					_aircraftObjects.Remove(obj);
+					obj.Tile.RemoveObject(obj);
 				}
 			}
-
 
 			objSection = _rules.GetSection("BuildingTypes");
 			IniSection objSectionAlt = _rules.GetSection("OverlayTypes");
-			for (int y = 0; y < FullSize.Height; y++) {
-				for (int x = 0; x < FullSize.Width * 2 - 1; x++) {
-					var obj = _structureObjects[x, y];
-					if (obj == null) continue;
-					int idx1 = objSection.FindValueIndex(obj.Name);
-					int idx2 = objSectionAlt.FindValueIndex(obj.Name);
-					if (idx1 == -1 && idx2 == -1) _structureObjects[x, y] = null;
-					else if (idx1 != -1 && idx1 > 303)
-						_structureObjects[x, y] = null;
-					else if (idx2 != -1 && idx2 > 246)
-						_structureObjects[x, y] = null;
+			foreach (var obj in _structureObjects.ToList()) {
+				int idx1 = objSection.FindValueIndex(obj.Name);
+				int idx2 = objSectionAlt.FindValueIndex(obj.Name);
+				if ((idx1 == -1 && idx2 == -1) || (idx1 != -1 && idx1 > 303) || (idx2 != -1 && idx2 > 246)) {
+					_structureObjects.Remove(obj);
+					obj.Tile.RemoveObject(obj);
 				}
 			}
-
 			// no need to remove smudges as no new ones were introduced with yr
 		}
 
 		private void RemoveUnknownObjects() {
 			ObjectCollection c = _theater.GetCollection(CollectionType.Terrain);
-			for (int y = 0; y < FullSize.Height; y++) {
-				for (int x = 0; x < FullSize.Width * 2 - 1; x++) {
-					var obj = _terrainObjects[x, y];
-					if (obj == null) continue;
-					if (!c.HasObject(obj)) {
-						_terrainObjects[x, y] = null;
-						obj.Tile.AllObjects.Remove(obj);
-					}
-				}
+			foreach (var obj in _terrainObjects.Where(obj => !c.HasObject(obj)).ToList()) {
+				_terrainObjects.Remove(obj);
+				obj.Tile.RemoveObject(obj);
 			}
 
 			c = _theater.GetCollection(CollectionType.Infantry);
-			for (int y = 0; y < FullSize.Height; y++) {
-				for (int x = 0; x < FullSize.Width * 2 - 1; x++) {
-					var objList = _infantryObjects[x, y];
-					if (objList == null) continue;
+			foreach (var obj in _infantryObjects.Where(obj => !c.HasObject(obj)).ToList()) {
+				obj.Tile.RemoveObject(obj);
+				_infantryObjects.Remove(obj);
 
-					var tile = _tiles[x, y];
-					foreach (var i in objList) {
-						if (!c.HasObject(i)) {
-							tile.AllObjects.Remove(i);
-						}
-					}
-					objList.RemoveAll(i => !c.HasObject(i));
-				}
 			}
 
 			c = _theater.GetCollection(CollectionType.Vehicle);
-			for (int y = 0; y < FullSize.Height; y++) {
-				for (int x = 0; x < FullSize.Width * 2 - 1; x++) {
-					var obj = _unitObjects[x, y];
-					if (obj == null) continue;
-					if (!c.HasObject(obj)) {
-						_unitObjects[x, y] = null;
-						obj.Tile.AllObjects.Remove(obj);
-					}
-				}
+			foreach (var obj in _unitObjects.Where(obj => !c.HasObject(obj)).ToList()) {
+				obj.Tile.RemoveObject(obj);
+				_unitObjects.Remove(obj);
 			}
 
 			c = _theater.GetCollection(CollectionType.Aircraft);
-			for (int y = 0; y < FullSize.Height; y++) {
-				for (int x = 0; x < FullSize.Width * 2 - 1; x++) {
-					var obj = _aircraftObjects[x, y];
-					if (obj == null) continue;
-					if (!c.HasObject(obj)) {
-						_aircraftObjects[x, y] = null;
-						obj.Tile.AllObjects.Remove(obj);
-					}
-				}
+			foreach (var obj in _aircraftObjects.Where(obj => !c.HasObject(obj)).ToList()) {
+				obj.Tile.RemoveObject(obj);
+				_aircraftObjects.Remove(obj);
 			}
 
 			c = _theater.GetCollection(CollectionType.Smudge);
-			for (int y = 0; y < FullSize.Height; y++) {
-				for (int x = 0; x < FullSize.Width * 2 - 1; x++) {
-					var obj = _smudgeObjects[x, y];
-					if (obj == null) continue;
-					if (!c.HasObject(obj)) {
-						obj.Tile.AllObjects.Remove(obj);
-						_smudgeObjects[x, y] = null;
-					}
-				}
+			foreach (var obj in _smudgeObjects.Where(obj => !c.HasObject(obj)).ToList()) {
+				obj.Tile.RemoveObject(obj);
+				_smudgeObjects.Remove(obj);
 			}
+
 
 			c = _theater.GetCollection(CollectionType.Building);
 			var cAlt = _theater.GetCollection(CollectionType.Overlay);
 			IniSection objSectionAlt = _rules.GetSection("OverlayTypes");
-			for (int y = 0; y < FullSize.Height; y++) {
-				for (int x = 0; x < FullSize.Width * 2 - 1; x++) {
-					var obj = _structureObjects[x, y];
-					if (obj == null) continue;
-					if (!c.HasObject(obj) && !cAlt.HasObject(obj)) {
-						obj.Tile.AllObjects.Remove(obj);
-						_structureObjects[x, y] = null;
-					}
-				}
+			foreach (var obj in _structureObjects.Where(obj => !c.HasObject(obj) && !cAlt.HasObject(obj)).ToList()) {
+				obj.Tile.RemoveObject(obj);
+				_structureObjects.Remove(obj);
 			}
-
 		}
 
 		/// <summary>Detect map type.</summary>
@@ -404,7 +332,7 @@ namespace CNCMaps.Map {
 				ApplyLightSources();
 			}
 
-			SetStructuresBaseTile(); // requires .Drawable set on objects
+			SetBaseTiles(); // requires .Drawable set on objects
 
 			// first preparing all palettes as above, and only now recalculating them 
 			// could save a large amount of work in total
@@ -464,38 +392,28 @@ namespace CNCMaps.Map {
 			}
 		}
 
-		private void SetStructuresBaseTile() {
+		private void SetBaseTiles() {
 			// we need foundations from the theater to place the structures at the correct tile,
-			for (int y = 0; y < _structureObjects.GetLength(1); y++) {
-				for (int x = 0; x < _structureObjects.GetLength(0); x++) {
-
-					StructureObject s = _structureObjects[x, y];
-					if (s != null && s.BaseTile == null) {
-						// s.BaseTile set means we've already moved it
-						var foundation = s.Drawable.Foundation;
-						var baseTile = _tiles.GetTileR(s.Tile.Rx + foundation.Width - 1, s.Tile.Ry + foundation.Height - 1);
-						s.BaseTile = baseTile ?? s.Tile;
-					}
-
-					// bridges too
-					OverlayObject o = _overlayObjects[x, y];
-					if (o != null && o.BaseTile == null && o.Drawable != null) {
-						Size foundation = o.Drawable.Foundation;
-						var baseTile = _tiles.GetTileR(o.Tile.Rx + foundation.Width - 1, o.Tile.Ry + foundation.Height - 1);
-						o.BaseTile = baseTile ?? o.Tile;
-					}
-
-					// and smudges					
-					SmudgeObject sm = _smudgeObjects[x, y];
-					if (sm != null && sm.BaseTile == null && sm.Drawable != null) {
-						Size foundation = sm.Drawable.Foundation;
-						if (foundation != System.Drawing.Size.Empty) {
-							var baseTile = _tiles.GetTileR(sm.Tile.Rx + foundation.Width - 1, sm.Tile.Ry + foundation.Height - 1);
-							sm.BaseTile = baseTile ?? o.Tile;
-						}
-					}
-
+			foreach (GameObject obj in _structureObjects.Cast<GameObject>().Union(_overlayObjects).Union(_smudgeObjects)) {
+				if (obj.BottomTile == null) {
+					// s.BottomTile set means we've already moved it
+					var foundation = obj.Drawable.Foundation;
+					var bottom = _tiles.GetTileR(obj.Tile.Rx + foundation.Width - 1, obj.Tile.Ry + foundation.Height - 1);
+					obj.BottomTile = bottom ?? obj.Tile;
+					obj.TopTile = obj.Tile;
 				}
+			}
+
+			foreach (GameObject obj in _unitObjects.Cast<GameObject>().Union(_aircraftObjects)) {
+				var bounds = obj.Drawable.GetBounds(obj);
+				// bounds to foundation
+				Size foundation = new Size(
+					(int)Math.Max(1, Math.Ceiling((bounds.Width / 2) / (double)Drawable.TileWidth)),
+					(int)Math.Max(1, Math.Ceiling((bounds.Height / 2) / (double)Drawable.TileHeight)));
+
+				var bottom = _tiles.GetTileR(obj.Tile.Rx + foundation.Width - 1, obj.Tile.Ry + foundation.Height - 1);
+				obj.BottomTile = bottom ?? obj.Tile;
+				obj.TopTile = obj.Tile;
 			}
 		}
 
@@ -561,7 +479,6 @@ namespace CNCMaps.Map {
 		/// <summary>Reads the terrain. </summary>
 		private void ReadTerrain() {
 			IniSection terrainSection = GetSection("Terrain");
-			_terrainObjects = new TerrainObject[FullSize.Width * 2 - 1, FullSize.Height];
 			if (terrainSection == null) return;
 			foreach (var v in terrainSection.OrderedEntries) {
 				int pos = int.Parse(v.Key);
@@ -572,7 +489,7 @@ namespace CNCMaps.Map {
 				var tile = _tiles.GetTileR(rx, ry);
 				if (tile != null) {
 					tile.AddObject(t);
-					_terrainObjects[tile.Dx, tile.Dy / 2] = t;
+					_terrainObjects.Add(t);
 				}
 			}
 		}
@@ -580,7 +497,6 @@ namespace CNCMaps.Map {
 		/// <summary>Reads the smudges. </summary>
 		private void ReadSmudges() {
 			IniSection smudgesSection = GetSection("Smudge");
-			_smudgeObjects = new SmudgeObject[FullSize.Width * 2 - 1, FullSize.Height];
 			if (smudgesSection == null) return;
 			foreach (var v in smudgesSection.OrderedEntries) {
 				string[] entries = ((string)v.Value).Split(',');
@@ -591,7 +507,7 @@ namespace CNCMaps.Map {
 				var tile = _tiles.GetTileR(rx, ry);
 				if (tile != null) {
 					tile.AddObject(s);
-					_smudgeObjects[tile.Dx, tile.Dy / 2] = s;
+					_smudgeObjects.Add(s);
 				}
 			}
 		}
@@ -617,7 +533,6 @@ namespace CNCMaps.Map {
 			var overlayDataPack = new byte[1 << 18];
 			Format5.DecodeInto(format80Data, overlayDataPack, 80);
 
-			_overlayObjects = new OverlayObject[FullSize.Width * 2 - 1, FullSize.Height];
 			foreach (MapTile t in _tiles) {
 				if (t == null) continue;
 				int idx = t.Rx + 512 * t.Ry;
@@ -626,7 +541,7 @@ namespace CNCMaps.Map {
 					byte overlay_value = overlayDataPack[idx];
 					var ovl = new OverlayObject(overlay_id, overlay_value);
 					t.AddObject(ovl);
-					_overlayObjects[ovl.Tile.Dx, ovl.Tile.Dy / 2] = ovl;
+					_overlayObjects.Add(ovl);
 				}
 			}
 		}
@@ -634,7 +549,6 @@ namespace CNCMaps.Map {
 		/// <summary>Reads the structures.</summary>
 		private void ReadStructures() {
 			IniSection structsSection = GetSection("Structures");
-			_structureObjects = new StructureObject[FullSize.Width * 2 - 1, FullSize.Height];
 			if (structsSection == null) {
 				Logger.Info("Structures section unavailable in {0}", Path.GetFileName(FileName));
 				return;
@@ -648,26 +562,28 @@ namespace CNCMaps.Map {
 					int rx = int.Parse(entries[3]);
 					int ry = int.Parse(entries[4]);
 					short direction = short.Parse(entries[5]);
-					var s = new StructureObject(owner, name, health, direction);
+					bool onBridge = entries[10] == "1";
+					var s = new StructureObject(owner, name, health, direction, onBridge);
 					s.Tile = _tiles.GetTileR(rx, ry);
 					s.Upgrade1 = entries[12];
 					s.Upgrade2 = entries[13];
 					s.Upgrade3 = entries[14];
-					if (s.Tile != null)
-						_structureObjects[s.Tile.Dx, s.Tile.Dy / 2] = s;
+					if (s.Tile != null) {
+						_structureObjects.Add(s);
+						s.Tile.AddObject(s);
+					}
 				}
 				catch (IndexOutOfRangeException) {
 				} // catch invalid entries
 				catch (FormatException) {
 				}
 			}
-			Logger.Trace("Loaded structures ({0})", _structureObjects.Length);
+			Logger.Trace("Loaded structures ({0})", _structureObjects.Count);
 		}
 
 		/// <summary>Reads the infantry. </summary>
 		private void ReadInfantry() {
 			IniSection infantrySection = GetSection("Infantry");
-			_infantryObjects = new List<InfantryObject>[FullSize.Width * 2 - 1, FullSize.Height];
 			if (infantrySection == null) {
 				Logger.Info("Infantry section unavailable in {0}", Path.GetFileName(FileName));
 				return;
@@ -681,14 +597,12 @@ namespace CNCMaps.Map {
 				int rx = int.Parse(entries[3]);
 				int ry = int.Parse(entries[4]);
 				short direction = short.Parse(entries[7]);
-				var i = new InfantryObject(owner, name, health, direction);
+				bool onBridge = entries[11] == "1";
+				var i = new InfantryObject(owner, name, health, direction, onBridge);
 				var tile = _tiles.GetTileR(rx, ry);
 				if (tile != null) {
 					tile.AddObject(i);
-					var infantryList = _infantryObjects[i.Tile.Dx, i.Tile.Dy / 2];
-					if (infantryList == null)
-						_infantryObjects[i.Tile.Dx, i.Tile.Dy / 2] = infantryList = new List<InfantryObject>();
-					infantryList.Add(i);
+					_infantryObjects.Add(i);
 					count++;
 				}
 			}
@@ -699,7 +613,6 @@ namespace CNCMaps.Map {
 		/// <summary>Reads the units.</summary>
 		private void ReadUnits() {
 			IniSection unitsSection = GetSection("Units");
-			_unitObjects = new UnitObject[FullSize.Width * 2 - 1, FullSize.Height];
 			if (unitsSection == null) {
 				Logger.Info("Units section unavailable in {0}", Path.GetFileName(FileName));
 				return;
@@ -713,20 +626,20 @@ namespace CNCMaps.Map {
 				int rx = int.Parse(entries[3]);
 				int ry = int.Parse(entries[4]);
 				short direction = short.Parse(entries[5]);
-				var u = new UnitObject(owner, name, health, direction);
+				bool onBridge = entries[10] == "1";
+				var u = new UnitObject(owner, name, health, direction, onBridge);
 				var tile = _tiles.GetTileR(rx, ry);
 				if (tile != null) {
 					tile.AddObject(u);
-					_unitObjects[u.Tile.Dx, u.Tile.Dy / 2] = u;
+					_unitObjects.Add(u);
 				}
 			}
-			Logger.Trace("Loaded units ({0})", _unitObjects.Length);
+			Logger.Trace("Loaded units ({0})", _unitObjects.Count);
 		}
 
 		/// <summary>Reads the aircraft.</summary>
 		private void ReadAircraft() {
 			IniSection aircraftSection = GetSection("Aircraft");
-			_aircraftObjects = new AircraftObject[FullSize.Width * 2 - 1, FullSize.Height];
 			if (aircraftSection == null) {
 				Logger.Info("Aircraft section unavailable in {0}", Path.GetFileName(FileName));
 				return;
@@ -739,14 +652,15 @@ namespace CNCMaps.Map {
 				int rx = int.Parse(entries[3]);
 				int ry = int.Parse(entries[4]);
 				short direction = short.Parse(entries[5]);
-				var a = new AircraftObject(owner, name, health, direction);
+				bool onBridge = entries[entries.Length - 4] == "1";
+				var a = new AircraftObject(owner, name, health, direction, onBridge);
 				var tile = _tiles.GetTileR(rx, ry);
 				if (tile != null) {
 					tile.AddObject(a);
-					_aircraftObjects[tile.Dx, tile.Dy / 2] = a;
+					_aircraftObjects.Add(a);
 				}
 			}
-			Logger.Trace("Loaded aircraft ({0})", _aircraftObjects.Length);
+			Logger.Trace("Loaded aircraft ({0})", _aircraftObjects.Count);
 		}
 
 		private void RecalculateOreSpread() {
@@ -821,67 +735,52 @@ namespace CNCMaps.Map {
 			var pc = _theater.GetPalettes();
 			foreach (var p in pc) _palettesToBeRecalculated.Add(p);
 
-			foreach (GameObject obj in
-				(from MapTile m in _tiles select m).Union
-				(from GameObject o in _overlayObjects select o).Union
-				(from GameObject o in _structureObjects select o).Union
-				(from GameObject o in _unitObjects select o).Union
-				(from GameObject o in _aircraftObjects select o).Union
-				(from GameObject o in _smudgeObjects select o).Union
-				(from GameObject o in _terrainObjects select o).Union
-				(_infantryObjects.Cast<List<InfantryObject>>().Where(o => o != null).SelectMany(o => o))) {
+			foreach (var tile in _tiles) {
+				if (tile == null) continue;
+				foreach (var obj in tile.AllObjects.Union(new[] { tile })) {
+					if (obj == null) continue;
 
-				if (obj == null) continue;
+					Palette p;
+					LightingType lt;
+					PaletteType pt;
 
-				Palette p;
-				LightingType lt;
-				PaletteType pt;
+					if (obj is MapTile) {
+						lt = LightingType.Full;
+						pt = PaletteType.Iso;
+					}
+					else {
+						obj.Collection = _theater.GetObjectCollection(obj);
+						obj.Drawable = obj.Collection.GetDrawable(obj); // quite a wrong place to set something this important..
+						pt = obj.Drawable.PaletteType;
+						lt = obj.Drawable.LightingType;
+					}
 
-				if (obj is MapTile) {
-					lt = LightingType.Full;
-					pt = PaletteType.Iso;
+					// level, ambient and full benefit from sharing
+					if (lt == LightingType.Full && pt == PaletteType.Iso) {
+						// bridges are attached to a low tile, but their height-offset should be taken into account 
+						int z = obj.Tile.Z + (obj.Drawable != null ? obj.Drawable.TileElevation : 0);
+						p = _palettePerLevel[z];
+					}
+					else if (lt >= LightingType.Level) {
+						// when applying lighting to its palette
+						p = _theater.GetPalette(obj.Drawable).Clone();
+						int z = obj.Tile.Z + (obj.Drawable != null ? obj.Drawable.TileElevation : 0);
+						p.ApplyLighting(_lighting, z, lt == LightingType.Full);
+					}
+					else {
+						p = _theater.GetPalette(obj.Drawable).Clone();
+					}
+					_palettesToBeRecalculated.Add(p);
+					obj.Palette = p;
 				}
-				else {
-					obj.Collection = _theater.GetObjectCollection(obj);
-					obj.Drawable = obj.Collection.GetDrawable(obj); // quite a wrong place to set something this important..
-					pt = obj.Drawable.PaletteType;
-					lt = obj.Drawable.LightingType;
-				}
-
-				// level, ambient and full benefit from sharing
-				if (lt == LightingType.Full && pt == PaletteType.Iso) {
-					// bridges are attached to a low tile, but their height-offset should be taken into account 
-					int z = obj.Tile.Z + (obj.Drawable != null ? obj.Drawable.HeightOffset : 0);
-					p = _palettePerLevel[z];
-				}
-				else if (lt >= LightingType.Level) {
-					// when applying lighting to its palette
-					p = _theater.GetPalette(obj.Drawable).Clone();
-					int z = obj.Tile.Z + (obj.Drawable != null ? obj.Drawable.HeightOffset : 0);
-					p.ApplyLighting(_lighting, z, lt == LightingType.Full);
-				}
-				else {
-					p = _theater.GetPalette(obj.Drawable).Clone();
-				}
-
-				_palettesToBeRecalculated.Add(p);
-
-				obj.Palette = p;
 			}
-
 			Logger.Debug("Loaded {0} different palettes", _palettesToBeRecalculated.Count - before);
 		}
 
 		private void ApplyRemappables() {
 			int before = _palettesToBeRecalculated.Count;
 
-			foreach (var obj in
-				(from OwnableObject o in _structureObjects select o).Union
-				(from OwnableObject o in _unitObjects select o).Union
-				(from OwnableObject o in _aircraftObjects select o).Union(
-				(_infantryObjects.Cast<List<InfantryObject>>().Where(o => o != null).SelectMany(o => o)))) {
-
-				if (obj == null) continue;
+			foreach (OwnableObject obj in _structureObjects.Cast<OwnableObject>().Union(_unitObjects).Union(_aircraftObjects).Union(_infantryObjects)) {
 				var g = obj as GameObject;
 				if (g != null & g.Drawable != null && g.Drawable.IsRemapable) {
 					if (g.Palette.IsShared) // don't wanna touch somebody elses palette..
@@ -916,13 +815,14 @@ namespace CNCMaps.Map {
 
 		private void LoadLightSources() {
 			Logger.Info("Loading light sources");
-			foreach (StructureObject s in _structureObjects) {
-				if (s == null) continue;
+			foreach (StructureObject s in _structureObjects.ToList()) {
 				var section = _rules.GetSection(s.Name);
 				if (section != null && section.HasKey("LightVisibility")) {
 					var ls = new LightSource(_rules.GetSection(s.Name), _lighting);
 					ls.Tile = s.Tile;
 					_lightSources.Add(ls);
+					s.Tile.RemoveObject(s, true);
+					_structureObjects.Remove(s); // arent drawn anyway
 				}
 			}
 		}
@@ -1167,28 +1067,28 @@ namespace CNCMaps.Map {
 			// first redraw all required tiles (zigzag method)
 			for (int y = 0; y < FullSize.Height; y++) {
 				for (int x = FullSize.Width * 2 - 2; x >= 0; x -= 2) {
-					if (_overlayObjects[x, y] == null || !checkFunc(_overlayObjects[x, y])) continue;
-					tileCollection.DrawTile(_tiles.GetTile(x, y), _drawingSurface);
+					if (_tiles[x, y].AllObjects.OfType<OverlayObject>().Any(checkFunc))
+						tileCollection.DrawTile(_tiles.GetTile(x, y), _drawingSurface);
 				}
 				for (int x = FullSize.Width * 2 - 3; x >= 0; x -= 2) {
-					if (_overlayObjects[x, y] == null || !checkFunc(_overlayObjects[x, y])) continue;
-					tileCollection.DrawTile(_tiles.GetTile(x, y), _drawingSurface);
+					if (_tiles[x, y].AllObjects.OfType<OverlayObject>().Any(checkFunc))
+						tileCollection.DrawTile(_tiles.GetTile(x, y), _drawingSurface);
 				}
 			}
-
-			// then the objects on these ore positions
 			for (int y = 0; y < FullSize.Height; y++) {
 				for (int x = FullSize.Width * 2 - 2; x >= 0; x -= 2) {
-					if (_overlayObjects[x, y] == null || !checkFunc(_overlayObjects[x, y])) continue;
-					List<GameObject> objs = GetObjectsAt(x, y);
-					foreach (GameObject o in objs)
-						_theater.Draw(o, _drawingSurface);
+					if (_tiles[x, y].AllObjects.OfType<OverlayObject>().Any(checkFunc)) {
+						List<GameObject> objs = GetObjectsAt(x, y);
+						foreach (GameObject o in objs)
+							_theater.Draw(o, _drawingSurface);
+					}
 				}
 				for (int x = FullSize.Width * 2 - 3; x >= 0; x -= 2) {
-					if (_overlayObjects[x, y] == null || !checkFunc(_overlayObjects[x, y])) continue;
-					List<GameObject> objs = GetObjectsAt(x, y);
-					foreach (GameObject o in objs)
-						_theater.Draw(o, _drawingSurface);
+					if (_tiles[x, y].AllObjects.OfType<OverlayObject>().Any(checkFunc)) {
+						List<GameObject> objs = GetObjectsAt(x, y);
+						foreach (GameObject o in objs)
+							_theater.Draw(o, _drawingSurface);
+					}
 				}
 			}
 		}
@@ -1196,8 +1096,22 @@ namespace CNCMaps.Map {
 		public void DrawMap() {
 			Logger.Info("Drawing map");
 			_drawingSurface = new DrawingSurface(FullSize.Width * TileWidth, FullSize.Height * TileHeight, PixelFormat.Format24bppRgb);
-			var tileCollection = _theater.GetTileCollection();
+			ObjectSorter sorter = new ObjectSorter(_theater, _tiles);
+			var orderedObjs = sorter.GetOrderedObjects();
+			foreach (var obj in orderedObjs)
+				_theater.Draw(obj, _drawingSurface);
 
+			/* // test that my bounds make some kind of sense
+			_drawingSurface.Unlock();
+			using (Graphics gfx = Graphics.FromImage(_drawingSurface.bm)) {
+				foreach (var obj in orderedObjs)
+					if (obj.Drawable != null)
+						obj.Drawable.DrawBounds(obj, gfx);
+			}
+			*/
+
+			/*
+			var tileCollection = _theater.GetTileCollection();
 			// zig-zag drawing technique explanation: http://stackoverflow.com/questions/892811/drawing-isometric-game-worlds
 			double lastReported = 0.0;
 			for (int y = 0; y < FullSize.Height; y++) {
@@ -1237,7 +1151,7 @@ namespace CNCMaps.Map {
 					lastReported = pct;
 				}
 			}
-
+			*/
 			Logger.Info("Map drawing completed");
 		}
 
@@ -1512,38 +1426,16 @@ namespace CNCMaps.Map {
 
 
 		internal List<GameObject> GetObjectsAt(int dx, int dy) {
+			var tile = _tiles[dx, dy];
 			var ret = new List<GameObject>();
-
-			if (_smudgeObjects[dx, dy] != null)
-				ret.Add(_smudgeObjects[dx, dy]);
-
-			var ovl = _overlayObjects[dx, dy];
-			Drawable ovlDraw = null;
-			if (ovl != null) {
-				ovlDraw = _theater.GetCollection(CollectionType.Overlay).GetDrawable(ovl);
-				if (ovlDraw != null && !ovlDraw.Overrides)
-					ret.Add(ovl);
-			}
-
-			if (_terrainObjects[dx, dy] != null)
-				ret.Add(_terrainObjects[dx, dy]);
-
-			if (_infantryObjects[dx, dy] != null)
-				foreach (var r in _infantryObjects[dx, dy])
-					ret.Add(r);
-
-			if (_aircraftObjects[dx, dy] != null)
-				ret.Add(_aircraftObjects[dx, dy]);
-
-			if (_unitObjects[dx, dy] != null)
-				ret.Add(_unitObjects[dx, dy]);
-
-			if (_structureObjects[dx, dy] != null)
-				ret.Add(_structureObjects[dx, dy]);
-
-			if (ovlDraw != null && ovlDraw.Overrides)
-				ret.Add(ovl);
-
+			ret.AddRange(tile.AllObjects.OfType<SmudgeObject>());
+			ret.AddRange(tile.AllObjects.OfType<OverlayObject>().Where(o => o.Drawable == null || !o.Drawable.Overrides));
+			ret.AddRange(tile.AllObjects.OfType<TerrainObject>());
+			ret.AddRange(tile.AllObjects.OfType<InfantryObject>());
+			ret.AddRange(tile.AllObjects.OfType<UnitObject>());
+			ret.AddRange(tile.AllObjects.OfType<StructureObject>());
+			ret.AddRange(tile.AllObjects.OfType<AircraftObject>());
+			ret.AddRange(tile.AllObjects.OfType<OverlayObject>().Where(o => o.Drawable != null && o.Drawable.Overrides));
 			return ret;
 		}
 

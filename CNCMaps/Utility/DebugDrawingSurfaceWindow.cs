@@ -41,7 +41,6 @@ namespace CNCMaps.Utility {
 			if (tile == null) return;
 			var tileFile = _theater.GetTileCollection().GetTileFile(tile);
 			sb.AppendFormat("   Tile {4}: d({0},{1}) r({2},{3})", tile.Dx, tile.Dy, tile.Rx, tile.Ry, tileFile.FileName.ToUpper());
-			sb.AppendFormat("   Z-buf: {0}", _drawingSurface.GetZBuffer()[rIdx]);
 			sb.AppendFormat("   S-buf: {0}", _drawingSurface.GetShadows()[rIdx]);
 			sb.AppendFormat("   H-buf: {0}", _drawingSurface.GetHeightBuffer()[rIdx]);
 

@@ -1,6 +1,7 @@
 ﻿using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using CNCMaps.FileFormats;
 using CNCMaps.Game;
 using CNCMaps.Map;
@@ -81,11 +82,13 @@ namespace CNCMaps {
 
 				map.DrawMap();
 
+#if DEBUG
 				// ====================================================================================
-				using (var form = new DebugDrawingSurfaceWindow(map.GetDrawingSurface(), map.GetTiles(), map.GetTheater(), map)){
-					form.RequestTileEvaluate += map.DebugDrawTile; form.ShowDialog();
-				}
+				// using (var form = new DebugDrawingSurfaceWindow(map.GetDrawingSurface(), map.GetTiles(), map.GetTheater(), map)) {
+				// 	form.RequestTileEvaluate += map.DebugDrawTile; form.ShowDialog();
+				// }
 				// ====================================================================================
+#endif
 
 				if (Settings.StartPositionMarking == StartPositionMarking.Squared)
 					map.DrawSquaredStartPositions();
@@ -111,6 +114,28 @@ namespace CNCMaps {
 
 				if (Settings.SavePNG)
 					ds.SavePNG(Path.Combine(Settings.OutputDir, Settings.OutputFile + ".png"), Settings.PNGQuality, saveRect);
+
+				Regex reThumb = new Regex(@"(\+)?\((\d+),(\d+)\)");
+				var match = reThumb.Match(Settings.ThumbnailSettings);
+				if (match.Success) {
+					Size dimensions = new Size(
+						int.Parse(match.Groups[2].Captures[0].Value),
+						int.Parse(match.Groups[3].Captures[0].Value));
+					var cutRect = map.GetLocalSizePixels();
+
+					if (match.Groups[1].Captures[0].Value == "+") {
+						// + means maintain aspect ratio
+						double aspectRatio = cutRect.Width / (double)cutRect.Height;
+						if (dimensions.Width / (double)dimensions.Height > aspectRatio) {
+							dimensions.Height = (int)(dimensions.Width / aspectRatio);
+						}
+						else {
+							dimensions.Width = (int)(dimensions.Height / aspectRatio);
+						}
+					}
+					_logger.Info("Saving thumbnail with dimensions {0}x{1}", dimensions.Width, dimensions.Height);
+					ds.SaveThumb(dimensions, cutRect, Path.Combine(Settings.OutputDir, "thumb_" + Settings.OutputFile + ".jpg"));
+				}
 
 				if (Settings.GeneratePreviewPack) {
 					if (mapFile.BaseStream is MixFile)
@@ -216,6 +241,7 @@ namespace CNCMaps {
 				}, 
 				{"G|graphics-winmgr", "Attempt rendering voxels using window manager context first (default)",v => Settings.PreferOSMesa = false},
 				{"g|graphics-osmesa", "Attempt rendering voxels using OSMesa context first", v => Settings.PreferOSMesa = true},
+				{"z|create-thumbnail=", "Also save a thumbnail along with the fullmap in dimensions (x,y), prefix with + to keep aspect ratio	", v => Settings.ThumbnailSettings = v},
 			};
 
 			_options.Parse(args);

@@ -19,6 +19,7 @@ namespace CNCMaps {
 		public EngineType Engine { get; set; }
 		public StartPositionMarking StartPositionMarking;
 		public bool PreferOSMesa { get; set; }
+		public string ThumbnailSettings { get; set; }
 
 		public bool GeneratePreviewPack { get; set; }
 		public bool OmitPreviewPackMarkers { get; set; }
@@ -38,7 +39,8 @@ namespace CNCMaps {
 				OutputDir = "",
 				OutputFile = "",
 				MixFilesDirectory = "",
-				ModMixes = ""
+				ModMixes = "",
+				ThumbnailSettings = "",
 			};
 		}
 	}

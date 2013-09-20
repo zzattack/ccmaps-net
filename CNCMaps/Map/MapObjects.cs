@@ -9,10 +9,19 @@ namespace CNCMaps.Map {
 		string Owner { get; set; }
 		short Health { get; set; }
 		short Direction { get; set; }
+		bool OnBridge { get; set; }
 	}
+
 	public class GameObject {
+		public GameObject() {
+			Id = IdCounter++;
+		}
 		public virtual MapTile Tile { get; set; }
-		public virtual MapTile BaseTile {
+		public virtual MapTile BottomTile {
+			get { return Tile; }
+			set { }
+		}
+		public virtual MapTile TopTile {
 			get { return Tile; }
 			set { }
 		}
@@ -30,6 +39,9 @@ namespace CNCMaps.Map {
 		public LightingType Lighting {
 			get { return Drawable != null ? Drawable.LightingType : LightingType.Full; }
 		}
+
+		public int Id { get; set; }
+		private static int IdCounter = 0;
 	}
 	public class NumberedObject : GameObject {
 		public int Number { get; protected set; }
@@ -38,30 +50,34 @@ namespace CNCMaps.Map {
 		public string Name { get; protected set; }
 	}
 	public class AircraftObject : NamedObject, OwnableObject {
-		public AircraftObject(string owner, string name, short health, short direction) {
+		public AircraftObject(string owner, string name, short health, short direction, bool onBridge) {
 			Owner = owner;
 			Name = name;
 			Health = health;
 			Direction = direction;
+			OnBridge = onBridge;
 		}
-
+		public override MapTile BottomTile { get; set; }
+		public override MapTile TopTile { get; set; }
 		public short Health { get; set; }
 		public short Direction { get; set; }
+		public bool OnBridge { get; set; }
 		public string Owner { get; set; }
 	}
 	public class InfantryObject : NamedObject, OwnableObject {
-		public InfantryObject(string owner, string name, short health, short direction) {
+		public InfantryObject(string owner, string name, short health, short direction, bool onBridge) {
 			Owner = owner;
 			Name = name;
 			Health = health;
 			Direction = direction;
+			OnBridge = onBridge;
 		}
-
 		public short Health { get; set; }
 		public short Direction { get; set; }
+		public bool OnBridge { get; set; }
 		public string Owner { get; set; }
 	}
-	public class LightSource : NamedObject {
+	public class LightSource : StructureObject {
 		public double LightVisibility { get; set; }
 		public double LightIntensity { get; set; }
 		public double LightRedTint { get; set; }
@@ -73,9 +89,9 @@ namespace CNCMaps.Map {
 
 		static NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
-		public LightSource() { }
-		public LightSource(IniFile.IniSection lamp, Lighting scenario) {
-			Name = lamp.Name;
+		public LightSource() : base("nobody", "", 0, 0, false) { }
+		public LightSource(IniFile.IniSection lamp, Lighting scenario)
+			: base("nobody", lamp.Name, 0, 0, false) {
 			Initialize(lamp, scenario);
 		}
 
@@ -129,7 +145,8 @@ namespace CNCMaps.Map {
 		}
 
 		public byte OverlayValue { get; set; }
-		public override MapTile BaseTile { get; set; }
+		public override MapTile BottomTile { get; set; }
+		public override MapTile TopTile { get; set; }
 
 		public OverlayObject(byte overlayID, byte overlayValue) {
 			OverlayID = overlayID;
@@ -140,21 +157,25 @@ namespace CNCMaps.Map {
 		public SmudgeObject(string name) {
 			Name = name;
 		}
-		public override MapTile BaseTile { get; set; }
+		public override MapTile BottomTile { get; set; }
+		public override MapTile TopTile { get; set; }
 	}
 	public class StructureObject : NamedObject, OwnableObject {
-		public StructureObject(string owner, string name, short health, short direction) {
+		public StructureObject(string owner, string name, short health, short direction, bool onBridge) {
 			Owner = owner;
 			Name = name;
 			Health = health;
 			Direction = direction;
+			OnBridge = onBridge;
 		}
 
-		public override MapTile BaseTile { get; set; }
+		public override MapTile BottomTile { get; set; }
+		public override MapTile TopTile { get; set; }
 		public short Health { get; set; }
 		public short Direction { get; set; }
+		public bool OnBridge { get; set; }
 		public string Owner { get; set; }
-		
+
 		public string Upgrade1 { get; set; }
 		public string Upgrade2 { get; set; }
 		public string Upgrade3 { get; set; }
@@ -165,16 +186,18 @@ namespace CNCMaps.Map {
 		}
 	}
 	public class UnitObject : NamedObject, OwnableObject {
-
-		public UnitObject(string owner, string name, short health, short direction) {
+		public UnitObject(string owner, string name, short health, short direction, bool onBridge) {
 			Owner = owner;
 			Name = name;
 			Health = health;
 			Direction = direction;
+			OnBridge = onBridge;
 		}
-
+		public override MapTile BottomTile { get; set; }
+		public override MapTile TopTile { get; set; }
 		public short Health { get; set; }
 		public short Direction { get; set; }
+		public bool OnBridge { get; set; }
 		public string Owner { get; set; }
 	}
 

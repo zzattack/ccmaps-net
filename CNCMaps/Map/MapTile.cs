@@ -1,5 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Diagnostics;
+using NLog;
 
 namespace CNCMaps.Map {
 
@@ -17,7 +20,12 @@ namespace CNCMaps.Map {
 
 		internal TileLayer Layer { get; private set; }
 		internal bool ExtraDataAffected { get; set; }
-		internal readonly List<GameObject> AllObjects = new List<GameObject>();
+
+		public ReadOnlyCollection<GameObject> AllObjects {
+			get { return new ReadOnlyCollection<GameObject>(_allObjects); }
+		}
+		private static readonly Logger _logger = LogManager.GetCurrentClassLogger();
+		private readonly List<GameObject> _allObjects = new List<GameObject>();
 
 		public MapTile(ushort dx, ushort dy, ushort rx, ushort ry, short rz, short tilenum, ushort subtile, TileLayer layer, short setnum = 0) {
 			Dx = dx;
@@ -31,9 +39,14 @@ namespace CNCMaps.Map {
 			Layer = layer;
 		}
 
-		internal void AddObject(GameObject obj) {
-			AllObjects.Add(obj);
+		public void AddObject(GameObject obj) {
+			_allObjects.Add(obj);
 			obj.Tile = this;
+		}
+		public void RemoveObject(GameObject obj, bool silent = false) {
+			if (!silent) _logger.Warn("Removing unknown object {0} from tile {1}", obj, this);
+			bool removed = _allObjects.Remove(obj);
+			if (!removed) _logger.Warn("Failed to reomve objects {0} from tile {1}", obj, this);
 		}
 
 		public override string ToString() {

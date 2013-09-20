@@ -123,6 +123,10 @@ namespace CNCMaps.VirtualFileSystem {
 			return ReadUInt8();
 		}
 
+		public sbyte ReadSByte() {
+			return unchecked((sbyte)ReadUInt8());
+		}
+
 		public byte ReadUInt8() {
 			return Read(1)[0];
 		}

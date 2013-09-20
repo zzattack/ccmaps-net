@@ -221,26 +221,31 @@ namespace CNCMaps.Game {
 
 
 		internal void Draw(GameObject obj, DrawingSurface ds) {
-			obj.Drawable.Draw(obj, ds);
-			// only structure objects should also draw their powerups
-			if (!(obj is StructureObject)) return;
+			Logger.Trace("Drawing object {0} @ {1}", obj, obj.Tile);
 
-			var strObj = obj as StructureObject;
-			if (!strObj.Upgrade1.Equals("None", StringComparison.InvariantCultureIgnoreCase) && obj.Drawable.PowerupSlots.Count >= 1) {
-				var powerup = _buildingTypes.GetDrawable(strObj.Upgrade1);
-				obj.Drawable.DrawPowerup(obj, powerup, 0, ds);
-			}
-			
-			if (!strObj.Upgrade2.Equals("None", StringComparison.InvariantCultureIgnoreCase) && obj.Drawable.PowerupSlots.Count >= 2) {
-				var powerup = _buildingTypes.GetDrawable(strObj.Upgrade2);
-				obj.Drawable.DrawPowerup(obj, powerup, 1, ds);
-			}
-			
-			if (!strObj.Upgrade3.Equals("None", StringComparison.InvariantCultureIgnoreCase) && obj.Drawable.PowerupSlots.Count >= 3) {
-				var powerup = _buildingTypes.GetDrawable(strObj.Upgrade3);
-				obj.Drawable.DrawPowerup(obj, powerup, 2, ds);
-			}
+			if (obj is MapTile)
+				_tileTypes.DrawTile(obj as MapTile, ds);
+			else {
+				obj.Drawable.Draw(obj, ds);
+				// only structure objects should also draw their powerups
+				if (!(obj is StructureObject)) return;
 
+				var strObj = obj as StructureObject;
+				if (!strObj.Upgrade1.Equals("None", StringComparison.InvariantCultureIgnoreCase) && obj.Drawable.PowerupSlots.Count >= 1) {
+					var powerup = _buildingTypes.GetDrawable(strObj.Upgrade1);
+					obj.Drawable.DrawPowerup(obj, powerup, 0, ds);
+				}
+
+				if (!strObj.Upgrade2.Equals("None", StringComparison.InvariantCultureIgnoreCase) && obj.Drawable.PowerupSlots.Count >= 2) {
+					var powerup = _buildingTypes.GetDrawable(strObj.Upgrade2);
+					obj.Drawable.DrawPowerup(obj, powerup, 1, ds);
+				}
+
+				if (!strObj.Upgrade3.Equals("None", StringComparison.InvariantCultureIgnoreCase) && obj.Drawable.PowerupSlots.Count >= 3) {
+					var powerup = _buildingTypes.GetDrawable(strObj.Upgrade3);
+					obj.Drawable.DrawPowerup(obj, powerup, 2, ds);
+				}
+			}
 		}
 	}
 }
