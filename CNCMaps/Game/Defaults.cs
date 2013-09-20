@@ -59,7 +59,7 @@ namespace CNCMaps.Game {
 			}
 		}
 
-		public static bool GetDefaultRemappability(CollectionType type) {
+		public static bool GetDefaultRemappability(CollectionType type, EngineType engine) {
 			switch (type) {
 				case CollectionType.Aircraft:
 				case CollectionType.Building:

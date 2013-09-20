@@ -103,13 +103,13 @@ namespace CNCMaps.Game {
 
 			drawable.PaletteType = Defaults.GetDefaultPalette(_collectionType, _engine);
 			drawable.LightingType = Defaults.GetDefaultLighting(_collectionType);
-			drawable.IsRemapable = Defaults.GetDefaultRemappability(_collectionType);
+			drawable.IsRemapable = Defaults.GetDefaultRemappability(_collectionType, _engine);
 			mainProps.FrameDecider = Defaults.GetDefaultFrameDecider(_collectionType);
 
 			string imageFileName = artSection.ReadString("Image", artSectionName);
-			bool isVoxel = artSection.ReadBool("Voxel");
+			drawable.IsVoxel = artSection.ReadBool("Voxel");
 			bool theaterExtension = artSection.ReadBool("Theater");
-			if (isVoxel) {
+			if (drawable.IsVoxel) {
 				imageFileName += ".vxl";
 				if (_collectionType == CollectionType.Building) {
 					// half tile to the left
@@ -142,6 +142,7 @@ namespace CNCMaps.Game {
 					int fy = artSection.ReadInt("Foundation.Y", 1);
 					drawable.Foundation = new Size(fx, fy);
 				}
+				mainProps.SortIndex = int.MinValue; // "main" building image always first
 			}
 			else if (_collectionType == CollectionType.Smudge) {
 				drawable.Foundation = new Size(rulesSection.ReadInt("Width", 1), rulesSection.ReadInt("Height", 1));
@@ -175,15 +176,10 @@ namespace CNCMaps.Game {
 				drawable.PaletteType = PaletteType.Anim;
 				drawable.LightingType = LightingType.None;
 			}
-			else if (artSection.ReadBool("AltPalette")) {
-				// If AltPalette=yes is set on an animation then that animation will use the unit palette instead of the animation palette. 
-				// However, remappable colours are ignored - they will not be remapped.
-				drawable.PaletteType = PaletteType.Unit;
-				drawable.IsRemapable = false;
-			}
 			else if (artSection.ReadString("Palette") != string.Empty) {
 				drawable.PaletteType = PaletteType.Custom;
 				drawable.CustomPaletteName = artSection.ReadString("Palette");
+				drawable.IsRemapable = false;
 			}
 
 			if (rulesSection.ReadString("AlphaImage") != "") {
@@ -200,7 +196,6 @@ namespace CNCMaps.Game {
 				drawable.DrawFlat = false;
 				// RA2 walls appear a bit higher
 				if (_engine >= EngineType.RedAlert2) {
-					mainProps.ZBufferAdjust += 40;
 					drawable.AddOffset(0, 3); // seems walls are located 3 pixels lower
 				}
 				drawable.PaletteType = PaletteType.Unit;
@@ -233,8 +228,7 @@ namespace CNCMaps.Game {
 				//mainProps.ZBufferAdjust += Drawable.TileHeight / 2;
 			}
 			else if (_collectionType == CollectionType.Infantry) {
-				mainProps.Offset.X += Drawable.TileWidth / 2;
-				mainProps.Offset.Y += Drawable.TileHeight / 2;
+				mainProps.Offset.X += Drawable.TileWidth / 2; // todo: align these properly
 			}
 
 			if (rulesSection.ReadString("Land") == "Rock") {
@@ -243,7 +237,6 @@ namespace CNCMaps.Game {
 			}
 			else if (rulesSection.ReadString("Land") == "Road") {
 				mainProps.Offset.Y += Drawable.TileHeight / 2;
-				mainProps.ZBufferAdjust += Drawable.TileHeight / 2;
 				drawable.Foundation = new Size(3, 1); // ensures bridges are drawn a bit lower than where they're stored
 			}
 			else if (rulesSection.ReadString("Land") == "Railroad") {
@@ -251,15 +244,18 @@ namespace CNCMaps.Game {
 					mainProps.Offset.Y = 11;
 				else
 					mainProps.Offset.Y = 14;
-				mainProps.ZBufferAdjust = 15;
 				drawable.LightingType = LightingType.Full;
 				drawable.PaletteType = PaletteType.Iso;
+				drawable.Foundation = new Size(2, 1); // ensures these too are drawn one tile lower than they are stored
 			}
 			if (rulesSection.ReadBool("SpawnsTiberium")) {
 				// For example on TIBTRE / Ore Poles
 				mainProps.Offset.Y = -1;
 				drawable.LightingType = LightingType.None;
 				drawable.PaletteType = PaletteType.Unit;
+			}
+			if (rulesSection.HasKey("JumpjetHeight")) {
+				drawable.AddOffset(0, (int)(-rulesSection.ReadInt("JumpjetHeight") / 256.0 * Drawable.TileHeight));
 			}
 
 			if (_collectionType == CollectionType.Overlay) {
@@ -275,8 +271,8 @@ namespace CNCMaps.Game {
 					else if (SpecialOverlays.IsHighBridge(ovl)) {
 						mainProps.OffsetHack = OffsetHacks.RA2BridgeOffsets;
 						mainProps.ShadowOffsetHack = OffsetHacks.RA2BridgeShadowOffsets;
-						drawable.HeightOffset = 4; // for lighting
-						mainProps.ZBufferAdjust = Drawable.TileHeight;
+						drawable.TileElevation = 4; // for lighting
+						drawable.Foundation = new Size(3, 1); // ensures they're drawn later --> fixes overlap
 					}
 				}
 				else if (_engine <= EngineType.Firestorm) {
@@ -288,8 +284,8 @@ namespace CNCMaps.Game {
 					else if (SpecialOverlays.IsHighBridge(ovl) || SpecialOverlays.IsTSHighRailsBridge(ovl)) {
 						mainProps.OffsetHack = OffsetHacks.TSBridgeOffsets;
 						mainProps.ShadowOffsetHack = OffsetHacks.TSBridgeShadowOffsets;
-						drawable.HeightOffset = 4;
-						mainProps.ZBufferAdjust = 1 * Drawable.TileHeight;
+						drawable.TileElevation = 4; // for lighting
+						drawable.Foundation = new Size(3, 1); // ensures they're drawn later --> fixes overlap
 					}
 				}
 			}
@@ -307,6 +303,7 @@ namespace CNCMaps.Game {
 				var damagedProps = new DrawProperties {
 					HasShadow = mainProps.HasShadow,
 					FrameDecider = mainProps.FrameDecider, // this is not an animation with loopstart/loopend yet
+					SortIndex = int.MinValue, // "main" building image always first
 				};
 				drawable.AddDamagedShp(VFS.Open<ShpFile>(imageFileName), damagedProps);
 				var extraFrameDecider = mainProps.FrameDecider;
@@ -346,8 +343,6 @@ namespace CNCMaps.Game {
 							ShadowOffset = mainProps.Offset,
 							SortIndex = ySort,
 							FrameDecider = extraFrameDecider,
-							//OverridesZbuffer = true,
-							ZBufferAdjust = artSection.ReadInt(extraImage + "ZAdjust") + mainProps.Offset.Y,
 						};
 						AddImageToObject(drawable, extraImageFileName, props);
 					}
@@ -380,8 +375,7 @@ namespace CNCMaps.Game {
 							Offset = mainProps.Offset,
 							ShadowOffset = mainProps.Offset,
 							FrameDecider = extraFrameDecider,
-							OverridesZbuffer = true,
-							ZBufferAdjust = -artSection.ReadInt(extraImage + "ZBufferAdjust"),
+							// TODO: figure out if this needs to be added to y offset = -artSection.ReadInt(extraImage + "ZAdjust"),
 						};
 						drawable.AddDamagedShp(VFS.Open(extraImageDamagedFileName) as ShpFile, props);
 					}

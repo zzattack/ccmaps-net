@@ -20,7 +20,6 @@ namespace CNCMaps.Game {
 		public Func<GameObject, Point> ShadowOffsetHack { get; set; } // used to reposition bridges based on their overlay value
 		public Point Offset;
 		public Point ShadowOffset;
-		public int ZBufferAdjust { get; set; }
 		public float TurretVoxelOffset { get; set; }
 		
 		public Point GetOffset(GameObject obj) {
@@ -100,7 +99,7 @@ namespace CNCMaps.Game {
 				if (obj is OwnableObject)
 					direction = (obj as OwnableObject).Direction;
 				shp.Initialize(); // header needs to be loaded at least
-				int imgCount = shp.Header.NumImages;
+				int imgCount = shp.NumImages;
 				if (imgCount % 8 == 0)
 					return (imgCount / 8) * (direction / 32);
 				else
