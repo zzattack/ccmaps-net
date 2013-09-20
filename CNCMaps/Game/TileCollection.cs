@@ -222,7 +222,6 @@ namespace CNCMaps.Game {
 
 					var props = new DrawProperties {
 						Offset = new Point(rxOffset, ryOffset),
-						OverridesZbuffer = true,
 						FrameDecider = FrameDeciders.LoopFrameDecider(artSection.ReadInt("LoopStart"), artSection.ReadInt("LoopEnd", 1)),
 						// todo: figure out if this needs to be added to y offset ZBufferAdjust = -extraSection.ReadInt(n + "ZAdjust"),
 					};

@@ -249,7 +249,7 @@ namespace CNCMaps.Game {
 					mainProps.Offset.Y = 14;
 				drawable.LightingType = LightingType.Full;
 				drawable.PaletteType = PaletteType.Iso;
-				drawable.Foundation = new Size(2, 1); // ensures these too are drawn one tile lower than they are stored
+				drawable.Foundation = new Size(2, 2); // hack to get these later in the drawing order
 			}
 			if (rulesSection.ReadBool("SpawnsTiberium")) {
 				// For example on TIBTRE / Ore Poles
@@ -464,7 +464,6 @@ namespace CNCMaps.Game {
 					PaletteOverride = GetFireAnimPalette(fireArt),
 					Offset = new Point(int.Parse(coords[0]), int.Parse(coords[1])),
 					FrameDecider = FrameDeciders.RandomFrameDecider,
-					OverridesZbuffer = true,
 				};
 				drawableObject.AddFire(VFS.Open<ShpFile>(fireAnim + ".shp"), props);
 			}

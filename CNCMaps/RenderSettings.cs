@@ -15,7 +15,7 @@ namespace CNCMaps {
 		public bool ShowHelp { get; set; }
 		public bool MarkOreFields { get; set; }
 		public bool IgnoreLighting { get; set; }
-		public bool IgnoreLocalSize { get; set; }
+		public SizeMode SizeMode { get; set; }
 		public EngineType Engine { get; set; }
 		public StartPositionMarking StartPositionMarking;
 		public bool PreferOSMesa { get; set; }
@@ -41,6 +41,7 @@ namespace CNCMaps {
 				MixFilesDirectory = "",
 				ModMixes = "",
 				ThumbnailSettings = "",
+				SizeMode = SizeMode.Auto,
 			};
 		}
 	}
@@ -49,6 +50,12 @@ namespace CNCMaps {
 		None,
 		Tiled,
 		Squared
+	}
+
+	public enum SizeMode {
+		Local,
+		Full,
+		Auto,
 	}
 
 }

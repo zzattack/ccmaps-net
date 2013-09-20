@@ -100,7 +100,7 @@ namespace CNCMaps {
 					Settings.OutputDir = Path.GetDirectoryName(Settings.InputFile);
 
 				// free up as much memory as possible before saving the large images
-				Rectangle saveRect = Settings.IgnoreLocalSize ? map.GetFullMapSizePixels() : map.GetLocalSizePixels();
+				Rectangle saveRect = map.GetSizePixels(Settings.SizeMode);
 				DrawingSurface ds = map.GetDrawingSurface();
 				// if we don't need this data anymore, we can try to save some memory
 				if (!Settings.GeneratePreviewPack) {
@@ -229,8 +229,8 @@ namespace CNCMaps {
 				{"s|start-pos-tiled", "Mark starting positions in a tiled manner",v => Settings.StartPositionMarking = StartPositionMarking.Tiled},
 				{"S|start-pos-squared", "Mark starting positions in a squared manner",v => Settings.StartPositionMarking = StartPositionMarking.Squared}, 
 				{"r|mark-ore", "Mark ore and gem fields more explicity, looks good when resizing to a preview",v => Settings.MarkOreFields = true},
-				{"F|force-fullmap", "Ignore LocalSize definition and just save the full map", v => Settings.IgnoreLocalSize = true},
-				{"f|force-localsize", "Use localsize for map dimensions (default)", v => Settings.IgnoreLocalSize = false}, 
+				{"F|force-fullmap", "Ignore LocalSize definition and just save the full map", v => Settings.SizeMode = SizeMode.Full},
+				{"f|force-localsize", "Use localsize for map dimensions (default)", v => Settings.SizeMode = SizeMode.Local}, 
 				{"k|replace-preview", "Update the maps [PreviewPack] data with the rendered image",v => Settings.GeneratePreviewPack = true}, 
 				{"n|ignore-lighting", "Ignore all lighting and lamps on the map",v => Settings.IgnoreLighting = true}, 
 				{"K|replace-preview-nosquares", "Update the maps [PreviewPack] data with the rendered image, without squares",

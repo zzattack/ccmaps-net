@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.IO;
@@ -761,7 +762,7 @@ namespace CNCMaps.Map {
 					else {
 						obj.Collection = _theater.GetObjectCollection(obj);
 						if (obj.Drawable == null) // quite a wrong place to set something this important..
-							obj.Drawable = obj.Collection.GetDrawable(obj); 
+							obj.Drawable = obj.Collection.GetDrawable(obj);
 						pt = obj.Drawable.PaletteType;
 						lt = obj.Drawable.LightingType;
 					}
@@ -1010,6 +1011,28 @@ namespace CNCMaps.Map {
 			return y;
 		}
 
+		internal Rectangle GetSizePixels(SizeMode sizeMode) {
+			switch (sizeMode) {
+				case SizeMode.Local: return GetLocalSizePixels();
+				case SizeMode.Full: return GetFullMapSizePixels();
+				case SizeMode.Auto: return GetAutoSizePixels();
+			}
+			return Rectangle.Empty;
+		}
+
+		public Rectangle GetAutoSizePixels() {
+			// uses full map, but if it's too close to localsize reverts to local
+			var full = GetFullMapSizePixels();
+			var local = GetLocalSizePixels();
+			const double delta = 0.15;
+			if (Math.Abs(full.Left - local.Left) / (double)full.Width < delta
+				&& Math.Abs(full.Width - local.Width) / (double)full.Width < delta
+				&& Math.Abs(full.Top - local.Top) / (double)full.Height < delta
+				&& Math.Abs(full.Bottom - local.Bottom) / (double)full.Height < delta)
+				return local;
+			else return full;
+		}
+
 		public Rectangle GetFullMapSizePixels() {
 			int left = TileWidth / 2,
 				top = TileHeight / 2;
@@ -1222,7 +1245,7 @@ namespace CNCMaps.Map {
 					gfx.PixelOffsetMode = PixelOffsetMode.HighQuality;
 					gfx.CompositingQuality = CompositingQuality.HighQuality;
 
-					var srcRect = Program.Settings.IgnoreLocalSize ? GetFullMapSizePixels() : GetLocalSizePixels();
+					var srcRect = GetSizePixels(Program.Settings.SizeMode);
 					var dstRect = new Rectangle(0, 0, preview.Width, preview.Height);
 					gfx.DrawImage(_drawingSurface.Bitmap, dstRect, srcRect, GraphicsUnit.Pixel);
 				}
@@ -1479,5 +1502,6 @@ namespace CNCMaps.Map {
 			_palettePerLevel.Clear();
 			_palettesToBeRecalculated.Clear();
 		}
+
 	}
 }

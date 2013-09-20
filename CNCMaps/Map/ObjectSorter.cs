@@ -58,8 +58,10 @@ namespace CNCMaps.Map {
 
 			// in a world where everything is perfectly drawable this should hold
 			// Debug.Assert(_graph.Count == 0);
-			while (_graph.Count != 0)
-				ret.AddRange(MarkDependencies(_graph.First().Key));
+			while (_graph.Count != 0) {
+				var leastDy = _graph./*OrderBy(pair => pair.Key.BottomTile.Dy).*/First().Key;
+				ret.AddRange(MarkDependencies(leastDy));
+			}
 			return ret;
 		}
 
@@ -88,7 +90,7 @@ namespace CNCMaps.Map {
 				}
 			};
 
-			for (int y = obj.TopTile.Dy - 0; y <= obj.BottomTile.Dy + 4; y++) {
+			for (int y = obj.TopTile.Dy - 2; y <= obj.BottomTile.Dy + 6; y++) {
 				for (int x = obj.TopTile.Dx - 4; x <= obj.TopTile.Dx + 4; x += 2) {
 					if (x >= 0 && y >= 0)
 						examine(_map[x + (y + obj.TopTile.Dy) % 2, y / 2]);
