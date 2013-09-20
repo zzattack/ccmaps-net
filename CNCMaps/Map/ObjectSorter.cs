@@ -27,7 +27,7 @@ namespace CNCMaps.Map {
 				if (tile == null) return;
 				foreach (var obj in tile.AllObjects) {
 					// every object depends on its bottom-most host tile at least
-					AddDependency(obj, obj.BottomTile, "Bottom tile");
+					AddDependency(obj, obj.TopTile, "top tile");
 					ExamineNeighbourhood(obj);
 				}
 
@@ -39,7 +39,7 @@ namespace CNCMaps.Map {
 				}
 			};
 
-			for (int y = 0; y < _map.Height; y++) {
+			/* for (int y = 0; y < _map.Height; y++) {
 				for (int x = _map.Width * 2 - 2; x >= 0; x -= 2)
 					processTile(_map[x, y]);
 				for (int x = _map.Width * 2 - 3; x >= 0; x -= 2)
@@ -50,8 +50,10 @@ namespace CNCMaps.Map {
 			foreach (var entry in _graph) {
 				foreach (var dep in entry.Value) {
 					Debug.Assert(!_graph.ContainsKey(dep) || !_graph[dep].Contains(entry.Key), "", "cyclic dependency found between {0} and {1}", entry.Key, dep);
+					// /GetFrontBlock(dep, entry.Key);
+					// GetFrontBlock(entry.Key, dep);
 				}
-			}
+			}*/
 
 			// in a world where everything is perfectly drawable this should hold
 			// Debug.Assert(_graph.Count == 0);
@@ -79,7 +81,7 @@ namespace CNCMaps.Map {
 
 					else if (front == obj2) {
 						// obj2 is in front of obj, so so obj cannot have been drawn yet
-						Debug.Assert(!_hist.Contains(obj), "obj drawn before all its dependencies were found");
+						Debug.Assert(!_hist.Contains(obj2), "obj drawn before all its dependencies were found");
 						AddDependency(obj2, obj, "obj2 in front");
 					}
 				}
@@ -97,7 +99,7 @@ namespace CNCMaps.Map {
 		private void AddDependency(GameObject obj, GameObject dependency, string reason = "") {
 			HashSet<GameObject> list;
 			if (!_graph.TryGetValue(obj, out list))
-				_graph[obj] = list = new HashSet<GameObject> { obj.BottomTile };
+				_graph[obj] = list = new HashSet<GameObject> { obj.BottomTile, obj.TopTile };
 			bool added = list.Add(dependency);
 			if (added) Debug.WriteLine("dependency (" + obj + "@" + obj.Tile + "," + dependency + "@" + dependency.Tile + ") added because " + reason);
 		}
@@ -141,15 +143,15 @@ namespace CNCMaps.Map {
 			switch (sepAxis) {
 				case Axis.X:
 					if (hexA.xMin > hexB.xMax) return objA;
-					else if (hexA.xMin < hexB.xMax) return objB;
+					else if (hexB.xMin > hexA.xMax) return objB;
 					break;
 				case Axis.Y:
 					if (hexA.yMin > hexB.yMax) return objA;
-					else if (hexA.yMin < hexB.yMax) return objB;
+					else if (hexB.yMin > hexA.yMax) return objB;
 					break;
 				case Axis.Z:
 					if (hexA.zMin > hexB.zMin) return objA;
-					else if (hexA.zMin < hexB.zMin) return objB;
+					else if (hexB.zMin > hexA.zMin) return objB;
 					break;
 			}
 

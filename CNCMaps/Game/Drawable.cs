@@ -123,18 +123,18 @@ namespace CNCMaps.Game {
 			Point d = new Point(obj.Tile.Dx * TileWidth / 2, (obj.Tile.Dy - obj.Tile.Z) * TileHeight / 2);
 			d.Offset(_globalOffset);
 			d.Offset(props.GetOffset(obj));
-			d.Offset(-vxl_ds.bmd.Width / 2, -vxl_ds.bmd.Height / 2);
+			d.Offset(-vxl_ds.BitmapData.Width / 2, -vxl_ds.BitmapData.Height / 2);
 
 			// rows inverted!
-			var w_low = (byte*)ds.bmd.Scan0;
-			byte* w_high = w_low + ds.bmd.Stride * ds.bmd.Height;
+			var w_low = (byte*)ds.BitmapData.Scan0;
+			byte* w_high = w_low + ds.BitmapData.Stride * ds.BitmapData.Height;
 			int rowsTouched = 0;
 
 			short firstRowTouched = short.MaxValue;
 			for (int y = 0; y < vxl_ds.Height; y++) {
 
-				byte* src_row = (byte*)vxl_ds.bmd.Scan0 + vxl_ds.bmd.Stride * (vxl_ds.Height - y - 1);
-				byte* dst_row = ((byte*)ds.bmd.Scan0 + (d.Y + y) * ds.bmd.Stride + d.X * 3);
+				byte* src_row = (byte*)vxl_ds.BitmapData.Scan0 + vxl_ds.BitmapData.Stride * (vxl_ds.Height - y - 1);
+				byte* dst_row = ((byte*)ds.BitmapData.Scan0 + (d.Y + y) * ds.BitmapData.Stride + d.X * 3);
 				int zIdx = (d.Y + y) * ds.Width + d.X;
 				if (dst_row < w_low || dst_row >= w_high) continue;
 

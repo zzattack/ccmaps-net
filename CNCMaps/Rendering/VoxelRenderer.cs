@@ -77,7 +77,7 @@ namespace CNCMaps.Rendering {
 				_ctx = GraphicsContext.CreateMesaContext();
 				long ctxPtr = long.Parse(_ctx.ToString()); // cannot access private .Context
 				if (ctxPtr != 0) {
-					_ctx.MakeCurrent(new OpenTK.Platform.Mesa.BitmapWindowInfo(_surface.bmd));
+					_ctx.MakeCurrent(new OpenTK.Platform.Mesa.BitmapWindowInfo(_surface.BitmapData));
 					if (!_ctx.IsCurrent) {
 						logger.Warn("Could not make context current");
 						throw new InvalidOperationException("Mesa context could not be made current");
@@ -109,12 +109,12 @@ namespace CNCMaps.Rendering {
 			vxl.Initialize();
 			hva.Initialize();
 
-			GL.Viewport(0, 0, _surface.bmd.Width, _surface.bmd.Height);
+			GL.Viewport(0, 0, _surface.BitmapData.Width, _surface.BitmapData.Height);
 			GL.Clear(ClearBufferMask.DepthBufferBit | ClearBufferMask.ColorBufferBit);
 
 			// RA2 uses dimetric projection with camera elevated 30° off the ground
 			GL.MatrixMode(MatrixMode.Projection);
-			var persp = Matrix4.CreatePerspectiveFieldOfView(MathHelper.DegreesToRadians(30), _surface.bmd.Width / (float)_surface.bmd.Height, 1, _surface.bmd.Height);
+			var persp = Matrix4.CreatePerspectiveFieldOfView(MathHelper.DegreesToRadians(30), _surface.BitmapData.Width / (float)_surface.BitmapData.Height, 1, _surface.BitmapData.Height);
 			GL.LoadMatrix(ref persp);
 
 			GL.MatrixMode(MatrixMode.Modelview);
@@ -215,7 +215,7 @@ namespace CNCMaps.Rendering {
 			}
 
 			// read pixels back to surface
-			GL.ReadPixels(0, 0, _surface.bmd.Width, _surface.bmd.Height, PixelFormat.Bgra, PixelType.UnsignedByte, _surface.bmd.Scan0);
+			GL.ReadPixels(0, 0, _surface.BitmapData.Width, _surface.BitmapData.Height, PixelFormat.Bgra, PixelType.UnsignedByte, _surface.BitmapData.Scan0);
 			return _surface;
 		}
 
@@ -234,13 +234,13 @@ namespace CNCMaps.Rendering {
 			int depthbuffer;
 			GL.Ext.GenRenderbuffers(1, out depthbuffer);
 			GL.Ext.BindRenderbuffer(RenderbufferTarget.RenderbufferExt, depthbuffer);
-			GL.Ext.RenderbufferStorage(RenderbufferTarget.RenderbufferExt, RenderbufferStorage.DepthComponent32, _surface.bmd.Width, _surface.bmd.Height);
+			GL.Ext.RenderbufferStorage(RenderbufferTarget.RenderbufferExt, RenderbufferStorage.DepthComponent32, _surface.BitmapData.Width, _surface.BitmapData.Height);
 			GL.Ext.FramebufferRenderbuffer(FramebufferTarget.FramebufferExt, FramebufferAttachment.DepthAttachmentExt, RenderbufferTarget.RenderbufferExt, depthbuffer);
 
 			int rgb_rb;
 			GL.Ext.GenRenderbuffers(1, out rgb_rb);
 			GL.Ext.BindRenderbuffer(RenderbufferTarget.RenderbufferExt, rgb_rb);
-			GL.Ext.RenderbufferStorage(RenderbufferTarget.RenderbufferExt, RenderbufferStorage.Rgba8, _surface.bmd.Width, _surface.bmd.Height);
+			GL.Ext.RenderbufferStorage(RenderbufferTarget.RenderbufferExt, RenderbufferStorage.Rgba8, _surface.BitmapData.Width, _surface.BitmapData.Height);
 			GL.Ext.FramebufferRenderbuffer(FramebufferTarget.FramebufferExt, FramebufferAttachment.ColorAttachment0Ext, RenderbufferTarget.RenderbufferExt, rgb_rb);
 
 			return GL.CheckFramebufferStatus(FramebufferTarget.FramebufferExt) == FramebufferErrorCode.FramebufferCompleteExt;

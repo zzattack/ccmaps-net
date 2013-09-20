@@ -158,23 +158,24 @@ namespace CNCMaps.FileFormats {
 			Point offset = new Point(tile.Dx * BlockWidth / 2, (tile.Dy - tile.Z) * BlockHeight / 2);
 
 			// make touched tiles (used for determining image cutoff)
-			int gx = tile.Dx, gy = (tile.Dy - tile.Z) / 2;
-			if (gx >= 0 && gy >= 0 && gx < tile.Layer.GridTouched.GetLength(0) && gy < tile.Layer.GridTouched.GetLength(1)) {
-				tile.Layer.GridTouched[gx, gy] |= TileLayer.TouchType.ByNormalData;
-				tile.Layer.GridTouchedBy[gx, gy] = tile;
+			Point center = offset + new Size(BlockWidth / 2, BlockHeight / 2);
+			var centerGridTile = tile.Layer.GetTileScreenNoZ(center);
+			if (centerGridTile != null) {
+				tile.Layer.GridTouched[centerGridTile.Dx, centerGridTile.Dy / 2] |= TileLayer.TouchType.ByNormalData;
+				tile.Layer.GridTouchedBy[centerGridTile.Dx, centerGridTile.Dy / 2] = tile;
 			}
 
 			logger.Trace("Drawing TMP file {0} (subtile {1}) at ({2},{3})", FileName, tile.SubTile, offset.X, offset.Y);
 
-			int stride = ds.bmd.Stride;
+			int stride = ds.BitmapData.Stride;
 
 			int halfCx = BlockWidth / 2,
 				halfCy = BlockHeight / 2;
 
 			// writing bounds
-			var w_low = (byte*)ds.bmd.Scan0;
-			byte* w_high = (byte*)ds.bmd.Scan0 + stride * ds.bmd.Height;
-			byte* w = (byte*)ds.bmd.Scan0 + stride * offset.Y + (offset.X + halfCx - 2) * 3;
+			var w_low = (byte*)ds.BitmapData.Scan0;
+			byte* w_high = (byte*)ds.BitmapData.Scan0 + stride * ds.BitmapData.Height;
+			byte* w = (byte*)ds.BitmapData.Scan0 + stride * offset.Y + (offset.X + halfCx - 2) * 3;
 
 			int rIdx = 0, x, y = 0;
 			int zIdx = offset.Y * ds.Width + offset.X + halfCx - 2;
@@ -184,7 +185,7 @@ namespace CNCMaps.FileFormats {
 				cx += 4;
 				for (ushort c = 0; c < cx; c++) {
 					byte paletteValue = img.TileData[rIdx];
-					
+
 					if (paletteValue != 0 && w_low <= w && w < w_high) {
 						*(w + 0) = p.Colors[paletteValue].B;
 						*(w + 1) = p.Colors[paletteValue].G;
@@ -205,7 +206,7 @@ namespace CNCMaps.FileFormats {
 				cx -= 4;
 				for (ushort c = 0; c < cx; c++) {
 					byte paletteValue = img.TileData[rIdx];
-					
+
 					if (paletteValue != 0 && w_low <= w && w < w_high) {
 						*(w + 0) = p.Colors[paletteValue].B;
 						*(w + 1) = p.Colors[paletteValue].G;
@@ -229,16 +230,16 @@ namespace CNCMaps.FileFormats {
 			rIdx = 0;
 
 			// identify extra-data affected tiles for cutoff
-			var extraBounds = Rectangle.FromLTRB(
-				Math.Max(0, (int)Math.Floor(offset.X / (BlockWidth / 2.0))),
-				Math.Max(0, (int)Math.Floor(offset.Y / (BlockHeight / 2.0))),
-				Math.Min(tile.Layer.Width - 1, (int)Math.Ceiling((offset.X + img.ExtraWidth) / (BlockWidth / 2.0))),
-				Math.Min((tile.Layer.Height - 1) * 2, (int)Math.Ceiling((offset.X + img.ExtraHeight) / (BlockHeight / 2.0))));
-			for (int by = extraBounds.Top; by < extraBounds.Bottom; by++) {
-				for (int bx = extraBounds.Left; bx < extraBounds.Right; bx++) {
-					logger.Trace("Tile at ({0},{1}) has extradata affecting ({2},{3})", tile.Dx, tile.Dy, bx, by);
-					tile.Layer.GridTouched[bx, by / 2] |= TileLayer.TouchType.ByExtraData;
-					tile.Layer.GridTouchedBy[bx, by / 2] = tile;
+			var extraScreenBounds = Rectangle.FromLTRB(
+				Math.Max(0, offset.X), Math.Max(0, offset.Y),
+				Math.Min(offset.X + img.ExtraWidth, ds.Width), Math.Min(offset.Y + img.ExtraHeight, ds.Height));
+
+			for (int by = extraScreenBounds.Top; by < extraScreenBounds.Bottom; by += BlockHeight / 2) {
+				for (int bx = extraScreenBounds.Left; bx < extraScreenBounds.Right; bx += BlockWidth / 2) {
+					var gridTileNoZ = tile.Layer.GetTileScreenNoZ(new Point(bx, by));
+					logger.Trace("Tile at ({0},{1}) has extradata affecting ({2},{3})", tile.Dx, tile.Dy, gridTileNoZ.Dx, gridTileNoZ.Dy);
+					tile.Layer.GridTouched[gridTileNoZ.Dx, gridTileNoZ.Dy / 2] |= TileLayer.TouchType.ByExtraData;
+					tile.Layer.GridTouchedBy[gridTileNoZ.Dx, gridTileNoZ.Dy / 2] = tile;
 				}
 			}
 
@@ -247,7 +248,7 @@ namespace CNCMaps.FileFormats {
 				for (x = 0; x < img.ExtraWidth; x++) {
 					// Checking per line is required because v needs to be checked every time
 					byte paletteValue = img.ExtraData[rIdx];
-					
+
 					if (paletteValue != 0 && w_low <= w && w < w_high) {
 						*w++ = p.Colors[paletteValue].B;
 						*w++ = p.Colors[paletteValue].G;

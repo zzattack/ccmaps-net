@@ -953,7 +953,7 @@ namespace CNCMaps.Map {
 				int h = radius, w = radius;
 				for (int drawY = destY - h / 2; drawY < destY + h; drawY++) {
 					for (int drawX = destX - w / 2; drawX < destX + w; drawX++) {
-						byte* p = (byte*)_drawingSurface.bmd.Scan0 + drawY * _drawingSurface.bmd.Stride + 3 * drawX;
+						byte* p = (byte*)_drawingSurface.BitmapData.Scan0 + drawY * _drawingSurface.BitmapData.Stride + 3 * drawX;
 						*p++ = 0x00;
 						*p++ = 0x00;
 						*p++ = 0xFF;
@@ -966,9 +966,9 @@ namespace CNCMaps.Map {
 			// searches in 10 rows, starting from the bottom up, for the first fully tiled row
 			int y;
 
-			/*// print map:
+			// print map:
 			var tileTouchGrid = _tiles.GridTouched;
-			var sb = new StringBuilder();
+			var sb = new System.Text.StringBuilder();
 			for (y = 0; y < tileTouchGrid.GetLength(1); y++) {
 				for (int x = 0; x < tileTouchGrid.GetLength(0); x++) {
 					if (tileTouchGrid[x, y] == TileLayer.TouchType.Untouched)
@@ -980,11 +980,11 @@ namespace CNCMaps.Map {
 				}
 				sb.AppendLine();
 			}
-			File.WriteAllText("cutoffmap.txt", sb.ToString());*/
+			File.WriteAllText("cutoffmap.txt", sb.ToString());
 
 			for (y = FullSize.Height - 1; y > FullSize.Height - 10; y--) {
 				bool isRowFilled = true;
-				for (int x = 1; x < FullSize.Width - 1; x++) {
+				for (int x = 1; x < FullSize.Width * 2 - 3; x++) {
 					if (_tiles.GridTouched[x, y] == TileLayer.TouchType.Untouched) {
 						isRowFilled = false;
 						break;
@@ -1157,9 +1157,9 @@ namespace CNCMaps.Map {
 
 		public void GeneratePreviewPack(bool omitMarkers) {
 			Logger.Info("Generating PreviewPack data");
-			// we will have to re-lock the bmd
+			// we will have to re-lock the BitmapData
 
-			_drawingSurface.Lock(_drawingSurface.bm.PixelFormat);
+			_drawingSurface.Lock(_drawingSurface.Bitmap.PixelFormat);
 			if (Program.Settings.MarkOreFields == false) {
 				Logger.Trace("Marking ore and gems areas");
 				MarkOreAndGems();
@@ -1211,7 +1211,7 @@ namespace CNCMaps.Map {
 
 					var srcRect = Program.Settings.IgnoreLocalSize ? GetFullMapSizePixels() : GetLocalSizePixels();
 					var dstRect = new Rectangle(0, 0, preview.Width, preview.Height);
-					gfx.DrawImage(_drawingSurface.bm, dstRect, srcRect, GraphicsUnit.Pixel);
+					gfx.DrawImage(_drawingSurface.Bitmap, dstRect, srcRect, GraphicsUnit.Pixel);
 				}
 
 				Logger.Info("Injecting thumbnail into map");

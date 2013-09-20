@@ -87,7 +87,18 @@ namespace CNCMaps.Map {
 			int rx = (p.X * h + p.Y * w - fx * h - fy * w) / (2 * w * h);
 			int ry = (p.X * -h + p.Y * w + fx * h - fy * w) / (2 * w * h);
 			var tile_noheight = GetTileR(rx, ry);
-			return tile_noheight != null ? tiles[tile_noheight.Dx, (tile_noheight.Dy + tile_noheight.Z) / 2] : null;
+			return tile_noheight != null ? this[tile_noheight.Dx, (tile_noheight.Dy + tile_noheight.Z) / 2] : null;
+		}
+
+		internal MapTile GetTileScreenNoZ(Point p) {
+			// use inverse matrix of world projection for screen to world
+			int w = Drawable.TileWidth / 2;
+			int h = Drawable.TileHeight / 2;
+			int fx = w * Width;
+			int fy = h * (-1 - Width);
+			int rx = (p.X * h + p.Y * w - fx * h - fy * w) / (2 * w * h);
+			int ry = (p.X * -h + p.Y * w + fx * h - fy * w) / (2 * w * h);
+			return GetTileR(rx, ry);
 		}
 
 		#region neighbouring tiles tests (auto-lat tests)

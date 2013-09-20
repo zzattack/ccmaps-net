@@ -163,14 +163,14 @@ namespace CNCMaps.FileFormats {
 			offset.Y += (obj.Tile.Dy - obj.Tile.Z) * Drawable.TileHeight / 2 - Height / 2 + img.Y;
 			Logger.Trace("Drawing SHP file {0} (Frame {1}) at ({2},{3})", FileName, frameIndex, offset.X, offset.Y);
 
-			int stride = ds.bmd.Stride;
+			int stride = ds.BitmapData.Stride;
 			var heightBuffer = ds.GetHeightBuffer();
 
-			var w_low = (byte*)ds.bmd.Scan0;
-			byte* w_high = (byte*)ds.bmd.Scan0 + stride * ds.bmd.Height;
+			var w_low = (byte*)ds.BitmapData.Scan0;
+			byte* w_high = (byte*)ds.BitmapData.Scan0 + stride * ds.BitmapData.Height;
 
 
-			byte* w = (byte*)ds.bmd.Scan0 + offset.X * 3 + stride * offset.Y;
+			byte* w = (byte*)ds.BitmapData.Scan0 + offset.X * 3 + stride * offset.Y;
 			int zIdx = offset.X + offset.Y * ds.Width;
 			int rIdx = 0;
 
@@ -219,14 +219,14 @@ namespace CNCMaps.FileFormats {
 			offset.Y += (obj.Tile.Dy - obj.Tile.Z) * Drawable.TileHeight / 2 - Height / 2 + img.Y;
 			Logger.Trace("Drawing SHP shadow {0} (frame {1}) at ({2},{3})", FileName, frameIndex, offset.X, offset.Y);
 
-			int stride = ds.bmd.Stride;
+			int stride = ds.BitmapData.Stride;
 			var shadows = ds.GetShadows();
 			var heightBuffer = ds.GetHeightBuffer();
 
-			var w_low = (byte*)ds.bmd.Scan0;
-			byte* w_high = (byte*)ds.bmd.Scan0 + stride * ds.bmd.Height;
+			var w_low = (byte*)ds.BitmapData.Scan0;
+			byte* w_high = (byte*)ds.BitmapData.Scan0 + stride * ds.BitmapData.Height;
 
-			byte* w = (byte*)ds.bmd.Scan0 + offset.X * 3 + stride * offset.Y;
+			byte* w = (byte*)ds.BitmapData.Scan0 + offset.X * 3 + stride * offset.Y;
 			int zIdx = offset.X + offset.Y * ds.Width;
 			int rIdx = 0;
 			int castHeight = obj.Tile.Z * Drawable.TileHeight / 2;
@@ -291,13 +291,13 @@ namespace CNCMaps.FileFormats {
 			offset.Y += (obj.Tile.Dy - obj.Tile.Z) * Drawable.TileHeight / 2;
 			Logger.Trace("Drawing AlphaImage SHP file {0} (frame {1}) at ({2},{3})", FileName, frameIndex, offset.X, offset.Y);
 
-			int stride = ds.bmd.Stride;
-			var w_low = (byte*)ds.bmd.Scan0;
-			byte* w_high = (byte*)ds.bmd.Scan0 + stride * ds.bmd.Height;
+			int stride = ds.BitmapData.Stride;
+			var w_low = (byte*)ds.BitmapData.Scan0;
+			byte* w_high = (byte*)ds.BitmapData.Scan0 + stride * ds.BitmapData.Height;
 
 			int dx = offset.X + Drawable.TileWidth / 2 - Width / 2 + img.X,
 				dy = offset.Y - Height / 2 + img.Y;
-			byte* w = (byte*)ds.bmd.Scan0 + dx * 3 + stride * dy;
+			byte* w = (byte*)ds.BitmapData.Scan0 + dx * 3 + stride * dy;
 
 			int rIdx = 0;
 

@@ -5,52 +5,51 @@ using System.Linq;
 
 namespace CNCMaps.Rendering {
 	public class DrawingSurface {
-		public BitmapData bmd { get; private set; }
-		public Bitmap bm { get; private set; }
+		public BitmapData BitmapData { get; private set; }
+		public Bitmap Bitmap { get; private set; }
 		public int Width { get; private set; } // prevents repeated (slow) lookups in bm.Width
 		public int Height { get; private set; } // prevents repeated (slow) lookups in bm.Width
-
-		short[] heightBuffer;
-		bool[] shadowBuffer;
+		short[] _heightBuffer;
+		bool[] _shadowBuffer;
 
 		static NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
 		public DrawingSurface(int width, int height, PixelFormat pixelFormat) {
 			logger.Debug("Initializing DrawingSurface with dimensions ({0},{1}), pixel format {2}", width, height, pixelFormat.ToString());
-			bm = new Bitmap(width, height, pixelFormat);
+			Bitmap = new Bitmap(width, height, pixelFormat);
 			Width = width;
 			Height = height;
-			Lock(bm.PixelFormat);
-			heightBuffer = new short[width * height];
-			shadowBuffer = new bool[width * height];
+			Lock(Bitmap.PixelFormat);
+			_heightBuffer = new short[width * height];
+			_shadowBuffer = new bool[width * height];
 		}
 
 		public void Lock(PixelFormat pixelFormat = PixelFormat.Format24bppRgb) {
-			if (bmd == null)
-				bmd = bm.LockBits(new Rectangle(0, 0, bm.Width, bm.Height), ImageLockMode.ReadWrite, pixelFormat);
+			if (BitmapData == null)
+				BitmapData = Bitmap.LockBits(new Rectangle(0, 0, Bitmap.Width, Bitmap.Height), ImageLockMode.ReadWrite, pixelFormat);
 		}
 
 		public void Unlock() {
-			if (bmd != null) {
-				bm.UnlockBits(bmd);
-				bmd = null;
+			if (BitmapData != null) {
+				Bitmap.UnlockBits(BitmapData);
+				BitmapData = null;
 			}
 		}
 
 		public bool IsShadow(int x, int y) {
-			return shadowBuffer[x + y * Width];
+			return _shadowBuffer[x + y * Width];
 		}
 
 		public void SetShadow(int x, int y) {
-			shadowBuffer[x + y * Width] = true;
+			_shadowBuffer[x + y * Width] = true;
 		}
 
 		public bool[] GetShadows() {
-			return shadowBuffer;
+			return _shadowBuffer;
 		}
 
 		public short[] GetHeightBuffer() {
-			return heightBuffer;
+			return _heightBuffer;
 		}
 
 		public void SavePNG(string path, int compressionLevel, int left, int top, int width, int height) {
@@ -65,10 +64,10 @@ namespace CNCMaps.Rendering {
 			var encoderParams = new EncoderParameters(1);
 			encoderParams.Param[0] = new EncoderParameter(Encoder.Quality, compressionLevel);
 
-			if (saveRect.Location == Point.Empty && saveRect.Size == bm.Size)
-				bm.Save(path, encoder, encoderParams);
+			if (saveRect.Location == Point.Empty && saveRect.Size == Bitmap.Size)
+				Bitmap.Save(path, encoder, encoderParams);
 			else
-				using (var cutRect = bm.Clone(saveRect, bm.PixelFormat))
+				using (var cutRect = Bitmap.Clone(saveRect, Bitmap.PixelFormat))
 					cutRect.Save(path, encoder, encoderParams);
 		}
 
@@ -84,10 +83,10 @@ namespace CNCMaps.Rendering {
 			var encoderParams = new EncoderParameters(1);
 			encoderParams.Param[0] = new EncoderParameter(Encoder.Quality, quality);
 
-			if (saveRect.Location == Point.Empty && saveRect.Size == bm.Size)
-				bm.Save(path, encoder, encoderParams);
+			if (saveRect.Location == Point.Empty && saveRect.Size == Bitmap.Size)
+				Bitmap.Save(path, encoder, encoderParams);
 			else
-				using (var cutRect = bm.Clone(saveRect, bm.PixelFormat))
+				using (var cutRect = Bitmap.Clone(saveRect, Bitmap.PixelFormat))
 					cutRect.Save(path, encoder, encoderParams);
 		}
 
@@ -104,7 +103,7 @@ namespace CNCMaps.Rendering {
 
 					var srcRect = cutout;
 					var dstRect = new Rectangle(0, 0, thumb.Width, thumb.Height);
-					gfx.DrawImage(bm, dstRect, srcRect, GraphicsUnit.Pixel);
+					gfx.DrawImage(Bitmap, dstRect, srcRect, GraphicsUnit.Pixel);
 				}
 				ImageCodecInfo encoder = ImageCodecInfo.GetImageEncoders().First(e => e.FormatID == ImageFormat.Jpeg.Guid);
 				var encoderParams = new EncoderParameters(1);
@@ -114,15 +113,15 @@ namespace CNCMaps.Rendering {
 		}
 
 		internal void FreeNonBitmap() {
-			this.shadowBuffer = null;
-			this.heightBuffer = null;
+			this._shadowBuffer = null;
+			this._heightBuffer = null;
 		}
 
 
 		internal void Dispose() {
 			Unlock();
-			this.shadowBuffer = null;
-			bm.Dispose();
+			this._shadowBuffer = null;
+			Bitmap.Dispose();
 		}
 
 	}
