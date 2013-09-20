@@ -120,11 +120,20 @@ namespace CNCMaps.FileFormats {
 				Images.Add(img);
 			}
 		}
-
-
-		internal Rectangle GetBounds() {
+		
+		public Rectangle GetBounds(GameObject obj, DrawProperties props) {
 			Initialize();
-			return new Rectangle(0, 0, Width, Height);
+			int frameIndex = 0;//DecideFrameIndex(props.FrameDecider(obj));
+			Point offset = Point.Empty;
+			Size size = new Size(0, 0);
+			offset.Offset(props.GetOffset(obj));
+			offset.Offset(-Width / 2, -Height / 2);
+			var img = GetImage(frameIndex);
+			if (img != null) {
+				offset.Offset(img.X, img.Y);
+				size = new Size(img.Width, img.Height);
+			}
+			return new Rectangle(offset, size);
 		}
 
 		private static Random R = new Random();
@@ -160,7 +169,7 @@ namespace CNCMaps.FileFormats {
 			var w_low = (byte*)ds.bmd.Scan0;
 			byte* w_high = (byte*)ds.bmd.Scan0 + stride * ds.bmd.Height;
 
-			
+
 			byte* w = (byte*)ds.bmd.Scan0 + offset.X * 3 + stride * offset.Y;
 			int zIdx = offset.X + offset.Y * ds.Width;
 			int rIdx = 0;

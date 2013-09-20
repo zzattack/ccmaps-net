@@ -1,4 +1,5 @@
 ﻿using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 using System.Linq;
 
@@ -90,6 +91,27 @@ namespace CNCMaps.Rendering {
 					cutRect.Save(path, encoder, encoderParams);
 		}
 
+		public void SaveThumb(Size dimensions, Rectangle cutout, string path) {
+			Unlock();
+
+			using (var thumb = new Bitmap(dimensions.Width, dimensions.Height, PixelFormat.Format24bppRgb)) {
+				using (Graphics gfx = Graphics.FromImage(thumb)) {
+					// use high-quality scaling
+					gfx.InterpolationMode = InterpolationMode.HighQualityBicubic;
+					gfx.SmoothingMode = SmoothingMode.HighQuality;
+					gfx.PixelOffsetMode = PixelOffsetMode.HighQuality;
+					gfx.CompositingQuality = CompositingQuality.HighQuality;
+
+					var srcRect = cutout;
+					var dstRect = new Rectangle(0, 0, thumb.Width, thumb.Height);
+					gfx.DrawImage(bm, dstRect, srcRect, GraphicsUnit.Pixel);
+				}
+				ImageCodecInfo encoder = ImageCodecInfo.GetImageEncoders().First(e => e.FormatID == ImageFormat.Jpeg.Guid);
+				var encoderParams = new EncoderParameters(1);
+				encoderParams.Param[0] = new EncoderParameter(Encoder.Quality, 95L);
+				thumb.Save(path, encoder, encoderParams);
+			}
+		}
 
 		internal void FreeNonBitmap() {
 			this.shadowBuffer = null;
@@ -102,5 +124,6 @@ namespace CNCMaps.Rendering {
 			this.shadowBuffer = null;
 			bm.Dispose();
 		}
+
 	}
 }

@@ -103,13 +103,13 @@ namespace CNCMaps.Game {
 
 			drawable.PaletteType = Defaults.GetDefaultPalette(_collectionType, _engine);
 			drawable.LightingType = Defaults.GetDefaultLighting(_collectionType);
-			drawable.IsRemapable = Defaults.GetDefaultRemappability(_collectionType);
+			drawable.IsRemapable = Defaults.GetDefaultRemappability(_collectionType, _engine);
 			mainProps.FrameDecider = Defaults.GetDefaultFrameDecider(_collectionType);
 
 			string imageFileName = artSection.ReadString("Image", artSectionName);
-			bool isVoxel = artSection.ReadBool("Voxel");
+			drawable.IsVoxel = artSection.ReadBool("Voxel");
 			bool theaterExtension = artSection.ReadBool("Theater");
-			if (isVoxel) {
+			if (drawable.IsVoxel) {
 				imageFileName += ".vxl";
 				if (_collectionType == CollectionType.Building) {
 					// half tile to the left
@@ -142,6 +142,7 @@ namespace CNCMaps.Game {
 					int fy = artSection.ReadInt("Foundation.Y", 1);
 					drawable.Foundation = new Size(fx, fy);
 				}
+				mainProps.SortIndex = int.MinValue; // "main" building image always first
 			}
 			else if (_collectionType == CollectionType.Smudge) {
 				drawable.Foundation = new Size(rulesSection.ReadInt("Width", 1), rulesSection.ReadInt("Height", 1));
@@ -175,15 +176,10 @@ namespace CNCMaps.Game {
 				drawable.PaletteType = PaletteType.Anim;
 				drawable.LightingType = LightingType.None;
 			}
-			else if (artSection.ReadBool("AltPalette")) {
-				// If AltPalette=yes is set on an animation then that animation will use the unit palette instead of the animation palette. 
-				// However, remappable colours are ignored - they will not be remapped.
-				drawable.PaletteType = PaletteType.Unit;
-				drawable.IsRemapable = false;
-			}
 			else if (artSection.ReadString("Palette") != string.Empty) {
 				drawable.PaletteType = PaletteType.Custom;
 				drawable.CustomPaletteName = artSection.ReadString("Palette");
+				drawable.IsRemapable = false;
 			}
 
 			if (rulesSection.ReadString("AlphaImage") != "") {
@@ -275,7 +271,7 @@ namespace CNCMaps.Game {
 						mainProps.OffsetHack = OffsetHacks.RA2BridgeOffsets;
 						mainProps.ShadowOffsetHack = OffsetHacks.RA2BridgeShadowOffsets;
 						drawable.HeightOffset = 4; // for lighting
-						drawable.Foundation = new Size(3, 1);
+						drawable.Foundation = new Size(3, 1); // ensures they're drawn later --> fixes overlap
 					}
 				}
 				else if (_engine <= EngineType.Firestorm) {
@@ -287,7 +283,8 @@ namespace CNCMaps.Game {
 					else if (SpecialOverlays.IsHighBridge(ovl) || SpecialOverlays.IsTSHighRailsBridge(ovl)) {
 						mainProps.OffsetHack = OffsetHacks.TSBridgeOffsets;
 						mainProps.ShadowOffsetHack = OffsetHacks.TSBridgeShadowOffsets;
-						drawable.HeightOffset = 4;
+						drawable.HeightOffset = 4; // for lighting
+						drawable.Foundation = new Size(3, 1); // ensures they're drawn later --> fixes overlap
 					}
 				}
 			}
@@ -305,6 +302,7 @@ namespace CNCMaps.Game {
 				var damagedProps = new DrawProperties {
 					HasShadow = mainProps.HasShadow,
 					FrameDecider = mainProps.FrameDecider, // this is not an animation with loopstart/loopend yet
+					SortIndex = int.MinValue, // "main" building image always first
 				};
 				drawable.AddDamagedShp(VFS.Open<ShpFile>(imageFileName), damagedProps);
 				var extraFrameDecider = mainProps.FrameDecider;

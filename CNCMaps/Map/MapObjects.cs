@@ -11,6 +11,9 @@ namespace CNCMaps.Map {
 		short Direction { get; set; }
 	}
 	public class GameObject {
+		public GameObject() {
+			Id = IdCounter++;
+		}
 		public virtual MapTile Tile { get; set; }
 		public virtual MapTile BottomTile {
 			get { return Tile; }
@@ -34,6 +37,9 @@ namespace CNCMaps.Map {
 		public LightingType Lighting {
 			get { return Drawable != null ? Drawable.LightingType : LightingType.Full; }
 		}
+		
+		public int Id { get; set; }
+		private static int IdCounter = 0;
 	}
 	public class NumberedObject : GameObject {
 		public int Number { get; protected set; }

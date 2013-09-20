@@ -108,7 +108,7 @@ namespace CNCMaps.Map {
 		private void RemoveYRObjects() {
 			foreach (var obj in _overlayObjects.Where(obj => obj.OverlayID > 246).ToList()) {
 				_overlayObjects.Remove(obj);
-				obj.Tile.AllObjects.Remove(obj);
+				obj.Tile.RemoveObject(obj);
 			}
 
 			IniSection objSection = _rules.GetSection("TerrainTypes");
@@ -116,7 +116,7 @@ namespace CNCMaps.Map {
 				int idx = objSection.FindValueIndex(obj.Name);
 				if (idx == -1 || idx > 73) {
 					_terrainObjects.Remove(obj);
-					obj.Tile.AllObjects.Remove(obj);
+					obj.Tile.RemoveObject(obj);
 				}
 			}
 
@@ -125,7 +125,7 @@ namespace CNCMaps.Map {
 				int idx = objSection.FindValueIndex(obj.Name);
 				if (idx == -1 || idx > 45) {
 					_infantryObjects.Remove(obj);
-					obj.Tile.AllObjects.Remove(obj);
+					obj.Tile.RemoveObject(obj);
 				}
 			}
 
@@ -134,7 +134,7 @@ namespace CNCMaps.Map {
 				int idx = objSection.FindValueIndex(obj.Name);
 				if (idx == -1 || idx > 57) {
 					_unitObjects.Remove(obj);
-					obj.Tile.AllObjects.Remove(obj);
+					obj.Tile.RemoveObject(obj);
 				}
 			}
 
@@ -143,7 +143,7 @@ namespace CNCMaps.Map {
 				int idx = objSection.FindValueIndex(obj.Name);
 				if (idx == -1 || idx > 9) {
 					_aircraftObjects.Remove(obj);
-					obj.Tile.AllObjects.Remove(obj);
+					obj.Tile.RemoveObject(obj);
 				}
 			}
 
@@ -154,7 +154,7 @@ namespace CNCMaps.Map {
 				int idx2 = objSectionAlt.FindValueIndex(obj.Name);
 				if ((idx1 == -1 && idx2 == -1) || (idx1 != -1 && idx1 > 303) || (idx2 != -1 && idx2 > 246)) {
 					_structureObjects.Remove(obj);
-					obj.Tile.AllObjects.Remove(obj);
+					obj.Tile.RemoveObject(obj);
 				}
 			}
 			// no need to remove smudges as no new ones were introduced with yr
@@ -162,33 +162,33 @@ namespace CNCMaps.Map {
 
 		private void RemoveUnknownObjects() {
 			ObjectCollection c = _theater.GetCollection(CollectionType.Terrain);
-			foreach (var obj in _terrainObjects.Where(obj => !c.HasObject(obj))) {
+			foreach (var obj in _terrainObjects.Where(obj => !c.HasObject(obj)).ToList()) {
 				_terrainObjects.Remove(obj);
-				obj.Tile.AllObjects.Remove(obj);
+				obj.Tile.RemoveObject(obj);
 			}
 
 			c = _theater.GetCollection(CollectionType.Infantry);
-			foreach (var obj in _infantryObjects.Where(obj => !c.HasObject(obj))) {
-				obj.Tile.AllObjects.Remove(obj);
+			foreach (var obj in _infantryObjects.Where(obj => !c.HasObject(obj)).ToList()) {
+				obj.Tile.RemoveObject(obj);
 				_infantryObjects.Remove(obj);
 
 			}
 
 			c = _theater.GetCollection(CollectionType.Vehicle);
-			foreach (var obj in _unitObjects.Where(obj => !c.HasObject(obj))) {
-				obj.Tile.AllObjects.Remove(obj);
+			foreach (var obj in _unitObjects.Where(obj => !c.HasObject(obj)).ToList()) {
+				obj.Tile.RemoveObject(obj);
 				_unitObjects.Remove(obj);
 			}
 
 			c = _theater.GetCollection(CollectionType.Aircraft);
-			foreach (var obj in _aircraftObjects.Where(obj => !c.HasObject(obj))) {
-				obj.Tile.AllObjects.Remove(obj);
+			foreach (var obj in _aircraftObjects.Where(obj => !c.HasObject(obj)).ToList()) {
+				obj.Tile.RemoveObject(obj);
 				_aircraftObjects.Remove(obj);
 			}
 
 			c = _theater.GetCollection(CollectionType.Smudge);
-			foreach (var obj in _smudgeObjects.Where(obj => !c.HasObject(obj))) {
-				obj.Tile.AllObjects.Remove(obj);
+			foreach (var obj in _smudgeObjects.Where(obj => !c.HasObject(obj)).ToList()) {
+				obj.Tile.RemoveObject(obj);
 				_smudgeObjects.Remove(obj);
 			}
 
@@ -197,7 +197,7 @@ namespace CNCMaps.Map {
 			var cAlt = _theater.GetCollection(CollectionType.Overlay);
 			IniSection objSectionAlt = _rules.GetSection("OverlayTypes");
 			foreach (var obj in _structureObjects.Where(obj => !c.HasObject(obj) && !cAlt.HasObject(obj)).ToList()) {
-				obj.Tile.AllObjects.Remove(obj);
+				obj.Tile.RemoveObject(obj);
 				_structureObjects.Remove(obj);
 			}
 		}
@@ -408,8 +408,8 @@ namespace CNCMaps.Map {
 				var bounds = obj.Drawable.GetBounds(obj);
 				// bounds to foundation
 				Size foundation = new Size(
-					(int)Math.Ceiling((bounds.Width / 2) / (double)Drawable.TileWidth),
-					(int)Math.Ceiling((bounds.Height / 2) / (double)Drawable.TileHeight));
+					(int)Math.Max(1, Math.Ceiling((bounds.Width / 2) / (double)Drawable.TileWidth)),
+					(int)Math.Max(1, Math.Ceiling((bounds.Height / 2) / (double)Drawable.TileHeight)));
 
 				var bottom = _tiles.GetTileR(obj.Tile.Rx + foundation.Width - 1, obj.Tile.Ry + foundation.Height - 1);
 				obj.BottomTile = bottom ?? obj.Tile;
@@ -814,11 +814,11 @@ namespace CNCMaps.Map {
 			foreach (StructureObject s in _structureObjects.ToList()) {
 				var section = _rules.GetSection(s.Name);
 				if (section != null && section.HasKey("LightVisibility")) {
-					s.Tile.AllObjects.Remove(s);
-					_structureObjects.Remove(s); // we dont draw these
 					var ls = new LightSource(_rules.GetSection(s.Name), _lighting);
 					ls.Tile = s.Tile;
 					_lightSources.Add(ls);
+					s.Tile.RemoveObject(s, true);
+					_structureObjects.Remove(s); // arent drawn anyway
 				}
 			}
 		}
@@ -827,6 +827,7 @@ namespace CNCMaps.Map {
 			int before = _palettesToBeRecalculated.Count;
 			foreach (LightSource lamp in _lightSources) {
 				foreach (MapTile t in _tiles) {
+					if (t == null) continue;
 
 					bool wasShared = t.Palette.IsShared;
 					// make sure this tile can only end up in the "to-be-recalculated list" once
@@ -1092,8 +1093,18 @@ namespace CNCMaps.Map {
 			Logger.Info("Drawing map");
 			_drawingSurface = new DrawingSurface(FullSize.Width * TileWidth, FullSize.Height * TileHeight, PixelFormat.Format24bppRgb);
 			ObjectSorter sorter = new ObjectSorter(_theater, _tiles);
-			foreach (var obj in sorter.GetOrderedObjects())
+			var orderedObjs = sorter.GetOrderedObjects();
+			foreach (var obj in orderedObjs)
 				_theater.Draw(obj, _drawingSurface);
+
+			/* // test that my bounds make some kind of sense
+			_drawingSurface.Unlock();
+			using (Graphics gfx = Graphics.FromImage(_drawingSurface.bm)) {
+				foreach (var obj in orderedObjs)
+					if (obj.Drawable != null)
+						obj.Drawable.DrawBounds(obj, gfx);
+			}
+			*/
 
 			/*
 			var tileCollection = _theater.GetTileCollection();

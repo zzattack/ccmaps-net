@@ -47,9 +47,9 @@ namespace CNCMaps.Game {
 		// below are all the different kinds of drawables that a Drawable can consist of
 		readonly List<DrawableFile<VxlFile>> _voxels = new List<DrawableFile<VxlFile>>();
 		readonly List<HvaFile> _hvas = new List<HvaFile>();
-		List<DrawableFile<ShpFile>> _shps = new List<DrawableFile<ShpFile>>();
-		List<DrawableFile<ShpFile>> _fires = new List<DrawableFile<ShpFile>>();
-		List<DrawableFile<ShpFile>> _damagedShps = new List<DrawableFile<ShpFile>>();
+		readonly List<DrawableFile<ShpFile>> _shps = new List<DrawableFile<ShpFile>>();
+		readonly List<DrawableFile<ShpFile>> _fires = new List<DrawableFile<ShpFile>>();
+		readonly List<DrawableFile<ShpFile>> _damagedShps = new List<DrawableFile<ShpFile>>();
 		private DrawableFile<ShpFile> _alphaImage;
 
 		internal void SetAlphaImage(ShpFile alphaSHP) {
@@ -180,21 +180,33 @@ namespace CNCMaps.Game {
 
 		public Rectangle GetBounds(GameObject obj) {
 			Rectangle bounds = Rectangle.Empty;
-			if (InvisibleInGame) return bounds;
 
-			foreach (var shp in _shps) {
-				if (bounds == Rectangle.Empty) bounds = shp.File.GetBounds();
-				else bounds = Rectangle.Union(bounds, shp.File.GetBounds());
-			}
-			if (_voxels.Any()) {
-				var vxlBounds = new Rectangle(-100, -100, 200, 200);
+			if (IsVoxel) {
+				var vxlBounds = new Rectangle(-100, -50, 200, 100);
 				if (bounds == Rectangle.Empty) bounds = vxlBounds;
 				else bounds = Rectangle.Union(bounds, vxlBounds);
 			}
-
-			bounds.Offset(obj.Tile.Dx * TileWidth / 2, (obj.Tile.Dy - obj.Tile.Z) * TileHeight / 2);
+			else {
+				foreach (var shp in _shps) {
+					if (bounds == Rectangle.Empty) bounds = shp.File.GetBounds(obj, shp.Props);
+					else bounds = Rectangle.Union(bounds, shp.File.GetBounds(obj, shp.Props));
+				} 
+			}
+			bounds.Offset(obj.Tile.Dx * TileWidth / 2 + TileWidth / 2, (obj.Tile.Dy - obj.Tile.Z) * TileHeight / 2);
+			bounds.Offset(_globalOffset);
 			return bounds;
 		}
+
+		/*private static Pen boundsRectPenVoxel = new Pen(Color.Blue);
+		private static Pen boundsRectPenSHP = new Pen(Color.Red);
+		public void DrawBounds(GameObject obj, Graphics gfx) {
+			if (IsVoxel)
+				gfx.DrawRectangle(boundsRectPenVoxel, GetBounds(obj));
+			else
+				gfx.DrawRectangle(boundsRectPenSHP, GetBounds(obj));
+		}*/
+
+		public bool IsVoxel { get; set; }
 	}
 
 	class DrawableFile<T> : IComparable where T : VirtualFile {
