@@ -19,11 +19,11 @@ namespace CNCMaps.Map {
 		public virtual MapTile Tile { get; set; }
 		public virtual MapTile BottomTile {
 			get { return Tile; }
-			set { }
+			set { throw new InvalidOperationException("Override this property if you want to use it"); }
 		}
 		public virtual MapTile TopTile {
 			get { return Tile; }
-			set { }
+			set { throw new InvalidOperationException("Override this property if you want to use it"); }
 		}
 
 		public ObjectCollection Collection { get; set; }
@@ -200,5 +200,12 @@ namespace CNCMaps.Map {
 		public bool OnBridge { get; set; }
 		public string Owner { get; set; }
 	}
-
+	public class AnimationObject : NamedObject {
+		public AnimationObject(string name, Drawable drawable) {
+			this.Name = name;
+			this.Drawable = drawable;
+		}
+		public override MapTile BottomTile { get; set; }
+		public override MapTile TopTile { get; set; }
+	}
 }

@@ -18,6 +18,7 @@ namespace CNCMaps.Game {
 		Smudge,
 		Terrain,
 		Vehicle,
+		Animation,
 	}
 
 	public class ObjectCollection {
@@ -50,9 +51,9 @@ namespace CNCMaps.Game {
 		};
 		#endregion
 
-		private static readonly string[] LampNames = new[] {
+		private static readonly string[] LampNames = {
 			"REDLAMP", "BLUELAMP", "GRENLAMP", "YELWLAMP", "PURPLAMP", "INORANLAMP", "INGRNLMP", "INREDLMP", "INBLULMP",
-			"INGALITE", "GALITE",
+			"INGALITE", "GALITE", "TSTLAMP", 
 			"INYELWLAMP", "INPURPLAMP", "NEGLAMP", "NERGRED", "TEMMORLAMP", "TEMPDAYLAMP", "TEMDAYLAMP", "TEMDUSLAMP",
 			"TEMNITLAMP", "SNOMORLAMP",
 			"SNODAYLAMP", "SNODUSLAMP", "SNONITLAMP"
@@ -171,10 +172,12 @@ namespace CNCMaps.Game {
 			}
 			else if (artSection.ReadBool("TerrainPalette")) {
 				drawable.PaletteType = PaletteType.Iso;
+				drawable.IsRemapable = false;
 			}
 			else if (artSection.ReadBool("AnimPalette")) {
 				drawable.PaletteType = PaletteType.Anim;
 				drawable.LightingType = LightingType.None;
+				drawable.IsRemapable = false;
 			}
 			else if (artSection.ReadString("Palette") != string.Empty) {
 				drawable.PaletteType = PaletteType.Custom;
@@ -225,7 +228,7 @@ namespace CNCMaps.Game {
 
 			if (_collectionType == CollectionType.Terrain) {
 				mainProps.Offset.Y += Drawable.TileHeight / 2; // trees and such are placed in the middle of their tile
-				//mainProps.ZBufferAdjust += Drawable.TileHeight / 2;
+				//mainProps.ZBufferAdjust += AnimationDrawable.TileHeight / 2;
 			}
 			else if (_collectionType == CollectionType.Infantry) {
 				mainProps.Offset.X += Drawable.TileWidth / 2; // todo: align these properly
@@ -233,7 +236,7 @@ namespace CNCMaps.Game {
 
 			if (rulesSection.ReadString("Land") == "Rock") {
 				mainProps.Offset.Y += Drawable.TileHeight / 2;
-				//mainProps.ZBufferAdjust += Drawable.TileHeight / 2;
+				//mainProps.ZBufferAdjust += AnimationDrawable.TileHeight / 2;
 			}
 			else if (rulesSection.ReadString("Land") == "Road") {
 				mainProps.Offset.Y += Drawable.TileHeight / 2;
@@ -298,7 +301,7 @@ namespace CNCMaps.Game {
 			if (_collectionType == CollectionType.Building) {
 				drawable.InvisibleInGame = rulesSection.ReadBool("InvisibleInGame") ||
 					// TS/FS have hardcoded lamps
-					_engine <= EngineType.Firestorm && LampNames.Contains(objName.ToUpper());
+					(_engine <= EngineType.Firestorm && LampNames.Contains(objName.ToUpper()));
 
 				var damagedProps = new DrawProperties {
 					HasShadow = mainProps.HasShadow,

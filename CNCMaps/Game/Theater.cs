@@ -28,6 +28,7 @@ namespace CNCMaps.Game {
 		ObjectCollection _overlayTypes;
 		ObjectCollection _terrainTypes;
 		ObjectCollection _smudgeTypes;
+		ObjectCollection _animations;
 		TileCollection _tileTypes;
 		PaletteCollection _palettes;
 
@@ -146,6 +147,9 @@ namespace CNCMaps.Game {
 
 			_vehicleTypes = new ObjectCollection(_rules.GetSection("VehicleTypes"),
 				CollectionType.Vehicle, _theaterType, _engine, _rules, _art, _palettes);
+
+			_animations = new ObjectCollection(_rules.GetSection("Animations"),
+				CollectionType.Animation, _theaterType, _engine, _rules, _art, _palettes);
 		}
 
 		static TheaterType TheaterTypeFromString(string theater, EngineType engineType) {
@@ -188,6 +192,7 @@ namespace CNCMaps.Game {
 			else if (o is OverlayObject) return _overlayTypes;
 			else if (o is TerrainObject) return _terrainTypes;
 			else if (o is SmudgeObject) return _smudgeTypes;
+			else if (o is AnimationObject) return _animations;
 			else return null;
 		}
 

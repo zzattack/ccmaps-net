@@ -53,6 +53,7 @@ namespace CNCMaps.Game {
 				case CollectionType.Overlay:
 				case CollectionType.Smudge:
 				case CollectionType.Terrain:
+				case CollectionType.Animation:
 					return LightingType.Full;
 				default:
 					throw new ArgumentOutOfRangeException("type");
@@ -69,6 +70,7 @@ namespace CNCMaps.Game {
 				case CollectionType.Overlay:
 				case CollectionType.Smudge:
 				case CollectionType.Terrain:
+				case CollectionType.Animation:
 					return false;
 				default:
 					throw new ArgumentOutOfRangeException("type");
@@ -121,6 +123,8 @@ namespace CNCMaps.Game {
 				case CollectionType.Terrain:
 					return true;
 				case CollectionType.Vehicle:
+					return false;
+				case CollectionType.Animation:
 					return false;
 				default:
 					return false;
@@ -289,6 +293,8 @@ namespace CNCMaps.Game {
 				case CollectionType.Smudge:
 				case CollectionType.Terrain:
 					return FrameDeciders.NullFrameDecider;
+				case CollectionType.Animation:
+					return FrameDeciders.RandomFrameDecider;
 				default:
 					throw new ArgumentOutOfRangeException("collection");
 			}

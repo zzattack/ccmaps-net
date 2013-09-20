@@ -26,13 +26,14 @@ namespace CNCMaps.Map {
 		private IniFile _art;
 
 		private TileLayer _tiles;
-		private List<OverlayObject> _overlayObjects = new List<OverlayObject>();
-		private List<SmudgeObject> _smudgeObjects = new List<SmudgeObject>();
-		private List<TerrainObject> _terrainObjects = new List<TerrainObject>();
-		private List<StructureObject> _structureObjects = new List<StructureObject>();
-		private List<InfantryObject> _infantryObjects = new List<InfantryObject>();
-		private List<UnitObject> _unitObjects = new List<UnitObject>();
-		private List<AircraftObject> _aircraftObjects = new List<AircraftObject>();
+		private readonly List<OverlayObject> _overlayObjects = new List<OverlayObject>();
+		private readonly List<SmudgeObject> _smudgeObjects = new List<SmudgeObject>();
+		private readonly List<TerrainObject> _terrainObjects = new List<TerrainObject>();
+		private readonly List<StructureObject> _structureObjects = new List<StructureObject>();
+		private readonly List<InfantryObject> _infantryObjects = new List<InfantryObject>();
+		private readonly List<UnitObject> _unitObjects = new List<UnitObject>();
+		private readonly List<AircraftObject> _aircraftObjects = new List<AircraftObject>();
+		private readonly List<AnimationObject> _animationObjects = new List<AnimationObject>();
 
 		private readonly Dictionary<string, Color> _countryColors = new Dictionary<string, Color>();
 		private readonly Dictionary<string, Color> _namedColors = new Dictionary<string, Color>();
@@ -332,7 +333,7 @@ namespace CNCMaps.Map {
 				ApplyLightSources();
 			}
 
-			SetBaseTiles(); // requires .Drawable set on objects
+			SetBaseTiles(); // requires .AnimationDrawable set on objects
 
 			// first preparing all palettes as above, and only now recalculating them 
 			// could save a large amount of work in total
@@ -404,12 +405,12 @@ namespace CNCMaps.Map {
 				}
 			}
 
-			foreach (GameObject obj in _unitObjects.Cast<GameObject>().Union(_aircraftObjects)) {
+			foreach (GameObject obj in _unitObjects.Cast<GameObject>().Union(_aircraftObjects).Union(_animationObjects)) {
 				var bounds = obj.Drawable.GetBounds(obj);
 				// bounds to foundation
 				Size foundation = new Size(
-					(int)Math.Max(1, Math.Ceiling((bounds.Width / 2) / (double)Drawable.TileWidth)),
-					(int)Math.Max(1, Math.Ceiling((bounds.Height / 2) / (double)Drawable.TileHeight)));
+					(int)Math.Max(1, Math.Ceiling(bounds.Width / (double)Drawable.TileWidth)),
+					(int)Math.Max(1, Math.Ceiling(bounds.Height / (double)Drawable.TileHeight)));
 
 				var bottom = _tiles.GetTileR(obj.Tile.Rx + foundation.Width - 1, obj.Tile.Ry + foundation.Height - 1);
 				obj.BottomTile = bottom ?? obj.Tile;
@@ -471,7 +472,8 @@ namespace CNCMaps.Map {
 				numtiles++;
 				if (dx >= 0 && dx < 2 * _tiles.Width &&
 					dy >= 0 && dy < 2 * _tiles.Height) {
-					_tiles[(ushort)dx, (ushort)dy / 2] = new MapTile((ushort)dx, (ushort)dy, rx, ry, z, tilenum, subtile, _tiles);
+					var tile = new MapTile((ushort)dx, (ushort)dy, rx, ry, z, tilenum, subtile, _tiles);
+					_tiles[(ushort)dx, (ushort)dy / 2] = tile;
 				}
 			}
 		}
@@ -737,6 +739,15 @@ namespace CNCMaps.Map {
 
 			foreach (var tile in _tiles) {
 				if (tile == null) continue;
+
+				// TODO: move this to a more sensible place
+				var tse = _theater.GetTileCollection().GetTileSetEntry(tile);
+				if (tse != null && tse.AnimationSubtile == tile.SubTile) {
+					var anim = new AnimationObject(tse.AnimationDrawable.Name, tse.AnimationDrawable);
+					tile.AddObject(anim);
+					_animationObjects.Add(anim);
+				}
+
 				foreach (var obj in tile.AllObjects.Union(new[] { tile })) {
 					if (obj == null) continue;
 
@@ -750,7 +761,8 @@ namespace CNCMaps.Map {
 					}
 					else {
 						obj.Collection = _theater.GetObjectCollection(obj);
-						obj.Drawable = obj.Collection.GetDrawable(obj); // quite a wrong place to set something this important..
+						if (obj.Drawable == null) // quite a wrong place to set something this important..
+							obj.Drawable = obj.Collection.GetDrawable(obj); 
 						pt = obj.Drawable.PaletteType;
 						lt = obj.Drawable.LightingType;
 					}
@@ -1107,8 +1119,8 @@ namespace CNCMaps.Map {
 			/*_drawingSurface.Unlock();
 			using (Graphics gfx = Graphics.FromImage(_drawingSurface.bm)) {
 				foreach (var obj in orderedObjs)
-					if (obj.Drawable != null)
-						obj.Drawable.DrawBoundingBox(obj, gfx);
+					if (obj.AnimationDrawable != null)
+						obj.AnimationDrawable.DrawBoundingBox(obj, gfx);
 			}*/
 
 

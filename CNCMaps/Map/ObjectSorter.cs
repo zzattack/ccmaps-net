@@ -46,15 +46,15 @@ namespace CNCMaps.Map {
 					processTile(_map[x, y]);
 			}
 
-			/*
+			
 			// assert no cyclics (one level deep)
 			foreach (var entry in _graph) {
 				foreach (var dep in entry.Value) {
 					Debug.Assert(!_graph.ContainsKey(dep) || !_graph[dep].Contains(entry.Key), "", "cyclic dependency found between {0} and {1}", entry.Key, dep);
-					// /GetFrontBlock(dep, entry.Key);
+					// GetFrontBlock(dep, entry.Key);
 					// GetFrontBlock(entry.Key, dep);
 				}
-			}*/
+			}
 
 			// in a world where everything is perfectly drawable this should hold
 			// Debug.Assert(_graph.Count == 0);

@@ -17,7 +17,7 @@ namespace CNCMaps.Game {
 		readonly List<TileSetEntry> _tiles = new List<TileSetEntry>();
 		readonly List<TileSet> _tileSets = new List<TileSet>();
 
-		class TileSet {
+		internal class TileSet {
 			public string FileName { get; private set; }
 			public string SetName { get; private set; }
 			public int TilesInSet { get; private set; }
@@ -35,12 +35,12 @@ namespace CNCMaps.Game {
 			}
 		}
 
-		class TileSetEntry {
+		internal class TileSetEntry {
 			static readonly Random RandomTileChooser = new Random();
 			public readonly List<TmpFile> TmpFiles = new List<TmpFile>();
-			public Drawable Drawable;
-			public int DrawableSubtile = -1;
-			public TileSet MemberOfSet { get; private set; }
+			public Drawable AnimationDrawable;
+			public int AnimationSubtile = -1;
+			internal TileSet MemberOfSet { get; private set; }
 			public TileSetEntry(TileSet owner) {
 				MemberOfSet = owner;
 			}
@@ -50,8 +50,8 @@ namespace CNCMaps.Game {
 			}
 
 			public void AddAnimation(int subtile, Drawable drawable) {
-				DrawableSubtile = subtile;
-				Drawable = drawable;
+				AnimationSubtile = subtile;
+				AnimationDrawable = drawable;
 			}
 
 			public TmpFile GetTmpFile() {
@@ -373,19 +373,25 @@ namespace CNCMaps.Game {
 
 			}
 		}
-
-
+		
 		public void DrawTile(MapTile t, DrawingSurface ds) {
 			if (t == null) return;
 			else if (t.TileNum < 0 || t.TileNum >= _tiles.Count) t.TileNum = 0;
 			var tile = _tiles[t.TileNum];
+			
 			var tmpFile = _tiles[t.TileNum].GetTmpFile();
 			if (tmpFile != null)
 				tmpFile.Draw(t, ds);
-			if (t.SubTile == tile.DrawableSubtile && tile.Drawable != null)
-				tile.Drawable.Draw(t, ds);
+
+			if (t.SubTile == tile.AnimationSubtile && tile.AnimationDrawable != null)
+				tile.AnimationDrawable.Draw(t, ds);
 		}
 
+		internal TileSetEntry GetTileSetEntry(MapTile t) {
+			if (t == null) return null;
+			else if (t.TileNum < 0 || t.TileNum >= _tiles.Count) t.TileNum = 0;
+			return _tiles[t.TileNum];
+		}
 		internal TmpFile GetTileFile(MapTile t) {
 			if (t == null) return null;
 			else if (t.TileNum < 0 || t.TileNum >= _tiles.Count) t.TileNum = 0;
