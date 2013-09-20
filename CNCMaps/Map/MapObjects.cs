@@ -89,9 +89,9 @@ namespace CNCMaps.Map {
 
 		static NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
-		public LightSource() : base("nobody", "", 0, 0, false) { }
+		public LightSource() : base("nobody", "", 0, 0) { }
 		public LightSource(IniFile.IniSection lamp, Lighting scenario)
-			: base("nobody", lamp.Name, 0, 0, false) {
+			: base("nobody", lamp.Name, 0, 0) {
 			Initialize(lamp, scenario);
 		}
 
@@ -161,12 +161,11 @@ namespace CNCMaps.Map {
 		public override MapTile TopTile { get; set; }
 	}
 	public class StructureObject : NamedObject, OwnableObject {
-		public StructureObject(string owner, string name, short health, short direction, bool onBridge) {
+		public StructureObject(string owner, string name, short health, short direction) {
 			Owner = owner;
 			Name = name;
 			Health = health;
 			Direction = direction;
-			OnBridge = onBridge;
 		}
 
 		public override MapTile BottomTile { get; set; }

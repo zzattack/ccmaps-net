@@ -176,9 +176,10 @@ namespace CNCMaps.Map {
 				{ typeof(OverlayObject), 2 },
 				{ typeof(TerrainObject), 3 },
 				{ typeof(StructureObject), 4 },
-				{ typeof(UnitObject), 5 },
-				{ typeof(InfantryObject), 5 },
-				{ typeof(AircraftObject), 6 },
+				{ typeof(AnimationObject), 5 },
+				{ typeof(UnitObject), 6 },
+				{ typeof(InfantryObject), 6 },
+				{ typeof(AircraftObject), 7 },
 			};
 			int prioA = priorities[objA.GetType()];
 			int prioB = priorities[objB.GetType()];

@@ -564,8 +564,7 @@ namespace CNCMaps.Map {
 					int rx = int.Parse(entries[3]);
 					int ry = int.Parse(entries[4]);
 					short direction = short.Parse(entries[5]);
-					bool onBridge = entries[10] == "1";
-					var s = new StructureObject(owner, name, health, direction, onBridge);
+					var s = new StructureObject(owner, name, health, direction);
 					s.Tile = _tiles.GetTileR(rx, ry);
 					s.Upgrade1 = entries[12];
 					s.Upgrade2 = entries[13];
