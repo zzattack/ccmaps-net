@@ -163,8 +163,8 @@ namespace CNCMaps.Map {
 			// no need to remove smudges as no new ones were introduced with yr
 		}
 
-		private double PercentageObjectsKnown(IniFile checkRules) {
-			if (checkRules == null) return 0.0;
+		private double PercentageObjectsKnown(IniFile rules, IniFile theaterIni) {
+			if (rules == null) return 0.0;
 
 			Func<GameObject, IniSection, bool> objectKnown = (obj, section) => {
 				if (obj is NamedObject) {
@@ -181,33 +181,38 @@ namespace CNCMaps.Map {
 			int known = 0;
 			int total = 0;
 
+			var tiles = _tiles.DistinctBy(t => t.TileNum);
+			var tilesCollection = new TileCollection(theaterIni);
+			known += tiles.Count(o => o.TileNum <= tilesCollection.NumTiles);
+			total += tiles.Count();
+
 			var infs = _infantryObjects.DistinctBy(o => o.Name);
-			known += infs.Count(o => objectKnown(o, checkRules.GetSection("InfantryTypes")));
+			known += infs.Count(o => objectKnown(o, rules.GetSection("InfantryTypes")));
 			total += infs.Count();
 
 			var terrains = _terrainObjects.DistinctBy(o => o.Name);
-			known += terrains.Count(o => objectKnown(o, checkRules.GetSection("TerrainTypes")));
+			known += terrains.Count(o => objectKnown(o, rules.GetSection("TerrainTypes")));
 			total += terrains.Count();
 
 			var units = _unitObjects.DistinctBy(o => o.Name);
-			known += units.Count(o => objectKnown(o, checkRules.GetSection("VehicleTypes")));
+			known += units.Count(o => objectKnown(o, rules.GetSection("VehicleTypes")));
 			total += units.Count();
 
 			var aircrafts = _aircraftObjects.DistinctBy(o => o.Name);
-			known += aircrafts.Count(o => objectKnown(o, checkRules.GetSection("AircraftTypes")));
+			known += aircrafts.Count(o => objectKnown(o, rules.GetSection("AircraftTypes")));
 			total += aircrafts.Count();
 
 			var smudges = _smudgeObjects.DistinctBy(o => o.Name);
-			known += smudges.Count(o => objectKnown(o, checkRules.GetSection("SmudgeTypes")));
+			known += smudges.Count(o => objectKnown(o, rules.GetSection("SmudgeTypes")));
 			total += smudges.Count();
 
 			var structures = _structureObjects.DistinctBy(o => o.Name);
-			known += structures.Count(o => objectKnown(o, checkRules.GetSection("BuildingTypes"))
-				|| objectKnown(o, checkRules.GetSection("OverlayTypes")));
+			known += structures.Count(o => objectKnown(o, rules.GetSection("BuildingTypes"))
+				|| objectKnown(o, rules.GetSection("OverlayTypes")));
 			total += structures.Count();
 
 			var overlays = _overlayObjects.DistinctBy(o => o.Number);
-			known += overlays.Count(o => objectKnown(o, checkRules.GetSection("OverlayTypes")));
+			known += overlays.Count(o => objectKnown(o, rules.GetSection("OverlayTypes")));
 			total += overlays.Count();
 
 
@@ -283,15 +288,32 @@ namespace CNCMaps.Map {
 			IniFile rulesRA2 = vfsRA2.OpenFile<IniFile>("rules.ini");
 			IniFile rulesYR = vfsYR.OpenFile<IniFile>("rulesmd.ini");
 
-			EngineType = DetectEngineFromRules(rulesTS, rulesFS, rulesRA2, rulesYR);
+			string theater = ReadString("Map", "Theater");
+			foreach (var f in Defaults.GetTheaterMixes(Theater.TheaterTypeFromString(theater, EngineType.TiberianSun)))
+				vfsTS.AddFile(f);
+			foreach (var f in Defaults.GetTheaterMixes(Theater.TheaterTypeFromString(theater, EngineType.Firestorm)))
+				vfsFS.AddFile(f);
+			foreach (var f in Defaults.GetTheaterMixes(Theater.TheaterTypeFromString(theater, EngineType.RedAlert2)))
+				vfsRA2.AddFile(f);
+			foreach (var f in Defaults.GetTheaterMixes(Theater.TheaterTypeFromString(theater, EngineType.YurisRevenge)))
+				vfsYR.AddFile(f);
+
+			IniFile theaterTS = vfsTS.OpenFile<IniFile>(Defaults.GetTheaterIni(Theater.TheaterTypeFromString(theater, EngineType.TiberianSun)));
+			IniFile theaterFS = vfsFS.OpenFile<IniFile>(Defaults.GetTheaterIni(Theater.TheaterTypeFromString(theater, EngineType.Firestorm)));
+			IniFile theaterRA2 = vfsRA2.OpenFile<IniFile>(Defaults.GetTheaterIni(Theater.TheaterTypeFromString(theater, EngineType.RedAlert2)));
+			IniFile theaterYR = vfsYR.OpenFile<IniFile>(Defaults.GetTheaterIni(Theater.TheaterTypeFromString(theater, EngineType.YurisRevenge)));
+
+			EngineType = DetectEngineFromRules(rulesTS, rulesFS, rulesRA2, rulesYR, theaterTS, theaterFS, theaterRA2, theaterYR);
 			Logger.Debug("Engine type detected as {0}", EngineType);
 		}
 
-		private EngineType DetectEngineFromRules(IniFile rulesTS, IniFile rulesFS, IniFile rulesRA2, IniFile rulesYR) {
-			double tsScore = PercentageObjectsKnown(rulesTS);
-			double fsScore = PercentageObjectsKnown(rulesFS);
-			double ra2Score = PercentageObjectsKnown(rulesRA2);
-			double yrScore = PercentageObjectsKnown(rulesYR);
+		private EngineType DetectEngineFromRules(
+			IniFile rulesTS, IniFile rulesFS, IniFile rulesRA2, IniFile rulesYR,
+			IniFile theaterTS, IniFile theaterFS, IniFile theaterRA2, IniFile theaterYR) {
+			double tsScore = PercentageObjectsKnown(rulesTS, theaterTS);
+			double fsScore = PercentageObjectsKnown(rulesFS, theaterFS);
+			double ra2Score = PercentageObjectsKnown(rulesRA2, theaterRA2);
+			double yrScore = PercentageObjectsKnown(rulesYR, theaterYR);
 
 			double maxScore = Math.Max(Math.Max(Math.Max(tsScore, fsScore), ra2Score), yrScore);
 			if (maxScore == yrScore) return EngineType.YurisRevenge;

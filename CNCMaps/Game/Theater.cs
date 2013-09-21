@@ -125,7 +125,7 @@ namespace CNCMaps.Game {
 
 			_palettes.AnimPalette = new Palette(VFS.Open<PalFile>("anim.pal"));
 
-			_tileTypes = new TileCollection(_theaterType, _engine, _art);
+			_tileTypes = new TileCollection(_theaterType, _art);
 
 			_buildingTypes = new ObjectCollection(_rules.GetSection("BuildingTypes"),
 				CollectionType.Building, _theaterType, _engine, _rules, _art, _palettes);
@@ -152,7 +152,7 @@ namespace CNCMaps.Game {
 				CollectionType.Animation, _theaterType, _engine, _rules, _art, _palettes);
 		}
 
-		static TheaterType TheaterTypeFromString(string theater, EngineType engineType) {
+		public static TheaterType TheaterTypeFromString(string theater, EngineType engineType) {
 			bool yr = engineType == EngineType.YurisRevenge;
 			theater = theater.ToLower();
 			if (theater == "lunar") return TheaterType.Lunar;

@@ -85,11 +85,10 @@ namespace CNCMaps.Game {
 		short WaterfallWest; short WoodBridgeSet;
 		// ReSharper restore InconsistentNaming
 
-		public TileCollection(TheaterType theaterType, EngineType engine, IniFile art) {
+		public TileCollection(TheaterType theaterType, IniFile art) {
 			_theaterType = theaterType;
 			string tileExtension = Defaults.GetTileExtension(theaterType);
 			theaterIni = VFS.Open(Defaults.GetTheaterIni(theaterType)) as IniFile;
-
 			#region Set numbers
 
 			IniFile.IniSection General = theaterIni.GetSection("General");
@@ -161,44 +160,19 @@ namespace CNCMaps.Game {
 
 			#endregion
 
-			int i = 0;
+			var lastSection = InitTilesets(tileExtension);
 
-			IniFile.IniSection lastSection = null;
-			int setNum = 0;
-			while (true) {
-				string sectionName = "TileSet" + i++.ToString("0000");
-				var sect = theaterIni.GetSection(sectionName);
-				if (sect == null)
-					break;
-				lastSection = sect;
+			if (art != null)
+				InitAnimations(art, lastSection, tileExtension);
+		}
 
-				logger.Trace("Loading tileset {0}", sectionName);
-				var ts = new TileSet(sect.ReadString("FileName"), sect.ReadString("SetName"), sect.ReadInt("TilesInSet"));
-				_setNumToFirstTile.Add((short)_tiles.Count);
-				_tileSets.Add(ts);
+		// used by auto-detection, just needs the tilesets formatted
+		internal TileCollection(IniFile theater) {
+			theaterIni = theater;
+			InitTilesets("");
+		}
 
-				for (int j = 1; j <= ts.TilesInSet; j++) {
-					_tileNumToSet.Add((short)setNum);
-					var rs = new TileSetEntry(ts);
-
-					// add as many tiles (with randomized name) as can be found
-					for (var r = (char)('a' - 1); r <= 'z'; r++) {
-						if ((r >= 'a') && ts.SetName == "Bridges") continue;
-
-						// filename = set filename + dd + .tmp/.urb/.des etc
-						string filename = ts.FileName + j.ToString("00");
-						if (r >= 'a') filename += r;
-						filename += tileExtension;
-						var tmpFile = VFS.Open<TmpFile>(filename);
-						if (tmpFile != null) rs.AddTile(tmpFile);
-						else break;
-					}
-					_tiles.Add(rs);
-					ts.Entries.Add(rs);
-				}
-				setNum++;
-			}
-
+		private void InitAnimations(IniFile art, IniFile.IniSection lastSection, string tileExtension) {
 			// the remaining sections contain animations to be attached to certain tiles
 			for (int j = lastSection.Index + 1; j < theaterIni.Sections.Count; j++) {
 				var extraSection = theaterIni.Sections[j];
@@ -240,6 +214,47 @@ namespace CNCMaps.Game {
 					tileSet.Entries[a - 1].AddAnimation(attachTo, drawable);
 				}
 			}
+		}
+
+		private IniFile.IniSection InitTilesets(string tileExtension) {
+			int i = 0;
+
+			IniFile.IniSection lastSection = null;
+			int setNum = 0;
+			while (true) {
+				string sectionName = "TileSet" + i++.ToString("0000");
+				var sect = theaterIni.GetSection(sectionName);
+				if (sect == null)
+					break;
+				lastSection = sect;
+
+				logger.Trace("Loading tileset {0}", sectionName);
+				var ts = new TileSet(sect.ReadString("FileName"), sect.ReadString("SetName"), sect.ReadInt("TilesInSet"));
+				_setNumToFirstTile.Add((short)_tiles.Count);
+				_tileSets.Add(ts);
+
+				for (int j = 1; j <= ts.TilesInSet; j++) {
+					_tileNumToSet.Add((short)setNum);
+					var rs = new TileSetEntry(ts);
+
+					// add as many tiles (with randomized name) as can be found
+					for (var r = (char)('a' - 1); r <= 'z'; r++) {
+						if ((r >= 'a') && ts.SetName == "Bridges") continue;
+
+						// filename = set filename + dd + .tmp/.urb/.des etc
+						string filename = ts.FileName + j.ToString("00");
+						if (r >= 'a') filename += r;
+						filename += tileExtension;
+						var tmpFile = VFS.Open<TmpFile>(filename);
+						if (tmpFile != null) rs.AddTile(tmpFile);
+						else break;
+					}
+					_tiles.Add(rs);
+					ts.Entries.Add(rs);
+				}
+				setNum++;
+			}
+			return lastSection;
 		}
 
 		public bool ConnectTiles(int setNum1, int setNum2) {
@@ -372,12 +387,12 @@ namespace CNCMaps.Game {
 
 			}
 		}
-		
+
 		public void DrawTile(MapTile t, DrawingSurface ds) {
 			if (t == null) return;
 			else if (t.TileNum < 0 || t.TileNum >= _tiles.Count) t.TileNum = 0;
 			var tile = _tiles[t.TileNum];
-			
+
 			var tmpFile = _tiles[t.TileNum].GetTmpFile();
 			if (tmpFile != null)
 				tmpFile.Draw(t, ds);
@@ -396,5 +411,10 @@ namespace CNCMaps.Game {
 			else if (t.TileNum < 0 || t.TileNum >= _tiles.Count) t.TileNum = 0;
 			return _tiles[t.TileNum].GetTmpFile();
 		}
+
+		public int NumTiles {
+			get { return _tiles.Count; }
+		}
+
 	}
 }
