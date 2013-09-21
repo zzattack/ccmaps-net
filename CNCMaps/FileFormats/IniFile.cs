@@ -312,6 +312,8 @@ namespace CNCMaps.FileFormats {
 		/// </summary>
 		/// <param name="ini"></param>
 		public void MergeWith(IniFile ini) {
+			if (ini == null) return;
+
 			foreach (var v in ini.Sections) {
 				var ownSection = GetOrCreateSection(v.Name);
 				// numbered arrays are 'appended' instead of overwritten

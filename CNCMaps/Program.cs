@@ -27,22 +27,7 @@ namespace CNCMaps {
 
 			try {
 				_logger.Info("Initializing virtual filesystem");
-				var vfs = VFS.GetInstance();
-
-				var mixDir = VFS.DetermineMixDir(Settings.MixFilesDirectory, Settings.Engine);
-				var modMixes = Settings.ModMixes.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
-				foreach (var modMix in modMixes) {
-					if (File.Exists(Path.Combine(mixDir, modMix))) {
-						_logger.Info("Adding custom mix {0}", modMix);
-						VFS.Add(Path.Combine(mixDir, modMix));
-					}
-				}
-
-				if (!vfs.ScanMixDir(mixDir, Settings.Engine)) {
-					_logger.Fatal("Scanning for mix files failed. If on Linux, specify the --mixdir command line argument");
-					return 2;
-				}
-
+				
 				var mapStream = File.Open(Settings.InputFile, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
 				VirtualFile mapFile;
 				var mixMap = new MixFile(mapStream, Settings.InputFile, 0, mapStream.Length, false, false);
@@ -70,12 +55,32 @@ namespace CNCMaps {
 				// ---------------------------------------------------------------
 
 				if (!map.LoadMap(Settings.Engine)) {
+					_logger.Error("Could not successfully load this map. Try specifying the engine type manually.");
+					return 1;
+				}
+
+				// enginetype is now definitive
+				string mixDir = VFS.DetermineMixDir(Settings.MixFilesDirectory, map.EngineType);
+				var modMixes = Settings.ModMixes.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+				foreach (var modMix in modMixes) {
+					if (File.Exists(Path.Combine(mixDir, modMix))) {
+						_logger.Info("Adding custom mix {0}", modMix);
+						VFS.Add(Path.Combine(mixDir, modMix));
+					}
+				}
+
+				if (!VFS.GetInstance().ScanMixDir(mixDir, map.EngineType)) {
+					_logger.Fatal("Scanning for mix files failed. If on Linux, specify the --mixdir command line argument");
+					return 2;
+				}
+
+				if (!map.LoadTheater()) {
 					_logger.Error("Could not successfully load all required components for this map. Aborting.");
 					return 1;
 				}
 
 				if (Settings.StartPositionMarking == StartPositionMarking.Tiled)
-					map.DrawTiledStartPositions();
+					map.MarkTiledStartPositions();
 
 				if (Settings.MarkOreFields)
 					map.MarkOreAndGems();
@@ -84,9 +89,9 @@ namespace CNCMaps {
 
 #if DEBUG
 				// ====================================================================================
-				 using (var form = new DebugDrawingSurfaceWindow(map.GetDrawingSurface(), map.GetTiles(), map.GetTheater(), map)) {
-				 	form.RequestTileEvaluate += map.DebugDrawTile; form.ShowDialog();
-				 }
+				// using (var form = new DebugDrawingSurfaceWindow(map.GetDrawingSurface(), map.GetTiles(), map.GetTheater(), map)) {
+				// 	form.RequestTileEvaluate += map.DebugDrawTile; form.ShowDialog();
+				// }
 				// ====================================================================================
 #endif
 

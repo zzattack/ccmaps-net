@@ -14,9 +14,6 @@ namespace CNCMaps.VirtualFileSystem {
 		private readonly List<IArchive> _allArchives = new List<IArchive>();
 		private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
 
-		private VFS() {
-		}
-
 		public static VFS GetInstance() {
 			return Instance;
 		}
@@ -32,6 +29,11 @@ namespace CNCMaps.VirtualFileSystem {
 		public static T Open<T>(string filename, FileFormat f, CacheMethod m) where T : VirtualFile {
 			return Open(filename, f, m) as T;
 		}
+
+		public T OpenFile<T>(string filename, CacheMethod m = CacheMethod.Default) where T : VirtualFile {
+			return this.OpenFile(filename, GetFormatFromTypeclass(typeof(T)), m) as T;
+		}
+
 
 		static FileFormat GetFormatFromTypeclass(Type t) {
 			if (t == typeof(IniFile)) return FileFormat.Ini;
@@ -101,8 +103,8 @@ namespace CNCMaps.VirtualFileSystem {
 				}
 			}
 			// virtual mix file
-			else if (Exists(path)) {
-				var mx = Open<MixFile>(path, m);
+			else if (FileExists(path)) {
+				var mx = OpenFile(path, FileFormat.Mix) as MixFile;
 				_allArchives.Add(mx);
 				return true;
 			}

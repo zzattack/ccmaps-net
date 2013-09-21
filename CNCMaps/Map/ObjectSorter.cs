@@ -59,7 +59,7 @@ namespace CNCMaps.Map {
 			// in a world where everything is perfectly drawable this should hold
 			// Debug.Assert(_graph.Count == 0);
 			while (_graph.Count != 0) {
-				var leastDy = _graph./*OrderBy(pair => pair.Key.BottomTile.Dy).*/First().Key;
+				var leastDy = _graph.OrderBy(pair => pair.Key.BottomTile.Dy).First().Key;
 				ret.AddRange(MarkDependencies(leastDy));
 			}
 			return ret;

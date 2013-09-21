@@ -11,6 +11,7 @@ using CNCMaps.FileFormats;
 using CNCMaps.FileFormats.Encodings;
 using CNCMaps.Game;
 using CNCMaps.Rendering;
+using CNCMaps.Utility;
 using CNCMaps.VirtualFileSystem;
 
 using PixelFormat = System.Drawing.Imaging.PixelFormat;
@@ -162,6 +163,57 @@ namespace CNCMaps.Map {
 			// no need to remove smudges as no new ones were introduced with yr
 		}
 
+		private double PercentageObjectsKnown(IniFile checkRules) {
+			if (checkRules == null) return 0.0;
+
+			Func<GameObject, IniSection, bool> objectKnown = (obj, section) => {
+				if (obj is NamedObject) {
+					string name = (obj as NamedObject).Name;
+					return section.OrderedEntries.Any(kvp => kvp.Value.ToString().Equals(name, StringComparison.InvariantCultureIgnoreCase));
+				}
+				else if (obj is NumberedObject) {
+					int number = (obj as NumberedObject).Number;
+					return section.HasKey(number.ToString());
+				}
+				return false; // should not happen
+			};
+
+			int known = 0;
+			int total = 0;
+
+			var infs = _infantryObjects.DistinctBy(o => o.Name);
+			known += infs.Count(o => objectKnown(o, checkRules.GetSection("InfantryTypes")));
+			total += infs.Count();
+
+			var terrains = _terrainObjects.DistinctBy(o => o.Name);
+			known += terrains.Count(o => objectKnown(o, checkRules.GetSection("TerrainTypes")));
+			total += terrains.Count();
+
+			var units = _unitObjects.DistinctBy(o => o.Name);
+			known += units.Count(o => objectKnown(o, checkRules.GetSection("VehicleTypes")));
+			total += units.Count();
+
+			var aircrafts = _aircraftObjects.DistinctBy(o => o.Name);
+			known += aircrafts.Count(o => objectKnown(o, checkRules.GetSection("AircraftTypes")));
+			total += aircrafts.Count();
+
+			var smudges = _smudgeObjects.DistinctBy(o => o.Name);
+			known += smudges.Count(o => objectKnown(o, checkRules.GetSection("SmudgeTypes")));
+			total += smudges.Count();
+
+			var structures = _structureObjects.DistinctBy(o => o.Name);
+			known += structures.Count(o => objectKnown(o, checkRules.GetSection("BuildingTypes"))
+				|| objectKnown(o, checkRules.GetSection("OverlayTypes")));
+			total += structures.Count();
+
+			var overlays = _overlayObjects.DistinctBy(o => o.Number);
+			known += overlays.Count(o => objectKnown(o, checkRules.GetSection("OverlayTypes")));
+			total += overlays.Count();
+
+
+			return known / (double)total;
+		}
+
 		private void RemoveUnknownObjects() {
 			ObjectCollection c = _theater.GetCollection(CollectionType.Terrain);
 			foreach (var obj in _terrainObjects.Where(obj => !c.HasObject(obj)).ToList()) {
@@ -207,19 +259,62 @@ namespace CNCMaps.Map {
 		/// <summary>Detect map type.</summary>
 		/// <param name="rules">The rules.ini file to be used.</param>
 		/// <returns>The engine to be used to render this map.</returns>
-		private EngineType DetectMapType(IniFile rules) {
+		private void DetectEngineType() {
+			var vfsTS = new VFS();
+			var vfsFS = new VFS();
+			var vfsRA2 = new VFS();
+			var vfsYR = new VFS();
+
+			if (Directory.Exists(VFS.TSInstallDir)) {
+				vfsTS.ScanMixDir(VFS.TSInstallDir, EngineType.TiberianSun);
+				vfsFS.ScanMixDir(VFS.TSInstallDir, EngineType.Firestorm);
+			}
+
+			if (Directory.Exists(VFS.RA2InstallDir)) {
+				vfsRA2.ScanMixDir(VFS.RA2InstallDir, EngineType.RedAlert2);
+				vfsYR.ScanMixDir(VFS.RA2InstallDir, EngineType.YurisRevenge);
+			}
+
+			IniFile rulesTS = vfsTS.OpenFile<IniFile>("rules.ini");
+			IniFile rulesFS = vfsFS.OpenFile<IniFile>("rules.ini");
+			if (rulesFS != null)
+				rulesFS.MergeWith(vfsFS.OpenFile<IniFile>("firestrm.ini"));
+
+			IniFile rulesRA2 = vfsRA2.OpenFile<IniFile>("rules.ini");
+			IniFile rulesYR = vfsYR.OpenFile<IniFile>("rulesmd.ini");
+
+			EngineType = DetectEngineFromRules(rulesTS, rulesFS, rulesRA2, rulesYR);
+			Logger.Debug("Engine type detected as {0}", EngineType);
+		}
+
+		private EngineType DetectEngineFromRules(IniFile rulesTS, IniFile rulesFS, IniFile rulesRA2, IniFile rulesYR) {
+			double tsScore = PercentageObjectsKnown(rulesTS);
+			double fsScore = PercentageObjectsKnown(rulesFS);
+			double ra2Score = PercentageObjectsKnown(rulesRA2);
+			double yrScore = PercentageObjectsKnown(rulesYR);
+
+			double maxScore = Math.Max(Math.Max(Math.Max(tsScore, fsScore), ra2Score), yrScore);
+			if (maxScore == yrScore) return EngineType.YurisRevenge;
+			else if (maxScore == ra2Score) return EngineType.RedAlert2;
+			else if (maxScore == fsScore) return EngineType.Firestorm;
+			else if (maxScore == tsScore) return EngineType.TiberianSun;
+			return EngineType.YurisRevenge; // default
+		}
+
+		private EngineType DetectTSorFS() {
+			return ReadBool("Basic", "RequiredAddon") ? EngineType.Firestorm : EngineType.TiberianSun;
+		}
+
+		private EngineType DetectRA2orYR() {
 			Logger.Info("Determining map type");
 
 			if (ReadBool("Basic", "RequiredAddon"))
 				return EngineType.YurisRevenge;
 
 			string theater = ReadString("Map", "Theater").ToLower();
+
 			// decision based on theatre
 			if (theater == "lunar" || theater == "newurban" || theater == "desert")
-				return EngineType.YurisRevenge;
-
-			// decision based on overlay/trees/structs
-			if (!AllObjectsFromRA2(rules))
 				return EngineType.YurisRevenge;
 
 			// decision based on max tile/threatre
@@ -255,33 +350,19 @@ namespace CNCMaps.Map {
 
 			// if we have to autodetect, we need to load rules.ini,
 			// and we don't want to parse it again when constructing the theater
-			if (et == EngineType.AutoDetect) {
-				_rules = VFS.Open<IniFile>("rules.ini");
-				EngineType = DetectMapType(_rules);
-
-				if (EngineType == EngineType.YurisRevenge) {
-					// add YR mixes to VFS
-					var mixDir = VFS.DetermineMixDir(Program.Settings.MixFilesDirectory, EngineType.YurisRevenge);
-					VFS.GetInstance().ScanMixDir(mixDir, EngineType.YurisRevenge);
-
-					var rulesmd = VFS.Open<IniFile>("rulesmd.ini");
-					var artmd = VFS.Open<IniFile>("artmd.ini");
-
-					if (rulesmd == null) {
-						Logger.Error("rulesmd.ini or artmd.ini could not be loaded! You cannot render a YR/FS map " +
-									 "without the expansion installed. Unavailable objects will not be rendered, reverting to rules.ini.");
-						RemoveYRObjects();
-
-						_art = VFS.Open<IniFile>("art.ini");
-					}
-					else {
-						_rules = rulesmd;
-						_art = artmd;
-					}
-				}
-				else _art = VFS.Open<IniFile>("art.ini"); // rules is already loaded
+			try {
+				if (et == EngineType.AutoDetect)
+					DetectEngineType();
+				return true;
 			}
-			else if (EngineType == EngineType.YurisRevenge) {
+			catch {
+				return false;
+			}
+		}
+
+		// between LoadMap and LoadTheater, the VFS should be initialized
+		public bool LoadTheater() {
+			if (EngineType == EngineType.YurisRevenge) {
 				_rules = VFS.Open("rulesmd.ini") as IniFile;
 				_art = VFS.Open("artmd.ini") as IniFile;
 			}
@@ -292,7 +373,6 @@ namespace CNCMaps.Map {
 				Logger.Info("Merging Firestorm rules with TS rules");
 				_rules.MergeWith(VFS.Open<IniFile>("firestrm.ini"));
 				_art.MergeWith(VFS.Open<IniFile>("artfs.ini"));
-
 			}
 			else {
 				_rules = VFS.Open("rules.ini") as IniFile;
@@ -872,7 +952,7 @@ namespace CNCMaps.Map {
 				p.Recalculate();
 		}
 
-		public void DrawTiledStartPositions() {
+		public void MarkTiledStartPositions() {
 			Logger.Info("Marking tiled start positions");
 			IniSection basic = GetSection("Basic");
 			if (basic == null || !basic.ReadBool("MultiplayerOnly")) return;

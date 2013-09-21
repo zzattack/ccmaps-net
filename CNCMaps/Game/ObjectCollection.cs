@@ -231,7 +231,8 @@ namespace CNCMaps.Game {
 				//mainProps.ZBufferAdjust += AnimationDrawable.TileHeight / 2;
 			}
 			else if (_collectionType == CollectionType.Infantry) {
-				mainProps.Offset.X += Drawable.TileWidth / 2; // todo: align these properly
+				mainProps.Offset.Y += Drawable.TileHeight / 2;
+				mainProps.Offset.X -= 8; // something like this. appears to be somewhat random.
 			}
 
 			if (rulesSection.ReadString("Land") == "Rock") {
