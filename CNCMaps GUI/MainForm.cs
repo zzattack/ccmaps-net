@@ -268,7 +268,7 @@ namespace CNCMaps.GUI {
 			if (tbMixDir.Text != FindMixDir(rbEngineAuto.Checked || rbEngineRA2.Checked || rbEngineYR.Checked))
 				cmd += "-m " + "\"" + tbMixDir.Text + "\" ";
 			if (cbAdditionalMixes.Checked)
-				cmd += "-M \"" + tbAdditionalMixes.Text + "\"";
+				cmd += "-M \"" + tbAdditionalMixes.Text + "\" ";
 		
 			if (cbEmphasizeOre.Checked) cmd += "-r ";
 			if (cbTiledStartPositions.Checked) cmd += "-s ";
@@ -436,7 +436,7 @@ namespace CNCMaps.GUI {
 			if (!progressEntry.Equals(default(KeyValuePair<int, string>))) {
 				UpdateStatus("rendering: " + progressEntry.Key + "%", progressEntry.Key);
 			}
-			else if (s.Contains("Drawing tiles...") || s.Contains("Drawing objects...")) {
+			if (s.Contains("Drawing map...")) {
 				int idx = s.LastIndexOf(" ") + 1;
 				double pct = Math.Round(27 + (90.0 - 27.0) * int.Parse(s.Substring(idx, s.Length - idx - 1)) / 100.0, 0);
 				UpdateStatus("drawing, " + pct + "%", (int)pct);
@@ -452,7 +452,6 @@ namespace CNCMaps.GUI {
 			{18, "Creating per-height palettes"},
 			{20, "Loading light sources"},
 			{22, "Calculating palette-values for all objects"},
-			{27, "Drawing map"},
 			{90, "Map drawing completed"},
 		};
 		#endregion

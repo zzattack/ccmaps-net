@@ -164,7 +164,7 @@ namespace CNCMaps.Map {
 		}
 
 		private double PercentageObjectsKnown(IniFile rules, IniFile theaterIni) {
-			if (rules == null) return 0.0;
+			if (rules == null || theaterIni == null) return 0.0;
 
 			Func<GameObject, IniSection, bool> objectKnown = (obj, section) => {
 				if (obj is NamedObject) {
@@ -181,7 +181,7 @@ namespace CNCMaps.Map {
 			int known = 0;
 			int total = 0;
 
-			var tiles = _tiles.DistinctBy(t => t.TileNum);
+			var tiles = _tiles.Where(t => t != null).DistinctBy(t => t.TileNum);
 			var tilesCollection = new TileCollection(theaterIni);
 			known += tiles.Count(o => o.TileNum <= tilesCollection.NumTiles);
 			total += tiles.Count();
@@ -316,10 +316,10 @@ namespace CNCMaps.Map {
 			double yrScore = PercentageObjectsKnown(rulesYR, theaterYR);
 
 			double maxScore = Math.Max(Math.Max(Math.Max(tsScore, fsScore), ra2Score), yrScore);
-			if (maxScore == yrScore) return EngineType.YurisRevenge;
-			else if (maxScore == ra2Score) return EngineType.RedAlert2;
-			else if (maxScore == fsScore) return EngineType.Firestorm;
+			if (maxScore == ra2Score) return EngineType.RedAlert2;
+			else if (maxScore == yrScore) return EngineType.YurisRevenge;
 			else if (maxScore == tsScore) return EngineType.TiberianSun;
+			else if (maxScore == fsScore) return EngineType.Firestorm;
 			return EngineType.YurisRevenge; // default
 		}
 
@@ -424,8 +424,9 @@ namespace CNCMaps.Map {
 
 			if (EngineType >= EngineType.RedAlert2) {
 				_theater.GetTileCollection().RecalculateTileSystem(_tiles);
-				RecalculateOreSpread(); // is this really used on TS?
 			}
+
+			RecalculateOreSpread(); // is this really used on TS?
 
 			LoadLighting();
 			CreateLevelPalettes();
@@ -519,6 +520,22 @@ namespace CNCMaps.Map {
 				obj.BottomTile = bottom ?? obj.Tile;
 				obj.TopTile = obj.Tile;
 			}
+
+			foreach (GameObject obj in _unitObjects.Cast<GameObject>().Union(_infantryObjects)) {
+				var oobj = obj as OwnableObject;
+				if (oobj.OnBridge) {
+					// relocate two tiles down
+					var bottom = _tiles.GetTileR(obj.Tile.Rx + 2, obj.Tile.Ry + 2);
+					obj.BottomTile = bottom ?? obj.Tile;
+					obj.TopTile = obj.BottomTile;
+				}
+			}
+
+			foreach (OverlayObject obj in _overlayObjects.Where(SpecialOverlays.IsHighBridge)) {
+				var bottom = _tiles.GetTileR(obj.Tile.Rx + 2, obj.Tile.Ry + 2);
+				obj.BottomTile = bottom ?? obj.Tile;
+				obj.TopTile = obj.BottomTile;
+			}
 		}
 
 		/// <summary>Reads all objects. </summary>
@@ -586,15 +603,17 @@ namespace CNCMaps.Map {
 			IniSection terrainSection = GetSection("Terrain");
 			if (terrainSection == null) return;
 			foreach (var v in terrainSection.OrderedEntries) {
-				int pos = int.Parse(v.Key);
-				string name = v.Value;
-				int rx = pos % 1000;
-				int ry = pos / 1000;
-				var t = new TerrainObject(name);
-				var tile = _tiles.GetTileR(rx, ry);
-				if (tile != null) {
-					tile.AddObject(t);
-					_terrainObjects.Add(t);
+				int pos;
+				if (int.TryParse(v.Key, out pos)) {
+					string name = v.Value;
+					int rx = pos % 1000;
+					int ry = pos / 1000;
+					var t = new TerrainObject(name);
+					var tile = _tiles.GetTileR(rx, ry);
+					if (tile != null) {
+						tile.AddObject(t);
+						_terrainObjects.Add(t);
+					}
 				}
 			}
 		}
@@ -605,6 +624,7 @@ namespace CNCMaps.Map {
 			if (smudgesSection == null) return;
 			foreach (var v in smudgesSection.OrderedEntries) {
 				string[] entries = ((string)v.Value).Split(',');
+				if (entries.Length <= 3) continue;
 				string name = entries[0];
 				int rx = int.Parse(entries[1]);
 				int ry = int.Parse(entries[2]);
@@ -661,6 +681,7 @@ namespace CNCMaps.Map {
 			foreach (var v in structsSection.OrderedEntries) {
 				try {
 					string[] entries = ((string)v.Value).Split(',');
+					if (entries.Length <= 15) continue;
 					string owner = entries[0];
 					string name = entries[1];
 					short health = short.Parse(entries[2]);
@@ -695,6 +716,7 @@ namespace CNCMaps.Map {
 			int count = 0;
 			foreach (var v in infantrySection.OrderedEntries) {
 				string[] entries = ((string)v.Value).Split(',');
+				if (entries.Length <= 8) continue;
 				string owner = entries[0];
 				string name = entries[1];
 				short health = short.Parse(entries[2]);
@@ -724,6 +746,8 @@ namespace CNCMaps.Map {
 			int count = 0;
 			foreach (var v in unitsSection.OrderedEntries) {
 				string[] entries = ((string)v.Value).Split(',');
+				if (entries.Length <= 11) continue;
+
 				string owner = entries[0];
 				string name = entries[1];
 				short health = short.Parse(entries[2]);
@@ -788,7 +812,7 @@ namespace CNCMaps.Map {
 					num %= 12;
 
 					// replace ore
-					o.OverlayID = (byte)(SpecialOverlays.MinOreID + num);
+					o.OverlayID = (byte)(SpecialOverlays.Ra2MinIdRiparius + num);
 				}
 
 				else if (type == OverlayTibType.Gems) {
@@ -803,8 +827,9 @@ namespace CNCMaps.Map {
 					num %= 12;
 
 					// replace gems
-					o.OverlayID = (byte)(SpecialOverlays.MinGemsID + num);
+					o.OverlayID = (byte)(SpecialOverlays.Ra2MinIdCruentus + num);
 				}
+
 			}
 		}
 
@@ -850,7 +875,7 @@ namespace CNCMaps.Map {
 					_animationObjects.Add(anim);
 				}
 
-				foreach (var obj in tile.AllObjects.Union(new[] { tile })) {
+				foreach (var obj in tile.AllObjects.Union(new[] { tile }).ToList()) {
 					if (obj == null) continue;
 
 					Palette p;
@@ -865,6 +890,10 @@ namespace CNCMaps.Map {
 						obj.Collection = _theater.GetObjectCollection(obj);
 						if (obj.Drawable == null) // quite a wrong place to set something this important..
 							obj.Drawable = obj.Collection.GetDrawable(obj);
+
+						if (obj.Drawable == null) {
+							continue; // this is BAD
+						}
 						pt = obj.Drawable.PaletteType;
 						lt = obj.Drawable.LightingType;
 					}
@@ -990,10 +1019,12 @@ namespace CNCMaps.Map {
 
 				// Draw 4x4 cell around start pos
 				for (int x = wx - 2; x < wx + 2; x++) {
-					for (int y = wy - 2; y < wy + 2; y++) {
+					for (int y = wy - 1; y < wy + 3; y++) {
 						MapTile t = _tiles.GetTileR(x, y);
 						if (t != null) {
 							t.Palette = Palette.Merge(t.Palette, red, 0.4);
+							//foreach (var o in t.AllObjects.OfType<SmudgeObject>().Cast<GameObject>().Union(t.AllObjects.OfType<OverlayObject>()))
+							//	o.Palette = Palette.Merge(o.Palette, red, 0.4);
 						}
 					}
 				}
@@ -1235,16 +1266,24 @@ namespace CNCMaps.Map {
 			Logger.Info("Drawing map");
 			_drawingSurface = new DrawingSurface(FullSize.Width * TileWidth, FullSize.Height * TileHeight, PixelFormat.Format24bppRgb);
 			var sorter = new ObjectSorter(_theater, _tiles);
-			var orderedObjs = sorter.GetOrderedObjects();
-			foreach (var obj in orderedObjs)
+			var orderedObjs = sorter.GetOrderedObjects().ToList();
+			double lastReported = 0.0;
+			for (int i = 0; i < orderedObjs.Count; i++) {
+				var obj = orderedObjs[i];
 				_theater.Draw(obj, _drawingSurface);
+				double pct = 100.0 * i / orderedObjs.Count;
+				if (pct > lastReported + 5) {
+					Logger.Info("Drawing map... {0}%", Math.Round(pct, 0));
+					lastReported = pct;
+				}
+			}
 
 			// test that my bounds make some kind of sense
 			/*_drawingSurface.Unlock();
 			using (Graphics gfx = Graphics.FromImage(_drawingSurface.bm)) {
 				foreach (var obj in orderedObjs)
-					if (obj.AnimationDrawable != null)
-						obj.AnimationDrawable.DrawBoundingBox(obj, gfx);
+					if (obj.Drawable != null)
+						obj.Drawable.DrawBoundingBox(obj, gfx);
 			}*/
 
 

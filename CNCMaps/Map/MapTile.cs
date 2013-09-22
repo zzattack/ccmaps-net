@@ -50,7 +50,7 @@ namespace CNCMaps.Map {
 		}
 
 		public override string ToString() {
-			return string.Format("d({0},{1}),r({2},{3})", Dx, Dy, Rx, Ry);
+			return string.Format("d({0},{1}),r({2},{3},{4})", Dx, Dy, Rx, Ry, Z);
 		}
 
 		public override MapTile Tile {

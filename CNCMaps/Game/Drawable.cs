@@ -129,6 +129,7 @@ namespace CNCMaps.Game {
 			var w_low = (byte*)ds.BitmapData.Scan0;
 			byte* w_high = w_low + ds.BitmapData.Stride * ds.BitmapData.Height;
 			int rowsTouched = 0;
+			var heightBuffer = ds.GetHeightBuffer();
 
 			short firstRowTouched = short.MaxValue;
 			for (int y = 0; y < vxl_ds.Height; y++) {
@@ -137,6 +138,7 @@ namespace CNCMaps.Game {
 				byte* dst_row = ((byte*)ds.BitmapData.Scan0 + (d.Y + y) * ds.BitmapData.Stride + d.X * 3);
 				int zIdx = (d.Y + y) * ds.Width + d.X;
 				if (dst_row < w_low || dst_row >= w_high) continue;
+				short hBufVal = (short)(10 + (obj.Tile.Z + obj.Drawable.TileElevation) * TileHeight / 2);
 
 				for (int x = 0; x < vxl_ds.Width; x++) {
 					// only non-transparent pixels
@@ -147,6 +149,7 @@ namespace CNCMaps.Game {
 
 						if (y < firstRowTouched)
 							firstRowTouched = (short)y;
+						heightBuffer[zIdx] = hBufVal;
 					}
 					zIdx++;
 				}
@@ -193,12 +196,12 @@ namespace CNCMaps.Game {
 			Rectangle bounds = Rectangle.Empty;
 
 			if (IsVoxel) {
-				var vxlBounds = new Rectangle(-100, -100, 200, 200);
+				var vxlBounds = new Rectangle(-TileWidth / 2, -TileHeight / 2, TileWidth, TileHeight);
 				if (bounds == Rectangle.Empty) bounds = vxlBounds;
 				else bounds = Rectangle.Union(bounds, vxlBounds);
 			}
 			else {
-				foreach (var shp in _shps) {
+				foreach (var shp in _shps.Where(shp => shp.File != null)) {
 					if (bounds == Rectangle.Empty) bounds = shp.File.GetBounds(obj, shp.Props);
 					else bounds = Rectangle.Union(bounds, shp.File.GetBounds(obj, shp.Props));
 				}

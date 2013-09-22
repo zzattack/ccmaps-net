@@ -70,11 +70,13 @@ namespace CNCMaps.Utility {
 		public delegate void TileEvaluationDelegate(MapTile t);
 		public event TileEvaluationDelegate RequestTileEvaluate;
 		private void pictureBox1_MouseDown(object sender, MouseEventArgs e) {
-			var tile = _tiles.GetTileScreen(e.Location);
-			if (tile == null) return;
-			_drawingSurface.Lock();
-			RequestTileEvaluate(tile);
-			_drawingSurface.Unlock();
+			if (e.Button == MouseButtons.Left) {
+				var tile = _tiles.GetTileScreen(e.Location);
+				if (tile == null) return;
+				_drawingSurface.Lock();
+				RequestTileEvaluate(tile);
+				_drawingSurface.Unlock();
+			}
 		}
 
 	}

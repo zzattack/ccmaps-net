@@ -42,6 +42,7 @@ namespace CNCMaps.Map {
 
 		public int Id { get; set; }
 		private static int IdCounter = 0;
+		public int DrawOrderIndex = -1;
 	}
 	public class NumberedObject : GameObject {
 		public int Number { get; protected set; }

@@ -9,7 +9,7 @@ namespace CNCMaps.Rendering {
 		public Bitmap Bitmap { get; private set; }
 		public int Width { get; private set; } // prevents repeated (slow) lookups in bm.Width
 		public int Height { get; private set; } // prevents repeated (slow) lookups in bm.Width
-		short[] _heightBuffer;
+		int[] _heightBuffer;
 		bool[] _shadowBuffer;
 
 		static NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
@@ -20,7 +20,7 @@ namespace CNCMaps.Rendering {
 			Width = width;
 			Height = height;
 			Lock(Bitmap.PixelFormat);
-			_heightBuffer = new short[width * height];
+			_heightBuffer = new int[width * height];
 			_shadowBuffer = new bool[width * height];
 		}
 
@@ -48,7 +48,7 @@ namespace CNCMaps.Rendering {
 			return _shadowBuffer;
 		}
 
-		public short[] GetHeightBuffer() {
+		public int[] GetHeightBuffer() {
 			return _heightBuffer;
 		}
 

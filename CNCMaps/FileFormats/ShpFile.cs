@@ -2,12 +2,10 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
-using System.Runtime.InteropServices;
 using CNCMaps.FileFormats.Encodings;
 using CNCMaps.Game;
 using CNCMaps.Map;
 using CNCMaps.Rendering;
-using CNCMaps.Utility;
 using CNCMaps.VirtualFileSystem;
 
 namespace CNCMaps.FileFormats {
@@ -120,7 +118,7 @@ namespace CNCMaps.FileFormats {
 				Images.Add(img);
 			}
 		}
-		
+
 		public Rectangle GetBounds(GameObject obj, DrawProperties props) {
 			Initialize();
 			int frameIndex = 0;//DecideFrameIndex(props.FrameDecider(obj));
@@ -182,13 +180,16 @@ namespace CNCMaps.FileFormats {
 					continue; // out of bounds
 				}
 
+				int hBufVal = obj.DrawOrderIndex;
+				if (obj.Drawable != null)
+					hBufVal += (short)(obj.Drawable.TileElevation * Drawable.TileHeight / 2);
 				for (int x = 0; x < img.Width; x++) {
 					byte paletteValue = imgData[rIdx];
 					if (paletteValue != 0 && w_low <= w && w < w_high) {
 						*(w + 0) = p.Colors[paletteValue].B;
 						*(w + 1) = p.Colors[paletteValue].G;
 						*(w + 2) = p.Colors[paletteValue].R;
-						heightBuffer[zIdx] = (short)(Height + obj.Tile.Z * Drawable.TileHeight / 2);
+						heightBuffer[zIdx] = hBufVal;
 					}
 					// Up to the next pixel
 					rIdx++;
@@ -229,7 +230,9 @@ namespace CNCMaps.FileFormats {
 			byte* w = (byte*)ds.BitmapData.Scan0 + offset.X * 3 + stride * offset.Y;
 			int zIdx = offset.X + offset.Y * ds.Width;
 			int rIdx = 0;
-			int castHeight = obj.Tile.Z * Drawable.TileHeight / 2;
+			int castHeight = obj.DrawOrderIndex; // (obj.Tile.Z) * Drawable.TileHeight / 2;
+			//if (obj.Drawable != null)
+			//	castHeight += obj.Drawable.TileElevation * Drawable.TileHeight / 2;
 
 			for (int y = 0; y < img.Height; y++) {
 				if (offset.Y + y < 0) {

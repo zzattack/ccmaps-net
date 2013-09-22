@@ -14,7 +14,7 @@ namespace CNCMaps.Map {
 		private readonly Dictionary<GameObject, HashSet<GameObject>> _graph = new Dictionary<GameObject, HashSet<GameObject>>();
 		// objects with empty all their dependencies
 		private readonly HashSet<GameObject> _hist = new HashSet<GameObject>();
-		
+
 		public ObjectSorter(Theater t, TileLayer map) {
 			this._map = map;
 			this._t = t;
@@ -46,7 +46,7 @@ namespace CNCMaps.Map {
 					processTile(_map[x, y]);
 			}
 
-			
+
 			// assert no cyclics (one level deep)
 			foreach (var entry in _graph) {
 				foreach (var dep in entry.Value) {
@@ -59,13 +59,19 @@ namespace CNCMaps.Map {
 			// in a world where everything is perfectly drawable this should hold
 			// Debug.Assert(_graph.Count == 0);
 			while (_graph.Count != 0) {
-				var leastDy = _graph.OrderBy(pair => pair.Key.BottomTile.Dy).First().Key;
+				var leastDy = _graph.OrderBy(pair => pair.Key.TopTile.Dy).First().Key;
 				ret.AddRange(MarkDependencies(leastDy));
 			}
+
+			for (int i = 0; i < ret.Count; i++) {
+				var r = ret[i];
+				r.DrawOrderIndex = i;
+			}
+
 			return ret;
 		}
 
-		private void ExamineNeighbourhood(GameObject obj) {
+		internal void ExamineNeighbourhood(GameObject obj) {
 			// Debug.WriteLine("Examining neighhourhood of " + obj);
 			Debug.Assert(!_hist.Contains(obj), "examining neighbourhood for an object that's already in the draw list");
 
@@ -90,7 +96,7 @@ namespace CNCMaps.Map {
 				}
 			};
 
-			for (int y = obj.TopTile.Dy - 2; y <= obj.BottomTile.Dy + 6; y++) {
+			for (int y = obj.TopTile.Dy - 2; y <= obj.BottomTile.Dy + 4; y++) {
 				for (int x = obj.TopTile.Dx - 4; x <= obj.TopTile.Dx + 4; x += 2) {
 					if (x >= 0 && y >= 0)
 						examine(_map[x + (y + obj.TopTile.Dy) % 2, y / 2]);
@@ -177,11 +183,11 @@ namespace CNCMaps.Map {
 				{ typeof(SmudgeObject), 1 },
 				{ typeof(OverlayObject), 2 },
 				{ typeof(TerrainObject), 3 },
-				{ typeof(StructureObject), 4 },
-				{ typeof(AnimationObject), 5 },
-				{ typeof(UnitObject), 6 },
-				{ typeof(InfantryObject), 6 },
-				{ typeof(AircraftObject), 7 },
+				{ typeof(StructureObject), 3 },
+				{ typeof(AnimationObject), 4 },
+				{ typeof(UnitObject), 5 },
+				{ typeof(InfantryObject), 5 },
+				{ typeof(AircraftObject), 6 },
 			};
 			int prioA = priorities[objA.GetType()];
 			int prioB = priorities[objB.GetType()];
@@ -190,8 +196,8 @@ namespace CNCMaps.Map {
 			else if (prioA < prioB) return objB;
 
 			// finally try the minimal y coordinate
-			if (hexA.yMin > hexB.yMin) return objA;
-			else if (hexA.yMin < hexB.yMin) return objB;
+			if (boxA.Bottom > boxB.Bottom) return objA;
+			else if (boxA.Bottom < boxB.Bottom) return objB;
 
 			// finally if nothing worked up to here, which is very unlikely,
 			// we'll use a tie-breaker that is at least guaranteed to yield

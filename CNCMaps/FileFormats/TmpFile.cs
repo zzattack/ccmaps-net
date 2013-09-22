@@ -180,17 +180,17 @@ namespace CNCMaps.FileFormats {
 			int rIdx = 0, x, y = 0;
 			int zIdx = offset.Y * ds.Width + offset.X + halfCx - 2;
 			int cx = 0; // Amount of pixel to copy
-
+			short hBufVal = (short) (tile.Z * Drawable.TileHeight / 2);
 			for (; y < halfCy; y++) {
 				cx += 4;
 				for (ushort c = 0; c < cx; c++) {
 					byte paletteValue = img.TileData[rIdx];
 
-					if (paletteValue != 0 && w_low <= w && w < w_high) {
+					if (paletteValue != 0 && w_low <= w && w < w_high && hBufVal >= heightBuffer[zIdx]) {
 						*(w + 0) = p.Colors[paletteValue].B;
 						*(w + 1) = p.Colors[paletteValue].G;
 						*(w + 2) = p.Colors[paletteValue].R;
-						heightBuffer[zIdx] = (short)(tile.Z * Drawable.TileHeight / 2);
+						heightBuffer[zIdx] = hBufVal;
 					}
 					w += 3;
 					zIdx++;
@@ -207,11 +207,11 @@ namespace CNCMaps.FileFormats {
 				for (ushort c = 0; c < cx; c++) {
 					byte paletteValue = img.TileData[rIdx];
 
-					if (paletteValue != 0 && w_low <= w && w < w_high) {
+					if (paletteValue != 0 && w_low <= w && w < w_high && hBufVal >= heightBuffer[zIdx]) {
 						*(w + 0) = p.Colors[paletteValue].B;
 						*(w + 1) = p.Colors[paletteValue].G;
 						*(w + 2) = p.Colors[paletteValue].R;
-						heightBuffer[zIdx] = (short)(tile.Z * Drawable.TileHeight / 2);
+						heightBuffer[zIdx] = hBufVal;
 					}
 					w += 3;
 					zIdx++;
@@ -252,11 +252,11 @@ namespace CNCMaps.FileFormats {
 					// Checking per line is required because v needs to be checked every time
 					byte paletteValue = img.ExtraData[rIdx];
 
-					if (paletteValue != 0 && w_low <= w && w < w_high) {
+					if (paletteValue != 0 && w_low <= w && w < w_high && hBufVal >= heightBuffer[zIdx]) {
 						*w++ = p.Colors[paletteValue].B;
 						*w++ = p.Colors[paletteValue].G;
 						*w++ = p.Colors[paletteValue].R;
-						heightBuffer[zIdx] = (short)(img.ExtraHeight + tile.Z * Drawable.TileHeight / 2);
+						heightBuffer[zIdx] = hBufVal;
 					}
 					else
 						w += 3;

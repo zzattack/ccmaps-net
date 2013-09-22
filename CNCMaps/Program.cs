@@ -27,7 +27,7 @@ namespace CNCMaps {
 
 			try {
 				_logger.Info("Initializing virtual filesystem");
-				
+
 				var mapStream = File.Open(Settings.InputFile, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
 				VirtualFile mapFile;
 				var mixMap = new MixFile(mapStream, Settings.InputFile, 0, mapStream.Length, false, false);
@@ -89,9 +89,9 @@ namespace CNCMaps {
 
 #if DEBUG
 				// ====================================================================================
-				// using (var form = new DebugDrawingSurfaceWindow(map.GetDrawingSurface(), map.GetTiles(), map.GetTheater(), map)) {
-				// 	form.RequestTileEvaluate += map.DebugDrawTile; form.ShowDialog();
-				// }
+				using (var form = new DebugDrawingSurfaceWindow(map.GetDrawingSurface(), map.GetTiles(), map.GetTheater(), map)) {
+					form.RequestTileEvaluate += map.DebugDrawTile; form.ShowDialog();
+				}
 				// ====================================================================================
 #endif
 
@@ -126,7 +126,7 @@ namespace CNCMaps {
 					Size dimensions = new Size(
 						int.Parse(match.Groups[2].Captures[0].Value),
 						int.Parse(match.Groups[3].Captures[0].Value));
-					var cutRect = map.GetLocalSizePixels();
+					var cutRect = map.GetSizePixels(Settings.SizeMode);
 
 					if (match.Groups[1].Captures[0].Value == "+") {
 						// + means maintain aspect ratio

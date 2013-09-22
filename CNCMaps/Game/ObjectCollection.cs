@@ -219,9 +219,11 @@ namespace CNCMaps.Game {
 			if (rulesSection.ReadBool("IsVeins")) {
 				drawable.LightingType = LightingType.None;
 				drawable.PaletteType = PaletteType.Unit;
+				mainProps.FrameDecider = FrameDeciders.OverlayValueFrameDecider;
+				mainProps.Offset.Y -= 1; // hurray, fuck logic
 			}
 			if (rulesSection.ReadBool("IsVeinholeMonster")) {
-				mainProps.Offset.Y = -48; // why is this needed???
+				mainProps.Offset.Y = -49; // why is this needed???
 				drawable.LightingType = LightingType.None;
 				drawable.PaletteType = PaletteType.Unit;
 			}
@@ -232,7 +234,7 @@ namespace CNCMaps.Game {
 			}
 			else if (_collectionType == CollectionType.Infantry) {
 				mainProps.Offset.Y += Drawable.TileHeight / 2;
-				mainProps.Offset.X -= 8; // something like this. appears to be somewhat random.
+				mainProps.Offset.X -= 15; // something like this. appears to be somewhat random.
 			}
 
 			if (rulesSection.ReadString("Land") == "Rock") {
@@ -241,7 +243,7 @@ namespace CNCMaps.Game {
 			}
 			else if (rulesSection.ReadString("Land") == "Road") {
 				mainProps.Offset.Y += Drawable.TileHeight / 2;
-				drawable.Foundation = new Size(3, 1); // ensures bridges are drawn a bit lower than where they're stored
+				// drawable.Foundation = new Size(3, 1); // ensures bridges are drawn a bit lower than where they're stored
 			}
 			else if (rulesSection.ReadString("Land") == "Railroad") {
 				if (_engine <= EngineType.Firestorm)
@@ -289,7 +291,7 @@ namespace CNCMaps.Game {
 						mainProps.OffsetHack = OffsetHacks.TSBridgeOffsets;
 						mainProps.ShadowOffsetHack = OffsetHacks.TSBridgeShadowOffsets;
 						drawable.TileElevation = 4; // for lighting
-						drawable.Foundation = new Size(3, 1); // ensures they're drawn later --> fixes overlap
+						//drawable.Foundation = new Size(3, 1); // ensures they're drawn later --> fixes overlap
 					}
 				}
 			}

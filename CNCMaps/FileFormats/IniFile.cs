@@ -51,6 +51,10 @@ namespace CNCMaps.FileFormats {
 			while (CanRead) {
 				ProcessLine(ReadLine());
 			}
+			// support for Ares tag
+			var includes = GetOrCreateSection("#include");
+			foreach (var entry in includes.OrderedEntries)
+				MergeWith(VFS.Open<IniFile>(entry.Value));
 		}
 
 		int ProcessLine(string line) {
