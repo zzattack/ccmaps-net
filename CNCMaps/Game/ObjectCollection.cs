@@ -124,9 +124,7 @@ namespace CNCMaps.Game {
 			}
 			else if (theaterExtension) {
 				imageFileName += Defaults.GetExtension(_theaterType);
-				if (_collectionType != CollectionType.Overlay || _engine <= EngineType.Firestorm) {
-					drawable.PaletteType = PaletteType.Iso;
-				}
+				drawable.PaletteType = PaletteType.Iso;
 			}
 			else imageFileName += Defaults.GetExtension(_theaterType, _collectionType);
 
@@ -199,13 +197,13 @@ namespace CNCMaps.Game {
 				drawable.DrawFlat = false;
 				// RA2 walls appear a bit higher
 				if (_engine >= EngineType.RedAlert2) {
+					mainProps.ZBufferAdjust += 40;
 					drawable.AddOffset(0, 3); // seems walls are located 3 pixels lower
 				}
 				drawable.PaletteType = PaletteType.Unit;
 				drawable.LightingType = LightingType.Ambient;
 				mainProps.FrameDecider = FrameDeciders.OverlayValueFrameDecider;
 			}
-
 			if (rulesSection.ReadBool("Gate")) {
 				drawable.IsGate = true;
 				drawable.DrawFlat = false;
@@ -239,7 +237,7 @@ namespace CNCMaps.Game {
 
 			if (rulesSection.ReadString("Land") == "Rock") {
 				mainProps.Offset.Y += Drawable.TileHeight / 2;
-				//mainProps.ZBufferAdjust += AnimationDrawable.TileHeight / 2;
+				//mainProps.ZBufferAdjust += Drawable.TileHeight / 2;
 			}
 			else if (rulesSection.ReadString("Land") == "Road") {
 				mainProps.Offset.Y += Drawable.TileHeight / 2;
@@ -263,6 +261,7 @@ namespace CNCMaps.Game {
 			if (rulesSection.HasKey("JumpjetHeight")) {
 				drawable.AddOffset(0, (int)(-rulesSection.ReadInt("JumpjetHeight") / 256.0 * Drawable.TileHeight));
 			}
+			drawable.AddOffset(artSection.ReadInt("XDrawOffset"), artSection.ReadInt("YDrawOffset"));
 
 			if (_collectionType == CollectionType.Overlay) {
 				int objIdx = _drawables.Count - 1;
@@ -382,6 +381,7 @@ namespace CNCMaps.Game {
 							ShadowOffset = mainProps.Offset,
 							FrameDecider = extraFrameDecider,
 							// TODO: figure out if this needs to be added to y offset = -artSection.ReadInt(extraImage + "ZAdjust"),
+							ZBufferAdjust = -artSection.ReadInt(extraImage + "ZAdjust"),
 						};
 						drawable.AddDamagedShp(VFS.Open(extraImageDamagedFileName) as ShpFile, props);
 					}
