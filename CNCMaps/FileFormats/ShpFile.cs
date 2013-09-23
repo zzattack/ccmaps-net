@@ -121,11 +121,10 @@ namespace CNCMaps.FileFormats {
 
 		public Rectangle GetBounds(GameObject obj, DrawProperties props) {
 			Initialize();
-			int frameIndex = 0;//DecideFrameIndex(props.FrameDecider(obj));
-			Point offset = Point.Empty;
-			Size size = new Size(0, 0);
-			offset.Offset(props.GetOffset(obj));
+			int frameIndex = DecideFrameIndex(props.FrameDecider(obj));
+			Point offset = props.GetOffset(obj);
 			offset.Offset(-Width / 2, -Height / 2);
+			Size size = new Size(0, 0);
 			var img = GetImage(frameIndex);
 			if (img != null) {
 				offset.Offset(img.X, img.Y);
@@ -163,6 +162,7 @@ namespace CNCMaps.FileFormats {
 
 			int stride = ds.BitmapData.Stride;
 			var heightBuffer = ds.GetHeightBuffer();
+			var zBuffer = ds.GetZBuffer();
 
 			var w_low = (byte*)ds.BitmapData.Scan0;
 			byte* w_high = (byte*)ds.BitmapData.Scan0 + stride * ds.BitmapData.Height;
@@ -180,16 +180,19 @@ namespace CNCMaps.FileFormats {
 					continue; // out of bounds
 				}
 
-				int hBufVal = obj.DrawOrderIndex;
-				if (obj.Drawable != null)
-					hBufVal += (short)(obj.Drawable.TileElevation * Drawable.TileHeight / 2);
+				short zBufVal = (short)((obj.BottomTile.Rx + obj.BottomTile.Ry + obj.BottomTile.Z) * Drawable.TileHeight / 2 + props.ZBufferAdjust);
+				if (obj.Drawable != null && !obj.Drawable.DrawFlat) 
+					zBufVal += (short)(Height - img.Y - y);
+					// zBufVal += (short)(image.Header.cy - y);
+
 				for (int x = 0; x < img.Width; x++) {
 					byte paletteValue = imgData[rIdx];
 					if (paletteValue != 0 && w_low <= w && w < w_high) {
 						*(w + 0) = p.Colors[paletteValue].B;
 						*(w + 1) = p.Colors[paletteValue].G;
 						*(w + 2) = p.Colors[paletteValue].R;
-						heightBuffer[zIdx] = hBufVal;
+						zBuffer[zIdx] = zBufVal;
+						heightBuffer[zIdx] = (short)(Height + obj.Tile.Z * Drawable.TileHeight / 2);
 					}
 					// Up to the next pixel
 					rIdx++;
@@ -222,6 +225,7 @@ namespace CNCMaps.FileFormats {
 
 			int stride = ds.BitmapData.Stride;
 			var shadows = ds.GetShadows();
+			var zBuffer = ds.GetZBuffer();
 			var heightBuffer = ds.GetHeightBuffer();
 
 			var w_low = (byte*)ds.BitmapData.Scan0;
@@ -230,7 +234,7 @@ namespace CNCMaps.FileFormats {
 			byte* w = (byte*)ds.BitmapData.Scan0 + offset.X * 3 + stride * offset.Y;
 			int zIdx = offset.X + offset.Y * ds.Width;
 			int rIdx = 0;
-			int castHeight = obj.DrawOrderIndex; // (obj.Tile.Z) * Drawable.TileHeight / 2;
+			int castHeight = obj.Tile.Z * Drawable.TileHeight / 2;
 			//if (obj.Drawable != null)
 			//	castHeight += obj.Drawable.TileElevation * Drawable.TileHeight / 2;
 
@@ -242,8 +246,11 @@ namespace CNCMaps.FileFormats {
 					continue; // out of bounds
 				}
 
+				short zBufVal = (short)((obj.Tile.Rx + obj.Tile.Ry + obj.Tile.Z) * Drawable.TileHeight / 2 + props.ZBufferAdjust);
+				zBufVal += (short)(Height / 2);// + image.Header.y + y);
+				// zBufVal += (short)(-Header.Height / 2 + image.Header.y + image.Header.cy);
 				for (int x = 0; x < img.Width; x++) {
-					if (w_low <= w && w < w_high && imgData[rIdx] != 0 && castHeight >= heightBuffer[zIdx]) {
+					if (w_low <= w && w < w_high && imgData[rIdx] != 0 && zBufVal >= zBuffer[zIdx] && castHeight >= heightBuffer[zIdx]) {
 						*(w + 0) /= 2;
 						*(w + 1) /= 2;
 						*(w + 2) /= 2;

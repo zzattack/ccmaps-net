@@ -151,6 +151,7 @@ namespace CNCMaps.FileFormats {
 
 			if (tile.SubTile >= Images.Count) return;
 			TmpImage img = Images[tile.SubTile];
+			var zBuffer = ds.GetZBuffer();
 			var heightBuffer = ds.GetHeightBuffer();
 			Palette p = tile.Palette;
 
@@ -180,17 +181,19 @@ namespace CNCMaps.FileFormats {
 			int rIdx = 0, x, y = 0;
 			int zIdx = offset.Y * ds.Width + offset.X + halfCx - 2;
 			int cx = 0; // Amount of pixel to copy
-			short hBufVal = (short) (tile.Z * Drawable.TileHeight / 2);
+
 			for (; y < halfCy; y++) {
 				cx += 4;
 				for (ushort c = 0; c < cx; c++) {
 					byte paletteValue = img.TileData[rIdx];
-
-					if (paletteValue != 0 && w_low <= w && w < w_high && hBufVal >= heightBuffer[zIdx]) {
+					
+					short zBufVal = (short)((tile.Rx + tile.Ry + tile.Z) * Drawable.TileHeight / 2);// - (img.zData != null ? img.zData[rIdx] : 0));
+					if (paletteValue != 0 && w_low <= w && w < w_high && zBufVal >= zBuffer[zIdx]) {
 						*(w + 0) = p.Colors[paletteValue].B;
 						*(w + 1) = p.Colors[paletteValue].G;
 						*(w + 2) = p.Colors[paletteValue].R;
-						heightBuffer[zIdx] = hBufVal;
+						zBuffer[zIdx] = zBufVal;
+						heightBuffer[zIdx] = (short)(tile.Z * Drawable.TileHeight / 2);
 					}
 					w += 3;
 					zIdx++;
@@ -207,11 +210,13 @@ namespace CNCMaps.FileFormats {
 				for (ushort c = 0; c < cx; c++) {
 					byte paletteValue = img.TileData[rIdx];
 
-					if (paletteValue != 0 && w_low <= w && w < w_high && hBufVal >= heightBuffer[zIdx]) {
+					short zBufVal = (short)((tile.Rx + tile.Ry + tile.Z) * Drawable.TileHeight / 2);// - (img.zData != null ? img.zData[rIdx] : 0));
+					if (paletteValue != 0 && w_low <= w && w < w_high && zBufVal >= zBuffer[zIdx]) {
 						*(w + 0) = p.Colors[paletteValue].B;
 						*(w + 1) = p.Colors[paletteValue].G;
 						*(w + 2) = p.Colors[paletteValue].R;
-						heightBuffer[zIdx] = hBufVal;
+						zBuffer[zIdx] = zBufVal;
+						heightBuffer[zIdx] = (short)(tile.Z * Drawable.TileHeight / 2);
 					}
 					w += 3;
 					zIdx++;
@@ -251,12 +256,14 @@ namespace CNCMaps.FileFormats {
 				for (x = 0; x < img.ExtraWidth; x++) {
 					// Checking per line is required because v needs to be checked every time
 					byte paletteValue = img.ExtraData[rIdx];
+					short zBufVal = (short)((tile.Rx + tile.Ry + tile.Z) * Drawable.TileHeight / 2);
 
-					if (paletteValue != 0 && w_low <= w && w < w_high && hBufVal >= heightBuffer[zIdx]) {
+					if (paletteValue != 0 && w_low <= w && w < w_high && zBufVal >= zBuffer[zIdx]) {
 						*w++ = p.Colors[paletteValue].B;
 						*w++ = p.Colors[paletteValue].G;
 						*w++ = p.Colors[paletteValue].R;
-						heightBuffer[zIdx] = hBufVal;
+						zBuffer[zIdx] = zBufVal;
+						heightBuffer[zIdx] = (short)(img.ExtraHeight + tile.Z * Drawable.TileHeight / 2);
 					}
 					else
 						w += 3;

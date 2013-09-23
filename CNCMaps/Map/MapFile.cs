@@ -1,11 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Configuration;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using CNCMaps.FileFormats;
 using CNCMaps.FileFormats.Encodings;
@@ -59,108 +57,6 @@ namespace CNCMaps.Map {
 			base(baseStream, filename, offset, length, isBuffered) {
 			if (isBuffered)
 				Close(); // we no longer need the file handle anyway
-		}
-
-		/// <summary>Tests whether all objects on the map are present in RA2</summary>
-		/// <param name="rules">The rules.ini file from RA2.</param>
-		/// <returns>True if all objects are from RA2, else false.</returns>
-		private bool AllObjectsFromRA2(IniFile rules) {
-			foreach (var obj in _overlayObjects)
-				if (obj.OverlayID > 246) return false;
-
-			IniSection objSection = rules.GetSection("TerrainTypes");
-			foreach (var obj in _terrainObjects) {
-				int idx = objSection.FindValueIndex(obj.Name);
-				if (idx == -1 || idx > 73) return false;
-			}
-
-			objSection = rules.GetSection("InfantryTypes");
-			foreach (var obj in _infantryObjects) {
-				int idx = objSection.FindValueIndex(obj.Name);
-				if (idx == -1 || idx > 45) return false;
-			}
-
-			objSection = rules.GetSection("VehicleTypes");
-			foreach (var obj in _unitObjects) {
-				int idx = objSection.FindValueIndex(obj.Name);
-				if (idx == -1 || idx > 57) return false;
-			}
-
-			objSection = rules.GetSection("AircraftTypes");
-			foreach (var obj in _aircraftObjects) {
-				int idx = objSection.FindValueIndex(obj.Name);
-				if (idx == -1 || idx > 9) return false;
-			}
-
-			objSection = rules.GetSection("BuildingTypes");
-			IniSection objSectionAlt = rules.GetSection("OverlayTypes");
-			foreach (var obj in _structureObjects) {
-				int idx1 = objSection.FindValueIndex(obj.Name);
-				int idx2 = objSectionAlt.FindValueIndex(obj.Name);
-				if (idx1 == -1 && idx2 == -1) return false;
-				else if (idx1 != -1 && idx1 > 303)
-					return false;
-				else if (idx2 != -1 && idx2 > 246)
-					return false;
-			}
-
-			// no need to test smudge types as no new ones were introduced with yr
-			return true;
-		}
-
-		private void RemoveYRObjects() {
-			foreach (var obj in _overlayObjects.Where(obj => obj.OverlayID > 246).ToList()) {
-				_overlayObjects.Remove(obj);
-				obj.Tile.RemoveObject(obj);
-			}
-
-			IniSection objSection = _rules.GetSection("TerrainTypes");
-			foreach (var obj in _terrainObjects.ToList()) {
-				int idx = objSection.FindValueIndex(obj.Name);
-				if (idx == -1 || idx > 73) {
-					_terrainObjects.Remove(obj);
-					obj.Tile.RemoveObject(obj);
-				}
-			}
-
-			objSection = _rules.GetSection("InfantryTypes");
-			foreach (var obj in _infantryObjects.ToList()) {
-				int idx = objSection.FindValueIndex(obj.Name);
-				if (idx == -1 || idx > 45) {
-					_infantryObjects.Remove(obj);
-					obj.Tile.RemoveObject(obj);
-				}
-			}
-
-			objSection = _rules.GetSection("VehicleTypes");
-			foreach (var obj in _unitObjects.ToList()) {
-				int idx = objSection.FindValueIndex(obj.Name);
-				if (idx == -1 || idx > 57) {
-					_unitObjects.Remove(obj);
-					obj.Tile.RemoveObject(obj);
-				}
-			}
-
-			objSection = _rules.GetSection("AircraftTypes");
-			foreach (var obj in _aircraftObjects.ToList()) {
-				int idx = objSection.FindValueIndex(obj.Name);
-				if (idx == -1 || idx > 9) {
-					_aircraftObjects.Remove(obj);
-					obj.Tile.RemoveObject(obj);
-				}
-			}
-
-			objSection = _rules.GetSection("BuildingTypes");
-			IniSection objSectionAlt = _rules.GetSection("OverlayTypes");
-			foreach (var obj in _structureObjects.ToList()) {
-				int idx1 = objSection.FindValueIndex(obj.Name);
-				int idx2 = objSectionAlt.FindValueIndex(obj.Name);
-				if ((idx1 == -1 && idx2 == -1) || (idx1 != -1 && idx1 > 303) || (idx2 != -1 && idx2 > 246)) {
-					_structureObjects.Remove(obj);
-					obj.Tile.RemoveObject(obj);
-				}
-			}
-			// no need to remove smudges as no new ones were introduced with yr
 		}
 
 		private double PercentageObjectsKnown(IniFile rules, IniFile theaterIni) {
@@ -254,10 +150,21 @@ namespace CNCMaps.Map {
 
 			c = _theater.GetCollection(CollectionType.Building);
 			var cAlt = _theater.GetCollection(CollectionType.Overlay);
-			IniSection objSectionAlt = _rules.GetSection("OverlayTypes");
 			foreach (var obj in _structureObjects.Where(obj => !c.HasObject(obj) && !cAlt.HasObject(obj)).ToList()) {
 				obj.Tile.RemoveObject(obj);
 				_structureObjects.Remove(obj);
+			}
+		}
+
+		private void SetDrawables() {
+			foreach (var tile in _tiles) {
+				if (tile == null) continue;
+				tile.Drawable = new Drawable(tile.ToString()) { DrawFlat = true }; 
+
+				foreach (var obj in tile.AllObjects) {
+					obj.Collection = _theater.GetObjectCollection(obj);
+					obj.Drawable = obj.Collection.GetDrawable(obj);
+				}
 			}
 		}
 
@@ -323,10 +230,6 @@ namespace CNCMaps.Map {
 			return EngineType.YurisRevenge; // default
 		}
 
-		private EngineType DetectTSorFS() {
-			return ReadBool("Basic", "RequiredAddon") ? EngineType.Firestorm : EngineType.TiberianSun;
-		}
-
 		private EngineType DetectRA2orYR() {
 			Logger.Info("Determining map type");
 
@@ -355,7 +258,7 @@ namespace CNCMaps.Map {
 				return EngineType.RedAlert2;
 			}
 			// decision based on extension
-			else if (Path.GetExtension(FileName) == ".yrm") return EngineType.YurisRevenge;
+			else if (new[] { ".yrm", ".yro" }.Contains(Path.GetExtension(FileName))) return EngineType.YurisRevenge;
 			else return EngineType.RedAlert2;
 		}
 
@@ -416,6 +319,7 @@ namespace CNCMaps.Map {
 			_theater = new Theater(ReadString("Map", "Theater"), EngineType, _rules, _art);
 			_theater.Initialize();
 			RemoveUnknownObjects();
+			SetDrawables();
 
 			LoadColors();
 			if (EngineType >= EngineType.RedAlert2)
@@ -509,7 +413,7 @@ namespace CNCMaps.Map {
 				}
 			}
 
-			foreach (GameObject obj in _unitObjects.Cast<GameObject>().Union(_aircraftObjects).Union(_animationObjects)) {
+			foreach (GameObject obj in _unitObjects.Cast<GameObject>().Union(_aircraftObjects)) {
 				var bounds = obj.Drawable.GetBounds(obj);
 				// bounds to foundation
 				Size foundation = new Size(
@@ -888,12 +792,6 @@ namespace CNCMaps.Map {
 					}
 					else {
 						obj.Collection = _theater.GetObjectCollection(obj);
-						if (obj.Drawable == null) // quite a wrong place to set something this important..
-							obj.Drawable = obj.Collection.GetDrawable(obj);
-
-						if (obj.Drawable == null) {
-							continue; // this is BAD
-						}
 						pt = obj.Drawable.PaletteType;
 						lt = obj.Drawable.LightingType;
 					}
@@ -1278,15 +1176,16 @@ namespace CNCMaps.Map {
 				}
 			}
 
+#if DEBUG
+			/*
 			// test that my bounds make some kind of sense
-			/*_drawingSurface.Unlock();
-			using (Graphics gfx = Graphics.FromImage(_drawingSurface.bm)) {
+			_drawingSurface.Unlock();
+			using (Graphics gfx = Graphics.FromImage(_drawingSurface.Bitmap)) {
 				foreach (var obj in orderedObjs)
 					if (obj.Drawable != null)
 						obj.Drawable.DrawBoundingBox(obj, gfx);
 			}*/
-
-
+#endif
 			/*
 			var tileCollection = _theater.GetTileCollection();
 			// zig-zag drawing technique explanation: http://stackoverflow.com/questions/892811/drawing-isometric-game-worlds

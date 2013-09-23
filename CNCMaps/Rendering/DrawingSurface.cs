@@ -11,7 +11,7 @@ namespace CNCMaps.Rendering {
 		public int Height { get; private set; } // prevents repeated (slow) lookups in bm.Width
 		int[] _heightBuffer;
 		bool[] _shadowBuffer;
-
+		short[] zBuffer;
 		static NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
 		public DrawingSurface(int width, int height, PixelFormat pixelFormat) {
@@ -20,6 +20,7 @@ namespace CNCMaps.Rendering {
 			Width = width;
 			Height = height;
 			Lock(Bitmap.PixelFormat);
+			zBuffer = new short[width * height];
 			_heightBuffer = new int[width * height];
 			_shadowBuffer = new bool[width * height];
 		}
@@ -46,6 +47,10 @@ namespace CNCMaps.Rendering {
 
 		public bool[] GetShadows() {
 			return _shadowBuffer;
+		}
+
+		public short[] GetZBuffer() {
+			return zBuffer;
 		}
 
 		public int[] GetHeightBuffer() {
@@ -113,6 +118,7 @@ namespace CNCMaps.Rendering {
 		}
 
 		internal void FreeNonBitmap() {
+			this.zBuffer = null;
 			this._shadowBuffer = null;
 			this._heightBuffer = null;
 		}
@@ -120,6 +126,7 @@ namespace CNCMaps.Rendering {
 
 		internal void Dispose() {
 			Unlock();
+			this.zBuffer = null;
 			this._shadowBuffer = null;
 			Bitmap.Dispose();
 		}

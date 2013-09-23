@@ -53,7 +53,8 @@ namespace CNCMaps.Utility {
 
 				sb.AppendFormat("   S-buf: {0}", _drawingSurface.GetShadows()[rIdx]);
 				sb.AppendFormat("   H-buf: {0}", _drawingSurface.GetHeightBuffer()[rIdx]);
-
+				sb.AppendFormat("   Z-buf: {0}", _drawingSurface.GetZBuffer()[rIdx]);
+			
 				var objs = _map.GetObjectsAt(tile.Dx, tile.Dy / 2);
 				if (objs.Any()) {
 					sb.Append("   Objects: ");
