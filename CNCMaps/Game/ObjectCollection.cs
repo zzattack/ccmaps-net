@@ -180,7 +180,6 @@ namespace CNCMaps.Game {
 			else if (artSection.ReadString("Palette") != string.Empty) {
 				drawable.PaletteType = PaletteType.Custom;
 				drawable.CustomPaletteName = artSection.ReadString("Palette");
-				drawable.IsRemapable = false;
 			}
 
 			if (rulesSection.ReadString("AlphaImage") != "") {
