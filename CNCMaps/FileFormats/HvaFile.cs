@@ -62,7 +62,7 @@ namespace CNCMaps.FileFormats {
 		}
 
 		internal Matrix4 LoadGLMatrix(int section, int frame = 0) {
-			if (!_initialized) Initialize();
+			Initialize();
 			var hvaMatrix = Sections[section].Matrices[frame];
 			return ToGLMatrix(hvaMatrix);
 		}

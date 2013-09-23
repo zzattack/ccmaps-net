@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using System.Text;
 
 namespace CNCMaps.VirtualFileSystem {
@@ -148,6 +149,12 @@ namespace CNCMaps.VirtualFileSystem {
 
 		public float ReadFloat() {
 			return BitConverter.ToSingle(Read(sizeof(Single)), 0);
+		}
+
+		public float ReadFloat2() {
+			var ori = Read(sizeof (Single)).ToList();
+			byte[] rev = new[] {ori[3], ori[2], ori[1], ori[0]};
+			return BitConverter.ToSingle(rev, 0);
 		}
 
 		public double ReadDouble() {

@@ -40,6 +40,10 @@
     <StartupObject />
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="NLog, Version=2.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>.\NLog.dll</HintPath>
+    </Reference>
     <Reference Include="OpenTK">
       <HintPath>.\OpenTK.dll</HintPath>
     </Reference>
@@ -138,16 +142,10 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\..\..\NLog-master\src\NLog\NLog.netfx40.csproj">
-      <Project>{a0bff0db-ed9a-4639-ae86-8e709a1efc66}</Project>
-      <Name>NLog.netfx40</Name>
-    </ProjectReference>
-  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <ProjectExtensions>
     <VisualStudio>
-      <UserProperties BuildVersion_AssemblyInfoFilename="CNCMaps\Properties\AssemblyInfoGlobal.cs" BuildVersion_UseGlobalSettings="True" BuildVersion_UpdateAssemblyVersion="True" BuildVersion_UpdateFileVersion="True" />
+      <UserProperties BuildVersion_UpdateFileVersion="True" BuildVersion_UpdateAssemblyVersion="True" BuildVersion_UseGlobalSettings="True" BuildVersion_AssemblyInfoFilename="CNCMaps\Properties\AssemblyInfoGlobal.cs" />
     </VisualStudio>
   </ProjectExtensions>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

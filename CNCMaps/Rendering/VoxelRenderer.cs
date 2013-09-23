@@ -118,16 +118,39 @@ namespace CNCMaps.Rendering {
 			GL.LoadMatrix(ref persp);
 
 			GL.MatrixMode(MatrixMode.Modelview);
+
+#if DEBUG
+			GL.PushMatrix();
+			GL.LineWidth(4);
+			GL.Color3(Color.Red);
+			GL.Begin(BeginMode.Lines);
+			GL.Vertex3(-100, 0, 0);
+			GL.Vertex3(100, 0, 0);
+			GL.End();
+			GL.Color3(Color.Green);
+			GL.Begin(BeginMode.Lines);
+			GL.Vertex3(0, -100, 0);
+			GL.Vertex3(0, 100, 0);
+			GL.End();
+			GL.Color3(Color.White);
+			GL.Begin(BeginMode.Lines);
+			GL.Vertex3(0, 0, -100);
+			GL.Vertex3(0, 0, 100);
+			GL.End();
+			GL.PopMatrix();
+#endif
+
 			var lookat = Matrix4.LookAt(0, 0, -10, 0, 0, 0, 0, 1, 0);
 			GL.LoadMatrix(ref lookat);
 			GL.Scale(0.0142, 0.0142, 0.0142); // seems to work well enough for all voxels
+
 			GL.Translate(0, 0, 10);
 
 			float direction = (obj is OwnableObject) ? (obj as OwnableObject).Direction : 0;
 			float objectRotation = 45f - direction / 256f * 360f; // convert game rotation to world degrees
 			var world = Matrix4.CreateRotationZ(MathHelper.DegreesToRadians(objectRotation)); // object facing
-			world *= Matrix4.CreateRotationY(MathHelper.DegreesToRadians(180)); // invert y-axis
-			world *= Matrix4.CreateRotationX(MathHelper.DegreesToRadians(60)); // this is how the game places voxels flat on the world
+			world *= Matrix4.CreateRotationY(MathHelper.DegreesToRadians(180)); // this is how the game places voxels flat on the world
+			world *= Matrix4.CreateRotationX(MathHelper.DegreesToRadians(60));
 
 			// art.ini TurretOffset value positions some voxel parts over our x-axis
 			world = Matrix4.CreateTranslation(0.18f * props.TurretVoxelOffset, 0, 0) * world;
@@ -164,7 +187,7 @@ namespace CNCMaps.Rendering {
 				frameRot.M43 *= section.HVAMultiplier * section.ScaleZ;
 
 				var frameScale = Matrix4.Scale(section.HVAMultiplier); // seems I don't need this?
-				var frameTransl = Matrix4.CreateTranslation(section.MinBounds);
+				var frameTransl = Matrix4.Identity; //Matrix4.CreateTranslation(section.MinBounds);
 				var frame = frameRot * frameTransl;
 				GL.MultMatrix(ref frame);
 

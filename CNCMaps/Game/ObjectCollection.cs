@@ -112,15 +112,7 @@ namespace CNCMaps.Game {
 			bool theaterExtension = artSection.ReadBool("Theater");
 			if (drawable.IsVoxel) {
 				imageFileName += ".vxl";
-				if (_collectionType == CollectionType.Building) {
-					// half tile to the left
-					mainProps.Offset.X += Drawable.TileWidth / 2;
-				}
-				else if (_collectionType == CollectionType.Vehicle) {
-					// also vertical tile center
-					mainProps.Offset.X += Drawable.TileWidth / 2;
-					mainProps.Offset.Y += Drawable.TileHeight / 2;
-				}
+				mainProps.Offset.Y += Drawable.TileHeight / 2;
 			}
 			else if (theaterExtension) {
 				imageFileName += Defaults.GetExtension(_theaterType);
@@ -142,6 +134,7 @@ namespace CNCMaps.Game {
 					drawable.Foundation = new Size(fx, fy);
 				}
 				mainProps.SortIndex = int.MinValue; // "main" building image always first
+				//mainProps.Offset.Offset(Drawable.TileWidth / 2, 0);
 			}
 			else if (_collectionType == CollectionType.Smudge) {
 				drawable.Foundation = new Size(rulesSection.ReadInt("Width", 1), rulesSection.ReadInt("Height", 1));
@@ -273,6 +266,7 @@ namespace CNCMaps.Game {
 						drawable.LightingType = LightingType.None;
 					}
 					else if (SpecialOverlays.IsHighBridge(ovl)) {
+						mainProps.Offset.Offset(Drawable.TileWidth / 2, 0);
 						mainProps.OffsetHack = OffsetHacks.RA2BridgeOffsets;
 						mainProps.ShadowOffsetHack = OffsetHacks.RA2BridgeShadowOffsets;
 						drawable.TileElevation = 4; // for lighting

@@ -442,10 +442,10 @@ namespace CNCMaps.Map {
 			Logger.Info("Reading map overlay");
 			ReadOverlay();
 
-			Logger.Info("Reading map overlay objects");
+			Logger.Info("Reading map terrain objects");
 			ReadTerrain();
 
-			Logger.Info("Reading map terrain object");
+			Logger.Info("Reading map smudge objects");
 			ReadSmudges();
 
 			Logger.Info("Reading infantry on map");
@@ -492,6 +492,7 @@ namespace CNCMaps.Map {
 					_tiles[(ushort)dx, (ushort)dy / 2] = tile;
 				}
 			}
+			Logger.Debug("Read {0} tiles", numtiles);
 		}
 
 		/// <summary>Reads the terrain. </summary>
@@ -512,6 +513,7 @@ namespace CNCMaps.Map {
 					}
 				}
 			}
+			Logger.Debug("Read {0} terrain objects", _terrainObjects.Count);
 		}
 
 		/// <summary>Reads the smudges. </summary>
@@ -521,7 +523,7 @@ namespace CNCMaps.Map {
 			foreach (var v in smudgesSection.OrderedEntries) {
 				try {
 					string[] entries = ((string)v.Value).Split(',');
-					if (entries.Length <= 3) continue;
+					if (entries.Length <= 2) continue;
 					string name = entries[0];
 					int rx = int.Parse(entries[1]);
 					int ry = int.Parse(entries[2]);
@@ -535,6 +537,7 @@ namespace CNCMaps.Map {
 				catch (FormatException) {
 				}
 			}
+			Logger.Debug("Read {0} smudges", _smudgeObjects.Count);
 		}
 
 		/// <summary>Reads the overlay.</summary>
@@ -569,6 +572,7 @@ namespace CNCMaps.Map {
 					_overlayObjects.Add(ovl);
 				}
 			}
+			Logger.Debug("Read {0} overlay types", _overlayObjects.Count);
 		}
 
 		/// <summary>Reads the structures.</summary>
@@ -603,7 +607,7 @@ namespace CNCMaps.Map {
 				catch (FormatException) {
 				}
 			}
-			Logger.Trace("Loaded structures ({0})", _structureObjects.Count);
+			Logger.Trace("Read {0} structures", _structureObjects.Count);
 		}
 
 		/// <summary>Reads the infantry. </summary>
@@ -639,7 +643,7 @@ namespace CNCMaps.Map {
 				catch (FormatException) {
 				}
 			}
-			Logger.Trace("Loaded infantry objects ({0})", count);
+			Logger.Trace("Read {0} infantry objects", count);
 
 		}
 
@@ -675,7 +679,7 @@ namespace CNCMaps.Map {
 				catch (IndexOutOfRangeException) {
 				}
 			}
-			Logger.Trace("Loaded units ({0})", _unitObjects.Count);
+			Logger.Trace("Read {0} units", _unitObjects.Count);
 		}
 
 		/// <summary>Reads the aircraft.</summary>
@@ -707,7 +711,7 @@ namespace CNCMaps.Map {
 				catch (IndexOutOfRangeException) {
 				}
 			}
-			Logger.Trace("Loaded aircraft ({0})", _aircraftObjects.Count);
+			Logger.Trace("Read {0} aircraft objects", _aircraftObjects.Count);
 		}
 
 		private void RecalculateOreSpread() {
@@ -932,7 +936,7 @@ namespace CNCMaps.Map {
 					int wx = pos - wy * 1000;
 
 					// Draw 4x4 cell around start pos
-					for (int x = wx - 2; x < wx + 2; x++) {
+					for (int x = wx - 1; x < wx + 3; x++) {
 						for (int y = wy - 1; y < wy + 3; y++) {
 							MapTile t = _tiles.GetTileR(x, y);
 							if (t != null) {
@@ -1210,14 +1214,14 @@ namespace CNCMaps.Map {
 			}
 
 #if DEBUG
-			/*
+			
 			// test that my bounds make some kind of sense
 			_drawingSurface.Unlock();
 			using (Graphics gfx = Graphics.FromImage(_drawingSurface.Bitmap)) {
 				foreach (var obj in orderedObjs)
 					if (obj.Drawable != null)
 						obj.Drawable.DrawBoundingBox(obj, gfx);
-			}*/
+			}
 #endif
 			/*
 			var tileCollection = _theater.GetTileCollection();

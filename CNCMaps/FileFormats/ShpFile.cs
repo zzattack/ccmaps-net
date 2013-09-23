@@ -156,7 +156,7 @@ namespace CNCMaps.FileFormats {
 
 			Point offset = globalOffset;
 			offset.Offset(props.GetOffset(obj));
-			offset.X += obj.Tile.Dx * Drawable.TileWidth / 2 + Drawable.TileWidth / 2 - Width / 2 + img.X;
+			offset.X += obj.Tile.Dx * Drawable.TileWidth / 2 - Width / 2 + img.X;
 			offset.Y += (obj.Tile.Dy - obj.Tile.Z) * Drawable.TileHeight / 2 - Height / 2 + img.Y;
 			Logger.Trace("Drawing SHP file {0} (Frame {1}) at ({2},{3})", FileName, frameIndex, offset.X, offset.Y);
 
@@ -219,7 +219,7 @@ namespace CNCMaps.FileFormats {
 
 			Point offset = globalOffset;
 			offset.Offset(props.GetShadowOffset(obj));
-			offset.X += obj.Tile.Dx * Drawable.TileWidth / 2 + Drawable.TileWidth / 2 - Width / 2 + img.X;
+			offset.X += obj.Tile.Dx * Drawable.TileWidth / 2 - Width / 2 + img.X;
 			offset.Y += (obj.Tile.Dy - obj.Tile.Z) * Drawable.TileHeight / 2 - Height / 2 + img.Y;
 			Logger.Trace("Drawing SHP shadow {0} (frame {1}) at ({2},{3})", FileName, frameIndex, offset.X, offset.Y);
 

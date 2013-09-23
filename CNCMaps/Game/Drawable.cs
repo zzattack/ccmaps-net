@@ -196,21 +196,15 @@ namespace CNCMaps.Game {
 		public Rectangle GetBounds(GameObject obj) {
 			Rectangle bounds = Rectangle.Empty;
 
-			if (IsVoxel) {
-				for (int i = 0; i < _voxels.Count; i++) {
-					var vxl = _voxels[i];
-					var hva = _hvas[i];
-					var vxlbounds = vxl.File.GetBounds(obj, vxl.File, hva, vxl.Props);
-					bounds = Rectangle.Union(bounds, vxlbounds);
-				}
-
+			for (int i = 0; i < _voxels.Count; i++) {
+				var vxl = _voxels[i];
+				var hva = _hvas[i];
+				var vxlbounds = vxl.File.GetBounds(obj, vxl.File, hva, vxl.Props);
+				bounds = Rectangle.Union(bounds, vxlbounds);
 			}
-			else {
-				foreach (var shp in _shps.Where(shp => shp.File != null)) {
-					if (bounds == Rectangle.Empty) bounds = shp.File.GetBounds(obj, shp.Props);
-					else bounds = Rectangle.Union(bounds, shp.File.GetBounds(obj, shp.Props));
-				}
-				bounds.Offset(TileWidth / 2, 0); // this is really gay
+			foreach (var shp in _shps.Where(shp => shp.File != null)) {
+				if (bounds == Rectangle.Empty) bounds = shp.File.GetBounds(obj, shp.Props);
+				else bounds = Rectangle.Union(bounds, shp.File.GetBounds(obj, shp.Props));
 			}
 			bounds.Offset(obj.Tile.Dx * TileWidth / 2, (obj.Tile.Dy - obj.Tile.Z) * TileHeight / 2);
 			bounds.Offset(_globalOffset);
