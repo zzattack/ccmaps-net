@@ -112,13 +112,41 @@ namespace CNCMaps.Game {
 			bool theaterExtension = artSection.ReadBool("Theater");
 			if (drawable.IsVoxel) {
 				imageFileName += ".vxl";
-				mainProps.Offset.Y += Drawable.TileHeight / 2;
 			}
 			else if (theaterExtension) {
 				imageFileName += Defaults.GetExtension(_theaterType);
 				drawable.PaletteType = PaletteType.Iso;
 			}
 			else imageFileName += Defaults.GetExtension(_theaterType, _collectionType);
+
+			switch (_collectionType) {
+				case CollectionType.Aircraft:
+					break;
+				case CollectionType.Building:
+					drawable.AddOffset(Drawable.TileWidth / 2, 0);
+					break;
+				case CollectionType.Infantry:
+					drawable.AddOffset(Drawable.TileWidth / 2, Drawable.TileHeight / 2);
+					break;
+				case CollectionType.Overlay:
+					drawable.AddOffset(Drawable.TileWidth / 2, 0);
+					break;
+				case CollectionType.Smudge:
+					drawable.AddOffset(Drawable.TileWidth / 2, 0);
+					break;
+				case CollectionType.Terrain:
+					drawable.AddOffset(Drawable.TileWidth / 2, Drawable.TileHeight / 2);
+					break;
+				case CollectionType.Vehicle:
+					drawable.AddOffset(Drawable.TileWidth / 2, Drawable.TileHeight / 2);
+					break;
+				case CollectionType.Animation:
+
+					break;
+				default:
+					throw new ArgumentOutOfRangeException();
+			}
+
 
 			// Find out foundation, now with custom foundation support (Ares feature).
 			if (_collectionType == CollectionType.Building) {
@@ -134,7 +162,6 @@ namespace CNCMaps.Game {
 					drawable.Foundation = new Size(fx, fy);
 				}
 				mainProps.SortIndex = int.MinValue; // "main" building image always first
-				//mainProps.Offset.Offset(Drawable.TileWidth / 2, 0);
 			}
 			else if (_collectionType == CollectionType.Smudge) {
 				drawable.Foundation = new Size(rulesSection.ReadInt("Width", 1), rulesSection.ReadInt("Height", 1));
@@ -204,7 +231,7 @@ namespace CNCMaps.Game {
 			}
 
 			if (rulesSection.ReadBool("BridgeRepairHut")) {
-				// xOffset = yOffset = 0; // TOOD: check we really don't need this
+				
 			}
 			if (rulesSection.ReadBool("IsVeins")) {
 				drawable.LightingType = LightingType.None;
@@ -219,12 +246,10 @@ namespace CNCMaps.Game {
 			}
 
 			if (_collectionType == CollectionType.Terrain) {
-				mainProps.Offset.Y += Drawable.TileHeight / 2; // trees and such are placed in the middle of their tile
-				//mainProps.ZBufferAdjust += AnimationDrawable.TileHeight / 2;
+				
 			}
 			else if (_collectionType == CollectionType.Infantry) {
-				mainProps.Offset.Y += Drawable.TileHeight / 2;
-				mainProps.Offset.X -= 15; // something like this. appears to be somewhat random.
+
 			}
 
 			if (rulesSection.ReadString("Land") == "Rock") {
@@ -266,7 +291,6 @@ namespace CNCMaps.Game {
 						drawable.LightingType = LightingType.None;
 					}
 					else if (SpecialOverlays.IsHighBridge(ovl)) {
-						mainProps.Offset.Offset(Drawable.TileWidth / 2, 0);
 						mainProps.OffsetHack = OffsetHacks.RA2BridgeOffsets;
 						mainProps.ShadowOffsetHack = OffsetHacks.RA2BridgeShadowOffsets;
 						drawable.TileElevation = 4; // for lighting
@@ -395,7 +419,7 @@ namespace CNCMaps.Game {
 					}
 					var turretOffset = new Point(rulesSection.ReadInt("TurretAnimX"), rulesSection.ReadInt("TurretAnimY"));
 					if (voxel)
-						turretOffset.Offset(Drawable.TileWidth / 2, 0);
+						; // TODO: check ned turretOffset.Offset(Drawable.TileWidth / 2, 0);
 
 					var props = new DrawProperties {
 						Offset = turretOffset,
