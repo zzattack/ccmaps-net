@@ -77,6 +77,8 @@ namespace CNCMaps.Map {
 		public short Direction { get; set; }
 		public bool OnBridge { get; set; }
 		public string Owner { get; set; }
+		public override MapTile BottomTile { get; set; }
+		public override MapTile TopTile { get; set; }
 	}
 	public class LightSource : StructureObject {
 		public double LightVisibility { get; set; }

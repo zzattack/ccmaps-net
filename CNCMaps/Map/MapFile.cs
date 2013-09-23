@@ -413,26 +413,18 @@ namespace CNCMaps.Map {
 				}
 			}
 
-			foreach (GameObject obj in _unitObjects.Cast<GameObject>().Union(_aircraftObjects)) {
+			foreach (GameObject obj in _unitObjects.Cast<GameObject>().Union(_aircraftObjects).Union(_infantryObjects)) {
 				var bounds = obj.Drawable.GetBounds(obj);
 				// bounds to foundation
-				Size foundation = new Size(
+				Size occupy = new Size(
 					(int)Math.Max(1, Math.Ceiling(bounds.Width / (double)Drawable.TileWidth)),
 					(int)Math.Max(1, Math.Ceiling(bounds.Height / (double)Drawable.TileHeight)));
 
-				var bottom = _tiles.GetTileR(obj.Tile.Rx + foundation.Width - 1, obj.Tile.Ry + foundation.Height - 1);
+				int bridge = (obj as OwnableObject).OnBridge ? -2 : 0;
+				var top = _tiles.GetTileR(obj.Tile.Rx + bridge - 1 + occupy.Width, obj.Tile.Ry + bridge - 1 + occupy.Height);
+				var bottom = _tiles.GetTileR(obj.Tile.Rx, obj.Tile.Ry);
 				obj.BottomTile = bottom ?? obj.Tile;
-				obj.TopTile = obj.Tile;
-			}
-
-			foreach (GameObject obj in _unitObjects.Cast<GameObject>().Union(_infantryObjects)) {
-				var oobj = obj as OwnableObject;
-				if (oobj.OnBridge) {
-					// relocate two tiles down
-					var bottom = _tiles.GetTileR(obj.Tile.Rx + 2, obj.Tile.Ry + 2);
-					obj.BottomTile = bottom ?? obj.Tile;
-					obj.TopTile = obj.BottomTile;
-				}
+				obj.TopTile = top ?? obj.Tile;
 			}
 
 			foreach (OverlayObject obj in _overlayObjects.Where(SpecialOverlays.IsHighBridge)) {
@@ -527,16 +519,20 @@ namespace CNCMaps.Map {
 			IniSection smudgesSection = GetSection("Smudge");
 			if (smudgesSection == null) return;
 			foreach (var v in smudgesSection.OrderedEntries) {
-				string[] entries = ((string)v.Value).Split(',');
-				if (entries.Length <= 3) continue;
-				string name = entries[0];
-				int rx = int.Parse(entries[1]);
-				int ry = int.Parse(entries[2]);
-				var s = new SmudgeObject(name);
-				var tile = _tiles.GetTileR(rx, ry);
-				if (tile != null) {
-					tile.AddObject(s);
-					_smudgeObjects.Add(s);
+				try {
+					string[] entries = ((string)v.Value).Split(',');
+					if (entries.Length <= 3) continue;
+					string name = entries[0];
+					int rx = int.Parse(entries[1]);
+					int ry = int.Parse(entries[2]);
+					var s = new SmudgeObject(name);
+					var tile = _tiles.GetTileR(rx, ry);
+					if (tile != null) {
+						tile.AddObject(s);
+						_smudgeObjects.Add(s);
+					}
+				}
+				catch (FormatException) {
 				}
 			}
 		}
@@ -619,21 +615,28 @@ namespace CNCMaps.Map {
 			}
 			int count = 0;
 			foreach (var v in infantrySection.OrderedEntries) {
-				string[] entries = ((string)v.Value).Split(',');
-				if (entries.Length <= 8) continue;
-				string owner = entries[0];
-				string name = entries[1];
-				short health = short.Parse(entries[2]);
-				int rx = int.Parse(entries[3]);
-				int ry = int.Parse(entries[4]);
-				short direction = short.Parse(entries[7]);
-				bool onBridge = entries[11] == "1";
-				var i = new InfantryObject(owner, name, health, direction, onBridge);
-				var tile = _tiles.GetTileR(rx, ry);
-				if (tile != null) {
-					tile.AddObject(i);
-					_infantryObjects.Add(i);
-					count++;
+				try {
+
+					string[] entries = ((string)v.Value).Split(',');
+					if (entries.Length <= 8) continue;
+					string owner = entries[0];
+					string name = entries[1];
+					short health = short.Parse(entries[2]);
+					int rx = int.Parse(entries[3]);
+					int ry = int.Parse(entries[4]);
+					short direction = short.Parse(entries[7]);
+					bool onBridge = entries[11] == "1";
+					var i = new InfantryObject(owner, name, health, direction, onBridge);
+					var tile = _tiles.GetTileR(rx, ry);
+					if (tile != null) {
+						tile.AddObject(i);
+						_infantryObjects.Add(i);
+						count++;
+					}
+				}
+				catch (IndexOutOfRangeException) {
+				}
+				catch (FormatException) {
 				}
 			}
 			Logger.Trace("Loaded infantry objects ({0})", count);
@@ -649,21 +652,27 @@ namespace CNCMaps.Map {
 			}
 			int count = 0;
 			foreach (var v in unitsSection.OrderedEntries) {
-				string[] entries = ((string)v.Value).Split(',');
-				if (entries.Length <= 11) continue;
+				try {
+					string[] entries = ((string)v.Value).Split(',');
+					if (entries.Length <= 11) continue;
 
-				string owner = entries[0];
-				string name = entries[1];
-				short health = short.Parse(entries[2]);
-				int rx = int.Parse(entries[3]);
-				int ry = int.Parse(entries[4]);
-				short direction = short.Parse(entries[5]);
-				bool onBridge = entries[10] == "1";
-				var u = new UnitObject(owner, name, health, direction, onBridge);
-				var tile = _tiles.GetTileR(rx, ry);
-				if (tile != null) {
-					tile.AddObject(u);
-					_unitObjects.Add(u);
+					string owner = entries[0];
+					string name = entries[1];
+					short health = short.Parse(entries[2]);
+					int rx = int.Parse(entries[3]);
+					int ry = int.Parse(entries[4]);
+					short direction = short.Parse(entries[5]);
+					bool onBridge = entries[10] == "1";
+					var u = new UnitObject(owner, name, health, direction, onBridge);
+					var tile = _tiles.GetTileR(rx, ry);
+					if (tile != null) {
+						tile.AddObject(u);
+						_unitObjects.Add(u);
+					}
+				}
+				catch (FormatException) {
+				}
+				catch (IndexOutOfRangeException) {
 				}
 			}
 			Logger.Trace("Loaded units ({0})", _unitObjects.Count);
@@ -677,19 +686,25 @@ namespace CNCMaps.Map {
 				return;
 			}
 			foreach (var v in aircraftSection.OrderedEntries) {
-				string[] entries = ((string)v.Value).Split(',');
-				string owner = entries[0];
-				string name = entries[1];
-				short health = short.Parse(entries[2]);
-				int rx = int.Parse(entries[3]);
-				int ry = int.Parse(entries[4]);
-				short direction = short.Parse(entries[5]);
-				bool onBridge = entries[entries.Length - 4] == "1";
-				var a = new AircraftObject(owner, name, health, direction, onBridge);
-				var tile = _tiles.GetTileR(rx, ry);
-				if (tile != null) {
-					tile.AddObject(a);
-					_aircraftObjects.Add(a);
+				try {
+					string[] entries = ((string)v.Value).Split(',');
+					string owner = entries[0];
+					string name = entries[1];
+					short health = short.Parse(entries[2]);
+					int rx = int.Parse(entries[3]);
+					int ry = int.Parse(entries[4]);
+					short direction = short.Parse(entries[5]);
+					bool onBridge = entries[entries.Length - 4] == "1";
+					var a = new AircraftObject(owner, name, health, direction, onBridge);
+					var tile = _tiles.GetTileR(rx, ry);
+					if (tile != null) {
+						tile.AddObject(a);
+						_aircraftObjects.Add(a);
+					}
+				}
+				catch (FormatException) {
+				}
+				catch (IndexOutOfRangeException) {
 				}
 			}
 			Logger.Trace("Loaded aircraft ({0})", _aircraftObjects.Count);
@@ -909,22 +924,28 @@ namespace CNCMaps.Map {
 			Palette red = Palette.MakePalette(Color.Red);
 
 			foreach (var entry in waypoints.OrderedEntries) {
-				if (int.Parse(entry.Key) >= 8)
-					continue;
-				int pos = int.Parse(entry.Value);
-				int wy = pos / 1000;
-				int wx = pos - wy * 1000;
+				try {
+					if (int.Parse(entry.Key) >= 8)
+						continue;
+					int pos = int.Parse(entry.Value);
+					int wy = pos / 1000;
+					int wx = pos - wy * 1000;
 
-				// Draw 4x4 cell around start pos
-				for (int x = wx - 2; x < wx + 2; x++) {
-					for (int y = wy - 1; y < wy + 3; y++) {
-						MapTile t = _tiles.GetTileR(x, y);
-						if (t != null) {
-							t.Palette = Palette.Merge(t.Palette, red, 0.4);
-							//foreach (var o in t.AllObjects.OfType<SmudgeObject>().Cast<GameObject>().Union(t.AllObjects.OfType<OverlayObject>()))
-							//	o.Palette = Palette.Merge(o.Palette, red, 0.4);
+					// Draw 4x4 cell around start pos
+					for (int x = wx - 2; x < wx + 2; x++) {
+						for (int y = wy - 1; y < wy + 3; y++) {
+							MapTile t = _tiles.GetTileR(x, y);
+							if (t != null) {
+								t.Palette = Palette.Merge(t.Palette, red, 0.4);
+								//foreach (var o in t.AllObjects.OfType<SmudgeObject>().Cast<GameObject>().Union(t.AllObjects.OfType<OverlayObject>()))
+								//	o.Palette = Palette.Merge(o.Palette, red, 0.4);
+							}
 						}
 					}
+				}
+				catch (FormatException) {
+				}
+				catch (IndexOutOfRangeException) {
 				}
 			}
 		}
@@ -937,33 +958,39 @@ namespace CNCMaps.Map {
 			Palette red = Palette.MakePalette(Color.Red);
 
 			foreach (var entry in waypoints.OrderedEntries) {
-				if (int.Parse(entry.Key) >= 8)
-					continue;
+				try {
+					if (int.Parse(entry.Key) >= 8)
+						continue;
 
-				int pos = int.Parse(entry.Value);
-				int wy = pos / 1000;
-				int wx = pos - wy * 1000;
+					int pos = int.Parse(entry.Value);
+					int wy = pos / 1000;
+					int wx = pos - wy * 1000;
 
-				// Redraw the 4x4 cell around start pos with original palette;
-				// first the tiles, then the objects
-				for (int x = wx - 2; x < wx + 2; x++) {
-					for (int y = wy - 2; y < wy + 2; y++) {
-						MapTile t = _tiles.GetTileR(x, y);
-						if (t == null) continue;
-						t.Palette = _palettePerLevel[t.Z];
-						// redraw tile
-						_theater.GetTileCollection().DrawTile(t, _drawingSurface);
+					// Redraw the 4x4 cell around start pos with original palette;
+					// first the tiles, then the objects
+					for (int x = wx - 2; x < wx + 2; x++) {
+						for (int y = wy - 2; y < wy + 2; y++) {
+							MapTile t = _tiles.GetTileR(x, y);
+							if (t == null) continue;
+							t.Palette = _palettePerLevel[t.Z];
+							// redraw tile
+							_theater.GetTileCollection().DrawTile(t, _drawingSurface);
+						}
+					}
+					for (int x = wx - 5; x < wx + 5; x++) {
+						for (int y = wy - 5; y < wy + 5; y++) {
+							MapTile t = _tiles.GetTileR(x, y);
+							if (t == null) continue;
+							// redraw objects on here
+							List<GameObject> objs = GetObjectsAt(t.Dx, t.Dy / 2);
+							foreach (GameObject o in objs)
+								_theater.Draw(o, _drawingSurface);
+						}
 					}
 				}
-				for (int x = wx - 5; x < wx + 5; x++) {
-					for (int y = wy - 5; y < wy + 5; y++) {
-						MapTile t = _tiles.GetTileR(x, y);
-						if (t == null) continue;
-						// redraw objects on here
-						List<GameObject> objs = GetObjectsAt(t.Dx, t.Dy / 2);
-						foreach (GameObject o in objs)
-							_theater.Draw(o, _drawingSurface);
-					}
+				catch (IndexOutOfRangeException) {
+				}
+				catch (FormatException) {
 				}
 			}
 		}
@@ -975,32 +1002,38 @@ namespace CNCMaps.Map {
 			IniSection waypoints = GetSection("Waypoints");
 
 			foreach (var entry in waypoints.OrderedEntries) {
-				if (int.Parse(entry.Key) >= 8)
-					continue;
-				int pos = int.Parse(entry.Value);
-				int wy = pos / 1000;
-				int wx = pos - wy * 1000;
+				try {
+					if (int.Parse(entry.Key) >= 8)
+						continue;
+					int pos = int.Parse(entry.Value);
+					int wy = pos / 1000;
+					int wx = pos - wy * 1000;
 
-				MapTile t = _tiles.GetTileR(wx, wy);
-				if (t == null) continue;
-				int destX = t.Dx * TileWidth / 2;
-				int destY = (t.Dy - t.Z) * TileHeight / 2;
+					MapTile t = _tiles.GetTileR(wx, wy);
+					if (t == null) continue;
+					int destX = t.Dx * TileWidth / 2;
+					int destY = (t.Dy - t.Z) * TileHeight / 2;
 
-				bool vert = FullSize.Height * 2 > FullSize.Width;
-				int radius;
-				if (vert)
-					radius = 10 * FullSize.Height * TileHeight / 2 / 144;
-				else
-					radius = 10 * FullSize.Width * TileWidth / 2 / 133;
+					bool vert = FullSize.Height * 2 > FullSize.Width;
+					int radius;
+					if (vert)
+						radius = 10 * FullSize.Height * TileHeight / 2 / 144;
+					else
+						radius = 10 * FullSize.Width * TileWidth / 2 / 133;
 
-				int h = radius, w = radius;
-				for (int drawY = destY - h / 2; drawY < destY + h; drawY++) {
-					for (int drawX = destX - w / 2; drawX < destX + w; drawX++) {
-						byte* p = (byte*)_drawingSurface.BitmapData.Scan0 + drawY * _drawingSurface.BitmapData.Stride + 3 * drawX;
-						*p++ = 0x00;
-						*p++ = 0x00;
-						*p++ = 0xFF;
+					int h = radius, w = radius;
+					for (int drawY = destY - h / 2; drawY < destY + h; drawY++) {
+						for (int drawX = destX - w / 2; drawX < destX + w; drawX++) {
+							byte* p = (byte*) _drawingSurface.BitmapData.Scan0 + drawY * _drawingSurface.BitmapData.Stride + 3 * drawX;
+							*p++ = 0x00;
+							*p++ = 0x00;
+							*p++ = 0xFF;
+						}
 					}
+				}
+				catch (FormatException) {
+				}
+				catch (IndexOutOfRangeException) {
 				}
 			}
 		}

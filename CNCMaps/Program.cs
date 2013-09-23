@@ -176,7 +176,7 @@ namespace CNCMaps {
 				// init default config
 				var target = new ColoredConsoleTarget();
 				target.Name = "console";
-				target.Layout = "${processtime:format=ss.mmm} [${level}] ${message}";
+				target.Layout = "${processtime:format=s\\.ffff} [${level}] ${message}";
 				target.RowHighlightingRules.Add(new ConsoleRowHighlightingRule() {
 					ForegroundColor = ConsoleOutputColor.Magenta,
 					Condition = "level = LogLevel.Fatal"

@@ -99,7 +99,7 @@ namespace CNCMaps.Map {
 			};
 
 			for (int y = obj.TopTile.Dy - 2; y <= obj.BottomTile.Dy + 4; y++) {
-				for (int x = obj.TopTile.Dx - 4; x <= obj.TopTile.Dx + 4; x += 2) {
+				for (int x = obj.TopTile.Dx - 6; x <= obj.TopTile.Dx + 6; x += 2) {
 					if ((x + (y + obj.TopTile.Dy)) >= 0 && y >= 0)
 						examine(_map[x + (y + obj.TopTile.Dy) % 2, y / 2]);
 				}
@@ -160,6 +160,12 @@ namespace CNCMaps.Map {
 			if ((objA is MapTile) ^ (objB is MapTile) && sepAxis != Axis.Z)
 				return (objA is MapTile) ? objB : objA;
 
+			// flat stuff always loses
+			if (objA.Drawable.DrawFlat ^ objB.Drawable.DrawFlat) {
+				if (sepAxis != Axis.Z)
+					return (objA.Drawable.DrawFlat) ? objB : objA;
+			}
+
 			switch (sepAxis) {
 				case Axis.X:
 					if (hexA.xMin > hexB.xMax) return objA;
@@ -170,8 +176,8 @@ namespace CNCMaps.Map {
 					else if (hexB.yMin > hexA.yMax) return objB;
 					break;
 				case Axis.Z:
-					if (hexA.zMin > hexB.zMin) return objA;
-					else if (hexB.zMin > hexA.zMin) return objB;
+					if (hexA.zMin > hexB.zMax) return objA;
+					else if (hexB.zMin > hexA.zMax) return objB;
 					break;
 			}
 			
@@ -242,7 +248,7 @@ namespace CNCMaps.Map {
 					xMax = obj.BottomTile.Rx,
 					yMin = obj.TopTile.Ry,
 					yMax = obj.BottomTile.Ry,
-					zMin = obj.Tile.Z,
+					zMin = obj.Tile.Z + (oObj.OnBridge ? 4 : 0),
 					zMax = obj.Tile.Z + (oObj.OnBridge ? 4 : 0),
 				};
 			}
@@ -252,7 +258,7 @@ namespace CNCMaps.Map {
 					xMax = obj.BottomTile.Rx,
 					yMin = obj.TopTile.Ry,
 					yMax = obj.BottomTile.Ry,
-					zMin = obj.Tile.Z,
+					zMin = obj.Tile.Z + obj.Drawable.TileElevation,
 					zMax = obj.Tile.Z + obj.Drawable.TileElevation,
 				};
 		}
