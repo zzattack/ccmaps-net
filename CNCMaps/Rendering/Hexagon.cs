@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
-namespace CNCMaps.Rendering {
+﻿namespace CNCMaps.Rendering {
 	public enum Axis { X, Y, Z, None };
 
 	public class Hexagon {

@@ -1,7 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.IO;
-using System.Runtime.InteropServices;
-using CNCMaps.Utility;
 using CNCMaps.VirtualFileSystem;
 using OpenTK;
 

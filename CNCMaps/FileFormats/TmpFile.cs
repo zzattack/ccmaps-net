@@ -2,11 +2,9 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
-using System.Runtime.InteropServices;
 using CNCMaps.Game;
 using CNCMaps.Map;
 using CNCMaps.Rendering;
-using CNCMaps.Utility;
 using CNCMaps.VirtualFileSystem;
 
 namespace CNCMaps.FileFormats {
