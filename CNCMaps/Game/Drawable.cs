@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
-using System.Windows.Forms;
 using CNCMaps.FileFormats;
 using CNCMaps.Map;
 using CNCMaps.Rendering;
@@ -128,8 +127,8 @@ namespace CNCMaps.Game {
 			// rows inverted!
 			var w_low = (byte*)ds.BitmapData.Scan0;
 			byte* w_high = w_low + ds.BitmapData.Stride * ds.BitmapData.Height;
+			var zBuffer = ds.GetZBuffer();
 			int rowsTouched = 0;
-			var heightBuffer = ds.GetHeightBuffer();
 
 			short firstRowTouched = short.MaxValue;
 			for (int y = 0; y < vxl_ds.Height; y++) {
@@ -138,7 +137,6 @@ namespace CNCMaps.Game {
 				byte* dst_row = ((byte*)ds.BitmapData.Scan0 + (d.Y + y) * ds.BitmapData.Stride + d.X * 3);
 				int zIdx = (d.Y + y) * ds.Width + d.X;
 				if (dst_row < w_low || dst_row >= w_high) continue;
-				short hBufVal = (short)(10 + (obj.Tile.Z + obj.Drawable.TileElevation) * TileHeight / 2);
 
 				for (int x = 0; x < vxl_ds.Width; x++) {
 					// only non-transparent pixels
@@ -149,7 +147,10 @@ namespace CNCMaps.Game {
 
 						if (y < firstRowTouched)
 							firstRowTouched = (short)y;
-						heightBuffer[zIdx] = hBufVal;
+
+						short zBufVal = (short)((obj.Tile.Rx + obj.Tile.Ry + obj.Tile.Z) * TileHeight / 2 + props.ZBufferAdjust);
+						if (zBufVal >= zBuffer[zIdx])
+							zBuffer[zIdx] = zBufVal;
 					}
 					zIdx++;
 				}
@@ -196,18 +197,24 @@ namespace CNCMaps.Game {
 			Rectangle bounds = Rectangle.Empty;
 
 			if (IsVoxel) {
-				var vxlBounds = new Rectangle(-TileWidth / 2, -TileHeight / 2, TileWidth, TileHeight);
-				if (bounds == Rectangle.Empty) bounds = vxlBounds;
-				else bounds = Rectangle.Union(bounds, vxlBounds);
+				for (int i = 0; i < _voxels.Count; i++) {
+					var vxl = _voxels[i];
+					var hva = _hvas[i];
+					var vxlbounds = vxl.File.GetBounds(obj, vxl.File, hva, vxl.Props);
+					bounds = Rectangle.Union(bounds, vxlbounds);
+				}
+
 			}
 			else {
 				foreach (var shp in _shps.Where(shp => shp.File != null)) {
 					if (bounds == Rectangle.Empty) bounds = shp.File.GetBounds(obj, shp.Props);
 					else bounds = Rectangle.Union(bounds, shp.File.GetBounds(obj, shp.Props));
 				}
+				bounds.Offset(TileWidth / 2, 0); // this is really gay
 			}
-			bounds.Offset(obj.Tile.Dx * TileWidth / 2 + TileWidth / 2, (obj.Tile.Dy - obj.Tile.Z) * TileHeight / 2);
+			bounds.Offset(obj.Tile.Dx * TileWidth / 2, (obj.Tile.Dy - obj.Tile.Z) * TileHeight / 2);
 			bounds.Offset(_globalOffset);
+
 			if (obj is OwnableObject && (obj as OwnableObject).OnBridge)
 				bounds.Offset(0, -4 * TileHeight / 2);
 			return bounds;

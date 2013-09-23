@@ -1,7 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Drawing;
 using System.IO;
+using CNCMaps.Game;
+using CNCMaps.Map;
 using CNCMaps.Rendering;
 using CNCMaps.VirtualFileSystem;
 using OpenTK;
@@ -162,21 +165,27 @@ namespace CNCMaps.FileFormats {
 			public float SpanX {
 				get { return MaxBounds.X - MinBounds.X; }
 			}
+
 			public float SpanY {
 				get { return MaxBounds.Y - MinBounds.Y; }
 			}
+
 			public float SpanZ {
 				get { return MaxBounds.Z - MinBounds.Z; }
 			}
+
 			public float ScaleX {
 				get { return SpanX * 1.0f / SizeX; }
 			}
+
 			public float ScaleY {
 				get { return SpanY * 1.0f / SizeY; }
 			}
+
 			public float ScaleZ {
 				get { return SpanZ * 1.0f / SizeZ; }
 			}
+
 			public Vector3 Scale {
 				get { return new Vector3(ScaleX, ScaleY, ScaleZ); }
 			}
@@ -261,9 +270,73 @@ namespace CNCMaps.FileFormats {
 				var normals = GetNormals();
 				return normals[p < normals.Length ? p : normals.Length - 1];
 			}
+
+
 		};
 
+		internal Rectangle GetBounds(GameObject obj, VxlFile vxl, HvaFile hva, DrawProperties props) {
+			Initialize();
 
+			float direction = (obj is OwnableObject) ? (obj as OwnableObject).Direction : 0;
+			float objectRotation = 45f - direction / 256f * 360f; // convert game rotation to world degrees
+
+			var world = Matrix4.CreateRotationZ(MathHelper.DegreesToRadians(objectRotation)); // object facing
+			world *= Matrix4.CreateRotationX(MathHelper.DegreesToRadians(60)); // this is how the game places voxels flat on the world
+			
+			Rectangle ret = Rectangle.Empty;
+			foreach (var section in vxl.Sections) {
+				var frameRot = hva.LoadGLMatrix(section.Index);
+				frameRot.M41 *= section.HVAMultiplier * section.ScaleX;
+				frameRot.M42 *= section.HVAMultiplier * section.ScaleY;
+				frameRot.M43 *= section.HVAMultiplier * section.ScaleZ;
+				var frameTransl = Matrix4.CreateTranslation(section.MinBounds);
+				var frame = frameTransl * frameRot * world;
+
+				// floor rect of the bounding box
+				Vector3 floorTopLeft = new Vector3(0, 0, 0);
+				Vector3 floorTopRight = new Vector3(section.SpanX, 0, 0);
+				Vector3 floorBottomRight = new Vector3(section.SpanX, section.SpanY, 0);
+				Vector3 floorBottomLeft = new Vector3(0, section.SpanY, 0);
+
+				// ceil rect of the bounding box
+				Vector3 ceilTopLeft = new Vector3(0, 0, section.SpanZ);
+				Vector3 ceilTopRight = new Vector3(section.SpanX, 0, section.SpanZ);
+				Vector3 ceilBottomRight = new Vector3(section.SpanX, section.SpanY, section.SpanZ);
+				Vector3 ceilBottomLeft = new Vector3(0, section.SpanY, section.SpanZ);
+
+				// apply transformations
+				floorTopLeft = Vector3.Transform(floorTopLeft, frame);
+				floorTopRight = Vector3.Transform(floorTopRight, frame);
+				floorBottomRight = Vector3.Transform(floorBottomRight, frame);
+				floorBottomLeft = Vector3.Transform(floorBottomLeft, frame);
+
+				ceilTopLeft = Vector3.Transform(ceilTopLeft, frame);
+				ceilTopRight = Vector3.Transform(ceilTopRight, frame);
+				ceilBottomRight = Vector3.Transform(ceilBottomRight, frame);
+				ceilBottomLeft = Vector3.Transform(ceilBottomLeft, frame);
+
+				int FminX = (int)Math.Floor(Math.Min(Math.Min(Math.Min(floorTopLeft.X, floorTopRight.X), floorBottomRight.X), floorBottomLeft.X));
+				int FmaxX = (int)Math.Ceiling(Math.Max(Math.Max(Math.Max(floorTopLeft.X, floorTopRight.X), floorBottomRight.X), floorBottomLeft.X));
+				int FminY = (int)Math.Floor(Math.Min(Math.Min(Math.Min(floorTopLeft.Y, floorTopRight.Y), floorBottomRight.Y), floorBottomLeft.Y));
+				int FmaxY = (int)Math.Ceiling(Math.Max(Math.Max(Math.Max(floorTopLeft.Y, floorTopRight.Y), floorBottomRight.Y), floorBottomLeft.Y));
+
+				int TminX = (int)Math.Floor(Math.Min(Math.Min(Math.Min(ceilTopLeft.X, ceilTopRight.X), ceilBottomRight.X), ceilBottomLeft.X));
+				int TmaxX = (int)Math.Ceiling(Math.Max(Math.Max(Math.Max(ceilTopLeft.X, ceilTopRight.X), ceilBottomRight.X), ceilBottomLeft.X));
+				int TminY = (int)Math.Floor(Math.Min(Math.Min(Math.Min(ceilTopLeft.Y, ceilTopRight.Y), ceilBottomRight.Y), ceilBottomLeft.Y));
+				int TmaxY = (int)Math.Ceiling(Math.Max(Math.Max(Math.Max(ceilTopLeft.Y, ceilTopRight.Y), ceilBottomRight.Y), ceilBottomLeft.Y));
+
+				int minX = Math.Min(FminX, TminX);
+				int maxX = Math.Max(FmaxX, TmaxX);
+				int minY = Math.Min(FminY, TminY);
+				int maxY = Math.Max(FmaxY, TmaxY);
+
+				ret = Rectangle.Union(ret, Rectangle.FromLTRB(minX, minY, maxX, maxY));
+			}
+
+			ret.Offset(props.GetOffset(obj));
+			// return new Rectangle(-ret.Width / 2, -ret.Height / 2, ret.Width, ret.Height);
+			return ret;
+		}
 
 		#region Normal Tables
 
@@ -641,7 +714,6 @@ namespace CNCMaps.FileFormats {
         };
 
 		#endregion
-
 
 	}
 }
