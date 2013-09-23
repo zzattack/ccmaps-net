@@ -125,7 +125,7 @@ namespace CNCMaps.Game {
 
 			_palettes.AnimPalette = new Palette(VFS.Open<PalFile>("anim.pal"));
 
-			_tileTypes = new TileCollection(_theaterType, _art);
+			_tileTypes = new TileCollection(_theaterType);
 
 			_buildingTypes = new ObjectCollection(_rules.GetSection("BuildingTypes"),
 				CollectionType.Building, _theaterType, _engine, _rules, _art, _palettes);
@@ -150,6 +150,8 @@ namespace CNCMaps.Game {
 
 			_animations = new ObjectCollection(_rules.GetSection("Animations"),
 				CollectionType.Animation, _theaterType, _engine, _rules, _art, _palettes);
+
+			_tileTypes.InitAnimations(_animations);
 		}
 
 		public static TheaterType TheaterTypeFromString(string theater, EngineType engineType) {

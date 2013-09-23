@@ -10,11 +10,11 @@
 			if (RangesDisjoint(a.zMin, a.zMax, b.zMin, b.zMax)) {
 				return Axis.Z;
 			}
-			if (RangesDisjoint(a.xMin, a.xMax, b.xMin, b.xMax)) {
-				return Axis.X;
-			}
 			if (RangesDisjoint(a.yMin, a.yMax, b.yMin, b.yMax)) {
 				return Axis.Y;
+			}
+			if (RangesDisjoint(a.xMin, a.xMax, b.xMin, b.xMax)) {
+				return Axis.X;
 			}
 			return Axis.None;
 		}

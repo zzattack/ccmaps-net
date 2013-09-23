@@ -294,7 +294,7 @@ namespace CNCMaps.Game {
 				case CollectionType.Terrain:
 					return FrameDeciders.NullFrameDecider;
 				case CollectionType.Animation:
-					return FrameDeciders.RandomFrameDecider;
+					return FrameDeciders.NullFrameDecider;
 				default:
 					throw new ArgumentOutOfRangeException("collection");
 			}

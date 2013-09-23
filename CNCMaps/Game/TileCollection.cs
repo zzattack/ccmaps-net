@@ -39,6 +39,7 @@ namespace CNCMaps.Game {
 			static readonly Random RandomTileChooser = new Random();
 			public readonly List<TmpFile> TmpFiles = new List<TmpFile>();
 			public Drawable AnimationDrawable;
+			public Point AnimationOffset;
 			public int AnimationSubtile = -1;
 			internal TileSet MemberOfSet { get; private set; }
 			public TileSetEntry(TileSet owner) {
@@ -49,9 +50,10 @@ namespace CNCMaps.Game {
 				TmpFiles.Add(tmpFile);
 			}
 
-			public void AddAnimation(int subtile, Drawable drawable) {
+			public void AddAnimation(int subtile, Drawable drawable, Point offset) {
 				AnimationSubtile = subtile;
 				AnimationDrawable = drawable;
+				AnimationOffset = offset;
 			}
 
 			public TmpFile GetTmpFile(int subTile, bool damaged = false) {
@@ -92,9 +94,12 @@ namespace CNCMaps.Game {
 		short WaterfallWest; short WoodBridgeSet;
 		// ReSharper restore InconsistentNaming
 
-		public TileCollection(TheaterType theaterType, IniFile art) {
+		private readonly int _animsSectionsStartIdx = -1;
+		private readonly string _tileExtension;
+
+		public TileCollection(TheaterType theaterType) {
 			_theaterType = theaterType;
-			string tileExtension = Defaults.GetTileExtension(theaterType);
+			_tileExtension = Defaults.GetTileExtension(theaterType);
 			theaterIni = VFS.Open(Defaults.GetTheaterIni(theaterType)) as IniFile;
 			#region Set numbers
 
@@ -167,21 +172,18 @@ namespace CNCMaps.Game {
 
 			#endregion
 
-			var lastSection = InitTilesets(tileExtension);
-
-			if (art != null)
-				InitAnimations(art, lastSection, tileExtension);
+			_animsSectionsStartIdx = InitTilesets() + 1;
 		}
 
 		// used by auto-detection, just needs the tilesets formatted
 		internal TileCollection(IniFile theater) {
 			theaterIni = theater;
-			InitTilesets("");
+			InitTilesets();
 		}
 
-		private void InitAnimations(IniFile art, IniFile.IniSection lastSection, string tileExtension) {
+		public void InitAnimations(ObjectCollection animations) {
 			// the remaining sections contain animations to be attached to certain tiles
-			for (int j = lastSection.Index + 1; j < theaterIni.Sections.Count; j++) {
+			for (int j = _animsSectionsStartIdx; j < theaterIni.Sections.Count; j++) {
 				var extraSection = theaterIni.Sections[j];
 				var tileSet = _tileSets.Find(ts => ts.SetName == extraSection.Name);
 				if (tileSet == null) continue;
@@ -189,51 +191,28 @@ namespace CNCMaps.Game {
 				for (int a = 1; a <= tileSet.TilesInSet; a++) {
 					string n = string.Format("Tile{0:00}", a);
 					string anim = extraSection.ReadString(n + "Anim");
-					if (string.IsNullOrEmpty(anim))
-						continue;
-					var artSection = art.GetSection(anim);
-					if (artSection == null)
-						continue;
 
-					var drawable = new Drawable(anim);
+					var drawable = animations.GetDrawable(anim);
+					if (string.IsNullOrEmpty(anim) || drawable == null)
+						continue;
 
 					// in pixels
-					int rxOffset = extraSection.ReadInt(n + "XOffset");
-					int ryOffset = Drawable.TileHeight / 2 + extraSection.ReadInt(n + "YOffset");
-
-					var props = new DrawProperties {
-						Offset = new Point(rxOffset, ryOffset),
-						FrameDecider = FrameDeciders.LoopFrameDecider(artSection.ReadInt("LoopStart"), artSection.ReadInt("LoopEnd", 1)),
-						// todo: figure out if this needs to be added to y offset ZBufferAdjust = -extraSection.ReadInt(n + "ZAdjust"),
-					};
-
-					string filename = anim;
-					if (artSection.ReadBool("Theater"))
-						filename += tileExtension;
-					else
-						filename += ".shp";
-
-					drawable.PaletteType = PaletteType.Iso;
-					drawable.LightingType = LightingType.Full;
-					drawable.AddShp(VFS.Open<ShpFile>(filename), props);
-
 					int attachTo = extraSection.ReadInt(n + "AttachesTo");
-					tileSet.Entries[a - 1].AddAnimation(attachTo, drawable);
+					var offset = new Point(extraSection.ReadInt(n + "XOffset"), extraSection.ReadInt(n + "YOffset"));
+					tileSet.Entries[a - 1].AddAnimation(attachTo, drawable, offset);
 				}
 			}
 		}
 
-		private IniFile.IniSection InitTilesets(string tileExtension) {
-			int i = 0;
-
-			IniFile.IniSection lastSection = null;
+		private int InitTilesets() {
+			int sectionIdx = 0;
 			int setNum = 0;
 			while (true) {
-				string sectionName = "TileSet" + i++.ToString("0000");
+				string sectionName = "TileSet" + sectionIdx.ToString("0000");
 				var sect = theaterIni.GetSection(sectionName);
 				if (sect == null)
 					break;
-				lastSection = sect;
+				sectionIdx++;
 
 				logger.Trace("Loading tileset {0}", sectionName);
 				var ts = new TileSet(sect.ReadString("FileName"), sect.ReadString("SetName"), sect.ReadInt("TilesInSet"));
@@ -251,7 +230,7 @@ namespace CNCMaps.Game {
 						// filename = set filename + dd + .tmp/.urb/.des etc
 						string filename = ts.FileName + j.ToString("00");
 						if (r >= 'a') filename += r;
-						filename += tileExtension;
+						filename += _tileExtension;
 						var tmpFile = VFS.Open<TmpFile>(filename);
 						if (tmpFile != null) rs.AddTile(tmpFile);
 						else break;
@@ -261,7 +240,7 @@ namespace CNCMaps.Game {
 				}
 				setNum++;
 			}
-			return lastSection;
+			return sectionIdx;
 		}
 
 		public bool ConnectTiles(int setNum1, int setNum2) {
@@ -404,8 +383,11 @@ namespace CNCMaps.Game {
 			if (tmpFile != null)
 				tmpFile.Draw(t, ds);
 
-			if (t.SubTile == tile.AnimationSubtile && tile.AnimationDrawable != null)
+			if (t.SubTile == tile.AnimationSubtile && tile.AnimationDrawable != null) {
+				tile.AnimationDrawable.AddOffset(tile.AnimationOffset.X, tile.AnimationOffset.Y);
 				tile.AnimationDrawable.Draw(t, ds);
+				tile.AnimationDrawable.AddOffset(-tile.AnimationOffset.X, -tile.AnimationOffset.Y);
+			}
 		}
 
 		internal TileSetEntry GetTileSetEntry(MapTile t) {
