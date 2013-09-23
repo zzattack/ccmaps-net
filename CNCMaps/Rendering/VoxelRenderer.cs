@@ -120,6 +120,7 @@ namespace CNCMaps.Rendering {
 			GL.MatrixMode(MatrixMode.Modelview);
 
 #if DEBUG
+			/*
 			GL.PushMatrix();
 			GL.LineWidth(4);
 			GL.Color3(Color.Red);
@@ -137,20 +138,20 @@ namespace CNCMaps.Rendering {
 			GL.Vertex3(0, 0, -100);
 			GL.Vertex3(0, 0, 100);
 			GL.End();
-			GL.PopMatrix();
+			GL.PopMatrix();*/
 #endif
 
 			var lookat = Matrix4.LookAt(0, 0, -10, 0, 0, 0, 0, 1, 0);
 			GL.LoadMatrix(ref lookat);
-			GL.Scale(0.0142, 0.0142, 0.0142); // seems to work well enough for all voxels
-
+			
 			GL.Translate(0, 0, 10);
-
 			float direction = (obj is OwnableObject) ? (obj as OwnableObject).Direction : 0;
 			float objectRotation = 45f - direction / 256f * 360f; // convert game rotation to world degrees
-			var world = Matrix4.CreateRotationZ(MathHelper.DegreesToRadians(objectRotation)); // object facing
-			world *= Matrix4.CreateRotationY(MathHelper.DegreesToRadians(180)); // this is how the game places voxels flat on the world
-			world *= Matrix4.CreateRotationX(MathHelper.DegreesToRadians(60));
+
+			var world = Matrix4.CreateRotationX(MathHelper.DegreesToRadians(60));
+			world = Matrix4.CreateRotationY(MathHelper.DegreesToRadians(180)) * world; // this is how the game places voxels flat on the world
+			world = Matrix4.CreateRotationZ(MathHelper.DegreesToRadians(objectRotation)) * world; // object facing
+			world = Matrix4.Scale(0.028f, 0.028f, 0.028f) * world;
 
 			// art.ini TurretOffset value positions some voxel parts over our x-axis
 			world = Matrix4.CreateTranslation(0.18f * props.TurretVoxelOffset, 0, 0) * world;
@@ -186,21 +187,20 @@ namespace CNCMaps.Rendering {
 				frameRot.M42 *= section.HVAMultiplier * section.ScaleY;
 				frameRot.M43 *= section.HVAMultiplier * section.ScaleZ;
 
-				var frameScale = Matrix4.Scale(section.HVAMultiplier); // seems I don't need this?
-				var frameTransl = Matrix4.Identity; //Matrix4.CreateTranslation(section.MinBounds);
-				var frame = frameRot * frameTransl;
+				var frameTransl = Matrix4.CreateTranslation(section.MinBounds);
+				var frame = frameTransl * frameRot;
 				GL.MultMatrix(ref frame);
 
 				// undo world transformations on light direction
 				var lightDirection = ExtractRotationVector(ToOpenGL(Matrix4.Invert(world * frame * shadowTransform)));
 					
-				/* draw line in direction light comes from
-				GL.LineWidth(2);
+				 // draw line in direction light comes from
+				/*GL.Color3(Color.Red);
+				GL.LineWidth(4f);
 				GL.Begin(BeginMode.Lines);
 				GL.Vertex3(0, 0, 0);
 				GL.Vertex3(Vector3.Multiply(lightDirection, 100f));
-				GL.End();
-				*/
+				GL.End();*/
 
 				GL.Begin(BeginMode.Quads);
 				for (uint x = 0; x != section.SizeX; x++) {
