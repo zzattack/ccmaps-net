@@ -54,9 +54,16 @@ namespace CNCMaps.Game {
 				AnimationDrawable = drawable;
 			}
 
-			public TmpFile GetTmpFile() {
+			public TmpFile GetTmpFile(int subTile, bool damaged = false) {
 				if (TmpFiles.Count == 0) return null;
-				return TmpFiles[RandomTileChooser.Next(TmpFiles.Count)];
+				var randomChosen = TmpFiles[RandomTileChooser.Next(TmpFiles.Count)];
+				// if this is not a randomizing tileset, but instead one with damaged data,
+				// then return the "undamaged" version
+				randomChosen.Initialize();
+				if (randomChosen.Images[Math.Min(subTile, randomChosen.Images.Count - 1)].HasDamagedData)
+					return TmpFiles[Math.Min(damaged ? 1 : 0, TmpFiles.Count - 1)];
+				else
+					return randomChosen;
 			}
 		}
 
@@ -393,7 +400,7 @@ namespace CNCMaps.Game {
 			else if (t.TileNum < 0 || t.TileNum >= _tiles.Count) t.TileNum = 0;
 			var tile = _tiles[t.TileNum];
 
-			var tmpFile = _tiles[t.TileNum].GetTmpFile();
+			var tmpFile = _tiles[t.TileNum].GetTmpFile(t.SubTile);
 			if (tmpFile != null)
 				tmpFile.Draw(t, ds);
 
@@ -409,7 +416,7 @@ namespace CNCMaps.Game {
 		internal TmpFile GetTileFile(MapTile t) {
 			if (t == null) return null;
 			else if (t.TileNum < 0 || t.TileNum >= _tiles.Count) t.TileNum = 0;
-			return _tiles[t.TileNum].GetTmpFile();
+			return _tiles[t.TileNum].GetTmpFile(t.SubTile);
 		}
 
 		public int NumTiles {
