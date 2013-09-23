@@ -205,7 +205,7 @@ namespace CNCMaps.Map {
 			this.Name = name;
 			this.Drawable = drawable;
 		}
-		public override MapTile BottomTile { get; set; }
-		public override MapTile TopTile { get; set; }
+		//public override MapTile BottomTile { get; set; }
+		//public override MapTile TopTile { get; set; }
 	}
 }

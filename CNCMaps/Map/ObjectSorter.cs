@@ -25,15 +25,17 @@ namespace CNCMaps.Map {
 
 			Action<MapTile> processTile = tile => {
 				if (tile == null) return;
-				foreach (var obj in tile.AllObjects) {
+
+				foreach (var obj in new[] { tile }.Union(tile.AllObjects)) {
 					// every object depends on its bottom-most host tile at least
-					AddDependency(obj, obj.TopTile, "top tile");
+					AddDependency(obj, obj.BottomTile, "top tile");
 					ExamineNeighbourhood(obj);
 				}
 
 				// if this tile has no dependencies, then mark it and remove it
 				// as dependency from all other objects
-				if (!_graph.ContainsKey(tile) || _graph[tile].Count == 0) {
+				_graph[tile].Remove(tile);
+				if (_graph[tile].Count == 0) {
 					var satisfied = MarkDependencies(tile);
 					ret.AddRange(satisfied);
 				}
@@ -80,7 +82,7 @@ namespace CNCMaps.Map {
 				// Debug.WriteLine("neighhourhood tile " + tile2 + " of obj " + obj + " at " + obj.Tile);
 
 				// Debug.WriteLine("..EXAMINING " + obj);
-				foreach (var obj2 in tile2.AllObjects) {
+				foreach (var obj2 in new[] { tile2 }.Union(tile2.AllObjects)) {
 					if (obj2 == obj) continue;
 
 					var front = GetFrontBlock(obj, obj2);
@@ -98,7 +100,7 @@ namespace CNCMaps.Map {
 
 			for (int y = obj.TopTile.Dy - 2; y <= obj.BottomTile.Dy + 4; y++) {
 				for (int x = obj.TopTile.Dx - 4; x <= obj.TopTile.Dx + 4; x += 2) {
-					if (x >= 0 && y >= 0)
+					if ((x + (y + obj.TopTile.Dy)) >= 0 && y >= 0)
 						examine(_map[x + (y + obj.TopTile.Dy) % 2, y / 2]);
 				}
 			}
@@ -110,7 +112,7 @@ namespace CNCMaps.Map {
 			if (!_graph.TryGetValue(obj, out list))
 				_graph[obj] = list = new HashSet<GameObject> { obj.BottomTile, obj.TopTile };
 			bool added = list.Add(dependency);
-			if (added) Debug.WriteLine("dependency (" + obj + "@" + obj.Tile + "," + dependency + "@" + dependency.Tile + ") added because " + reason);
+			if (added) Debug.WriteLine("dependency (" + obj + "@" + obj.Tile + " --> " + dependency + "@" + dependency.Tile + ") added because " + reason);
 		}
 
 		private IEnumerable<GameObject> MarkDependencies(GameObject nowSatisfied) {
@@ -142,13 +144,22 @@ namespace CNCMaps.Map {
 			// will lead to cyclic dependencies in the drawing order graph, 
 			// resulting in neither object every being drawn.
 
+			// tiles never overlap
+			if ((objA is MapTile || objA is AnimationObject) && (objB is MapTile || objB is AnimationObject)) return null;
+
 			var boxA = GetBoundingBox(objA);
 			var boxB = GetBoundingBox(objB);
 			if (!boxA.IntersectsWith(boxB)) return null;
 
 			var hexA = GetIsoBoundingBox(objA);
 			var hexB = GetIsoBoundingBox(objB);
+
 			var sepAxis = Hexagon.GetSeparationAxis(hexA, hexB);
+
+			// tiles can only be in front based on z-axis separation
+			if ((objA is MapTile) ^ (objB is MapTile) && sepAxis != Axis.Z)
+				return (objA is MapTile) ? objB : objA;
+
 			switch (sepAxis) {
 				case Axis.X:
 					if (hexA.xMin > hexB.xMax) return objA;
@@ -163,7 +174,7 @@ namespace CNCMaps.Map {
 					else if (hexB.zMin > hexA.zMin) return objB;
 					break;
 			}
-
+			
 			// units on bridges can only be drawn after the bridge
 			if (objA is OverlayObject && SpecialOverlays.IsHighBridge(objA as OverlayObject)
 				&& objB is OwnableObject && (objB as OwnableObject).OnBridge) return objB;
@@ -184,10 +195,10 @@ namespace CNCMaps.Map {
 				{ typeof(OverlayObject), 2 },
 				{ typeof(TerrainObject), 3 },
 				{ typeof(StructureObject), 3 },
-				{ typeof(AnimationObject), 4 },
-				{ typeof(UnitObject), 5 },
-				{ typeof(InfantryObject), 5 },
-				{ typeof(AircraftObject), 6 },
+				{ typeof(AnimationObject), 3 },
+				{ typeof(UnitObject), 3 },
+				{ typeof(InfantryObject), 3 },
+				{ typeof(AircraftObject), 4 },
 			};
 			int prioA = priorities[objA.GetType()];
 			int prioB = priorities[objB.GetType()];
