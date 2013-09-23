@@ -280,18 +280,25 @@ namespace CNCMaps.FileFormats {
 			float direction = (obj is OwnableObject) ? (obj as OwnableObject).Direction : 0;
 			float objectRotation = 45f - direction / 256f * 360f; // convert game rotation to world degrees
 
-			var world = Matrix4.CreateRotationZ(MathHelper.DegreesToRadians(objectRotation)); // object facing
-			world *= Matrix4.CreateRotationX(MathHelper.DegreesToRadians(60)); // this is how the game places voxels flat on the world
-			
+			var world = Matrix4.CreateRotationX(MathHelper.DegreesToRadians(60));
+			world = Matrix4.CreateRotationZ(MathHelper.DegreesToRadians(objectRotation)) * world; // object facing
+			world = Matrix4.Scale(0.25f, 0.25f, 0.25f) * world;
+
+			// art.ini TurretOffset value positions some voxel parts over our x-axis
+			world = Matrix4.CreateTranslation(0.18f * props.TurretVoxelOffset, 0, 0) * world;
+			var camera = Matrix4.CreatePerspectiveFieldOfView(MathHelper.DegreesToRadians(30), 1f, 1, 100);
+			world = world * camera;	
+
 			Rectangle ret = Rectangle.Empty;
 			foreach (var section in vxl.Sections) {
 				var frameRot = hva.LoadGLMatrix(section.Index);
 				frameRot.M41 *= section.HVAMultiplier * section.ScaleX;
 				frameRot.M42 *= section.HVAMultiplier * section.ScaleY;
 				frameRot.M43 *= section.HVAMultiplier * section.ScaleZ;
+
 				var frameTransl = Matrix4.CreateTranslation(section.MinBounds);
 				var frame = frameTransl * frameRot * world;
-
+				
 				// floor rect of the bounding box
 				Vector3 floorTopLeft = new Vector3(0, 0, 0);
 				Vector3 floorTopRight = new Vector3(section.SpanX, 0, 0);
