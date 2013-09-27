@@ -67,7 +67,9 @@
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.XML" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <None Include="app.config" />
+  </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include="Microsoft.Net.Client.3.5">
       <Visible>False</Visible>
@@ -92,6 +94,7 @@
     <Compile Include="..\CNCMaps\Utility\Option.cs">
       <Link>Option.cs</Link>
     </Compile>
+    <Compile Include="Annotations.cs" />
     <Compile Include="DynamicTypeDescription\CustomComponentModel.cs" />
     <Compile Include="DynamicTypeDescription\DynamicTypeDescriptor.cs" />
     <Compile Include="DynamicTypeDescription\StandardValueEditorUI.cs">
@@ -135,7 +138,7 @@
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <ProjectExtensions>
     <VisualStudio>
-      <UserProperties BuildVersion_UpdateFileVersion="True" BuildVersion_UpdateAssemblyVersion="True" BuildVersion_UseGlobalSettings="True" BuildVersion_AssemblyInfoFilename="CNCMaps\Properties\AssemblyInfoGlobal.cs" />
+      <UserProperties BuildVersion_AssemblyInfoFilename="CNCMaps\Properties\AssemblyInfoGlobal.cs" BuildVersion_UseGlobalSettings="True" BuildVersion_UpdateAssemblyVersion="True" BuildVersion_UpdateFileVersion="True" />
     </VisualStudio>
   </ProjectExtensions>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

@@ -1,14 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.ComponentModel.Design;
 using System.Drawing.Design;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
 using System.Xml.Serialization;
 using CNCMaps.GUI;
+using CNCMaps.GUI.Annotations;
 using DynamicTypeDescriptor;
 
 namespace CNCMaps.Utility {
@@ -42,7 +43,8 @@ namespace CNCMaps.Utility {
 	}
 
 	[Serializable]
-	public class ModConfig {
+	public class ModConfig : INotifyPropertyChanged {
+
 		[NonSerialized]
 		private DynamicCustomTypeDescriptor _dctd = null;
 
@@ -71,7 +73,8 @@ namespace CNCMaps.Utility {
 
 		public static ModConfig Deserialize(Stream s) {
 			var xs = new XmlSerializer(typeof(ModConfig));
-			return (ModConfig)xs.Deserialize(s);
+			var ret = (ModConfig)xs.Deserialize(s);
+			return ret;
 		}
 
 		public void Serialize(Stream s) {
@@ -79,14 +82,12 @@ namespace CNCMaps.Utility {
 			xs.Serialize(s, this);
 		}
 
-
 		[Id(1, 1)]
 		[Description("An identifying name for this configuration file")]
 		public string Name { get; set; }
 
 		[Id(2, 1)]
 		[Description("Specify the engine type used for your mod.")]
-		[Editor(typeof(StandardValueEditor), typeof(UITypeEditor))]
 		public EngineType Engine { get; set; }
 
 		[Id(3, 1)]
@@ -105,12 +106,19 @@ namespace CNCMaps.Utility {
 
 		[Id(5, 1)]
 		[Description("The theater specific settings for each available theater")]
-		[PropertyStateFlags((PropertyFlags.Default | PropertyFlags.ExpandIEnumerable) & ~PropertyFlags.SupportStandardValues)]
-		public List<TheaterSettings> Theaters { get; set; }
+		[PropertyStateFlags(PropertyFlags.ExpandIEnumerable)]
+		public BindingList<TheaterSettings> Theaters {
+			get { return _theaters; }
+			set {
+				_theaters = value;
+				_theaters.ListChanged += (sender, args) => OnPropertyChanged("Theaters");
+			}
+		}
+		private BindingList<TheaterSettings> _theaters;
 
 		public ModConfig() {
 			Name = "Custom mod config";
-			Theaters = new List<TheaterSettings>();
+			Theaters = new BindingList<TheaterSettings>();
 			Directories = new List<string> { MainForm.FindMixDir(true) };
 			ExtraMixes = new List<string>();
 			Engine = EngineType.YurisRevenge;
@@ -121,26 +129,25 @@ namespace CNCMaps.Utility {
 			_dctd = ProviderInstaller.Install(this);
 			_dctd.PropertySortOrder = CustomSortOrder.AscendingById;
 		}
-
+		
 		public ModConfig Clone() {
-			using (var ms = new MemoryStream()) {
-				var formatter = new BinaryFormatter();
-				formatter.Serialize(ms, this);
-				ms.Position = 0;
-				var ret = (ModConfig)formatter.Deserialize(ms);
-				ret.InstallTypeDescriptor();
-				foreach (var t in ret.Theaters)
-					t.InstallTypeDescriptor();
-				return ret;
-			}
+			var ret = (ModConfig)this.MemberwiseClone();
+			ret.ExtraMixes = new List<string>();
+			ret.Directories = new List<string>();
+			ret.Theaters = new BindingList<TheaterSettings>();
+			foreach (var t in Theaters)
+				ret.Theaters.Add(t.Clone());
+			ret.InstallTypeDescriptor();
+			return ret;
 		}
+
 
 		#region Defaults per game
 
 		internal static readonly ModConfig DefaultsTS = new ModConfig {
 			Name = "TS Defaults",
 			ExtraMixes = new List<string>(),
-			Theaters = new List<TheaterSettings> {
+			Theaters = new BindingList<TheaterSettings> {
 				new TheaterSettings {
 					Type = TheaterType.Temperate,
 					TheaterIni = "temperat.ini",
@@ -177,7 +184,7 @@ namespace CNCMaps.Utility {
 		internal static readonly ModConfig DefaultsRA2 = new ModConfig {
 			Name = "RA2 Defaults",
 			ExtraMixes = new List<string>(),
-			Theaters = new List<TheaterSettings> {
+			Theaters = new BindingList<TheaterSettings> {
 				new TheaterSettings {
 					Type = TheaterType.Temperate,
 					TheaterIni = "temperat.ini",
@@ -227,7 +234,7 @@ namespace CNCMaps.Utility {
 		internal static readonly ModConfig DefaultsYR = new ModConfig {
 			Name = "YR Defaults",
 			ExtraMixes = new List<string>(),
-			Theaters = new List<TheaterSettings> {
+			Theaters = new BindingList<TheaterSettings> {
 				new TheaterSettings {
 					Type = TheaterType.Temperate,
 					TheaterIni = "temperatmd.ini",
@@ -327,6 +334,13 @@ namespace CNCMaps.Utility {
 		internal TheaterSettings GetTheater(TheaterType th) {
 			return Theaters.First(t => t.Type == th);
 		}
+
+		public event PropertyChangedEventHandler PropertyChanged;
+		[NotifyPropertyChangedInvocator]
+		protected virtual void OnPropertyChanged(string propertyName) {
+			PropertyChangedEventHandler handler = PropertyChanged;
+			if (handler != null) handler(this, new PropertyChangedEventArgs(propertyName));
+		}
 	}
 
 	[Serializable]
@@ -337,6 +351,7 @@ namespace CNCMaps.Utility {
 
 		public TheaterSettings() {
 			Mixes = new List<string>();
+			InstallTypeDescriptor();
 		}
 
 		internal void InstallTypeDescriptor() {
@@ -349,7 +364,6 @@ namespace CNCMaps.Utility {
 
 		[Id(2, 1)]
 		[Description("Mix files that should be loaded specific to this theater.")]
-		[PropertyStateFlags((PropertyFlags.Default | PropertyFlags.ExpandIEnumerable) & ~PropertyFlags.SupportStandardValues)]
 		[Editor(@"System.Windows.Forms.Design.StringCollectionEditor, System.Design, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a", typeof(UITypeEditor))]
 		[TypeConverter(typeof(CsvConverter))]
 		public List<string> Mixes { get; set; }
@@ -376,6 +390,11 @@ namespace CNCMaps.Utility {
 			return Type.ToString();
 		}
 
+		internal TheaterSettings Clone() {
+			var ret = (TheaterSettings)this.MemberwiseClone();
+			ret.InstallTypeDescriptor();
+			return ret;
+		}
 	}
 
 	public class CsvConverter : TypeConverter {
@@ -391,7 +410,7 @@ namespace CNCMaps.Utility {
 		private string AddQuotes(string s) {
 			if (string.IsNullOrWhiteSpace(s)) return "";
 
-			StringBuilder sb = new StringBuilder();
+			var sb = new StringBuilder();
 			if (!s.StartsWith("\""))
 				sb.Append('"');
 			sb.Append(s);
@@ -417,7 +436,7 @@ namespace CNCMaps.Utility {
 		public override object ConvertFrom(ITypeDescriptorContext context, CultureInfo culture, object value) {
 			if (value is string) {
 				var vs = ((string)value).Split(new[] { ", " }, StringSplitOptions.RemoveEmptyEntries);
-				return vs.Select(v => v.Trim('"')).ToArray();
+				return vs.Select(v => v.Trim('"')).ToList();
 			}
 			return base.ConvertFrom(context, culture, value);
 		}

@@ -11,11 +11,10 @@ namespace CNCMaps.GUI {
 
 		public ModConfigEditor() {
 			InitializeComponent();
-
-			propertyGrid1.SelectedObject = new ModConfig();
-			_pendingChanges = true;
-
-			propertyGrid1.PropertyValueChanged += (o, args) => _pendingChanges = true;
+			propertyGrid1.PropertyValueChanged += (o, args) => {
+				_pendingChanges = true;
+			};
+			SelectObject(ModConfig.DefaultsYR.Clone());
 		}
 
 		public ModConfigEditor(string modConfigFile)
@@ -23,11 +22,21 @@ namespace CNCMaps.GUI {
 			this.ModConfigFile = modConfigFile;
 			try {
 				using (var f = File.OpenRead(modConfigFile))
-					propertyGrid1.SelectedObject = ModConfig.Deserialize(f);
+					SelectObject(ModConfig.Deserialize(f));
 				_pendingChanges = false;
 			}
 			catch {
 			}
+		}
+		private void SelectObject(ModConfig modConfig) {
+			modConfig.PropertyChanged += (sender, args) => {
+				propertyGrid1.Refresh();
+				propertyGrid1.ExpandAllGridItems();
+			};
+
+			bool expand = propertyGrid1.SelectedObject == null;
+			propertyGrid1.SelectedObject = modConfig;
+			if (expand) propertyGrid1.ExpandAllGridItems();
 		}
 
 		private void loadTSToolStripMenuItem_Click(object sender, EventArgs e) {
@@ -43,14 +52,15 @@ namespace CNCMaps.GUI {
 		}
 
 		private void newToolStripMenuItem1_Click(object sender, EventArgs e) {
-			propertyGrid1.SelectedObject = new ModConfig();
+			SelectObject(new ModConfig());
 		}
 
 		private void openToolStripMenuItem_Click(object sender, EventArgs e) {
 			if (openFileDialog1.ShowDialog() == DialogResult.OK) {
-				using (var f = openFileDialog1.OpenFile())
-					propertyGrid1.SelectedObject = ModConfig.Deserialize(f);
-				ModConfigFile = saveFileDialog1.FileName;
+				using (var f = openFileDialog1.OpenFile()) {
+					SelectObject(ModConfig.Deserialize(f));
+				}
+				ModConfigFile = openFileDialog1.FileName;
 				_pendingChanges = false;
 			}
 		}
@@ -59,26 +69,21 @@ namespace CNCMaps.GUI {
 			if (saveFileDialog1.ShowDialog() == DialogResult.OK) {
 				using (var f = saveFileDialog1.OpenFile())
 					(propertyGrid1.SelectedObject as ModConfig).Serialize(f);
-				ModConfigFile = saveFileDialog1.FileName;
+				ModConfigFile = Path.GetFullPath(saveFileDialog1.FileName);
 				_pendingChanges = false;
 			}
-		}
-
-		private void exitToolStripMenuItem_Click(object sender, EventArgs e) {
-			Close();
 		}
 
 		private void CopyTheaters(ModConfig modConfig) {
 			(propertyGrid1.SelectedObject as ModConfig).Theaters = modConfig.Theaters;
 			TypeDescriptor.Refresh(propertyGrid1.SelectedObject);
-			propertyGrid1.ExpandAllGridItems();
 		}
 
 		private void ModConfigEditor_FormClosing(object sender, FormClosingEventArgs e) {
 			if (_pendingChanges && MessageBox.Show("There are pending changes. Save first?", "Unsaved changes",
 				MessageBoxButtons.YesNo) == DialogResult.Yes)
 				saveToolStripMenuItem_Click(null, null);
-
 		}
+
 	}
 }

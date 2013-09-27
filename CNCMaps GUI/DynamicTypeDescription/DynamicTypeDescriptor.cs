@@ -16,8 +16,10 @@ using System.Globalization;
 using System.Linq;
 using System.Reflection;
 using System.Resources;
+using System.Security.Cryptography;
 using System.Text;
 using System.Windows.Forms.Design;
+using CNCMaps.Utility;
 
 namespace DynamicTypeDescriptor {
 	public enum CustomSortOrder {
@@ -634,11 +636,27 @@ namespace DynamicTypeDescriptor {
 			return base.GetProperties(context, value, attributes);
 		}
 		public override bool CanConvertFrom(ITypeDescriptorContext context, Type sourceType) {
-			return true;
+			ICollection<StandardValueAttribute> col = null;
+			Type propType = Type.Missing.GetType();
+			if (context != null && context.PropertyDescriptor is CustomPropertyDescriptor) {
+				CustomPropertyDescriptor cpd = context.PropertyDescriptor as CustomPropertyDescriptor;
+				UpdateEnumDisplayText(cpd);
+				col = cpd.StatandardValues;
+				propType = cpd.PropertyType;
+			}
+
+			if (propType.IsEnum) return true;
+			else if (sourceType == propType) return true;
+			else if (sourceType == typeof(StandardValueAttribute)) return true;
+			var x = base.CanConvertFrom(context, sourceType);
+			 return base.CanConvertFrom(context, sourceType);
 		}
 		public override bool CanConvertTo(ITypeDescriptorContext context, Type destinationType) {
-			return true;
+			if (destinationType == typeof(string)) return true;
+			else if (destinationType == typeof(StandardValueAttribute)) return true;
+			else return base.CanConvertTo(context, destinationType);
 		}
+
 		public override bool GetStandardValuesSupported(ITypeDescriptorContext context) {
 			if (context != null && context.PropertyDescriptor is CustomPropertyDescriptor) {
 				CustomPropertyDescriptor cpd = context.PropertyDescriptor as CustomPropertyDescriptor;
@@ -823,7 +841,8 @@ namespace DynamicTypeDescriptor {
 					return (value as StandardValueAttribute).Value;
 				}
 			}
-			return base.ConvertFrom(context, culture, value);
+			var x = base.ConvertTo(context, culture, value, destinationType);
+			return x;
 
 		}
 		public override StandardValuesCollection GetStandardValues(ITypeDescriptorContext context) {
