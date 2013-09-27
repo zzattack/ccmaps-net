@@ -125,19 +125,19 @@
 version of the resulting image often looks much better, which is what this option does.
 DANGEROUS: comments and ini formatting is lost. The original map is overwritten!</value>
   </data>
+  <data name="lblOreEmphasisDescription.Text" xml:space="preserve">
+    <value>Setting this will result in a yellow glow to be placed behind ore, and a purple glow behind gems. When scaling images down, for example to use them as small preview image of a map, this looks pretty good.</value>
+  </data>
   <data name="rbEngineAuto.ToolTip" xml:space="preserve">
     <value>Tries to automatically deduce whether your map is made for RA2/YR, but is often unsuccessful,
 since this information is not actually stored in the map.
 This will never render the map as if it is a TS/FS map, if it is you need to manually select this!</value>
   </data>
-  <data name="lblOreEmphasisDescription.Text" xml:space="preserve">
-    <value>Setting this will result in a yellow glow to be placed behind ore, and a purple glow behind gems. When scaling images down, for example to use them as small preview image of a map, this looks pretty good.</value>
-  </data>
   <data name="rbAutoFilename.ToolTip" xml:space="preserve">
-    <value>Automatic filename resolution uses a scheme for determining
-the name of TS/RA2 multiplayer maps as well as campaign missions.
-It deduces this from missions.pkt or missions.ini and translates it to
-the language of the installed game.</value>
+    <value>Automatic filename resolution uses a  CSF, missions.ini or [Basic]/Name if possible. 
+This scheme works well for determining the name of TS/RA2 multiplayer maps as well
+ as campaign missions. When deduced from missions.pkt or missions.ini they are localized
+in the the language of the installed game.</value>
   </data>
   <metadata name="ofd.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>186, 17</value>

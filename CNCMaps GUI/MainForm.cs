@@ -23,6 +23,7 @@ namespace CNCMaps.GUI {
 
 
 		public MainForm() {
+			Properties.Settings.Default.Upgrade();
 			InitializeComponent();
 		}
 		public MainForm(bool skipUpdateCheck)
@@ -41,6 +42,10 @@ namespace CNCMaps.GUI {
 				PerformUpdateCheck();
 			else
 				UpdateStatus("not checking for newer version", 100);
+		}
+
+		private void MainFormClosing(object sender, FormClosingEventArgs e) {
+			Properties.Settings.Default.Save();
 		}
 
 		#region registry searching
@@ -218,7 +223,7 @@ namespace CNCMaps.GUI {
 			UpdateCommandline();
 		}
 		private void PngOutputCheckedChanged(object sender, EventArgs e) {
-			nudCompression.Visible = label1.Visible = cbOutputPNG.Checked;
+			nudCompression.Visible = lblCompressionLevel.Visible = cbOutputPNG.Checked;
 			UpdateCommandline();
 		}
 		private void JpegOutputCheckedChanged(object sender, EventArgs e) {
