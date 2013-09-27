@@ -11,7 +11,7 @@ namespace CNCMaps.VirtualFileSystem {
 
 	public class VFS {
 		private static readonly VFS Instance = new VFS();
-		private readonly List<IArchive> _allArchives = new List<IArchive>();
+		internal readonly List<IArchive> AllArchives = new List<IArchive>();
 		private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
 
 		public static VFS GetInstance() {
@@ -64,7 +64,7 @@ namespace CNCMaps.VirtualFileSystem {
 		}
 
 		private bool FileExists(string filename) {
-			return _allArchives.Any(v => v != null && v.ContainsFile(filename));
+			return AllArchives.Any(v => v != null && v.ContainsFile(filename));
 		}
 
 		public VirtualFile OpenFile(string filename) {
@@ -73,8 +73,8 @@ namespace CNCMaps.VirtualFileSystem {
 		}
 
 		public VirtualFile OpenFile(string filename, FileFormat format = FileFormat.None, CacheMethod m = CacheMethod.Default) {
-			if (_allArchives == null || _allArchives.Count == 0) return null;
-			var archive = _allArchives.FirstOrDefault(v => v != null && v.ContainsFile(filename));
+			if (AllArchives == null || AllArchives.Count == 0) return null;
+			var archive = AllArchives.FirstOrDefault(v => v != null && v.ContainsFile(filename));
 			if (archive == null) return null;
 
 			try {
@@ -88,7 +88,7 @@ namespace CNCMaps.VirtualFileSystem {
 		public bool AddFile(string path, CacheMethod m = CacheMethod.Default) {
 			// directory
 			if (Directory.Exists(path)) {
-				_allArchives.Add(new DirArchive(path));
+				AllArchives.Add(new DirArchive(path));
 				return true;
 			}
 			// regular file
@@ -98,21 +98,21 @@ namespace CNCMaps.VirtualFileSystem {
 				if (FormatHelper.MixArchiveExtensions.Contains(fi.Extension, StringComparer.InvariantCultureIgnoreCase)) {
 					var mf = new MixFile(File.Open(path, FileMode.Open, FileAccess.Read, FileShare.Read));
 					mf.FileName = path;
-					_allArchives.Add(mf);
+					AllArchives.Add(mf);
 					return true;
 				}
 			}
 			// virtual mix file
 			else if (FileExists(path)) {
 				var mx = OpenFile(path, FileFormat.Mix) as MixFile;
-				_allArchives.Add(mx);
+				AllArchives.Add(mx);
 				return true;
 			}
 			return false;
 		}
 
 		public bool AddMix(MixFile mix) {
-			_allArchives.Add(mix);
+			AllArchives.Add(mix);
 			return true;
 		}
 
@@ -140,23 +140,17 @@ namespace CNCMaps.VirtualFileSystem {
 			Logger.Info("Initializing filesystem on {0} for the {1} engine", mixDir, engine.ToString());
 			AddFile(mixDir);
 
-			return ScanMixDir(engine);
-		}
-
-		public bool ScanMixDir(EngineType engine) {
 			// try all expand\d{2}md?\.mix files
-			foreach (string mixDir in _allArchives.OfType<DirArchive>().Select(d => d.Directory).ToList()) {
-				for (int i = 99; i >= 0; i--) {
-					string file = "expand" + i.ToString("00") + ".mix";
-					string path = Path.Combine(mixDir, file);
+			for (int i = 99; i >= 0; i--) {
+				string file = "expand" + i.ToString("00") + ".mix";
+				string path = Path.Combine(mixDir, file);
+				if (File.Exists(path))
+					AddFile(path);
+				if (engine == EngineType.YurisRevenge) {
+					file = "expandmd" + i.ToString("00") + ".mix";
+					path = Path.Combine(mixDir, file);
 					if (File.Exists(path))
 						AddFile(path);
-					if (engine == EngineType.YurisRevenge) {
-						file = "expandmd" + i.ToString("00") + ".mix";
-						path = Path.Combine(mixDir, file);
-						if (File.Exists(path))
-							AddFile(path);
-					}
 				}
 			}
 
@@ -166,7 +160,7 @@ namespace CNCMaps.VirtualFileSystem {
 				if (engine == EngineType.YurisRevenge) AddFile("langmd.mix");
 				AddFile("language.mix");
 			}
-			
+
 			if (engine >= EngineType.RedAlert2) {
 				if (engine == EngineType.YurisRevenge)
 					AddFile("ra2md.mix");
@@ -189,24 +183,20 @@ namespace CNCMaps.VirtualFileSystem {
 			if (engine == EngineType.YurisRevenge)
 				AddFile("audiomd.mix");
 
-			foreach (string mixDir in _allArchives.OfType<DirArchive>().Select(d => d.Directory).ToList()) {
-				foreach (string file in Directory.GetFiles(mixDir, "ecache*.mix"))
-					AddFile(Path.Combine(mixDir, file));
-			}
+			foreach (string file in Directory.GetFiles(mixDir, "ecache*.mix"))
+				AddFile(Path.Combine(mixDir, file));
 
-			foreach (string mixDir in _allArchives.OfType<DirArchive>().Select(d => d.Directory).ToList())
-				foreach (string file in Directory.GetFiles(mixDir, "elocal*.mix"))
-					AddFile(Path.Combine(mixDir, file));
+
+			foreach (string file in Directory.GetFiles(mixDir, "elocal*.mix"))
+				AddFile(Path.Combine(mixDir, file));
 
 			if (engine >= EngineType.RedAlert2) {
-				foreach (string mixDir in _allArchives.OfType<DirArchive>().Select(d => d.Directory).ToList())
-					foreach (string file in Directory.GetFiles(mixDir, "*.mmx"))
-						AddFile(Path.Combine(mixDir, file));
+				foreach (string file in Directory.GetFiles(mixDir, "*.mmx"))
+					AddFile(Path.Combine(mixDir, file));
 
 				if (engine == EngineType.YurisRevenge)
-					foreach (string mixDir in _allArchives.OfType<DirArchive>().Select(d => d.Directory).ToList())
-						foreach (string file in Directory.GetFiles(mixDir, "*.yro"))
-							AddFile(Path.Combine(mixDir, file));
+					foreach (string file in Directory.GetFiles(mixDir, "*.yro"))
+						AddFile(Path.Combine(mixDir, file));
 			}
 
 			if (engine >= EngineType.RedAlert2) {
@@ -232,9 +222,9 @@ namespace CNCMaps.VirtualFileSystem {
 		}
 
 		public void Clear() {
-			foreach (var arch in _allArchives)
+			foreach (var arch in AllArchives)
 				arch.Close();
-			_allArchives.Clear();
+			AllArchives.Clear();
 		}
 
 		public static string RA2InstallPath {

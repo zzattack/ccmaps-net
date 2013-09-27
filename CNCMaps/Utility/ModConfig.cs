@@ -55,14 +55,14 @@ namespace CNCMaps.Utility {
 
 		public string Name { get; set; }
 		public EngineType Engine { get; set; }
-		public List<string> ExtraDirectories { get; set; }
+		public List<string> Directories { get; set; }
 		public List<string> ExtraMixes { get; set; }
 		public List<TheaterSettings> Theaters { get; set; }
 
 		public ModConfig() {
 			Name = "Custom mod config";
 			Theaters = new List<TheaterSettings>();
-			ExtraDirectories = new List<string>();
+			Directories = new List<string>();
 			ExtraMixes = new List<string>();
 			Engine = EngineType.YurisRevenge;
 		}

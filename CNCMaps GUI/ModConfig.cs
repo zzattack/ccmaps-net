@@ -119,7 +119,7 @@ namespace CNCMaps.Utility {
 		public ModConfig() {
 			Name = "Custom mod config";
 			Theaters = new BindingList<TheaterSettings>();
-			Directories = new List<string> { MainForm.FindMixDir(true) };
+			Directories = new List<string> { };
 			ExtraMixes = new List<string>();
 			Engine = EngineType.YurisRevenge;
 			InstallTypeDescriptor();

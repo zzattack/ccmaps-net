@@ -92,22 +92,18 @@ namespace CNCMaps {
 				if (ModConfig.ActiveConfig == null)
 					ModConfig.LoadDefaultConfig(map.Engine);
 
-				foreach (string modDir in ModConfig.ActiveConfig.ExtraDirectories)
+				// first add the dirs, then load the extra mixes, then scan the dirs
+				foreach (string modDir in ModConfig.ActiveConfig.Directories)
 					VFS.Add(modDir);
-				
 				// add mixdir to VFS (if it's not included in the mod config)
 				string mixDir = VFS.DetermineMixDir(Settings.MixFilesDirectory, map.Engine);
-				if (ModConfig.ActiveConfig.ExtraDirectories.All(d => 0 != String.Compare(Path.GetFullPath(d).TrimEnd('\\'), mixDir.TrimEnd('\\'), StringComparison.InvariantCultureIgnoreCase)))
+				if (ModConfig.ActiveConfig.Directories.All(d => 0 != String.Compare(Path.GetFullPath(d).TrimEnd('\\'), mixDir.TrimEnd('\\'), StringComparison.InvariantCultureIgnoreCase)))
 					VFS.Add(mixDir);
-
 				foreach (string mixFile in ModConfig.ActiveConfig.ExtraMixes)
 					VFS.Add(mixFile);
-
-				// now load the stuff the unmodified game would also load
-				if (!VFS.GetInstance().ScanMixDir(mixDir, map.Engine)) {
-					_logger.Fatal("Scanning for mix files failed. If on Linux, specify the --mixdir command line argument");
-					return 2;
-				}
+				foreach (var dir in VFS.GetInstance().AllArchives.OfType<DirArchive>().Select(d => d.Directory).ToList())
+					VFS.GetInstance().ScanMixDir(dir, map.Engine);
+				
 
 				if (!map.LoadTheater()) {
 					_logger.Error("Could not successfully load all required components for this map. Aborting.");
@@ -302,6 +298,10 @@ namespace CNCMaps {
 			}
 			else if (Settings.OutputDir != "" && !System.IO.Directory.Exists(Settings.OutputDir)) {
 				_logger.Error("Specified output directory does not exist.");
+				return false;
+			}
+			if (!string.IsNullOrEmpty(Settings.MixFilesDirectory) && !string.IsNullOrEmpty(Settings.ModConfig)) {
+				_logger.Error("Specify either -m or -M but not both.");
 				return false;
 			}
 			return true;
