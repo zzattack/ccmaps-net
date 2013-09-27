@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
+using System.Windows.Forms;
 using CNCMaps.Game;
 using CNCMaps.Rendering;
 
@@ -225,7 +226,9 @@ namespace CNCMaps.Map {
 
 		public Rectangle GetBoundingBox(GameObject obj) {
 			if (obj is MapTile) {
-				return _t.GetTileCollection().GetTileFile(obj as MapTile).GetBounds(obj as MapTile);
+				var tf = _t.GetTileCollection().GetTileFile(obj as MapTile);
+				if (tf != null) return tf.GetBounds(obj as MapTile);
+				else return Rectangle.Empty;
 			}
 			else {
 				return obj.Drawable.GetBounds(obj);

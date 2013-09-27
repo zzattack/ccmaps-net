@@ -254,7 +254,7 @@ namespace CNCMaps.Utility {
 					Type=TheaterType.Snow,
 					TheaterIni = "snowmd.ini",
 					Mixes = new List<string> {
-						"isosnowmd.mix",
+						"isosnomd.mix",
 						"snowmd.mix",
 						"isosnow.mix",
 						"snow.mix",

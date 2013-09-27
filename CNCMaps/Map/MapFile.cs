@@ -333,8 +333,7 @@ namespace CNCMaps.Map {
 
 			if (Engine >= EngineType.RedAlert2)
 				_theater.GetTileCollection().RecalculateTileSystem(_tiles);
-
-
+			
 			RecalculateOreSpread(); // is this really used on TS?
 
 			LoadLighting();
