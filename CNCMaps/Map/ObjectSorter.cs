@@ -145,7 +145,7 @@ namespace CNCMaps.Map {
 			// resulting in neither object every being drawn.
 
 			// tiles never overlap
-			if ((objA is MapTile || objA is AnimationObject) && (objB is MapTile || objB is AnimationObject)) return null;
+			if (objA is MapTile && objB is MapTile) return null;
 
 			var boxA = GetBoundingBox(objA);
 			var boxB = GetBoundingBox(objB);

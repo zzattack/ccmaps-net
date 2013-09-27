@@ -78,8 +78,10 @@ namespace CNCMaps.Game {
 			}
 
 			foreach (var entry in objectSection.OrderedEntries) {
-				logger.Trace("Loading object {0}.{1}", objectSection.Name, entry.Value);
-				LoadObject(entry.Value);
+				if (!string.IsNullOrEmpty(entry.Value)) {
+					logger.Trace("Loading object {0}.{1}", objectSection.Name, entry.Value);
+					LoadObject(entry.Value);
+				}
 			}
 		}
 
@@ -191,7 +193,7 @@ namespace CNCMaps.Game {
 			if (rulesSection.ReadString("AlphaImage") != "") {
 				string alphaImageFile = rulesSection.ReadString("AlphaImage") + ".shp";
 				if (VFS.Exists(alphaImageFile))
-					drawable.SetAlphaImage(VFS.Open(alphaImageFile) as ShpFile);
+					drawable.SetAlphaImage(VFS.Open<ShpFile>(alphaImageFile));
 			}
 
 			mainProps.HasShadow = artSection.ReadBool("Shadow", Defaults.GetShadowAssumption(_collectionType));

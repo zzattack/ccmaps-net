@@ -331,8 +331,8 @@ namespace CNCMaps.Map {
 				LoadCountries();
 			LoadHouses();
 
-			//if (EngineType >= EngineType.RedAlert2)
-			//	_theater.GetTileCollection().RecalculateTileSystem(_tiles);
+			if (Engine >= EngineType.RedAlert2)
+				_theater.GetTileCollection().RecalculateTileSystem(_tiles);
 
 
 			RecalculateOreSpread(); // is this really used on TS?
