@@ -18,7 +18,7 @@ namespace CNCMaps.Map {
 
 	/// <summary>Map file.</summary>
 	public class MapFile : IniFile {
-		public EngineType EngineType { get; private set; }
+		public EngineType Engine { get; private set; }
 		public Rectangle FullSize { get; private set; }
 		public Rectangle LocalSize { get; private set; }
 		private Theater _theater;
@@ -59,7 +59,8 @@ namespace CNCMaps.Map {
 				Close(); // we no longer need the file handle anyway
 		}
 
-		private double PercentageObjectsKnown(IniFile rules, IniFile theaterIni) {
+		private double PercentageObjectsKnown(VFS vfs, IniFile rules, TheaterSettings ths) {
+			var theaterIni = vfs.OpenFile<IniFile>(ths.TheaterIni);
 			if (rules == null || theaterIni == null) return 0.0;
 
 			Func<GameObject, IniSection, bool> objectKnown = (obj, section) => {
@@ -78,7 +79,8 @@ namespace CNCMaps.Map {
 			int total = 0;
 
 			var tiles = _tiles.Where(t => t != null).DistinctBy(t => t.TileNum);
-			var tilesCollection = new TileCollection(theaterIni);
+			var tilesCollection = new TileCollection(ths, vfs.OpenFile<IniFile>(ths.TheaterIni));
+			tilesCollection.InitTilesets();
 			known += tiles.Count(o => o.TileNum <= tilesCollection.NumTiles);
 			total += tiles.Count();
 
@@ -159,7 +161,7 @@ namespace CNCMaps.Map {
 		private void SetDrawables() {
 			foreach (var tile in _tiles) {
 				if (tile == null) continue;
-				tile.Drawable = new Drawable(tile.ToString()) { DrawFlat = true }; 
+				tile.Drawable = new Drawable(tile.ToString()) { DrawFlat = true };
 
 				foreach (var obj in tile.AllObjects) {
 					obj.Collection = _theater.GetObjectCollection(obj);
@@ -196,31 +198,34 @@ namespace CNCMaps.Map {
 			IniFile rulesYR = vfsYR.OpenFile<IniFile>("rulesmd.ini");
 
 			string theater = ReadString("Map", "Theater");
-			foreach (var f in Defaults.GetTheaterMixes(Theater.TheaterTypeFromString(theater, EngineType.TiberianSun)))
+			TheaterType thType = Theater.TheaterTypeFromString(theater);
+			TheaterSettings thsTS = ModConfig.DefaultsTS.GetTheater(thType);
+			TheaterSettings thsFS = ModConfig.DefaultsFS.GetTheater(thType);
+			TheaterSettings thsRA2 = ModConfig.DefaultsRA2.GetTheater(thType);
+			TheaterSettings thsYR = ModConfig.DefaultsYR.GetTheater(thType);
+
+			foreach (var f in thsTS.Mixes)
 				vfsTS.AddFile(f);
-			foreach (var f in Defaults.GetTheaterMixes(Theater.TheaterTypeFromString(theater, EngineType.Firestorm)))
+			foreach (var f in thsFS.Mixes)
 				vfsFS.AddFile(f);
-			foreach (var f in Defaults.GetTheaterMixes(Theater.TheaterTypeFromString(theater, EngineType.RedAlert2)))
+			foreach (var f in thsRA2.Mixes)
 				vfsRA2.AddFile(f);
-			foreach (var f in Defaults.GetTheaterMixes(Theater.TheaterTypeFromString(theater, EngineType.YurisRevenge)))
+			foreach (var f in thsYR.Mixes)
 				vfsYR.AddFile(f);
 
-			IniFile theaterTS = vfsTS.OpenFile<IniFile>(Defaults.GetTheaterIni(Theater.TheaterTypeFromString(theater, EngineType.TiberianSun)));
-			IniFile theaterFS = vfsFS.OpenFile<IniFile>(Defaults.GetTheaterIni(Theater.TheaterTypeFromString(theater, EngineType.Firestorm)));
-			IniFile theaterRA2 = vfsRA2.OpenFile<IniFile>(Defaults.GetTheaterIni(Theater.TheaterTypeFromString(theater, EngineType.RedAlert2)));
-			IniFile theaterYR = vfsYR.OpenFile<IniFile>(Defaults.GetTheaterIni(Theater.TheaterTypeFromString(theater, EngineType.YurisRevenge)));
-
-			EngineType = DetectEngineFromRules(rulesTS, rulesFS, rulesRA2, rulesYR, theaterTS, theaterFS, theaterRA2, theaterYR);
-			Logger.Debug("Engine type detected as {0}", EngineType);
+			Engine = DetectEngineFromRules(rulesTS, rulesFS, rulesRA2, rulesYR, thsTS, thsFS, thsRA2, thsYR, vfsTS, vfsFS, vfsRA2, vfsYR);
+			Logger.Debug("Engine type detected as {0}", Engine);
 		}
 
 		private EngineType DetectEngineFromRules(
 			IniFile rulesTS, IniFile rulesFS, IniFile rulesRA2, IniFile rulesYR,
-			IniFile theaterTS, IniFile theaterFS, IniFile theaterRA2, IniFile theaterYR) {
-			double tsScore = PercentageObjectsKnown(rulesTS, theaterTS);
-			double fsScore = PercentageObjectsKnown(rulesFS, theaterFS);
-			double ra2Score = PercentageObjectsKnown(rulesRA2, theaterRA2);
-			double yrScore = PercentageObjectsKnown(rulesYR, theaterYR);
+			TheaterSettings theaterTS, TheaterSettings theaterFS, TheaterSettings theaterRA2, TheaterSettings theaterYR,
+			VFS vfsTS, VFS vfsFS, VFS vfsRA2, VFS vfsYR) {
+			
+			double tsScore = PercentageObjectsKnown(vfsTS, rulesTS, theaterTS);
+			double fsScore = PercentageObjectsKnown(vfsFS, rulesFS, theaterFS);
+			double ra2Score = PercentageObjectsKnown(vfsRA2, rulesRA2, theaterRA2);
+			double yrScore = PercentageObjectsKnown(vfsYR, rulesYR, theaterYR);
 
 			double maxScore = Math.Max(Math.Max(Math.Max(tsScore, fsScore), ra2Score), yrScore);
 			if (maxScore == ra2Score) return EngineType.RedAlert2;
@@ -270,7 +275,7 @@ namespace CNCMaps.Map {
 			FullSize = new Rectangle(int.Parse(size[0]), int.Parse(size[1]), int.Parse(size[2]), int.Parse(size[3]));
 			size = map.ReadString("LocalSize").Split(',');
 			LocalSize = new Rectangle(int.Parse(size[0]), int.Parse(size[1]), int.Parse(size[2]), int.Parse(size[3]));
-			EngineType = et;
+			Engine = et;
 			ReadAllObjects();
 
 			// if we have to autodetect, we need to load rules.ini,
@@ -287,11 +292,11 @@ namespace CNCMaps.Map {
 
 		// between LoadMap and LoadTheater, the VFS should be initialized
 		public bool LoadTheater() {
-			if (EngineType == EngineType.YurisRevenge) {
+			if (Engine == EngineType.YurisRevenge) {
 				_rules = VFS.Open("rulesmd.ini") as IniFile;
 				_art = VFS.Open("artmd.ini") as IniFile;
 			}
-			else if (EngineType == EngineType.Firestorm) {
+			else if (Engine == EngineType.Firestorm) {
 				_rules = VFS.Open("rules.ini") as IniFile;
 				_art = VFS.Open("art.ini") as IniFile;
 
@@ -316,19 +321,19 @@ namespace CNCMaps.Map {
 			Logger.Info("Overriding rules.ini with map INI entries");
 			_rules.MergeWith(this);
 
-			_theater = new Theater(ReadString("Map", "Theater"), EngineType, _rules, _art);
+			_theater = new Theater(ReadString("Map", "Theater"), Engine, _rules, _art);
 			_theater.Initialize();
 			RemoveUnknownObjects();
 			SetDrawables();
 
 			LoadColors();
-			if (EngineType >= EngineType.RedAlert2)
+			if (Engine >= EngineType.RedAlert2)
 				LoadCountries();
 			LoadHouses();
 
-			if (EngineType >= EngineType.RedAlert2) {
-				_theater.GetTileCollection().RecalculateTileSystem(_tiles);
-			}
+			//if (EngineType >= EngineType.RedAlert2)
+			//	_theater.GetTileCollection().RecalculateTileSystem(_tiles);
+
 
 			RecalculateOreSpread(); // is this really used on TS?
 
@@ -354,7 +359,7 @@ namespace CNCMaps.Map {
 		private void LoadCountries() {
 			Logger.Info("Loading countries");
 
-			var countriesSection = _rules.GetSection(EngineType >= EngineType.RedAlert2 ? "Countries" : "Houses");
+			var countriesSection = _rules.GetSection(Engine >= EngineType.RedAlert2 ? "Countries" : "Houses");
 			foreach (var entry in countriesSection.OrderedEntries) {
 				IniSection countrySection = _rules.GetSection(entry.Value);
 				if (countrySection == null) continue;
@@ -490,6 +495,17 @@ namespace CNCMaps.Map {
 					dy >= 0 && dy < 2 * _tiles.Height) {
 					var tile = new MapTile((ushort)dx, (ushort)dy, rx, ry, z, tilenum, subtile, _tiles);
 					_tiles[(ushort)dx, (ushort)dy / 2] = tile;
+				}
+			}
+
+			// fix null tiles to blank
+			for (ushort y = 0; y < FullSize.Height; y++) {
+				for (ushort x = 0; x <= FullSize.Width * 2 - 2; x++) {
+					ushort dx = (ushort)(x);
+					ushort dy = (ushort)(y * 2 + x % 2);
+					ushort rx = (ushort)((dx + dy) / 2 + 1);
+					ushort ry = (ushort)(dy - rx + FullSize.Width + 1);
+					if (_tiles[x, y] == null) _tiles[x, y] = new MapTile(dx, dy, rx, ry, 0, 0, 0, _tiles);
 				}
 			}
 			Logger.Debug("Read {0} tiles", numtiles);
@@ -654,7 +670,6 @@ namespace CNCMaps.Map {
 				Logger.Info("Units section unavailable in {0}", Path.GetFileName(FileName));
 				return;
 			}
-			int count = 0;
 			foreach (var v in unitsSection.OrderedEntries) {
 				try {
 					string[] entries = ((string)v.Value).Split(',');
@@ -721,7 +736,7 @@ namespace CNCMaps.Map {
 				// The value consists of the sum of all dx's with a little magic offsets
 				// plus the sum of all dy's with also a little magic offset, and also
 				// everything is calculated modulo 12
-				var type = SpecialOverlays.GetOverlayTibType(o, EngineType);
+				var type = SpecialOverlays.GetOverlayTibType(o, Engine);
 
 				if (type == OverlayTibType.Ore) {
 					int x = o.Tile.Dx;
@@ -852,17 +867,17 @@ namespace CNCMaps.Map {
 			}
 
 			// TS needs tiberium remapped
-			if (EngineType <= EngineType.Firestorm) {
+			if (Engine <= EngineType.Firestorm) {
 				var tiberiums = _rules.GetSection("Tiberiums").OrderedEntries.Select(tib => tib.Value.ToString());
 				var remaps = tiberiums.Select(tib => _rules.GetOrCreateSection(tib).ReadString("Color"));
 				var tibRemaps = tiberiums.Zip(remaps, (k, v) => new { k, v }).ToDictionary(x => x.k, x => x.v);
 
 				foreach (var ovl in _overlayObjects) {
 					if (ovl == null) continue;
-					var tibType = SpecialOverlays.GetOverlayTibType(ovl, EngineType);
+					var tibType = SpecialOverlays.GetOverlayTibType(ovl, Engine);
 					if (tibType != OverlayTibType.NotSpecial) {
 						ovl.Palette = ovl.Palette.Clone();
-						string tibName = SpecialOverlays.GetTibName(ovl, EngineType);
+						string tibName = SpecialOverlays.GetTibName(ovl, Engine);
 						if (tibRemaps.ContainsKey(tibName) && _namedColors.ContainsKey(tibRemaps[tibName]))
 							ovl.Palette.Remap(_namedColors[tibRemaps[tibName]]);
 						_palettesToBeRecalculated.Add(ovl.Palette);
@@ -1028,7 +1043,7 @@ namespace CNCMaps.Map {
 					int h = radius, w = radius;
 					for (int drawY = destY - h / 2; drawY < destY + h; drawY++) {
 						for (int drawX = destX - w / 2; drawX < destX + w; drawX++) {
-							byte* p = (byte*) _drawingSurface.BitmapData.Scan0 + drawY * _drawingSurface.BitmapData.Stride + 3 * drawX;
+							byte* p = (byte*)_drawingSurface.BitmapData.Scan0 + drawY * _drawingSurface.BitmapData.Stride + 3 * drawX;
 							*p++ = 0x00;
 							*p++ = 0x00;
 							*p++ = 0xFF;
@@ -1127,7 +1142,7 @@ namespace CNCMaps.Map {
 			var markerPalettes = new Dictionary<OverlayTibType, Palette>();
 
 			// init sensible defaults
-			if (EngineType >= EngineType.RedAlert2) {
+			if (Engine >= EngineType.RedAlert2) {
 				markerPalettes[OverlayTibType.Ore] = Palette.MakePalette(Color.Yellow);
 				markerPalettes[OverlayTibType.Gems] = Palette.MakePalette(Color.Purple);
 			}
@@ -1137,7 +1152,7 @@ namespace CNCMaps.Map {
 			// but made available for the renderer's preview functionality through a key "MapRendererColor"
 			var tiberiums = _rules.GetOrCreateSection("Tiberiums").OrderedEntries.Select(kvp => kvp.Value).ToList();
 			var remaps = tiberiums.Select(tib => _rules.GetOrCreateSection(tib)
-				.ReadString(EngineType >= EngineType.RedAlert2 ? "MapRendererColor" : "Color")).ToList();
+				.ReadString(Engine >= EngineType.RedAlert2 ? "MapRendererColor" : "Color")).ToList();
 
 			// override defaults if specified in rules
 			for (int i = 0; i < tiberiums.Count; i++) {
@@ -1152,10 +1167,10 @@ namespace CNCMaps.Map {
 			// the color of the tiberium kind stored on it
 			foreach (var o in _overlayObjects) {
 				if (o == null) continue;
-				var ovlType = SpecialOverlays.GetOverlayTibType(o, EngineType);
+				var ovlType = SpecialOverlays.GetOverlayTibType(o, Engine);
 				if (!markerPalettes.ContainsKey(ovlType)) continue;
 
-				double opacityBase = ovlType == OverlayTibType.Ore && EngineType == EngineType.RedAlert2 ? 0.3 : 0.15;
+				double opacityBase = ovlType == OverlayTibType.Ore && Engine == EngineType.RedAlert2 ? 0.3 : 0.15;
 				double opacity = Math.Max(0, 12 - o.OverlayValue) / 11.0 * 0.5 + opacityBase;
 				o.Tile.Palette = Palette.Merge(o.Tile.Palette, markerPalettes[ovlType], opacity);
 				o.Palette = Palette.Merge(o.Palette, markerPalettes[ovlType], opacity);
@@ -1165,7 +1180,7 @@ namespace CNCMaps.Map {
 		public void RedrawOreAndGems() {
 			var tileCollection = _theater.GetTileCollection();
 			var checkFunc = new Func<OverlayObject, bool>(delegate(OverlayObject ovl) {
-				return SpecialOverlays.GetOverlayTibType(ovl, EngineType) != OverlayTibType.NotSpecial;
+				return SpecialOverlays.GetOverlayTibType(ovl, Engine) != OverlayTibType.NotSpecial;
 			});
 
 			// first redraw all required tiles (zigzag method)
@@ -1214,14 +1229,14 @@ namespace CNCMaps.Map {
 			}
 
 #if DEBUG
-			
+
 			// test that my bounds make some kind of sense
-			_drawingSurface.Unlock();
+			/*_drawingSurface.Unlock();
 			using (Graphics gfx = Graphics.FromImage(_drawingSurface.Bitmap)) {
 				foreach (var obj in orderedObjs)
 					if (obj.Drawable != null)
 						obj.Drawable.DrawBoundingBox(obj, gfx);
-			}
+			}*/
 #endif
 			/*
 			var tileCollection = _theater.GetTileCollection();
@@ -1292,7 +1307,7 @@ namespace CNCMaps.Map {
 
 			// Number magic explained: http://modenc.renegadeprojects.com/Maps/PreviewPack
 			int pw, ph;
-			switch (EngineType) {
+			switch (Engine) {
 				case EngineType.TiberianSun:
 					pw = (int)Math.Ceiling(1.975 * FullSize.Width);
 					ph = (int)Math.Ceiling(0.995 * FullSize.Height);
@@ -1368,7 +1383,7 @@ namespace CNCMaps.Map {
 			// campaign mission
 			if (!basic.ReadBool("MultiplayerOnly") && basic.ReadBool("Official")) {
 				string missionsFile;
-				switch (EngineType) {
+				switch (Engine) {
 					case EngineType.TiberianSun:
 					case EngineType.RedAlert2:
 						missionsFile = "mission.ini";
@@ -1385,7 +1400,7 @@ namespace CNCMaps.Map {
 				var mf = VFS.Open<MissionsFile>(missionsFile);
 				missionEntry = mf.GetMissionEntry(Path.GetFileName(FileName));
 				if (missionEntry != null)
-					missionName = (EngineType >= EngineType.RedAlert2) ? missionEntry.UIName : missionEntry.Name;
+					missionName = (Engine >= EngineType.RedAlert2) ? missionEntry.UIName : missionEntry.Name;
 			}
 
 			else {
@@ -1409,7 +1424,7 @@ namespace CNCMaps.Map {
 
 				else {
 					// determine pkt file based on engine
-					switch (EngineType) {
+					switch (Engine) {
 						case EngineType.TiberianSun:
 						case EngineType.RedAlert2:
 							pkt = VFS.Open<PktFile>("missions.pkt");
@@ -1428,7 +1443,7 @@ namespace CNCMaps.Map {
 
 				// fallback for multiplayer maps with, .map extension,
 				// no YR objects so assumed to be ra2, but actually meant to be used on yr
-				if (mapExt == ".map" && pkt != null && !pkt.MapEntries.ContainsKey(pktEntryName) && EngineType >= EngineType.RedAlert2) {
+				if (mapExt == ".map" && pkt != null && !pkt.MapEntries.ContainsKey(pktEntryName) && Engine >= EngineType.RedAlert2) {
 					VFS.GetInstance().ScanMixDir(Program.Settings.MixFilesDirectory, EngineType.YurisRevenge);
 					pkt = VFS.Open<PktFile>("missionsmd.pkt");
 				}
@@ -1439,11 +1454,11 @@ namespace CNCMaps.Map {
 
 			// now, if we have a map entry from a PKT file, 
 			// for TS we are done, but for RA2 we need to look in the CSV file for the translated mapname
-			if (EngineType <= EngineType.Firestorm) {
+			if (Engine <= EngineType.Firestorm) {
 				if (pktMapEntry != null)
 					mapName = pktMapEntry.Description;
 				else if (missionEntry != null) {
-					if (EngineType == EngineType.TiberianSun) {
+					if (Engine == EngineType.TiberianSun) {
 						string campaignSide;
 						string missionNumber;
 
@@ -1470,7 +1485,7 @@ namespace CNCMaps.Map {
 			else if (missionEntry != null || pktMapEntry != null) {
 				string csfEntryName = missionEntry != null ? missionName : pktMapEntry.Description;
 
-				string csfFile = EngineType == EngineType.YurisRevenge ? "ra2md.csf" : "ra2.csf";
+				string csfFile = Engine == EngineType.YurisRevenge ? "ra2md.csf" : "ra2.csf";
 				Logger.Info("Loading csf file {0}", csfFile);
 				var csf = VFS.Open<CsfFile>(csfFile);
 				mapName = csf.GetValue(csfEntryName.ToLower());
@@ -1563,11 +1578,11 @@ namespace CNCMaps.Map {
 		}
 
 		public int TileWidth {
-			get { return EngineType == EngineType.RedAlert2 || EngineType == EngineType.YurisRevenge ? 60 : 48; }
+			get { return Engine == EngineType.RedAlert2 || Engine == EngineType.YurisRevenge ? 60 : 48; }
 		}
 
 		public int TileHeight {
-			get { return EngineType == EngineType.RedAlert2 || EngineType == EngineType.YurisRevenge ? 30 : 24; }
+			get { return Engine == EngineType.RedAlert2 || Engine == EngineType.YurisRevenge ? 30 : 24; }
 		}
 
 		internal void FreeUseless() {

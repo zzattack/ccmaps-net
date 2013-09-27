@@ -3,18 +3,10 @@ using System.Drawing;
 using CNCMaps.FileFormats;
 using CNCMaps.Map;
 using CNCMaps.Rendering;
+using CNCMaps.Utility;
 using CNCMaps.VirtualFileSystem;
 
 namespace CNCMaps.Game {
-	public enum TheaterType {
-		Temperate, TemperateYR,
-		Urban, UrbanYR,
-		Snow, SnowYR,
-		Lunar,
-		Desert,
-		NewUrban
-	}
-
 	public class Theater {
 		readonly TheaterType _theaterType;
 		readonly EngineType _engine;
@@ -35,10 +27,10 @@ namespace CNCMaps.Game {
 		static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
 
 		public Theater(string theaterName, EngineType engine) :
-			this(TheaterTypeFromString(theaterName, engine), engine) { }
+			this(TheaterTypeFromString(theaterName), engine) { }
 
 		public Theater(string theaterName, EngineType engine, IniFile rules, IniFile art) :
-			this(TheaterTypeFromString(theaterName, engine), engine, rules, art) { }
+			this(TheaterTypeFromString(theaterName), engine, rules, art) { }
 
 		public Theater(TheaterType theaterType, EngineType engine, IniFile rules, IniFile art) {
 			this._theaterType = theaterType;
@@ -71,62 +63,22 @@ namespace CNCMaps.Game {
 		 * Also, game only uses temperat.pal for ore overlays - snow.pal, urban.pal etc. are UNUSED - some code below changed to match this.
 		 */
 		public void Initialize() {
-			Logger.Info("Initializing theater");
+			Logger.Info("Initializing theater of type {0}", _theaterType);
+
+			ModConfig.SetActiveTheater(_theaterType);
+
 			// load palettes and additional mix files for this theater
-			switch (_theaterType) {
-				case TheaterType.Temperate:
-				case TheaterType.TemperateYR:
-					_palettes = new PaletteCollection(_theaterType);
-					_palettes.IsoPalette = new Palette(VFS.Open<PalFile>("isotem.pal"));
-					_palettes.OvlPalette = new Palette(VFS.Open<PalFile>("temperat.pal"));
-					_palettes.UnitPalette = new Palette(VFS.Open<PalFile>("unittem.pal"));
-					break;
+			_palettes = new PaletteCollection(_theaterType);
+			_palettes.IsoPalette = new Palette(VFS.Open<PalFile>(ModConfig.ActiveTheater.IsoPaletteName));
+			_palettes.OvlPalette = new Palette(VFS.Open<PalFile>(ModConfig.ActiveTheater.OverlayPaletteName));
+			_palettes.UnitPalette = new Palette(VFS.Open<PalFile>(ModConfig.ActiveTheater.UnitPaletteName));
 
-				case TheaterType.Snow:
-				case TheaterType.SnowYR:
-					_palettes = new PaletteCollection(_theaterType);
-					_palettes.IsoPalette = new Palette(VFS.Open<PalFile>("isosno.pal"));
-					_palettes.OvlPalette = new Palette(VFS.Open<PalFile>("temperat.pal"));
-					_palettes.UnitPalette = new Palette(VFS.Open<PalFile>("unitsno.pal"));
-					break;
-
-				case TheaterType.Urban:
-				case TheaterType.UrbanYR:
-					_palettes = new PaletteCollection(_theaterType);
-					_palettes.IsoPalette = new Palette(VFS.Open<PalFile>("isourb.pal"));
-					_palettes.OvlPalette = new Palette(VFS.Open<PalFile>("temperat.pal"));
-					_palettes.UnitPalette = new Palette(VFS.Open<PalFile>("uniturb.pal"));
-					break;
-
-				case TheaterType.Desert:
-					_palettes = new PaletteCollection(_theaterType);
-					_palettes.IsoPalette = new Palette(VFS.Open<PalFile>("isodes.pal"));
-					_palettes.OvlPalette = new Palette(VFS.Open<PalFile>("temperat.pal"));
-					_palettes.UnitPalette = new Palette(VFS.Open<PalFile>("unitdes.pal"));
-					break;
-
-				case TheaterType.Lunar:
-					_palettes = new PaletteCollection(_theaterType);
-					_palettes.IsoPalette = new Palette(VFS.Open<PalFile>("isolun.pal"));
-					_palettes.OvlPalette = new Palette(VFS.Open<PalFile>("temperat.pal"));
-					_palettes.UnitPalette = new Palette(VFS.Open<PalFile>("unitlun.pal"));
-					break;
-
-				case TheaterType.NewUrban:
-					_palettes = new PaletteCollection(_theaterType);
-					_palettes.IsoPalette = new Palette(VFS.Open<PalFile>("isoubn.pal"));
-					_palettes.OvlPalette = new Palette(VFS.Open<PalFile>("temperat.pal"));
-					_palettes.UnitPalette = new Palette(VFS.Open<PalFile>("unitubn.pal"));
-					break;
-			}
-
-			foreach (string mix in Defaults.GetTheaterMixes(_theaterType))
+			foreach (string mix in ModConfig.ActiveTheater.Mixes)
 				VFS.Add(mix, CacheMethod.Cache); // we wish for these to be cached as they're gonna be hit often
 
 			_palettes.AnimPalette = new Palette(VFS.Open<PalFile>("anim.pal"));
 
-			_tileTypes = new TileCollection(_theaterType);
-
+			_tileTypes = new TileCollection(ModConfig.ActiveTheater);
 			_buildingTypes = new ObjectCollection(_rules.GetSection("BuildingTypes"),
 				CollectionType.Building, _theaterType, _engine, _rules, _art, _palettes);
 
@@ -151,18 +103,18 @@ namespace CNCMaps.Game {
 			_animations = new ObjectCollection(_rules.GetSection("Animations"),
 				CollectionType.Animation, _theaterType, _engine, _rules, _art, _palettes);
 
+			_tileTypes.InitTilesets();
 			_tileTypes.InitAnimations(_animations);
 		}
 
-		public static TheaterType TheaterTypeFromString(string theater, EngineType engineType) {
-			bool yr = engineType == EngineType.YurisRevenge;
+		public static TheaterType TheaterTypeFromString(string theater) {
 			theater = theater.ToLower();
 			if (theater == "lunar") return TheaterType.Lunar;
 			else if (theater == "newurban") return TheaterType.NewUrban;
 			else if (theater == "desert") return TheaterType.Desert;
-			else if (theater == "temperate") return yr ? TheaterType.TemperateYR : TheaterType.Temperate;
-			else if (theater == "urban") return yr ? TheaterType.UrbanYR : TheaterType.Urban;
-			else if (theater == "snow") return yr ? TheaterType.SnowYR : TheaterType.Snow;
+			else if (theater == "temperate") return TheaterType.Temperate;
+			else if (theater == "urban") return TheaterType.Urban;
+			else if (theater == "snow") return TheaterType.Snow;
 			else throw new InvalidOperationException();
 		}
 

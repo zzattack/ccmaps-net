@@ -128,6 +128,14 @@ namespace CNCMaps.FileFormats {
 				public override bool Equals(object obj) {
 					return value.Equals(obj.ToString());
 				}
+				protected bool Equals(IniValue other) {
+					return string.Equals(value, other.value);
+				}
+
+				public override int GetHashCode() {
+					return (value != null ? value.GetHashCode() : 0);
+				}
+
 			}
 
 			public Dictionary<string, IniValue> SortedEntries { get; set; }

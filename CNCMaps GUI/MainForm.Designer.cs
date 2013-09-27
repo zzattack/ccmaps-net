@@ -47,6 +47,9 @@
 			this.cbTiledStartPositions = new System.Windows.Forms.CheckBox();
 			this.cbEmphasizeOre = new System.Windows.Forms.CheckBox();
 			this.gbInputOutput = new System.Windows.Forms.GroupBox();
+			this.btnModEditor = new System.Windows.Forms.Button();
+			this.tbModConfig = new System.Windows.Forms.TextBox();
+			this.cbModConfig = new System.Windows.Forms.CheckBox();
 			this.tbCustomOutput = new System.Windows.Forms.TextBox();
 			this.tbRenderProg = new System.Windows.Forms.TextBox();
 			this.lblAutoFilenameDescription = new System.Windows.Forms.Label();
@@ -77,8 +80,6 @@
 			this.lblStatus = new System.Windows.Forms.ToolStripStatusLabel();
 			this.lblFill = new System.Windows.Forms.ToolStripStatusLabel();
 			this.pbProgress = new System.Windows.Forms.ToolStripProgressBar();
-			this.cbAdditionalMixes = new System.Windows.Forms.CheckBox();
-			this.tbAdditionalMixes = new System.Windows.Forms.TextBox();
 			this.toolTip = new System.Windows.Forms.ToolTip(this.components);
 			this.gbMiscOptions.SuspendLayout();
 			this.panel1.SuspendLayout();
@@ -347,8 +348,9 @@
 			// 
 			this.gbInputOutput.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-			this.gbInputOutput.Controls.Add(this.tbAdditionalMixes);
-			this.gbInputOutput.Controls.Add(this.cbAdditionalMixes);
+			this.gbInputOutput.Controls.Add(this.btnModEditor);
+			this.gbInputOutput.Controls.Add(this.tbModConfig);
+			this.gbInputOutput.Controls.Add(this.cbModConfig);
 			this.gbInputOutput.Controls.Add(this.tbCustomOutput);
 			this.gbInputOutput.Controls.Add(this.tbRenderProg);
 			this.gbInputOutput.Controls.Add(this.lblAutoFilenameDescription);
@@ -376,6 +378,39 @@
 			this.gbInputOutput.Text = "Input & output";
 			this.gbInputOutput.DragDrop += new System.Windows.Forms.DragEventHandler(this.InputDragDrop);
 			this.gbInputOutput.DragEnter += new System.Windows.Forms.DragEventHandler(this.InputDragEnter);
+			// 
+			// btnModEditor
+			// 
+			this.btnModEditor.Location = new System.Drawing.Point(435, 185);
+			this.btnModEditor.Name = "btnModEditor";
+			this.btnModEditor.Size = new System.Drawing.Size(75, 23);
+			this.btnModEditor.TabIndex = 14;
+			this.btnModEditor.Text = "Open editor";
+			this.btnModEditor.UseVisualStyleBackColor = true;
+			this.btnModEditor.Visible = false;
+			this.btnModEditor.Click += new System.EventHandler(this.btnModEditor_Click);
+			// 
+			// tbModConfig
+			// 
+			this.tbModConfig.Location = new System.Drawing.Point(185, 188);
+			this.tbModConfig.Name = "tbModConfig";
+			this.tbModConfig.Size = new System.Drawing.Size(244, 20);
+			this.tbModConfig.TabIndex = 13;
+			this.tbModConfig.Visible = false;
+			this.tbModConfig.TextChanged += new System.EventHandler(this.UIChanged);
+			// 
+			// cbModConfig
+			// 
+			this.cbModConfig.AutoSize = true;
+			this.cbModConfig.Location = new System.Drawing.Point(42, 191);
+			this.cbModConfig.Name = "cbModConfig";
+			this.cbModConfig.Size = new System.Drawing.Size(141, 17);
+			this.cbModConfig.TabIndex = 12;
+			this.cbModConfig.Text = "Load special mod config";
+			this.toolTip.SetToolTip(this.cbModConfig, "Special mod configs allow you to specify precisely which extra directories, mixes" +
+        "\r\nand theater specific settings should be considered for your mod.");
+			this.cbModConfig.UseVisualStyleBackColor = true;
+			this.cbModConfig.CheckedChanged += new System.EventHandler(this.cbModConfig_CheckedChanged);
 			// 
 			// tbCustomOutput
 			// 
@@ -673,27 +708,6 @@
 			this.pbProgress.Size = new System.Drawing.Size(100, 16);
 			this.pbProgress.Style = System.Windows.Forms.ProgressBarStyle.Continuous;
 			// 
-			// cbAdditionalMixes
-			// 
-			this.cbAdditionalMixes.AutoSize = true;
-			this.cbAdditionalMixes.Location = new System.Drawing.Point(42, 191);
-			this.cbAdditionalMixes.Name = "cbAdditionalMixes";
-			this.cbAdditionalMixes.Size = new System.Drawing.Size(137, 17);
-			this.cbAdditionalMixes.TabIndex = 12;
-			this.cbAdditionalMixes.Text = "Load additional mix files";
-			this.toolTip.SetToolTip(this.cbAdditionalMixes, resources.GetString("cbAdditionalMixes.ToolTip"));
-			this.cbAdditionalMixes.UseVisualStyleBackColor = true;
-			this.cbAdditionalMixes.CheckedChanged += new System.EventHandler(this.cbAdditionalMixes_CheckedChanged);
-			// 
-			// tbAdditionalMixes
-			// 
-			this.tbAdditionalMixes.Location = new System.Drawing.Point(185, 188);
-			this.tbAdditionalMixes.Name = "tbAdditionalMixes";
-			this.tbAdditionalMixes.Size = new System.Drawing.Size(336, 20);
-			this.tbAdditionalMixes.TabIndex = 13;
-			this.tbAdditionalMixes.Visible = false;
-			this.tbAdditionalMixes.TextChanged += new System.EventHandler(this.UIChanged);
-			// 
 			// MainForm
 			// 
 			this.AllowDrop = true;
@@ -788,9 +802,10 @@
 		private System.Windows.Forms.ToolStripStatusLabel lblFill;
 		private System.Windows.Forms.ToolStripProgressBar pbProgress;
 		private System.Windows.Forms.ToolStripStatusLabel lblStatus;
-		private System.Windows.Forms.TextBox tbAdditionalMixes;
-		private System.Windows.Forms.CheckBox cbAdditionalMixes;
+		private System.Windows.Forms.TextBox tbModConfig;
+		private System.Windows.Forms.CheckBox cbModConfig;
 		private System.Windows.Forms.ToolTip toolTip;
+		private System.Windows.Forms.Button btnModEditor;
 
 	}
 }

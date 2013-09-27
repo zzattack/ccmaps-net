@@ -46,7 +46,7 @@ namespace CNCMaps.Rendering {
 		}
 
 		public void ApplyLighting(Lighting l, int level = 0, bool applyTints = true) {
-			_ambientMult = (l.Ambient - l.Ground) + l.Level * level;
+			_ambientMult = (l.Ambient + l.Ground) + l.Level * level;
 			if (applyTints) {
 				_redMult = l.Red;
 				_greenMult = l.Green;
@@ -76,10 +76,10 @@ namespace CNCMaps.Rendering {
 			if (!_originalColorsLoaded) return;
 
 			const double clipMult = 1.3;
-			_ambientMult = Math.Min(Math.Max(_ambientMult, -clipMult), clipMult);
-			_redMult = Math.Min(Math.Max(_redMult, -clipMult), clipMult);
-			_greenMult = Math.Min(Math.Max(_greenMult, -clipMult), clipMult);
-			_blueMult = Math.Min(Math.Max(_blueMult, -clipMult), clipMult);
+			_ambientMult = Math.Min(Math.Max(_ambientMult, 0), clipMult);
+			_redMult = Math.Min(Math.Max(_redMult, 0), clipMult);
+			_greenMult = Math.Min(Math.Max(_greenMult, 0), clipMult);
+			_blueMult = Math.Min(Math.Max(_blueMult, 0), clipMult);
 			for (int i = 0; i < 256; i++) {
 				var r = (byte)Math.Min(255, _origColors[i * 3 + 0] * (_ambientMult * _redMult) / 63.0 * 255.0);
 				var g = (byte)Math.Min(255, _origColors[i * 3 + 1] * (_ambientMult * _greenMult) / 63.0 * 255.0);

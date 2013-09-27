@@ -58,7 +58,7 @@ namespace CNCMaps.GUI {
 			return File.Exists(Path.Combine(Environment.CurrentDirectory, RendererExe)) ? RendererExe : "";
 		}
 
-		private static string FindMixDir(bool RA2) {
+		public static string FindMixDir(bool RA2) {
 			if (IsLinux) // don't expect registry access..
 				return Environment.CurrentDirectory;
 
@@ -158,8 +158,8 @@ namespace CNCMaps.GUI {
 			UpdateCommandline();
 		}
 
-		private void cbAdditionalMixes_CheckedChanged(object sender, EventArgs e) {
-			tbAdditionalMixes.Visible = cbAdditionalMixes.Checked;
+		private void cbModConfig_CheckedChanged(object sender, EventArgs e) {
+			tbModConfig.Visible = btnModEditor.Visible = cbModConfig.Checked;
 			UpdateCommandline();
 		}
 
@@ -215,6 +215,7 @@ namespace CNCMaps.GUI {
 			else if (!_currentEngineRa2 && newEngineRA2 && tbMixDir.Text == FindMixDir(false))
 				tbMixDir.Text = FindMixDir(true);
 			_currentEngineRa2 = newEngineRA2;
+			UpdateCommandline();
 		}
 		private void PngOutputCheckedChanged(object sender, EventArgs e) {
 			nudCompression.Visible = label1.Visible = cbOutputPNG.Checked;
@@ -265,9 +266,9 @@ namespace CNCMaps.GUI {
 
 			if (tbMixDir.Text != FindMixDir(rbEngineAuto.Checked || rbEngineRA2.Checked || rbEngineYR.Checked))
 				cmd += "-m " + "\"" + tbMixDir.Text + "\" ";
-			if (cbAdditionalMixes.Checked)
-				cmd += "-M \"" + tbAdditionalMixes.Text + "\" ";
-		
+			if (cbModConfig.Checked)
+				cmd += "-M \"" + tbModConfig.Text + "\" ";
+
 			if (cbEmphasizeOre.Checked) cmd += "-r ";
 			if (cbTiledStartPositions.Checked) cmd += "-s ";
 			if (cbSquaredStartPositions.Checked) cmd += "-S ";
@@ -453,6 +454,13 @@ namespace CNCMaps.GUI {
 			{90, "Map drawing completed"},
 		};
 		#endregion
+
+		private void btnModEditor_Click(object sender, EventArgs e) {
+			var editor = new ModConfigEditor(tbModConfig.Text);
+			if (editor.ShowDialog() == DialogResult.OK) {
+				tbModConfig.Text = editor.ModConfigFile;
+			}
+		}
 
 
 	}

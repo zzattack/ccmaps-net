@@ -96,6 +96,7 @@ namespace CNCMaps.Map {
 			int h = Drawable.TileHeight / 2;
 			int fx = w * Width;
 			int fy = h * (-1 - Width);
+			int fy2 = -h * (1 + Width);
 			int rx = (p.X * h + p.Y * w - fx * h - fy * w) / (2 * w * h);
 			int ry = (p.X * -h + p.Y * w + fx * h - fy * w) / (2 * w * h);
 			return GetTileR(rx, ry);

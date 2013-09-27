@@ -1,9 +1,10 @@
 ﻿using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Runtime.Serialization;
 using System.Text.RegularExpressions;
+using System.Xml;
 using CNCMaps.FileFormats;
-using CNCMaps.Game;
 using CNCMaps.Map;
 using CNCMaps.Rendering;
 using CNCMaps.Utility;
@@ -54,22 +55,56 @@ namespace CNCMaps {
 				return 0;*/
 				// ---------------------------------------------------------------
 
+				if (!string.IsNullOrEmpty(Settings.ModConfig)) {
+					if (File.Exists(Settings.ModConfig)) {
+						ModConfig cfg;
+						try {
+							using (FileStream f = File.OpenRead(Settings.ModConfig))
+								cfg = ModConfig.Deserialize(f);
+							ModConfig.ActiveConfig = cfg;
+							if (Settings.Engine != EngineType.AutoDetect) {
+								if (Settings.Engine != cfg.Engine)
+									_logger.Warn("Provided engine override does not match mod config.");
+							}
+							else
+								Settings.Engine = ModConfig.ActiveConfig.Engine;
+						}
+						catch (IOException) {
+							_logger.Error("IOException while loading mod config");
+						}
+						catch (XmlException) {
+							_logger.Error("XmlException while loading mod config");
+						}
+						catch (SerializationException) {
+							_logger.Error("Serialization exception while loading mod config");
+						}
+					}
+					else {
+						_logger.Error("Invalid mod config file specified");
+					}
+				}
 				if (!map.LoadMap(Settings.Engine)) {
 					_logger.Error("Could not successfully load this map. Try specifying the engine type manually.");
 					return 1;
 				}
 
-				// enginetype is now definitive
-				string mixDir = VFS.DetermineMixDir(Settings.MixFilesDirectory, map.EngineType);
-				var modMixes = Settings.ModMixes.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
-				foreach (var modMix in modMixes) {
-					if (File.Exists(Path.Combine(mixDir, modMix))) {
-						_logger.Info("Adding custom mix {0}", modMix);
-						VFS.Add(Path.Combine(mixDir, modMix));
-					}
-				}
+				// enginetype is now definitive, load mod config
+				if (ModConfig.ActiveConfig == null)
+					ModConfig.LoadDefaultConfig(map.Engine);
 
-				if (!VFS.GetInstance().ScanMixDir(mixDir, map.EngineType)) {
+				foreach (string modDir in ModConfig.ActiveConfig.ExtraDirectories)
+					VFS.Add(modDir);
+				
+				// add mixdir to VFS (if it's not included in the mod config)
+				string mixDir = VFS.DetermineMixDir(Settings.MixFilesDirectory, map.Engine);
+				if (ModConfig.ActiveConfig.ExtraDirectories.All(d => 0 != String.Compare(Path.GetFullPath(d).TrimEnd('\\'), mixDir.TrimEnd('\\'), StringComparison.InvariantCultureIgnoreCase)))
+					VFS.Add(mixDir);
+
+				foreach (string mixFile in ModConfig.ActiveConfig.ExtraMixes)
+					VFS.Add(mixFile);
+
+				// now load the stuff the unmodified game would also load
+				if (!VFS.GetInstance().ScanMixDir(mixDir, map.Engine)) {
 					_logger.Fatal("Scanning for mix files failed. If on Linux, specify the --mixdir command line argument");
 					return 2;
 				}
@@ -230,7 +265,7 @@ namespace CNCMaps {
 				{"p|output-png", "Output PNG file", v => Settings.SavePNG = true},
 				{"c|png-compression=", "Set PNG compression level (1-9)", (int v) => Settings.PNGQuality = v}, 
 				{"m|mixdir=", "Specify location of .mix files, read from registry if not specified (win only)",v => Settings.MixFilesDirectory = v},
-				{"M|modmixes=", "Comma-separated list of custom mix filenames, given top-priority when scanning for files",v => Settings.ModMixes = v},
+				{"M|modconfig=", "Filename of a game configuration specific to your mod (create with GUI)",v => Settings.ModConfig = v},
 				{"s|start-pos-tiled", "Mark starting positions in a tiled manner",v => Settings.StartPositionMarking = StartPositionMarking.Tiled},
 				{"S|start-pos-squared", "Mark starting positions in a squared manner",v => Settings.StartPositionMarking = StartPositionMarking.Squared}, 
 				{"r|mark-ore", "Mark ore and gem fields more explicity, looks good when resizing to a preview",v => Settings.MarkOreFields = true},

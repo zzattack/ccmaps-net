@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Drawing;
-using System.Drawing.Drawing2D;
 using CNCMaps.FileFormats;
 using CNCMaps.Game;
 using CNCMaps.Map;
-using CNCMaps.VirtualFileSystem;
 using OpenTK;
 using OpenTK.Graphics;
 using OpenTK.Graphics.OpenGL;
@@ -23,7 +21,7 @@ namespace CNCMaps.Rendering {
 		private static readonly Vector3 _ambient = new Vector3(0.8f);
 
 		DrawingSurface _surface;
-		VplFile _vplFile;
+		// VplFile _vplFile;
 
 		public void Initialize() {
 			logger.Info("Initializing voxel renderer");

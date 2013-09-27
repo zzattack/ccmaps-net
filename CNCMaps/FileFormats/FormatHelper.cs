@@ -52,7 +52,7 @@ namespace CNCMaps.FileFormats {
 				format = GuessFormat(filename);
 				logger.Debug("Guessed format: {0}", format);
 			}
-			VirtualFile ret;
+		
 			switch (format) {
 				case FileFormat.Csf:
 					return new CsfFile(baseStream, filename, offset, length, m != CacheMethod.NoCache); // defaults to cache

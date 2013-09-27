@@ -379,7 +379,7 @@ namespace CNCMaps.FileFormats.Encodings {
 						if (t > 0) do *op++ = *m_pos++; while (--t > 0);
 					}
 					else {
-					copy_match:
+					// copy_match:
 						*op++ = *m_pos++; *op++ = *m_pos++;
 						do *op++ = *m_pos++; while (--t > 0);
 					}
@@ -387,7 +387,7 @@ namespace CNCMaps.FileFormats.Encodings {
 					t = (uint)(ip[-2] & 3);
 					if (t == 0)
 						break;
-				match_next:
+				// match_next:
 					*op++ = *ip++;
 					if (t > 1) { *op++ = *ip++; if (t > 2) { *op++ = *ip++; } }
 					t = *ip++;

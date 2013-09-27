@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using CNCMaps.FileFormats;
-using CNCMaps.Game;
+using CNCMaps.Utility;
 using CNCMaps.VirtualFileSystem;
 
 namespace CNCMaps.Rendering {
@@ -56,7 +56,7 @@ namespace CNCMaps.Rendering {
 			if (paletteName.ToLower().EndsWith(".pal")) // full name already given
 				fileName = paletteName; 
 			else // filename = <paletteName><theaterExtension>.pal (e.g. lib<tem/sno/urb>.pal)
-				fileName = paletteName + Defaults.GetExtension(_theaterType).Substring(1) + ".pal";
+				fileName = paletteName + ModConfig.ActiveTheater.Extension.Substring(1) + ".pal";
 
 			var pal = CustomPalettes.FirstOrDefault(p => p.Name == paletteName);
 			if (pal == null) {

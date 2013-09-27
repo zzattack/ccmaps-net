@@ -117,7 +117,8 @@ namespace CNCMaps.Map {
 		/// <returns>Whether the palette was replaced, meaning it needs to be recalculated</returns>
 		public bool ApplyLamp(GameObject obj, bool ambientOnly = false) {
 			var lamp = this;
-			if (lamp.LightIntensity == 0.0)
+			const double TOLERANCE = 0.001;
+			if (Math.Abs(lamp.LightIntensity) < TOLERANCE)
 				return false;
 
 			var drawLocation = obj.Tile;

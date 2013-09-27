@@ -52,7 +52,7 @@ namespace CNCMaps.Map {
 			// assert no cyclics (one level deep)
 			foreach (var entry in _graph) {
 				foreach (var dep in entry.Value) {
-					Debug.Assert(!_graph.ContainsKey(dep) || !_graph[dep].Contains(entry.Key), "", "cyclic dependency found between {0} and {1}", entry.Key, dep);
+					// Debug.Assert(!_graph.ContainsKey(dep) || !_graph[dep].Contains(entry.Key), "", "cyclic dependency found between {0} and {1}", entry.Key, dep);
 					// GetFrontBlock(dep, entry.Key);
 					// GetFrontBlock(entry.Key, dep);
 				}
@@ -92,7 +92,7 @@ namespace CNCMaps.Map {
 
 					else if (front == obj2) {
 						// obj2 is in front of obj, so so obj cannot have been drawn yet
-						Debug.Assert(!_hist.Contains(obj2), "obj drawn before all its dependencies were found");
+						// Debug.Assert(!_hist.Contains(obj2), "obj drawn before all its dependencies were found");
 						AddDependency(obj2, obj, "obj2 in front");
 					}
 				}

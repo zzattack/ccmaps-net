@@ -7,6 +7,7 @@ using System.Text;
 using CNCMaps.FileFormats;
 using CNCMaps.Map;
 using CNCMaps.Rendering;
+using CNCMaps.Utility;
 using CNCMaps.VirtualFileSystem;
 
 namespace CNCMaps.Game {
@@ -77,21 +78,18 @@ namespace CNCMaps.Game {
 			}
 
 			foreach (var entry in objectSection.OrderedEntries) {
-				logger.Trace("Loading object {0}.{0}", objectSection.Name, entry.Value);
+				logger.Trace("Loading object {0}.{1}", objectSection.Name, entry.Value);
 				LoadObject(entry.Value);
 			}
 		}
 
 		private void LoadObject(string objName) {
-			IniFile.IniSection rulesSection = _rules.GetSection(objName);
+			IniFile.IniSection rulesSection = _rules.GetOrCreateSection(objName);
 			var drawable = new Drawable(objName);
 			var mainProps = new DrawProperties();
 
 			_drawables.Add(drawable);
 			_drawablesDict[objName] = drawable;
-
-			if (rulesSection == null || rulesSection.ReadBool("IsRubble"))
-				return;
 
 			drawable.IsValid = true;
 			string artSectionName = rulesSection.ReadString("Image", objName);
@@ -114,37 +112,25 @@ namespace CNCMaps.Game {
 				imageFileName += ".vxl";
 			}
 			else if (theaterExtension) {
-				imageFileName += Defaults.GetExtension(_theaterType);
+				imageFileName += ModConfig.ActiveTheater.Extension;
 				drawable.PaletteType = PaletteType.Iso;
 			}
-			else imageFileName += Defaults.GetExtension(_theaterType, _collectionType);
+			else imageFileName += ".shp";
 
+			// apply collection-specific offsets
 			switch (_collectionType) {
-				case CollectionType.Aircraft:
-					break;
 				case CollectionType.Building:
-					drawable.AddOffset(Drawable.TileWidth / 2, 0);
-					break;
-				case CollectionType.Infantry:
-					drawable.AddOffset(Drawable.TileWidth / 2, Drawable.TileHeight / 2);
-					break;
 				case CollectionType.Overlay:
-					drawable.AddOffset(Drawable.TileWidth / 2, 0);
-					break;
 				case CollectionType.Smudge:
 					drawable.AddOffset(Drawable.TileWidth / 2, 0);
 					break;
 				case CollectionType.Terrain:
-					drawable.AddOffset(Drawable.TileWidth / 2, Drawable.TileHeight / 2);
-					break;
 				case CollectionType.Vehicle:
+				case CollectionType.Infantry:
+				case CollectionType.Aircraft:
+				case CollectionType.Animation:
 					drawable.AddOffset(Drawable.TileWidth / 2, Drawable.TileHeight / 2);
 					break;
-				case CollectionType.Animation:
-
-					break;
-				default:
-					throw new ArgumentOutOfRangeException();
 			}
 
 
@@ -231,7 +217,7 @@ namespace CNCMaps.Game {
 			}
 
 			if (rulesSection.ReadBool("BridgeRepairHut")) {
-				
+
 			}
 			if (rulesSection.ReadBool("IsVeins")) {
 				drawable.LightingType = LightingType.None;
@@ -243,13 +229,6 @@ namespace CNCMaps.Game {
 				mainProps.Offset.Y = -49; // why is this needed???
 				drawable.LightingType = LightingType.None;
 				drawable.PaletteType = PaletteType.Unit;
-			}
-
-			if (_collectionType == CollectionType.Terrain) {
-				
-			}
-			else if (_collectionType == CollectionType.Infantry) {
-
 			}
 
 			if (rulesSection.ReadString("Land") == "Rock") {
@@ -352,9 +331,9 @@ namespace CNCMaps.Game {
 						}
 
 						if (theaterExtension)
-							extraImageFileName += Defaults.GetExtension(_theaterType);
+							extraImageFileName += ModConfig.ActiveTheater.Extension;
 						else
-							extraImageFileName += Defaults.GetExtension(_theaterType, _collectionType);
+							extraImageFileName += ".shp";
 
 						if (newTheater)
 							ApplyNewTheaterIfNeeded(artSectionName, ref extraImageFileName);
@@ -384,9 +363,9 @@ namespace CNCMaps.Game {
 								extraArtDamagedSection.ReadInt("LoopEnd", 1));
 						}
 						if (theaterExtension)
-							extraImageDamagedFileName += Defaults.GetExtension(_theaterType);
+							extraImageDamagedFileName += ModConfig.ActiveTheater.Extension;
 						else
-							extraImageDamagedFileName += Defaults.GetExtension(_theaterType, _collectionType);
+							extraImageDamagedFileName += ".shp";
 
 						if (newTheater)
 							ApplyNewTheaterIfNeeded(artSectionName, ref extraImageDamagedFileName);
@@ -418,8 +397,6 @@ namespace CNCMaps.Game {
 						ApplyNewTheaterIfNeeded(img, ref img);
 					}
 					var turretOffset = new Point(rulesSection.ReadInt("TurretAnimX"), rulesSection.ReadInt("TurretAnimY"));
-					if (voxel)
-						; // TODO: check ned turretOffset.Offset(Drawable.TileWidth / 2, 0);
 
 					var props = new DrawProperties {
 						Offset = turretOffset,
@@ -542,7 +519,7 @@ namespace CNCMaps.Game {
 		private void ApplyNewTheater(ref string imageFileName) {
 			var sb = new StringBuilder(imageFileName);
 
-			sb[1] = Defaults.GetTheaterPrefix(_theaterType);
+			sb[1] = ModConfig.ActiveTheater.NewTheaterChar;
 			if (!VFS.Exists(sb.ToString())) {
 				sb[1] = 'G'; // generic
 				if (!VFS.Exists(sb.ToString()))

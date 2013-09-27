@@ -40,10 +40,10 @@ namespace CNCMaps.GUI {
 								Version = version,
 							});
 						else
-							AlreadyLatest(this, EventArgs.Empty);
+							AlreadyLatest(this, Empty);
 					}
-					catch (Exception exc) {
-						UpdateCheckFailed(this, EventArgs.Empty);
+					catch (Exception) {
+						UpdateCheckFailed(this, Empty);
 					}
 				}
 			};

@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using CNCMaps.FileFormats;
-using CNCMaps.Game;
 using CNCMaps.Map;
+using CNCMaps.Utility;
 using Microsoft.Win32;
 
 namespace CNCMaps.VirtualFileSystem {
@@ -123,8 +123,11 @@ namespace CNCMaps.VirtualFileSystem {
 		}
 
 		public bool ScanMixDir(string mixDir, EngineType engine) {
-			if (engine == EngineType.AutoDetect)
-				engine = EngineType.YurisRevenge;
+			if (engine == EngineType.AutoDetect) {
+				Logger.Fatal("Scanning mixdir for auto detect theater is no longer supported!");
+				return false;
+			}
+
 			if (string.IsNullOrEmpty(mixDir))
 				mixDir = DetermineMixDir(mixDir, engine);
 
@@ -137,29 +140,37 @@ namespace CNCMaps.VirtualFileSystem {
 			Logger.Info("Initializing filesystem on {0} for the {1} engine", mixDir, engine.ToString());
 			AddFile(mixDir);
 
-			if (engine >= EngineType.RedAlert2) {
-				if (engine == EngineType.YurisRevenge) AddFile("langmd.mix");
-				AddFile(Path.Combine(mixDir, "language.mix"));
-			}
+			return ScanMixDir(engine);
+		}
 
+		public bool ScanMixDir(EngineType engine) {
 			// try all expand\d{2}md?\.mix files
-			for (int i = 99; i >= 0; i--) {
-				string file = "expand" + i.ToString("00") + ".mix";
-				string path = Path.Combine(mixDir, file);
-				if (File.Exists(path))
-					AddFile(path);
-				if (engine == EngineType.YurisRevenge) {
-					file = "expandmd" + i.ToString("00") + ".mix";
-					path = Path.Combine(mixDir, file);
+			foreach (string mixDir in _allArchives.OfType<DirArchive>().Select(d => d.Directory).ToList()) {
+				for (int i = 99; i >= 0; i--) {
+					string file = "expand" + i.ToString("00") + ".mix";
+					string path = Path.Combine(mixDir, file);
 					if (File.Exists(path))
 						AddFile(path);
+					if (engine == EngineType.YurisRevenge) {
+						file = "expandmd" + i.ToString("00") + ".mix";
+						path = Path.Combine(mixDir, file);
+						if (File.Exists(path))
+							AddFile(path);
+					}
 				}
 			}
 
+			// the game actually loads these earlier, but modders like to override them
+			// with ares or something
+			if (engine >= EngineType.RedAlert2) {
+				if (engine == EngineType.YurisRevenge) AddFile("langmd.mix");
+				AddFile("language.mix");
+			}
+			
 			if (engine >= EngineType.RedAlert2) {
 				if (engine == EngineType.YurisRevenge)
 					AddFile("ra2md.mix");
-				AddFile(Path.Combine(mixDir, "ra2.mix"));
+				AddFile("ra2.mix");
 			}
 			else {
 				if (engine == EngineType.Firestorm)
@@ -178,20 +189,24 @@ namespace CNCMaps.VirtualFileSystem {
 			if (engine == EngineType.YurisRevenge)
 				AddFile("audiomd.mix");
 
-			foreach (string file in Directory.GetFiles(mixDir, "ecache*.mix"))
-				AddFile(Path.Combine(mixDir, file));
+			foreach (string mixDir in _allArchives.OfType<DirArchive>().Select(d => d.Directory).ToList()) {
+				foreach (string file in Directory.GetFiles(mixDir, "ecache*.mix"))
+					AddFile(Path.Combine(mixDir, file));
+			}
 
-
-			foreach (string file in Directory.GetFiles(mixDir, "elocal*.mix"))
-				AddFile(Path.Combine(mixDir, file));
-
-			if (engine >= EngineType.RedAlert2) {
-				foreach (string file in Directory.GetFiles(mixDir, "*.mmx"))
+			foreach (string mixDir in _allArchives.OfType<DirArchive>().Select(d => d.Directory).ToList())
+				foreach (string file in Directory.GetFiles(mixDir, "elocal*.mix"))
 					AddFile(Path.Combine(mixDir, file));
 
-				if (engine == EngineType.YurisRevenge)
-					foreach (string file in Directory.GetFiles(mixDir, "*.yro"))
+			if (engine >= EngineType.RedAlert2) {
+				foreach (string mixDir in _allArchives.OfType<DirArchive>().Select(d => d.Directory).ToList())
+					foreach (string file in Directory.GetFiles(mixDir, "*.mmx"))
 						AddFile(Path.Combine(mixDir, file));
+
+				if (engine == EngineType.YurisRevenge)
+					foreach (string mixDir in _allArchives.OfType<DirArchive>().Select(d => d.Directory).ToList())
+						foreach (string file in Directory.GetFiles(mixDir, "*.yro"))
+							AddFile(Path.Combine(mixDir, file));
 			}
 
 			if (engine >= EngineType.RedAlert2) {

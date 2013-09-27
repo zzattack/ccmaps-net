@@ -111,6 +111,7 @@
     <Compile Include="Utility\EzMarshal.cs" />
     <Compile Include="Rendering\HsvColor.cs" />
     <Compile Include="Utility\Logger.cs" />
+    <Compile Include="Utility\ModConfig.cs" />
     <Compile Include="Utility\Option.cs" />
     <Compile Include="Map\ThumbInjector.cs" />
     <Compile Include="VirtualFileSystem\IArchive.cs" />
@@ -145,7 +146,7 @@
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <ProjectExtensions>
     <VisualStudio>
-      <UserProperties BuildVersion_UpdateFileVersion="True" BuildVersion_UpdateAssemblyVersion="True" BuildVersion_UseGlobalSettings="True" BuildVersion_AssemblyInfoFilename="CNCMaps\Properties\AssemblyInfoGlobal.cs" />
+      <UserProperties BuildVersion_AssemblyInfoFilename="CNCMaps\Properties\AssemblyInfoGlobal.cs" BuildVersion_UseGlobalSettings="True" BuildVersion_UpdateAssemblyVersion="True" BuildVersion_UpdateFileVersion="True" />
     </VisualStudio>
   </ProjectExtensions>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

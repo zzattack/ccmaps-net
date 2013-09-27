@@ -128,9 +128,9 @@ namespace CNCMaps.Game {
 			var w_low = (byte*)ds.BitmapData.Scan0;
 			byte* w_high = w_low + ds.BitmapData.Stride * ds.BitmapData.Height;
 			var zBuffer = ds.GetZBuffer();
-			int rowsTouched = 0;
+			// int rowsTouched = 0;
 
-			short firstRowTouched = short.MaxValue;
+			// short firstRowTouched = short.MaxValue;
 			for (int y = 0; y < vxl_ds.Height; y++) {
 
 				byte* src_row = (byte*)vxl_ds.BitmapData.Scan0 + vxl_ds.BitmapData.Stride * (vxl_ds.Height - y - 1);
@@ -145,8 +145,8 @@ namespace CNCMaps.Game {
 						*(dst_row + x * 3 + 1) = *(src_row + x * 4 + 1);
 						*(dst_row + x * 3 + 2) = *(src_row + x * 4 + 2);
 
-						if (y < firstRowTouched)
-							firstRowTouched = (short)y;
+						// if (y < firstRowTouched)
+						// 	firstRowTouched = (short)y;
 
 						short zBufVal = (short)((obj.Tile.Rx + obj.Tile.Ry + obj.Tile.Z) * TileHeight / 2 + props.ZBufferAdjust);
 						if (zBufVal >= zBuffer[zIdx])
@@ -224,6 +224,10 @@ namespace CNCMaps.Game {
 		}
 
 		public bool IsVoxel { get; set; }
+
+		internal Drawable Clone() {
+			return (Drawable)MemberwiseClone();
+		}
 	}
 
 	class DrawableFile<T> : IComparable where T : VirtualFile {
