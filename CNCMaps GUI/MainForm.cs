@@ -23,7 +23,6 @@ namespace CNCMaps.GUI {
 
 
 		public MainForm() {
-			Properties.Settings.Default.Upgrade();
 			InitializeComponent();
 		}
 		public MainForm(bool skipUpdateCheck)
@@ -32,19 +31,71 @@ namespace CNCMaps.GUI {
 		}
 
 		private void MainFormLoad(object sender, EventArgs args) {
-			this.Text += " - v" + Assembly.GetEntryAssembly().GetName().Version;
-			tbRenderProg.Text = FindRenderProg();
-			tbMixDir.Text = FindMixDir(true);
-			UpdateCommandline();
-			Height -= 180;
+			Text += " - v" + Assembly.GetEntryAssembly().GetName().Version;
+
+			if (string.IsNullOrEmpty(tbRenderProg.Text))
+				tbRenderProg.Text = FindRenderProg();
+
+			if (string.IsNullOrEmpty(tbMixDir.Text))
+				tbMixDir.Text = FindMixDir(true);
 
 			if (!_skipUpdateCheck)
 				PerformUpdateCheck();
 			else
 				UpdateStatus("not checking for newer version", 100);
+
+			rbAutoFilename.Checked = Properties.Settings.Default.outputauto;
+			rbCustomFilename.Checked = Properties.Settings.Default.outputcustom;
+			rbEngineAuto.Checked = Properties.Settings.Default.engineauto;
+			rbEngineFS.Checked = Properties.Settings.Default.enginefs;
+			rbEngineRA2.Checked = Properties.Settings.Default.enginera2;
+			rbEngineTS.Checked = Properties.Settings.Default.enginets;
+			rbEngineYR.Checked = Properties.Settings.Default.engineyr;
+			rbPreferHardwareRendering.Checked = Properties.Settings.Default.hwvoxels;
+			rbPreferSoftwareRendering.Checked = Properties.Settings.Default.swvoxels;
+			rbSizeFullmap.Checked = Properties.Settings.Default.fullsize;
+			rbSizeLocal.Checked = Properties.Settings.Default.localsize;
+			rbSizeAuto.Checked = Properties.Settings.Default.autosize;
+
+			cbEmphasizeOre.Checked = Properties.Settings.Default.emphore;
+			cbModConfig.Checked = Properties.Settings.Default.modconfig;
+			cbOmitSquareMarkers.Checked = Properties.Settings.Default.omitsquarespreview;
+			cbSquaredStartPositions.Checked = Properties.Settings.Default.squaredpos;
+			cbTiledStartPositions.Checked = Properties.Settings.Default.tiledpos;
+			cbOutputJPG.Checked = Properties.Settings.Default.outputjpg;
+			cbOutputPNG.Checked = Properties.Settings.Default.outputpng;
+			cbOutputThumbnail.Checked = Properties.Settings.Default.outputthumb;
+			cbReplacePreview.Checked = Properties.Settings.Default.injectthumb;
+			cbPreserveThumbAspect.Checked = Properties.Settings.Default.thumbpreserveaspect;
+
+			UpdateCommandline();
 		}
 
 		private void MainFormClosing(object sender, FormClosingEventArgs e) {
+			Properties.Settings.Default.outputauto = rbAutoFilename.Checked;
+			Properties.Settings.Default.outputcustom = rbCustomFilename.Checked;
+			Properties.Settings.Default.engineauto = rbEngineAuto.Checked;
+			Properties.Settings.Default.enginefs = rbEngineFS.Checked;
+			Properties.Settings.Default.enginera2 = rbEngineRA2.Checked;
+			Properties.Settings.Default.enginets = rbEngineTS.Checked;
+			Properties.Settings.Default.engineyr = rbEngineYR.Checked;
+			Properties.Settings.Default.hwvoxels = rbPreferHardwareRendering.Checked; ;
+			Properties.Settings.Default.swvoxels = rbPreferSoftwareRendering.Checked; ;
+			Properties.Settings.Default.fullsize = rbSizeFullmap.Checked; ;
+			Properties.Settings.Default.localsize = rbSizeLocal.Checked;
+			Properties.Settings.Default.autosize = rbSizeAuto.Checked;
+
+			Properties.Settings.Default.emphore = cbEmphasizeOre.Checked;
+			Properties.Settings.Default.modconfig = cbModConfig.Checked;
+			Properties.Settings.Default.omitsquarespreview = cbOmitSquareMarkers.Checked;
+			Properties.Settings.Default.squaredpos = cbSquaredStartPositions.Checked;
+			Properties.Settings.Default.tiledpos = cbTiledStartPositions.Checked;
+			Properties.Settings.Default.outputjpg = cbOutputJPG.Checked;
+			Properties.Settings.Default.outputpng = cbOutputPNG.Checked;
+			Properties.Settings.Default.outputthumb = cbOutputThumbnail.Checked;
+			Properties.Settings.Default.thumbpreserveaspect = cbPreserveThumbAspect.Checked;
+			Properties.Settings.Default.injectthumb = cbReplacePreview.Checked;
+
 			Properties.Settings.Default.Save();
 		}
 
@@ -165,6 +216,7 @@ namespace CNCMaps.GUI {
 
 		private void cbModConfig_CheckedChanged(object sender, EventArgs e) {
 			tbModConfig.Visible = btnModEditor.Visible = cbModConfig.Checked;
+			tbMixDir.Enabled = !cbModConfig.Checked;
 			UpdateCommandline();
 		}
 
@@ -244,6 +296,16 @@ namespace CNCMaps.GUI {
 			cbOmitSquareMarkers.Visible = cbReplacePreview.Checked;
 			UpdateCommandline();
 		}
+		private void BtnModEditorClick(object sender, EventArgs e) {
+			var editor = new ModConfigEditor(tbModConfig.Text);
+			if (editor.ShowDialog() == DialogResult.OK) {
+				tbModConfig.Text = editor.ModConfigFile;
+			}
+		}
+		private void CbOutputThumbnailCheckedChanged(object sender, EventArgs e) {
+			tbThumbDimensions.Visible = cbPreserveThumbAspect.Visible = cbOutputThumbnail.Checked;
+			UpdateCommandline();
+		}
 
 		private void UpdateCommandline() {
 			string cmd = GetCommandline();
@@ -269,10 +331,10 @@ namespace CNCMaps.GUI {
 					cmd += "-q " + nudEncodingQuality.Value.ToString(CultureInfo.InvariantCulture) + " ";
 			}
 
-			if (tbMixDir.Text != FindMixDir(rbEngineAuto.Checked || rbEngineRA2.Checked || rbEngineYR.Checked))
-				cmd += "-m " + "\"" + tbMixDir.Text + "\" ";
 			if (cbModConfig.Checked)
 				cmd += "-M \"" + tbModConfig.Text + "\" ";
+			else if (tbMixDir.Text != FindMixDir(rbEngineAuto.Checked || rbEngineRA2.Checked || rbEngineYR.Checked))
+				cmd += "-m " + "\"" + tbMixDir.Text + "\" ";
 
 			if (cbEmphasizeOre.Checked) cmd += "-r ";
 			if (cbTiledStartPositions.Checked) cmd += "-s ";
@@ -291,6 +353,17 @@ namespace CNCMaps.GUI {
 
 			if (cbReplacePreview.Checked)
 				cmd += cbOmitSquareMarkers.Checked ? "-K" : "-k ";
+
+			if (cbOutputThumbnail.Checked) {
+				var wh = tbThumbDimensions.Text.Split(new[] { "," }, StringSplitOptions.RemoveEmptyEntries).Select(x => x.Trim()).ToList();
+				int w, h;
+				if (wh.Count == 2 && int.TryParse(wh[0], out w) && int.TryParse(wh[1], out h)) {
+					cmd += "-z ";
+					if (cbPreserveThumbAspect.Checked)
+						cmd += "+";
+					cmd += string.Format("({0},{1})", w, h);
+				}
+			}
 
 			return cmd;
 		}
@@ -421,8 +494,8 @@ namespace CNCMaps.GUI {
 			if (_showlog)
 				return;
 
-			Height += cbLog.Height + 10;
-			cbLog.Visible = true;
+			Height += gbLog.Height + 10;
+			gbLog.Visible = true;
 			_showlog = true;
 		}
 		private delegate void LogDelegate(string s);
@@ -459,13 +532,6 @@ namespace CNCMaps.GUI {
 			{90, "Map drawing completed"},
 		};
 		#endregion
-
-		private void btnModEditor_Click(object sender, EventArgs e) {
-			var editor = new ModConfigEditor(tbModConfig.Text);
-			if (editor.ShowDialog() == DialogResult.OK) {
-				tbModConfig.Text = editor.ModConfigFile;
-			}
-		}
 
 
 	}

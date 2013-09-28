@@ -358,5 +358,41 @@ namespace CNCMaps.GUI.Properties {
                 this["omitsquarespreview"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool outputthumb {
+            get {
+                return ((bool)(this["outputthumb"]));
+            }
+            set {
+                this["outputthumb"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("800,0")]
+        public string thumbdimensions {
+            get {
+                return ((string)(this["thumbdimensions"]));
+            }
+            set {
+                this["thumbdimensions"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool thumbpreserveaspect {
+            get {
+                return ((bool)(this["thumbpreserveaspect"]));
+            }
+            set {
+                this["thumbpreserveaspect"] = value;
+            }
+        }
     }
 }

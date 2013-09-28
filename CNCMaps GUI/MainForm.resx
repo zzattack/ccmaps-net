@@ -133,6 +133,18 @@ DANGEROUS: comments and ini formatting is lost. The original map is overwritten!
 since this information is not actually stored in the map.
 This will never render the map as if it is a TS/FS map, if it is you need to manually select this!</value>
   </data>
+  <data name="cbPreserveThumbAspect.ToolTip" xml:space="preserve">
+    <value>Generate a thumbnail of specified size. Format is in 
+"width,height". If you specify 0 either for width or height,
+aspect ratio is preserved while the width/height is maximized
+for the non-zero component.</value>
+  </data>
+  <data name="cbOutputThumbnail.ToolTip" xml:space="preserve">
+    <value>Generate a thumbnail of specified size. Format is in 
+(width,height). If you specify 0 either for width or height,
+aspect ratio is preserved while the width/height is maximized
+for the non-zero component.</value>
+  </data>
   <data name="rbAutoFilename.ToolTip" xml:space="preserve">
     <value>Automatic filename resolution uses a  CSF, missions.ini or [Basic]/Name if possible. 
 This scheme works well for determining the name of TS/RA2 multiplayer maps as well
