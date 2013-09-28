@@ -24,7 +24,7 @@ namespace CNCMaps.Game {
 
 	public class ObjectCollection {
 		private readonly CollectionType _collectionType;
-		private readonly TheaterType _theaterType;
+		private readonly string _theaterType;
 		private readonly EngineType _engine;
 		private readonly IniFile _rules;
 		private readonly IniFile _art;
@@ -63,7 +63,7 @@ namespace CNCMaps.Game {
 		static NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
 		public ObjectCollection(IniFile.IniSection objectSection, CollectionType collectionType,
-			TheaterType theaterType, EngineType engine, IniFile rules, IniFile art, PaletteCollection palettes) {
+			string theaterType, EngineType engine, IniFile rules, IniFile art, PaletteCollection palettes) {
 			this._theaterType = theaterType;
 			this._engine = engine;
 			this._collectionType = collectionType;
@@ -176,7 +176,7 @@ namespace CNCMaps.Game {
 				drawable.PaletteType = PaletteType.Iso;
 				drawable.LightingType = LightingType.Full;
 			}
-			else if (artSection.ReadBool("TerrainPalette")) {
+			if (artSection.ReadBool("TerrainPalette")) {
 				drawable.PaletteType = PaletteType.Iso;
 				drawable.IsRemapable = false;
 			}
@@ -322,6 +322,8 @@ namespace CNCMaps.Game {
 						int ySort = 0;
 						bool extraShadow = false;
 						string extraImageFileName = extraImageSectionName;
+						Point extraOffset = mainProps.Offset;
+						bool extraNewTheater = newTheater;
 
 						if (extraArtSection != null) {
 							ySort = extraArtSection.ReadInt("YSort", artSection.ReadInt(extraImage + "YSort"));
@@ -330,6 +332,8 @@ namespace CNCMaps.Game {
 							extraFrameDecider = FrameDeciders.LoopFrameDecider(
 								extraArtSection.ReadInt("LoopStart"),
 								extraArtSection.ReadInt("LoopEnd", 1));
+							extraOffset.Offset(artSection.ReadInt(extraImage + "X"), artSection.ReadInt(extraImage + "Y"));
+							extraNewTheater = extraArtSection.ReadBool("NewTheater", extraNewTheater);
 						}
 
 						if (theaterExtension)
@@ -337,13 +341,13 @@ namespace CNCMaps.Game {
 						else
 							extraImageFileName += ".shp";
 
-						if (newTheater)
+						if (extraNewTheater)
 							ApplyNewTheaterIfNeeded(artSectionName, ref extraImageFileName);
 
 						var props = new DrawProperties {
 							HasShadow = extraShadow,
-							Offset = mainProps.Offset,
-							ShadowOffset = mainProps.Offset,
+							Offset = extraOffset,
+							ShadowOffset = extraOffset,
 							SortIndex = ySort,
 							FrameDecider = extraFrameDecider,
 						};
@@ -356,6 +360,9 @@ namespace CNCMaps.Game {
 						int ySort = 0;
 						bool extraShadow = false;
 						string extraImageDamagedFileName = extraImageDamagedSectionName;
+						Point extraOffset = mainProps.Offset;
+						bool extraNewTheater = newTheater;
+
 						if (extraArtDamagedSection != null) {
 							ySort = extraArtDamagedSection.ReadInt("YSort", artSection.ReadInt(extraImage + "YSort"));
 							extraShadow = extraArtDamagedSection.ReadBool("Shadow", extraShadow);
@@ -363,19 +370,21 @@ namespace CNCMaps.Game {
 							extraFrameDecider = FrameDeciders.LoopFrameDecider(
 								extraArtDamagedSection.ReadInt("LoopStart"),
 								extraArtDamagedSection.ReadInt("LoopEnd", 1));
+							extraOffset.Offset(artSection.ReadInt(extraImage + "X"), artSection.ReadInt(extraImage + "Y"));
+							extraNewTheater = extraArtDamagedSection.ReadBool("NewTheater", extraNewTheater);
 						}
 						if (theaterExtension)
 							extraImageDamagedFileName += ModConfig.ActiveTheater.Extension;
 						else
 							extraImageDamagedFileName += ".shp";
 
-						if (newTheater)
+						if (extraNewTheater)
 							ApplyNewTheaterIfNeeded(artSectionName, ref extraImageDamagedFileName);
 
 						var props = new DrawProperties {
 							HasShadow = extraShadow,
 							SortIndex = ySort,
-							Offset = mainProps.Offset,
+							Offset = extraOffset,
 							ShadowOffset = mainProps.Offset,
 							FrameDecider = extraFrameDecider,
 							// TODO: figure out if this needs to be added to y offset = -artSection.ReadInt(extraImage + "ZAdjust"),
@@ -507,7 +516,7 @@ namespace CNCMaps.Game {
 				var vxl = VFS.Open<VxlFile>(fileName);
 				if (vxl != null) {
 					string hvaFileName = Path.ChangeExtension(fileName, ".hva");
-					var hva = VFS.Open(hvaFileName) as HvaFile;
+					var hva = VFS.Open<HvaFile>(hvaFileName) ;
 					drawableObject.AddVoxel(vxl, hva, drawProps);
 				}
 			}
