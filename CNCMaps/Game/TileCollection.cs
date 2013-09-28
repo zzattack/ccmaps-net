@@ -10,7 +10,7 @@ using CNCMaps.VirtualFileSystem;
 namespace CNCMaps.Game {
 
 	class TileCollection {
-		static NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
+		static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
 		readonly IniFile _theaterIni;
 		readonly List<short> _tileNumToSet = new List<short>();
 		readonly List<short> _setNumToFirstTile = new List<short>();
@@ -100,7 +100,7 @@ namespace CNCMaps.Game {
 			if (theaterIni == null) {
 				_theaterIni = VFS.Open<IniFile>(theaterSettings.TheaterIni);
 				if (_theaterIni == null) {
-					logger.Warn("Unavailable theater loaded, theater.ini not found");
+					Logger.Warn("Unavailable theater loaded, theater.ini not found");
 					return;
 				}
 			}
@@ -188,7 +188,7 @@ namespace CNCMaps.Game {
 					break;
 				sectionIdx++;
 
-				logger.Trace("Loading tileset {0}", sectionName);
+				Logger.Trace("Loading tileset {0}", sectionName);
 				var ts = new TileSet(sect.ReadString("FileName"), sect.ReadString("SetName"), sect.ReadInt("TilesInSet"));
 				_setNumToFirstTile.Add((short)_tiles.Count);
 				_tileSets.Add(ts);
@@ -231,7 +231,7 @@ namespace CNCMaps.Game {
 					var drawable = animations.GetDrawable(anim);
 
 					if (string.IsNullOrEmpty(anim) || drawable == null) {
-						logger.Debug("Missing anim {0} for tileset {1}", anim, tileSet.SetName);
+						Logger.Debug("Missing anim {0} for tileset {1}", anim, tileSet.SetName);
 						continue;
 					}
 
@@ -324,7 +324,7 @@ namespace CNCMaps.Game {
 
 		/// <summary>Recalculates tile system. </summary>
 		public void RecalculateTileSystem(TileLayer tiles) {
-			logger.Info("Recalculating tile LAT system");
+			Logger.Info("Recalculating tile LAT system");
 
 			// change all CLAT tiles to their corresponding LAT tiles
 			foreach (MapTile t in tiles) {

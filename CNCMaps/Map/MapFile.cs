@@ -198,11 +198,10 @@ namespace CNCMaps.Map {
 			IniFile rulesYR = vfsYR.OpenFile<IniFile>("rulesmd.ini");
 
 			string theater = ReadString("Map", "Theater");
-			TheaterType thType = Theater.TheaterTypeFromString(theater);
-			TheaterSettings thsTS = ModConfig.DefaultsTS.GetTheater(thType);
-			TheaterSettings thsFS = ModConfig.DefaultsFS.GetTheater(thType);
-			TheaterSettings thsRA2 = ModConfig.DefaultsRA2.GetTheater(thType);
-			TheaterSettings thsYR = ModConfig.DefaultsYR.GetTheater(thType);
+			TheaterSettings thsTS = ModConfig.DefaultsTS.GetTheater(theater);
+			TheaterSettings thsFS = ModConfig.DefaultsFS.GetTheater(theater);
+			TheaterSettings thsRA2 = ModConfig.DefaultsRA2.GetTheater(theater);
+			TheaterSettings thsYR = ModConfig.DefaultsYR.GetTheater(theater);
 
 			foreach (var f in thsTS.Mixes)
 				vfsTS.AddFile(f);
@@ -322,7 +321,9 @@ namespace CNCMaps.Map {
 			_rules.MergeWith(this);
 
 			_theater = new Theater(ReadString("Map", "Theater"), Engine, _rules, _art);
-			_theater.Initialize();
+			if (!_theater.Initialize())
+				return false;
+
 			RemoveUnknownObjects();
 			SetDrawables();
 
@@ -1443,8 +1444,9 @@ namespace CNCMaps.Map {
 				// fallback for multiplayer maps with, .map extension,
 				// no YR objects so assumed to be ra2, but actually meant to be used on yr
 				if (mapExt == ".map" && pkt != null && !pkt.MapEntries.ContainsKey(pktEntryName) && Engine >= EngineType.RedAlert2) {
-					VFS.GetInstance().ScanMixDir(Program.Settings.MixFilesDirectory, EngineType.YurisRevenge);
-					pkt = VFS.Open<PktFile>("missionsmd.pkt");
+					var vfs = new VFS();
+					vfs.AddFile(Program.Settings.InputFile);
+					pkt = vfs.OpenFile<PktFile>("missionsmd.pkt");
 				}
 
 				if (pkt != null && !string.IsNullOrEmpty(pktEntryName))

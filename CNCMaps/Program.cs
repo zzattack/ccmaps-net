@@ -300,10 +300,6 @@ namespace CNCMaps {
 				_logger.Error("Specified output directory does not exist.");
 				return false;
 			}
-			if (!string.IsNullOrEmpty(Settings.MixFilesDirectory) && !string.IsNullOrEmpty(Settings.ModConfig)) {
-				_logger.Error("Specify either -m or -M but not both.");
-				return false;
-			}
 			return true;
 		}
 

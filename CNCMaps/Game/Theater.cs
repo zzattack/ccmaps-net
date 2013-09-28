@@ -8,7 +8,7 @@ using CNCMaps.VirtualFileSystem;
 
 namespace CNCMaps.Game {
 	public class Theater {
-		readonly TheaterType _theaterType;
+		readonly string _theaterType;
 		readonly EngineType _engine;
 		readonly IniFile _rules;
 		readonly IniFile _art;
@@ -26,49 +26,41 @@ namespace CNCMaps.Game {
 
 		static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
 
-		public Theater(string theaterName, EngineType engine) :
-			this(TheaterTypeFromString(theaterName), engine) { }
-
-		public Theater(string theaterName, EngineType engine, IniFile rules, IniFile art) :
-			this(TheaterTypeFromString(theaterName), engine, rules, art) { }
-
-		public Theater(TheaterType theaterType, EngineType engine, IniFile rules, IniFile art) {
+		public Theater(string theaterType, EngineType engine, IniFile rules, IniFile art) {
 			this._theaterType = theaterType;
 			this._engine = engine;
 			this._rules = rules;
 			this._art = art;
 		}
 
-		public Theater(TheaterType theaterType, EngineType engine) {
+		public Theater(string theaterType, EngineType engine) {
 			this._theaterType = theaterType;
 			this._engine = engine;
 			if (engine == EngineType.RedAlert2 || engine == EngineType.TiberianSun) {
-				_rules = VFS.Open("rules.ini") as IniFile;
-				_art = VFS.Open("art.ini") as IniFile;
+				_rules = VFS.Open<IniFile>("rules.ini") ;
+				_art = VFS.Open<IniFile>("art.ini");
 			}
 			else if (engine == EngineType.YurisRevenge) {
-				_rules = VFS.Open("rulesmd.ini") as IniFile;
-				_art = VFS.Open("artmd.ini") as IniFile;
+				_rules = VFS.Open<IniFile>("rulesmd.ini");
+				_art = VFS.Open<IniFile>("artmd.ini");
 			}
 			else if (engine == EngineType.Firestorm) {
-				_rules = VFS.Open("rules.ini") as IniFile;
+				_rules = VFS.Open<IniFile>("rules.ini");
 				var fsRules = VFS.Open<IniFile>("firestrm.ini");
 				Logger.Info("Merging Firestorm rules with TS rules");
 				_rules.MergeWith(fsRules);
-				_art = VFS.Open("artmd.ini") as IniFile;
+				_art = VFS.Open<IniFile>("artmd.ini");
 			}
 		}
 
-		/* Starkku: Statue of Liberty does not need special palette handling anymore, so commented those lines out.
-		 * Also, game only uses temperat.pal for ore overlays - snow.pal, urban.pal etc. are UNUSED - some code below changed to match this.
-		 */
-		public void Initialize() {
+		public bool Initialize() {
 			Logger.Info("Initializing theater of type {0}", _theaterType);
 
-			ModConfig.SetActiveTheater(_theaterType);
+			if (!ModConfig.SetActiveTheater(_theaterType))
+				return false;
 
 			// load palettes and additional mix files for this theater
-			_palettes = new PaletteCollection(_theaterType);
+			_palettes = new PaletteCollection();
 			_palettes.IsoPalette = new Palette(VFS.Open<PalFile>(ModConfig.ActiveTheater.IsoPaletteName));
 			_palettes.OvlPalette = new Palette(VFS.Open<PalFile>(ModConfig.ActiveTheater.OverlayPaletteName));
 			_palettes.UnitPalette = new Palette(VFS.Open<PalFile>(ModConfig.ActiveTheater.UnitPaletteName));
@@ -105,19 +97,10 @@ namespace CNCMaps.Game {
 
 			_tileTypes.InitTilesets();
 			_tileTypes.InitAnimations(_animations);
-		}
 
-		public static TheaterType TheaterTypeFromString(string theater) {
-			theater = theater.ToLower();
-			if (theater == "lunar") return TheaterType.Lunar;
-			else if (theater == "newurban") return TheaterType.NewUrban;
-			else if (theater == "desert") return TheaterType.Desert;
-			else if (theater == "temperate") return TheaterType.Temperate;
-			else if (theater == "urban") return TheaterType.Urban;
-			else if (theater == "snow") return TheaterType.Snow;
-			else throw new InvalidOperationException();
+			return true;
 		}
-
+		
 		internal TileCollection GetTileCollection() {
 			return _tileTypes;
 		}

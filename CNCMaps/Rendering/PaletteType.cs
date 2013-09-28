@@ -1,19 +1,37 @@
+using System.ComponentModel;
+using System.Drawing.Design;
+using DynamicTypeDescriptor;
+
 namespace CNCMaps.Rendering {
+
+	[Editor(typeof(StandardValueEditor), typeof(UITypeEditor))]
 	public enum PaletteType {
-		None, // implies unchosen
-		Iso, // for tiles and stuff
-		Unit, // for units and stuff
-		Overlay, // for overlays...
-		Anim, // for animation
-		Custom // give by a custom string (officially only used for Statue of Liberty)
+		[StandardValue("No palette", Visible = false)]
+		None,
+		[StandardValue("The iso palette, for tiles etc.")]
+		Iso,
+		[StandardValue("Unit palette, primarily for units")]
+		Unit,
+		[StandardValue("Overlay palette")]
+		Overlay,
+		[StandardValue("Animations palette")]
+		Anim,
+		[StandardValue("Custom palette (officially only used for Statue of Liberty)")]
+		Custom
 	};
-	
+
+	[Editor(typeof(StandardValueEditor), typeof(UITypeEditor))]
 	public enum LightingType {
-		None, // No special lighting (ore/gems).
-		// Global, // Global would get the lighting of the map as specified in [Lighting] but nothing else. NOT USED.
-		Level, // as above, adjusts per z-level of the map
-		Ambient, // as above, + affected by lamps, but only the ambient color
-		Full, // as above, + affected by lamps including r/g/b tints
+		[StandardValue("No special lighting (default for ore/gems)")]
+		None,
+		[StandardValue("Global receives the lighting of the map as specified in [Lighting] but nothing else ")]
+		Global,
+		[StandardValue("Same as global, but with z-level adjustments ")]
+		Level,
+		[StandardValue("Same as level, but with additional lighting affected by only the ambient color of lamps")]
+		Ambient,
+		[StandardValue("Full lighting, including r/g/b tints from lamps")]
+		Full,
 	};
 
 }

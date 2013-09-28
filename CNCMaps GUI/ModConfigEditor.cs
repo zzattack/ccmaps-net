@@ -20,12 +20,14 @@ namespace CNCMaps.GUI {
 		public ModConfigEditor(string modConfigFile)
 			: this() {
 			this.ModConfigFile = modConfigFile;
-			try {
-				using (var f = File.OpenRead(modConfigFile))
-					SelectObject(ModConfig.Deserialize(f));
-				_pendingChanges = false;
-			}
-			catch {
+			if (!string.IsNullOrEmpty(modConfigFile) && File.Exists(modConfigFile)) {
+				try {
+					using (var f = File.OpenRead(modConfigFile))
+						SelectObject(ModConfig.Deserialize(f));
+					_pendingChanges = false;
+				}
+				catch {
+				}
 			}
 		}
 		private void SelectObject(ModConfig modConfig) {

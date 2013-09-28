@@ -7,7 +7,6 @@ using CNCMaps.Map;
 namespace CNCMaps.Rendering {
 
 	public class Palette {
-		// Starkku: Name of the palette file, without .pal extension. Mostly for debug purposes, but can also be used to identify certain types of palettes semi-reliably.
 		public string Name { get; set; }
 
 		public Color[] Colors = new Color[256];

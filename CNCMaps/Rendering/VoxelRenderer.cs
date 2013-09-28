@@ -35,7 +35,6 @@ namespace CNCMaps.Rendering {
 
 			logger.Debug("GL context created");
 			try {
-				GL.LoadAll();
 				logger.Debug("GL functions loaded");
 
 				GL.Enable(EnableCap.DepthTest);
