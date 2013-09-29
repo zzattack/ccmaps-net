@@ -4,6 +4,7 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using CNCMaps.FileFormats;
 using CNCMaps.Map;
 using CNCMaps.Rendering;
@@ -24,7 +25,7 @@ namespace CNCMaps.Game {
 
 	public class ObjectCollection {
 		private readonly CollectionType _collectionType;
-		private readonly string _theaterType;
+		private readonly TheaterType _theaterType;
 		private readonly EngineType _engine;
 		private readonly IniFile _rules;
 		private readonly IniFile _art;
@@ -63,7 +64,7 @@ namespace CNCMaps.Game {
 		static NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
 		public ObjectCollection(IniFile.IniSection objectSection, CollectionType collectionType,
-			string theaterType, EngineType engine, IniFile rules, IniFile art, PaletteCollection palettes) {
+			TheaterType theaterType, EngineType engine, IniFile rules, IniFile art, PaletteCollection palettes) {
 			this._theaterType = theaterType;
 			this._engine = engine;
 			this._collectionType = collectionType;
@@ -224,13 +225,13 @@ namespace CNCMaps.Game {
 			if (rulesSection.ReadBool("IsVeins")) {
 				drawable.LightingType = LightingType.None;
 				drawable.PaletteType = PaletteType.Unit;
-				mainProps.FrameDecider = FrameDeciders.OverlayValueFrameDecider;
-				mainProps.Offset.Y -= 1; // hurray, fuck logic
+				drawable.IsVeins = true;
 			}
 			if (rulesSection.ReadBool("IsVeinholeMonster")) {
-				mainProps.Offset.Y = -49; // why is this needed???
+				mainProps.Offset.Y = -48; // why is this needed???
 				drawable.LightingType = LightingType.None;
 				drawable.PaletteType = PaletteType.Unit;
+				drawable.IsVeinHoleMonster = true;
 			}
 
 			if (rulesSection.ReadString("Land") == "Rock") {
@@ -268,6 +269,7 @@ namespace CNCMaps.Game {
 
 				if (_engine >= EngineType.RedAlert2) {
 					if (tibType != OverlayTibType.NotSpecial) {
+						mainProps.FrameDecider = FrameDeciders.OverlayValueFrameDecider;
 						drawable.PaletteType = PaletteType.Overlay;
 						drawable.LightingType = LightingType.None;
 					}
@@ -280,6 +282,7 @@ namespace CNCMaps.Game {
 				}
 				else if (_engine <= EngineType.Firestorm) {
 					if (tibType != OverlayTibType.NotSpecial) {
+						mainProps.FrameDecider = FrameDeciders.OverlayValueFrameDecider;
 						drawable.PaletteType = PaletteType.Unit;
 						drawable.LightingType = LightingType.None;
 						drawable.IsRemapable = true;
@@ -387,7 +390,6 @@ namespace CNCMaps.Game {
 							Offset = extraOffset,
 							ShadowOffset = mainProps.Offset,
 							FrameDecider = extraFrameDecider,
-							// TODO: figure out if this needs to be added to y offset = -artSection.ReadInt(extraImage + "ZAdjust"),
 							ZBufferAdjust = -artSection.ReadInt(extraImage + "ZAdjust"),
 						};
 						drawable.AddDamagedShp(VFS.Open(extraImageDamagedFileName) as ShpFile, props);
@@ -453,6 +455,16 @@ namespace CNCMaps.Game {
 
 				}
 			}
+
+			// overrides from the modconfig
+			var cfgOverride = ModConfig.ActiveConfig.ObjectOverrides.FirstOrDefault(
+				ovr => Regex.IsMatch(objName, ovr.ObjRegex, RegexOptions.IgnoreCase));
+			if (cfgOverride != null) {
+				logger.Debug("Object {0} receives overrides from regex {1}", objName, cfgOverride.ObjRegex);
+				drawable.LightingType = cfgOverride.Lighting;
+				drawable.PaletteType = cfgOverride.Palette;
+				drawable.CustomPaletteName = cfgOverride.CustomPaletteFile;
+			}
 		}
 
 		// Adds fire animations to a building. Supports custom-paletted animations.
@@ -516,7 +528,7 @@ namespace CNCMaps.Game {
 				var vxl = VFS.Open<VxlFile>(fileName);
 				if (vxl != null) {
 					string hvaFileName = Path.ChangeExtension(fileName, ".hva");
-					var hva = VFS.Open<HvaFile>(hvaFileName) ;
+					var hva = VFS.Open<HvaFile>(hvaFileName);
 					drawableObject.AddVoxel(vxl, hva, drawProps);
 				}
 			}

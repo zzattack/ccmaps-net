@@ -399,6 +399,13 @@ namespace CNCMaps.Game {
 			else if (t.TileNum < 0 || t.TileNum >= _tiles.Count) t.TileNum = 0;
 			return _tiles[t.TileNum].GetTmpFile(t.SubTile);
 		}
+		internal TmpFile.TmpImage GetTileImage(MapTile t) {
+			if (t == null) return null;
+			else if (t.TileNum < 0 || t.TileNum >= _tiles.Count) t.TileNum = 0;
+			var tmp = _tiles[t.TileNum].GetTmpFile(t.SubTile);
+			if (tmp.Images.Count > t.SubTile) return tmp.Images[t.SubTile];
+			return null;
+		}
 
 		public int NumTiles {
 			get { return _tiles.Count; }

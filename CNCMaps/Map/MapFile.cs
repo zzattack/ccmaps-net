@@ -197,7 +197,7 @@ namespace CNCMaps.Map {
 			IniFile rulesRA2 = vfsRA2.OpenFile<IniFile>("rules.ini");
 			IniFile rulesYR = vfsYR.OpenFile<IniFile>("rulesmd.ini");
 
-			string theater = ReadString("Map", "Theater");
+			TheaterType theater = Theater.TheaterTypeFromString(ReadString("Map", "Theater"));
 			TheaterSettings thsTS = ModConfig.DefaultsTS.GetTheater(theater);
 			TheaterSettings thsFS = ModConfig.DefaultsFS.GetTheater(theater);
 			TheaterSettings thsRA2 = ModConfig.DefaultsRA2.GetTheater(theater);
@@ -220,7 +220,7 @@ namespace CNCMaps.Map {
 			IniFile rulesTS, IniFile rulesFS, IniFile rulesRA2, IniFile rulesYR,
 			TheaterSettings theaterTS, TheaterSettings theaterFS, TheaterSettings theaterRA2, TheaterSettings theaterYR,
 			VFS vfsTS, VFS vfsFS, VFS vfsRA2, VFS vfsYR) {
-			
+
 			double tsScore = PercentageObjectsKnown(vfsTS, rulesTS, theaterTS);
 			double fsScore = PercentageObjectsKnown(vfsFS, rulesFS, theaterFS);
 			double ra2Score = PercentageObjectsKnown(vfsRA2, rulesRA2, theaterRA2);
@@ -320,9 +320,12 @@ namespace CNCMaps.Map {
 			Logger.Info("Overriding rules.ini with map INI entries");
 			_rules.MergeWith(this);
 
-			_theater = new Theater(ReadString("Map", "Theater"), Engine, _rules, _art);
+			_theater = new Theater(Theater.TheaterTypeFromString(ReadString("Map", "Theater")), Engine, _rules, _art);
 			if (!_theater.Initialize())
 				return false;
+
+			// needs to be done before drawables are set
+			RecalculateOreSpread();
 
 			RemoveUnknownObjects();
 			SetDrawables();
@@ -334,8 +337,8 @@ namespace CNCMaps.Map {
 
 			if (Engine >= EngineType.RedAlert2)
 				_theater.GetTileCollection().RecalculateTileSystem(_tiles);
-			
-			RecalculateOreSpread(); // is this really used on TS?
+			else if (Engine <= EngineType.Firestorm)
+				RecalculateVeinsSpread();
 
 			LoadLighting();
 			CreateLevelPalettes();
@@ -731,8 +734,8 @@ namespace CNCMaps.Map {
 
 		private void RecalculateOreSpread() {
 			Logger.Info("Redistributing ore-spread over patches");
+
 			foreach (OverlayObject o in _overlayObjects) {
-				if (o == null) continue;
 				// The value consists of the sum of all dx's with a little magic offsets
 				// plus the sum of all dy's with also a little magic offset, and also
 				// everything is calculated modulo 12
@@ -749,8 +752,10 @@ namespace CNCMaps.Map {
 					var num = (int)(yInc - xInc + 120000);
 					num %= 12;
 
-					// replace ore
-					o.OverlayID = (byte)(SpecialOverlays.Ra2MinIdRiparius + num);
+					if (Engine <= EngineType.RedAlert2)
+						o.OverlayID = (byte)(SpecialOverlays.Ra2MinIdRiparius + num);
+					else
+						o.OverlayID = (byte)(SpecialOverlays.TsMinIdRiparius + num);
 				}
 
 				else if (type == OverlayTibType.Gems) {
@@ -765,9 +770,86 @@ namespace CNCMaps.Map {
 					num %= 12;
 
 					// replace gems
-					o.OverlayID = (byte)(SpecialOverlays.Ra2MinIdCruentus + num);
+					if (Engine <= EngineType.RedAlert2)
+						o.OverlayID = (byte)(SpecialOverlays.Ra2MinIdCruentus + num);
+					else
+						o.OverlayID = (byte)(SpecialOverlays.TsMinIdCruentus + num);
 				}
 
+				else if (type == OverlayTibType.Vinifera) {
+					int x = o.Tile.Dx;
+					int y = o.Tile.Dy;
+					double yInc = ((((y - 9) / 2) % 12) * (((y - 8) / 2) % 12)) % 12;
+					double xInc = ((((x - 13) / 2) % 12) * (((x - 12) / 2) % 12)) % 12;
+
+					// x_inc may be > y_inc so adding a big number outside of cell bounds
+					// will surely keep num positive
+					var num = (int)(yInc - xInc + 120000);
+					num %= 12;
+
+					// replace gems
+					if (Engine <= EngineType.RedAlert2)
+						o.OverlayID = (byte)(SpecialOverlays.Ra2MinIdVinifera + num);
+					else
+						o.OverlayID = (byte)(SpecialOverlays.TsMinIdVinifera + num);
+				}
+
+				else if (type == OverlayTibType.Aboreus) {
+					int x = o.Tile.Dx;
+					int y = o.Tile.Dy;
+					double yInc = ((((y - 9) / 2) % 12) * (((y - 8) / 2) % 12)) % 12;
+					double xInc = ((((x - 13) / 2) % 12) * (((x - 12) / 2) % 12)) % 12;
+
+					// x_inc may be > y_inc so adding a big number outside of cell bounds
+					// will surely keep num positive
+					var num = (int)(yInc - xInc + 120000);
+					num %= 12;
+
+					// replace gems
+					if (Engine <= EngineType.RedAlert2)
+						o.OverlayID = (byte)(SpecialOverlays.Ra2MinIdAboreus + num);
+					else
+						o.OverlayID = (byte)(SpecialOverlays.TsMinIdAboreus + num);
+				}
+
+			}
+		}
+
+		private void RecalculateVeinsSpread() {
+			Random r = new Random();
+			foreach (OverlayObject o in _overlayObjects.Where(o => o.Drawable.IsVeins && !o.Drawable.IsVeinHoleMonster)) {
+				int veins = 0, rnd = 0;
+				
+				// see if veins are positioned on ramp
+				var tmpImg = _theater.GetTileCollection().GetTileImage(o.Tile);
+				if (tmpImg != null && tmpImg.RampType != 0) {
+					if (tmpImg.RampType == 7) veins = 51;
+					else if  (tmpImg.RampType == 2) veins = 53;
+					else if (tmpImg.RampType == 3) veins = 55;
+					else if (tmpImg.RampType == 4) veins = 57;
+					else {
+						continue;
+					}
+					rnd = 2;
+				}
+				else {
+					var ne = _tiles.GetNeighbourTile(o.Tile, TileLayer.TileDirection.TopRight);
+					var se = _tiles.GetNeighbourTile(o.Tile, TileLayer.TileDirection.BottomRight);
+					var sw = _tiles.GetNeighbourTile(o.Tile, TileLayer.TileDirection.BottomLeft);
+					var nw = _tiles.GetNeighbourTile(o.Tile, TileLayer.TileDirection.TopLeft);
+
+					if (ne.AllObjects.OfType<OverlayObject>().Any(v => v.Drawable.IsVeins || v.Drawable.IsVeinHoleMonster))
+						veins += 1;
+					if (se.AllObjects.OfType<OverlayObject>().Any(v => v.Drawable.IsVeins || v.Drawable.IsVeinHoleMonster))
+						veins += 2;
+					if (sw.AllObjects.OfType<OverlayObject>().Any(v => v.Drawable.IsVeins || v.Drawable.IsVeinHoleMonster))
+						veins += 4;
+					if (nw.AllObjects.OfType<OverlayObject>().Any(v => v.Drawable.IsVeins || v.Drawable.IsVeinHoleMonster))
+						veins += 8;
+
+					rnd = 3;
+				}
+				o.OverlayValue = (byte)(veins * rnd + r.Next(rnd));
 			}
 		}
 
@@ -1213,11 +1295,18 @@ namespace CNCMaps.Map {
 		}
 
 		public void DrawMap() {
-			Logger.Info("Drawing map");
-			_drawingSurface = new DrawingSurface(FullSize.Width * TileWidth, FullSize.Height * TileHeight, PixelFormat.Format24bppRgb);
+			Logger.Info("Sorting objects map");
 			var sorter = new ObjectSorter(_theater, _tiles);
 			var orderedObjs = sorter.GetOrderedObjects().ToList();
+
+			Logger.Info("Sorting objects map2"); ;
+			var sorter2 = new ObjectSorter(_theater, _tiles);
+			var orderedObjs2 = sorter2.GetOrderedObjects().ToList();
+
+			_drawingSurface = new DrawingSurface(FullSize.Width * TileWidth, FullSize.Height * TileHeight, PixelFormat.Format24bppRgb);
+
 			double lastReported = 0.0;
+			Logger.Info("Drawing map... 0%");
 			for (int i = 0; i < orderedObjs.Count; i++) {
 				var obj = orderedObjs[i];
 				_theater.Draw(obj, _drawingSurface);

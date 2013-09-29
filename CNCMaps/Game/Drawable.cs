@@ -41,6 +41,7 @@ namespace CNCMaps.Game {
 		public bool IsWall { get; set; }
 		public bool IsGate { get; set; }
 		public bool IsVeins { get; set; }
+		public bool IsVeinHoleMonster { get; set; }
 		public int TileElevation { get; set; }
 		public bool DrawFlat { get; set; }
 
