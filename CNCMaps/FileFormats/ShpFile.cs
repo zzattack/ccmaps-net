@@ -100,12 +100,11 @@ namespace CNCMaps.FileFormats {
 			}
 		}
 
-
 		public void Initialize() {
 			if (_isInitialized) return;
 			_isInitialized = true;
 
-			Logger.Debug("Initializing SHP data for file {0}", FileName);
+			Logger.Trace("Initializing SHP data for file {0}", FileName);
 			Zero = ReadInt16();
 			Width = ReadInt16();
 			Height = ReadInt16();
