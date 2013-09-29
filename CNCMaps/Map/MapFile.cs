@@ -838,13 +838,13 @@ namespace CNCMaps.Map {
 					var sw = _tiles.GetNeighbourTile(o.Tile, TileLayer.TileDirection.BottomLeft);
 					var nw = _tiles.GetNeighbourTile(o.Tile, TileLayer.TileDirection.TopLeft);
 
-					if (ne.AllObjects.OfType<OverlayObject>().Any(v => v.Drawable.IsVeins || v.Drawable.IsVeinHoleMonster))
+					if (ne != null & ne.AllObjects.OfType<OverlayObject>().Any(v => v.Drawable.IsVeins || v.Drawable.IsVeinHoleMonster))
 						veins += 1;
-					if (se.AllObjects.OfType<OverlayObject>().Any(v => v.Drawable.IsVeins || v.Drawable.IsVeinHoleMonster))
+					if (se != null & se.AllObjects.OfType<OverlayObject>().Any(v => v.Drawable.IsVeins || v.Drawable.IsVeinHoleMonster))
 						veins += 2;
-					if (sw.AllObjects.OfType<OverlayObject>().Any(v => v.Drawable.IsVeins || v.Drawable.IsVeinHoleMonster))
+					if (sw != null & sw.AllObjects.OfType<OverlayObject>().Any(v => v.Drawable.IsVeins || v.Drawable.IsVeinHoleMonster))
 						veins += 4;
-					if (nw.AllObjects.OfType<OverlayObject>().Any(v => v.Drawable.IsVeins || v.Drawable.IsVeinHoleMonster))
+					if (nw != null & nw.AllObjects.OfType<OverlayObject>().Any(v => v.Drawable.IsVeins || v.Drawable.IsVeinHoleMonster))
 						veins += 8;
 
 					rnd = 3;

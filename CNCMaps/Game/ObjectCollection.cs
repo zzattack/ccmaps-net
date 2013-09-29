@@ -345,7 +345,7 @@ namespace CNCMaps.Game {
 							extraImageFileName += ".shp";
 
 						if (extraNewTheater)
-							ApplyNewTheaterIfNeeded(artSectionName, ref extraImageFileName);
+							ApplyNewTheaterIfNeeded(extraImageSectionName, ref extraImageFileName);
 
 						var props = new DrawProperties {
 							HasShadow = extraShadow,
@@ -382,7 +382,7 @@ namespace CNCMaps.Game {
 							extraImageDamagedFileName += ".shp";
 
 						if (extraNewTheater)
-							ApplyNewTheaterIfNeeded(artSectionName, ref extraImageDamagedFileName);
+							ApplyNewTheaterIfNeeded(extraImageDamagedSectionName, ref extraImageDamagedFileName);
 
 						var props = new DrawProperties {
 							HasShadow = extraShadow,
