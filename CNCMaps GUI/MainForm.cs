@@ -390,7 +390,7 @@ namespace CNCMaps.GUI {
 					MessageBoxIcon.Information);
 				return;
 			}
-
+			tabControl.SelectTab(tpLog);
 			MakeLog();
 			ProcessCmd(exePath);
 		}

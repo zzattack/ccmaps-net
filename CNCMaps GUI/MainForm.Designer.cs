@@ -79,8 +79,6 @@ namespace CNCMaps.GUI {
 			this.btnRenderExecute = new System.Windows.Forms.Button();
 			this.tbCommandPreview = new System.Windows.Forms.TextBox();
 			this.ofd = new System.Windows.Forms.OpenFileDialog();
-			this.gbLog = new System.Windows.Forms.GroupBox();
-			this.rtbLog = new System.Windows.Forms.RichTextBox();
 			this.folderBrowserDialog1 = new System.Windows.Forms.FolderBrowserDialog();
 			this.statusStrip = new System.Windows.Forms.StatusStrip();
 			this.lblStatus = new System.Windows.Forms.ToolStripStatusLabel();
@@ -91,6 +89,9 @@ namespace CNCMaps.GUI {
 			this.tpMain = new System.Windows.Forms.TabPage();
 			this.lblCommand = new System.Windows.Forms.Label();
 			this.tpMisc = new System.Windows.Forms.TabPage();
+			this.tpLog = new System.Windows.Forms.TabPage();
+			this.gbLog = new System.Windows.Forms.GroupBox();
+			this.rtbLog = new System.Windows.Forms.RichTextBox();
 			this.gbMiscOptions.SuspendLayout();
 			this.gbThumbs.SuspendLayout();
 			this.gbVoxelsMode.SuspendLayout();
@@ -99,11 +100,12 @@ namespace CNCMaps.GUI {
 			this.gbInputOutput.SuspendLayout();
 			((System.ComponentModel.ISupportInitialize)(this.nudEncodingQuality)).BeginInit();
 			((System.ComponentModel.ISupportInitialize)(this.nudCompression)).BeginInit();
-			this.gbLog.SuspendLayout();
 			this.statusStrip.SuspendLayout();
 			this.tabControl.SuspendLayout();
 			this.tpMain.SuspendLayout();
 			this.tpMisc.SuspendLayout();
+			this.tpLog.SuspendLayout();
+			this.gbLog.SuspendLayout();
 			this.SuspendLayout();
 			// 
 			// gbMiscOptions
@@ -758,33 +760,6 @@ namespace CNCMaps.GUI {
 			// 
 			this.ofd.FileName = "ofd";
 			// 
-			// gbLog
-			// 
-			this.gbLog.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-			this.gbLog.Controls.Add(this.rtbLog);
-			this.gbLog.Location = new System.Drawing.Point(8, 286);
-			this.gbLog.Name = "gbLog";
-			this.gbLog.Size = new System.Drawing.Size(536, 0);
-			this.gbLog.TabIndex = 6;
-			this.gbLog.TabStop = false;
-			this.gbLog.Text = "Log";
-			this.gbLog.Visible = false;
-			// 
-			// rtbLog
-			// 
-			this.rtbLog.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-			this.rtbLog.Location = new System.Drawing.Point(17, 19);
-			this.rtbLog.Name = "rtbLog";
-			this.rtbLog.ReadOnly = true;
-			this.rtbLog.ScrollBars = System.Windows.Forms.RichTextBoxScrollBars.ForcedVertical;
-			this.rtbLog.Size = new System.Drawing.Size(513, 0);
-			this.rtbLog.TabIndex = 0;
-			this.rtbLog.Text = "";
-			// 
 			// statusStrip
 			// 
 			this.statusStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
@@ -819,6 +794,7 @@ namespace CNCMaps.GUI {
 			// 
 			this.tabControl.Controls.Add(this.tpMain);
 			this.tabControl.Controls.Add(this.tpMisc);
+			this.tabControl.Controls.Add(this.tpLog);
 			this.tabControl.Dock = System.Windows.Forms.DockStyle.Fill;
 			this.tabControl.Location = new System.Drawing.Point(0, 0);
 			this.tabControl.Name = "tabControl";
@@ -832,7 +808,6 @@ namespace CNCMaps.GUI {
 			this.tpMain.Controls.Add(this.gbInputOutput);
 			this.tpMain.Controls.Add(this.btnRenderExecute);
 			this.tpMain.Controls.Add(this.tbCommandPreview);
-			this.tpMain.Controls.Add(this.gbLog);
 			this.tpMain.Location = new System.Drawing.Point(4, 22);
 			this.tpMain.Name = "tpMain";
 			this.tpMain.Padding = new System.Windows.Forms.Padding(3);
@@ -859,6 +834,41 @@ namespace CNCMaps.GUI {
 			this.tpMisc.TabIndex = 1;
 			this.tpMisc.Text = "Misc settings";
 			this.tpMisc.UseVisualStyleBackColor = true;
+			// 
+			// tpLog
+			// 
+			this.tpLog.Controls.Add(this.gbLog);
+			this.tpLog.Location = new System.Drawing.Point(4, 22);
+			this.tpLog.Name = "tpLog";
+			this.tpLog.Size = new System.Drawing.Size(558, 286);
+			this.tpLog.TabIndex = 2;
+			this.tpLog.Text = "Log";
+			this.tpLog.UseVisualStyleBackColor = true;
+			// 
+			// gbLog
+			// 
+			this.gbLog.Controls.Add(this.rtbLog);
+			this.gbLog.Dock = System.Windows.Forms.DockStyle.Fill;
+			this.gbLog.Location = new System.Drawing.Point(0, 0);
+			this.gbLog.Name = "gbLog";
+			this.gbLog.Size = new System.Drawing.Size(558, 286);
+			this.gbLog.TabIndex = 7;
+			this.gbLog.TabStop = false;
+			this.gbLog.Text = "Log";
+			this.gbLog.Visible = false;
+			// 
+			// rtbLog
+			// 
+			this.rtbLog.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+			this.rtbLog.Location = new System.Drawing.Point(17, 19);
+			this.rtbLog.Name = "rtbLog";
+			this.rtbLog.ReadOnly = true;
+			this.rtbLog.ScrollBars = System.Windows.Forms.RichTextBoxScrollBars.ForcedVertical;
+			this.rtbLog.Size = new System.Drawing.Size(533, 261);
+			this.rtbLog.TabIndex = 0;
+			this.rtbLog.Text = "";
 			// 
 			// MainForm
 			// 
@@ -889,13 +899,14 @@ namespace CNCMaps.GUI {
 			this.gbInputOutput.PerformLayout();
 			((System.ComponentModel.ISupportInitialize)(this.nudEncodingQuality)).EndInit();
 			((System.ComponentModel.ISupportInitialize)(this.nudCompression)).EndInit();
-			this.gbLog.ResumeLayout(false);
 			this.statusStrip.ResumeLayout(false);
 			this.statusStrip.PerformLayout();
 			this.tabControl.ResumeLayout(false);
 			this.tpMain.ResumeLayout(false);
 			this.tpMain.PerformLayout();
 			this.tpMisc.ResumeLayout(false);
+			this.tpLog.ResumeLayout(false);
+			this.gbLog.ResumeLayout(false);
 			this.ResumeLayout(false);
 			this.PerformLayout();
 
@@ -923,8 +934,6 @@ namespace CNCMaps.GUI {
 		private System.Windows.Forms.Button btnRenderExecute;
 		private System.Windows.Forms.TextBox tbCommandPreview;
 		private System.Windows.Forms.OpenFileDialog ofd;
-		private System.Windows.Forms.GroupBox gbLog;
-		private System.Windows.Forms.RichTextBox rtbLog;
 		private System.Windows.Forms.FolderBrowserDialog folderBrowserDialog1;
 		private System.Windows.Forms.TextBox tbCustomOutput;
 		private System.Windows.Forms.RadioButton rbCustomFilename;
@@ -967,6 +976,9 @@ namespace CNCMaps.GUI {
 		private CheckBox cbOutputThumbnail;
 		private TextBox tbThumbDimensions;
 		private CheckBox cbPreserveThumbAspect;
+		private TabPage tpLog;
+		private GroupBox gbLog;
+		private RichTextBox rtbLog;
 
 	}
 }
