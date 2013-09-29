@@ -33,7 +33,7 @@ namespace CNCMaps.GUI {
 		private void SelectObject(ModConfig modConfig) {
 			modConfig.PropertyChanged += (sender, args) => {
 				propertyGrid1.Refresh();
-				propertyGrid1.ExpandAllGridItems();
+				// propertyGrid1.ExpandAllGridItems();
 			};
 
 			bool expand = propertyGrid1.SelectedObject == null;

@@ -912,15 +912,16 @@ namespace DynamicTypeDescriptor {
 						}
 						prefix = attr.KeyPrefix + cpd.PropertyType.Name;
 					}
-					catch (Exception ex) {
+					catch {
 						return;
 					}
+
 				}
 			}
 
 			if (rm != null) {
 				foreach (StandardValueAttribute sv in cpd.StatandardValues) {
-					string keyName = prefix + "_" + sv.Value.ToString() + "_Name";  // display name
+					string keyName = prefix + "_" + sv.Value + "_Name";  // display name
 					string keyDesc = prefix + "_" + sv.Value.ToString() + "_Desc"; // description
 					string dispName = String.Empty;
 					string description = String.Empty;

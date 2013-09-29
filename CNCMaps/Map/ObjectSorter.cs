@@ -15,108 +15,100 @@ namespace CNCMaps.Map {
 		private readonly Dictionary<GameObject, HashSet<GameObject>> _graph = new Dictionary<GameObject, HashSet<GameObject>>();
 		// objects with empty all their dependencies
 		private readonly HashSet<GameObject> _hist = new HashSet<GameObject>();
+		private readonly List<GameObject> _histOrdered = new List<GameObject>();
 
 		public ObjectSorter(Theater t, TileLayer map) {
 			this._map = map;
 			this._t = t;
 		}
 
+
 		internal IEnumerable<GameObject> GetOrderedObjects() {
-			var ret = new List<GameObject>();
-
-			Action<MapTile> processTile = tile => {
-				if (tile == null) return;
-
-				foreach (var obj in new[] { tile }.Union(tile.AllObjects)) {
-					// every object depends on its bottom-most host tile at least
-					AddDependency(obj, obj.BottomTile, "top tile");
-					ExamineNeighbourhood(obj);
-				}
-
-				// if this tile has no dependencies, then mark it and remove it
-				// as dependency from all other objects
-				_graph[tile].Remove(tile);
-				if (_graph[tile].Count == 0) {
-					var satisfied = MarkDependencies(tile);
-					ret.AddRange(satisfied);
-				}
-			};
-
 			for (int y = 0; y < _map.Height; y++) {
 				for (int x = _map.Width * 2 - 2; x >= 0; x -= 2)
-					processTile(_map[x, y]);
+					ProcessTile(_map[x, y]);
 				for (int x = _map.Width * 2 - 3; x >= 0; x -= 2)
-					processTile(_map[x, y]);
-			}
-
-
-			// assert no cyclics (one level deep)
-			foreach (var entry in _graph) {
-				foreach (var dep in entry.Value) {
-					// Debug.Assert(!_graph.ContainsKey(dep) || !_graph[dep].Contains(entry.Key), "", "cyclic dependency found between {0} and {1}", entry.Key, dep);
-					// GetFrontBlock(dep, entry.Key);
-					// GetFrontBlock(entry.Key, dep);
-				}
+					ProcessTile(_map[x, y]);
 			}
 
 			// in a world where everything is perfectly drawable this should hold
 			// Debug.Assert(_graph.Count == 0);
 			while (_graph.Count != 0) {
 				var leastDy = _graph.OrderBy(pair => pair.Key.TopTile.Dy).First().Key;
-				ret.AddRange(MarkDependencies(leastDy));
+				MarkDependencies(leastDy);
 			}
 
-			for (int i = 0; i < ret.Count; i++) {
-				var r = ret[i];
-				r.DrawOrderIndex = i;
+			//for (int i = 0; i < ret.Count; i++) {
+			//	var r = ret[i];
+			//	r.DrawOrderIndex = i;
+			//}
+
+			return _histOrdered;
+		}
+
+		void ProcessTile(MapTile tile) {
+			// "lock" this tile at least until we've examined its neighbourhood
+			AddDependency(tile, null);
+			ExamineNeighbourhood(tile);
+			foreach (var obj in tile.AllObjects) {
+				// every object depends on its bottom-most host tile at least
+				AddDependency(obj, null);
+				ExamineNeighbourhood(obj);
 			}
 
-			return ret;
+			_graph[tile].Remove(tile);
+			if (_graph[tile].Count == 0)
+				// mark this tile and remove it as dependency from all other objects
+				MarkDependencies(tile);
+
+			// Debug.WriteLine("----------------------- processed " + tile);
 		}
 
 		internal void ExamineNeighbourhood(GameObject obj) {
 			// Debug.WriteLine("Examining neighhourhood of " + obj);
-			Debug.Assert(!_hist.Contains(obj), "examining neighbourhood for an object that's already in the draw list");
+			// Debug.Assert(!_hist.Contains(obj), "examining neighbourhood for an object that's already in the draw list");
 
-			Action<MapTile> examine = tile2 => {
-				if (tile2 == null) return;
-				// Debug.WriteLine("neighhourhood tile " + tile2 + " of obj " + obj + " at " + obj.Tile);
+			for (int y = obj.TopTile.Dy - 2; y <= obj.BottomTile.Dy + 2; y++) {
+				for (int x = obj.TopTile.Dx - 3; x <= obj.TopTile.Dx + 3; x += 2) {
+					if ((x + (y + obj.TopTile.Dy)) < 0 || y < 0) continue;
+					var tile2 = _map[x + (y + obj.TopTile.Dy) % 2, y / 2];
+					if (tile2 == null) continue;
 
-				// Debug.WriteLine("..EXAMINING " + obj);
-				foreach (var obj2 in new[] { tile2 }.Union(tile2.AllObjects)) {
-					if (obj2 == obj) continue;
-
-					var front = GetFrontBlock(obj, obj2);
-
-					if (front == obj && !_hist.Contains(obj2))
-						AddDependency(obj, obj2, "obj in front");
-
-					else if (front == obj2) {
-						// obj2 is in front of obj, so so obj cannot have been drawn yet
-						// Debug.Assert(!_hist.Contains(obj2), "obj drawn before all its dependencies were found");
-						AddDependency(obj2, obj, "obj2 in front");
-					}
-				}
-			};
-
-			for (int y = obj.TopTile.Dy - 2; y <= obj.BottomTile.Dy + 4; y++) {
-				for (int x = obj.TopTile.Dx - 6; x <= obj.TopTile.Dx + 6; x += 2) {
-					if ((x + (y + obj.TopTile.Dy)) >= 0 && y >= 0)
-						examine(_map[x + (y + obj.TopTile.Dy) % 2, y / 2]);
+					// Debug.WriteLine("neighhourhood tile " + tile2 + " of obj " + obj + " at " + obj.Tile);
+					ExamineObjects(obj, tile2);
+					foreach (var obj2 in tile2.AllObjects)
+						ExamineObjects(obj, obj2);
 				}
 			}
+		}
 
+		private void ExamineObjects(GameObject obj, GameObject obj2) {
+			if (obj == obj2) return;
+
+			var front = GetFrontBlock(obj, obj2);
+			if (front == obj && !_hist.Contains(obj2))
+				AddDependency(obj, obj2, "obj in front");
+
+			else if (front == obj2) {
+				// obj2 is in front of obj, so so obj cannot have been drawn yet
+				// Debug.Assert(!_hist.Contains(obj2), "obj drawn before all its dependencies were found");
+				AddDependency(obj2, obj, "obj2 in front");
+			}
 		}
 
 		private void AddDependency(GameObject obj, GameObject dependency, string reason = "") {
 			HashSet<GameObject> list;
 			if (!_graph.TryGetValue(obj, out list))
 				_graph[obj] = list = new HashSet<GameObject> { obj.BottomTile, obj.TopTile };
-			bool added = list.Add(dependency);
-			if (added) Debug.WriteLine("dependency (" + obj + "@" + obj.Tile + " --> " + dependency + "@" + dependency.Tile + ") added because " + reason);
+
+			if (dependency != null) {
+				bool added = list.Add(dependency);
+				// if (added) Debug.WriteLine("dependency (" + obj + "@" + obj.Tile + " --> " + dependency + "@" + dependency.Tile + ") added because " + reason);
+			}
 		}
 
-		private IEnumerable<GameObject> MarkDependencies(GameObject nowSatisfied) {
+
+		private void MarkDependencies(GameObject nowSatisfied) {
 			var satisfiedQueue = new List<GameObject> { nowSatisfied };
 			while (satisfiedQueue.Count > 0) {
 				var mark = satisfiedQueue.Last();
@@ -125,17 +117,16 @@ namespace CNCMaps.Map {
 				// move the tile we're marking from the graph to the history
 				_graph.Remove(mark);
 				_hist.Add(mark);
+				_histOrdered.Add(mark);
 				// Debug.WriteLine("Inserting object " + mark + "@" + mark.Tile + " to hist");
 
-				var prune = new List<GameObject> { };
-				prune.AddRange(from tuple in _graph where tuple.Value.Remove(mark) where tuple.Value.Count == 0 select tuple.Key);
+				var prune = from entry in _graph where entry.Value.Remove(mark) && entry.Value.Count == 0 select entry.Key;
 				// prune newly satisfied
-				foreach (var obj in prune) {
+				foreach (var obj in prune.ToList()) {
 					_graph.Remove(obj);
 					satisfiedQueue.Add(obj);
 				}
 
-				yield return mark;
 			}
 		}
 
@@ -181,7 +172,7 @@ namespace CNCMaps.Map {
 					else if (hexB.zMin > hexA.zMax) return objB;
 					break;
 			}
-			
+
 			// units on bridges can only be drawn after the bridge
 			if (objA is OverlayObject && SpecialOverlays.IsHighBridge(objA as OverlayObject)
 				&& objB is OwnableObject && (objB as OwnableObject).OnBridge) return objB;

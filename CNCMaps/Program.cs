@@ -95,10 +95,12 @@ namespace CNCMaps {
 				// first add the dirs, then load the extra mixes, then scan the dirs
 				foreach (string modDir in ModConfig.ActiveConfig.Directories)
 					VFS.Add(modDir);
+				
 				// add mixdir to VFS (if it's not included in the mod config)
-				string mixDir = VFS.DetermineMixDir(Settings.MixFilesDirectory, map.Engine);
-				if (ModConfig.ActiveConfig.Directories.All(d => 0 != String.Compare(Path.GetFullPath(d).TrimEnd('\\'), mixDir.TrimEnd('\\'), StringComparison.InvariantCultureIgnoreCase)))
+				if (!ModConfig.ActiveConfig.Directories.Any()) {
+					string mixDir = VFS.DetermineMixDir(Settings.MixFilesDirectory, map.Engine);
 					VFS.Add(mixDir);
+				}
 				foreach (string mixFile in ModConfig.ActiveConfig.ExtraMixes)
 					VFS.Add(mixFile);
 				foreach (var dir in VFS.GetInstance().AllArchives.OfType<DirArchive>().Select(d => d.Directory).ToList())

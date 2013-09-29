@@ -15,19 +15,19 @@
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
+    <PlatformTarget>x86</PlatformTarget>
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DefineConstants>TRACE;DEBUG</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <UseVSHostingProcess>false</UseVSHostingProcess>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
+    <PlatformTarget>x86</PlatformTarget>
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
@@ -55,6 +55,28 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\CNCMaps GUI\DynamicTypeDescription\Annotations.cs">
+      <Link>Utility\Annotations.cs</Link>
+    </Compile>
+    <Compile Include="..\CNCMaps GUI\DynamicTypeDescription\CsvConverter.cs">
+      <Link>Utility\CsvConverter.cs</Link>
+    </Compile>
+    <Compile Include="..\CNCMaps GUI\DynamicTypeDescription\CustomComponentModel.cs">
+      <Link>Utility\CustomComponentModel.cs</Link>
+    </Compile>
+    <Compile Include="..\CNCMaps GUI\DynamicTypeDescription\DynamicTypeDescriptor.cs">
+      <Link>Utility\DynamicTypeDescriptor.cs</Link>
+    </Compile>
+    <Compile Include="..\CNCMaps GUI\DynamicTypeDescription\StandardValueEditorUI.cs">
+      <Link>Utility\StandardValueEditorUI.cs</Link>
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="..\CNCMaps GUI\DynamicTypeDescription\StandardValueEditorUI.Designer.cs">
+      <Link>Utility\StandardValueEditorUI.Designer.cs</Link>
+    </Compile>
+    <Compile Include="..\CNCMaps GUI\ModConfig.cs">
+      <Link>Utility\ModConfig.cs</Link>
+    </Compile>
     <Compile Include="FileFormats\Encodings\Blowfish.cs" />
     <Compile Include="FileFormats\Encodings\BlowfishKeyProvider.cs" />
     <Compile Include="FileFormats\Encodings\CRC32.cs" />
@@ -111,7 +133,6 @@
     <Compile Include="Utility\EzMarshal.cs" />
     <Compile Include="Rendering\HsvColor.cs" />
     <Compile Include="Utility\Logger.cs" />
-    <Compile Include="Utility\ModConfig.cs" />
     <Compile Include="Utility\Option.cs" />
     <Compile Include="Map\ThumbInjector.cs" />
     <Compile Include="VirtualFileSystem\IArchive.cs" />
@@ -122,6 +143,9 @@
     <Compile Include="VirtualFileSystem\VirtualTextFile.cs" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="..\CNCMaps GUI\DynamicTypeDescription\StandardValueEditorUI.resx">
+      <Link>Utility\StandardValueEditorUI.resx</Link>
+    </EmbeddedResource>
     <EmbeddedResource Include="Utility\DebugDrawingSurfaceWindow.resx">
       <DependentUpon>DebugDrawingSurfaceWindow.cs</DependentUpon>
     </EmbeddedResource>

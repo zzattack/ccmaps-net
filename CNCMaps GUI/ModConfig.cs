@@ -1,15 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.ComponentModel.Design;
 using System.Drawing.Design;
-using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Xml.Serialization;
-using CNCMaps.GUI;
 using CNCMaps.GUI.Annotations;
+using CNCMaps.Rendering;
 using DynamicTypeDescriptor;
 
 namespace CNCMaps.Utility {
@@ -18,17 +15,9 @@ namespace CNCMaps.Utility {
 	public enum EngineType {
 		[StandardValue("Auto Detect", Visible = false)]
 		AutoDetect = 0,
-
-		[StandardValue("Tiberian Sun")]
 		TiberianSun = 1,
-
-		[StandardValue("Firestorm")]
 		Firestorm = 2,
-
-		[StandardValue("Red Alert 2")]
 		RedAlert2 = 3,
-
-		[StandardValue("Yuri's Revenge")]
 		YurisRevenge = 4,
 	}
 
@@ -51,13 +40,8 @@ namespace CNCMaps.Utility {
 		public static ModConfig ActiveConfig { get; set; }
 		public static TheaterSettings ActiveTheater { get; private set; }
 
-		internal static void SetActiveConfig(EngineType engine, string modConfigFile) {
-			if (!string.IsNullOrEmpty(modConfigFile)) {
-				var fs = File.OpenRead(modConfigFile);
-				ActiveConfig = Deserialize(fs);
-				fs.Close();
-			}
-			else if (engine == EngineType.TiberianSun)
+		internal static void LoadDefaultConfig(EngineType engine) {
+			if (engine == EngineType.TiberianSun)
 				ActiveConfig = DefaultsTS;
 			else if (engine == EngineType.Firestorm)
 				ActiveConfig = DefaultsFS;
@@ -67,8 +51,9 @@ namespace CNCMaps.Utility {
 				ActiveConfig = DefaultsYR;
 		}
 
-		public static void SetActiveTheater(TheaterType theater) {
+		public static bool SetActiveTheater(TheaterType theater) {
 			ActiveTheater = ActiveConfig.Theaters.First(t => t.Type == theater);
+			return ActiveTheater != null;
 		}
 
 		public static ModConfig Deserialize(Stream s) {
@@ -116,9 +101,22 @@ namespace CNCMaps.Utility {
 		}
 		private BindingList<TheaterSettings> _theaters;
 
+		[Id(6, 1)]
+		[Description("Object specific overrides")]
+		[PropertyStateFlags(PropertyFlags.ExpandIEnumerable)]
+		public BindingList<ObjectOverride> ObjectOverrides {
+			get { return _objectOverrides; }
+			set {
+				_objectOverrides = value;
+				_objectOverrides.ListChanged += (sender, args) => OnPropertyChanged("ObjectOverrides");
+			}
+		}
+		private BindingList<ObjectOverride> _objectOverrides;
+
 		public ModConfig() {
 			Name = "Custom mod config";
 			Theaters = new BindingList<TheaterSettings>();
+			ObjectOverrides = new BindingList<ObjectOverride>();
 			Directories = new List<string> { };
 			ExtraMixes = new List<string>();
 			Engine = EngineType.YurisRevenge;
@@ -129,14 +127,20 @@ namespace CNCMaps.Utility {
 			_dctd = ProviderInstaller.Install(this);
 			_dctd.PropertySortOrder = CustomSortOrder.AscendingById;
 		}
-		
+
 		public ModConfig Clone() {
 			var ret = (ModConfig)this.MemberwiseClone();
 			ret.ExtraMixes = new List<string>();
 			ret.Directories = new List<string>();
+
 			ret.Theaters = new BindingList<TheaterSettings>();
 			foreach (var t in Theaters)
 				ret.Theaters.Add(t.Clone());
+
+			ret.ObjectOverrides = new BindingList<ObjectOverride>();
+			foreach (var t in ObjectOverrides)
+				ret.ObjectOverrides.Add(t.Clone());
+
 			ret.InstallTypeDescriptor();
 			return ret;
 		}
@@ -332,7 +336,7 @@ namespace CNCMaps.Utility {
 		#endregion
 
 		internal TheaterSettings GetTheater(TheaterType th) {
-			return Theaters.First(t => t.Type == th);
+			return Theaters.First(t => t.Type.Equals(th));
 		}
 
 		public event PropertyChangedEventHandler PropertyChanged;
@@ -397,53 +401,51 @@ namespace CNCMaps.Utility {
 		}
 	}
 
-	public class CsvConverter : TypeConverter {
-		// Overrides the ConvertTo method of TypeConverter.
-		public override object ConvertTo(ITypeDescriptorContext context, CultureInfo culture, object value, Type destinationType) {
-			var v = value as IEnumerable<String>;
-			if (destinationType == typeof(string)) {
-				return string.Join(", ", v.Select(AddQuotes).ToArray());
-			}
-			return base.ConvertTo(context, culture, value, destinationType);
+
+
+	[TypeConverter(typeof(ExpandableObjectConverter))]
+	[Serializable]
+	public class ObjectOverride {
+		[NonSerialized]
+		private DynamicCustomTypeDescriptor _dctd = null;
+
+		public ObjectOverride() {
+			InstallTypeDescriptor();
+			ObjRegex = "";
+			Palette = PaletteType.Iso;
+			CustomPaletteFile = "";
+			Lighting = LightingType.Full;
 		}
 
-		private string AddQuotes(string s) {
-			if (string.IsNullOrWhiteSpace(s)) return "";
-
-			var sb = new StringBuilder();
-			if (!s.StartsWith("\""))
-				sb.Append('"');
-			sb.Append(s);
-			if (!s.EndsWith("\""))
-				sb.Append('"');
-			return sb.ToString();
+		internal void InstallTypeDescriptor() {
+			_dctd = ProviderInstaller.Install(this);
+			_dctd.PropertySortOrder = CustomSortOrder.AscendingById;
 		}
 
-		public override bool CanConvertFrom(ITypeDescriptorContext context, Type sourceType) {
-			if (sourceType == typeof(string)) {
-				return true;
-			}
-			return base.CanConvertFrom(context, sourceType);
+		[Id(1, 1)]
+		[Description("Regex matching the name of objects that this override should be applied to (case insensitive).")]
+		public string ObjRegex { get; set; }
+
+		[Id(2, 1)]
+		[Description("Palette type that should be used for these objects.")]
+		public PaletteType Palette { get; set; }
+
+		[Id(3, 1)]
+		[Description("Filename of the custom palette, only used if PaletteType is set to custom.")]
+		public string CustomPaletteFile { get; set; }
+
+		[Id(4, 1)]
+		[Description("The kind of lighting applied to these objects..")]
+		public LightingType Lighting { get; set; }
+
+		internal ObjectOverride Clone() {
+			var ret = (ObjectOverride)this.MemberwiseClone();
+			ret.InstallTypeDescriptor();
+			return ret;
 		}
 
-		public override bool CanConvertTo(ITypeDescriptorContext context, Type sourceType) {
-			if (sourceType == typeof(IList<string>)) {
-				return true;
-			}
-			return base.CanConvertFrom(context, sourceType);
-		}
-
-		public override object ConvertFrom(ITypeDescriptorContext context, CultureInfo culture, object value) {
-			if (value is string) {
-				var vs = ((string)value).Split(new[] { ", " }, StringSplitOptions.RemoveEmptyEntries);
-				return vs.Select(v => v.Trim('"')).ToList();
-			}
-			return base.ConvertFrom(context, culture, value);
-		}
-
-		public override bool IsValid(ITypeDescriptorContext context, object value) {
-			return true; // basically anything is valid
+		public override string ToString() {
+			return string.Format("Override for \"{0}\"", !string.IsNullOrEmpty(ObjRegex) ? ObjRegex : "<empty>");
 		}
 	}
-
 }

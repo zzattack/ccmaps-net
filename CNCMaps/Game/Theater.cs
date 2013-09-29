@@ -8,7 +8,7 @@ using CNCMaps.VirtualFileSystem;
 
 namespace CNCMaps.Game {
 	public class Theater {
-		readonly string _theaterType;
+		readonly TheaterType _theaterType;
 		readonly EngineType _engine;
 		readonly IniFile _rules;
 		readonly IniFile _art;
@@ -26,14 +26,14 @@ namespace CNCMaps.Game {
 
 		static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
 
-		public Theater(string theaterType, EngineType engine, IniFile rules, IniFile art) {
+		public Theater(TheaterType theaterType, EngineType engine, IniFile rules, IniFile art) {
 			this._theaterType = theaterType;
 			this._engine = engine;
 			this._rules = rules;
 			this._art = art;
 		}
 
-		public Theater(string theaterType, EngineType engine) {
+		public Theater(TheaterType theaterType, EngineType engine) {
 			this._theaterType = theaterType;
 			this._engine = engine;
 			if (engine == EngineType.RedAlert2 || engine == EngineType.TiberianSun) {
@@ -100,7 +100,18 @@ namespace CNCMaps.Game {
 
 			return true;
 		}
-		
+
+		public static TheaterType TheaterTypeFromString(string theater) {
+			theater = theater.ToLower();
+			if (theater == "lunar") return TheaterType.Lunar;
+			else if (theater == "newurban") return TheaterType.NewUrban;
+			else if (theater == "desert") return TheaterType.Desert;
+			else if (theater == "temperate") return TheaterType.Temperate;
+			else if (theater == "urban") return TheaterType.Urban;
+			else if (theater == "snow") return TheaterType.Snow;
+			else throw new InvalidOperationException();
+		}
+
 		internal TileCollection GetTileCollection() {
 			return _tileTypes;
 		}
