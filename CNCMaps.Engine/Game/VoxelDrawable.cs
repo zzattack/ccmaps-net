@@ -25,9 +25,15 @@ namespace CNCMaps.Engine.Game {
 				BlitVoxelToSurface(ds, vxl_ds, obj, Props);
 		}
 
+		public override Rectangle GetBounds(GameObject obj) {
+			var bounds = VoxelRenderer.GetBounds(obj, Vxl, Hva, Props);
+			bounds.Offset(obj.Tile.Dx * TileWidth / 2, (obj.Tile.Dy - obj.Tile.Z) * TileHeight / 2);
+			bounds.Offset(Props.GetOffset(obj));
+			return bounds;
+		}
+
 		private unsafe void BlitVoxelToSurface(DrawingSurface ds, DrawingSurface vxl_ds, GameObject obj, DrawProperties props) {
 			Point d = new Point(obj.Tile.Dx * TileWidth / 2, (obj.Tile.Dy - obj.Tile.Z) * TileHeight / 2);
-			d.Offset(GlobalOffset);
 			d.Offset(props.GetOffset(obj));
 			d.Offset(-vxl_ds.BitmapData.Width / 2, -vxl_ds.BitmapData.Height / 2);
 

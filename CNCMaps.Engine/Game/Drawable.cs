@@ -19,7 +19,6 @@ namespace CNCMaps.Engine.Game {
 
 		public bool IsRemapable { get; set; }
 		public bool InvisibleInGame { get; set; }
-		public Point GlobalOffset { get; private set; }
 		public Size Foundation { get; set; }
 
 		public bool Overrides { get; set; }
@@ -46,13 +45,20 @@ namespace CNCMaps.Engine.Game {
 			Name = rules != null ? rules.Name : "";
 			Foundation = new Size(1, 1);
 		}
-
+		
 		public virtual void LoadFromRules() {
+			LoadFromRulesEssential();
+			LoadFromRulesFull();
+		}
+
+		public virtual void LoadFromRulesEssential() {
 			Image = Art.ReadString("Image", Art.Name);
 			IsVoxel = Art.ReadBool("Voxel");
 			TheaterExtension = Art.ReadBool("Theater");
-
 			NewTheater = OwnerCollection.Engine >= EngineType.RedAlert2 || Art.ReadBool("NewTheater");
+		}
+
+		public virtual void LoadFromRulesFull() {
 			if (Art.ReadString("Remapable") != string.Empty) {
 				// does NOT work in RA2
 				if (OwnerCollection.Engine <= EngineType.Firestorm)
@@ -148,36 +154,12 @@ namespace CNCMaps.Engine.Game {
 			Props.Offset.Offset(Art.ReadInt("XDrawOffset"), Art.ReadInt("YDrawOffset"));
 		}
 
-		public virtual void Draw(GameObject obj, DrawingSurface ds) {
-			logger.Trace("Drawing object {0} (type {1})", obj, obj.GetType());
-		}
-
-		public virtual Rectangle GetBounds(GameObject obj) {
-			Rectangle bounds = Rectangle.Empty;
-			// TODO
-			/*
-			for (int i = 0; i < _voxels.Count; i++) {
-				var vxl = _voxels[i];
-				var hva = _hvas[i];
-				var vxlbounds = vxl.File.GetBounds(obj, vxl.File, hva, vxl.Props);
-				bounds = Rectangle.Union(bounds, vxlbounds);
-			}
-			foreach (var shp in _shps.Where(shp => shp.File != null)) {
-				if (bounds == Rectangle.Empty) bounds = shp.File.GetBounds(obj, shp.Props);
-				else bounds = Rectangle.Union(bounds, shp.File.GetBounds(obj, shp.Props));
-			}
-			bounds.Offset(obj.Tile.Dx * TileWidth / 2, (obj.Tile.Dy - obj.Tile.Z) * TileHeight / 2);
-			bounds.Offset(GlobalOffset);
-
-			if (obj is OwnableObject && (obj as OwnableObject).OnBridge)
-				bounds.Offset(0, -4 * TileHeight / 2);
-			*/
-			return bounds;
-		}
+		public abstract void Draw(GameObject obj, DrawingSurface ds);
+		public abstract Rectangle GetBounds(GameObject obj);
 
 		private static readonly Pen BoundsRectPenVoxel = new Pen(Color.Blue);
 		private static readonly Pen BoundsRectPenSHP = new Pen(Color.Red);
-		public void DrawBoundingBox(GameObject obj, Graphics gfx) {
+		public virtual void DrawBoundingBox(GameObject obj, Graphics gfx) {
 			if (IsVoxel)
 				gfx.DrawRectangle(BoundsRectPenVoxel, GetBounds(obj));
 			else

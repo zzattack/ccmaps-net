@@ -11,10 +11,8 @@ namespace CNCMaps.Engine.Rendering {
 
 		public static Rectangle GetBounds(GameObject obj, ShpFile shp, DrawProperties props) {
 			shp.Initialize();
-			int frameIndex = props.FrameDecider(obj);
-			frameIndex = DecideFrameIndex(frameIndex, shp.NumImages);
-			Point offset = props.GetOffset(obj);
-			offset.Offset(-shp.Width / 2, -shp.Height / 2);
+			int frameIndex = DecideFrameIndex(props.FrameDecider(obj), shp.NumImages);
+			var offset = new Point(-shp.Width / 2, -shp.Height / 2);
 			Size size = new Size(0, 0);
 			var img = shp.GetImage(frameIndex);
 			if (img != null) {
@@ -24,7 +22,7 @@ namespace CNCMaps.Engine.Rendering {
 			return new Rectangle(offset, size);
 		}
 
-		unsafe public static void Draw(GameObject obj, ShpFile shp, DrawProperties props, DrawingSurface ds, Point globalOffset) {
+		unsafe public static void Draw(GameObject obj, ShpFile shp, DrawProperties props, DrawingSurface ds) {
 			shp.Initialize();
 
 			int frameIndex = props.FrameDecider(obj);
@@ -39,8 +37,7 @@ namespace CNCMaps.Engine.Rendering {
 			if (imgData == null || img.Width * img.Height != imgData.Length)
 				return;
 
-			Point offset = globalOffset;
-			offset.Offset(props.GetOffset(obj));
+			Point offset = props.GetOffset(obj);
 			offset.X += obj.Tile.Dx * Drawable.TileWidth / 2 - shp.Width / 2 + img.X;
 			offset.Y += (obj.Tile.Dy - obj.Tile.Z) * Drawable.TileHeight / 2 - shp.Height / 2 + img.Y;
 			Logger.Trace("Drawing SHP file {0} (Frame {1}) at ({2},{3})", shp.FileName, frameIndex, offset.X, offset.Y);
@@ -89,7 +86,7 @@ namespace CNCMaps.Engine.Rendering {
 			}
 		}
 
-		unsafe public static void DrawShadow(GameObject obj, ShpFile shp, DrawProperties props, DrawingSurface ds, Point globalOffset) {
+		unsafe public static void DrawShadow(GameObject obj, ShpFile shp, DrawProperties props, DrawingSurface ds) {
 			int frameIndex = props.FrameDecider(obj);
 			frameIndex = DecideFrameIndex(frameIndex, shp.NumImages);
 			frameIndex += shp.Images.Count / 2; // latter half are shadow Images
@@ -101,8 +98,7 @@ namespace CNCMaps.Engine.Rendering {
 			if (imgData == null || img.Width * img.Height != imgData.Length)
 				return;
 
-			Point offset = globalOffset;
-			offset.Offset(props.GetShadowOffset(obj));
+			Point offset = props.GetShadowOffset(obj);
 			offset.X += obj.Tile.Dx * Drawable.TileWidth / 2 - shp.Width / 2 + img.X;
 			offset.Y += (obj.Tile.Dy - obj.Tile.Z) * Drawable.TileHeight / 2 - shp.Height / 2 + img.Y;
 			Logger.Trace("Drawing SHP shadow {0} (frame {1}) at ({2},{3})", shp.FileName, frameIndex, offset.X, offset.Y);

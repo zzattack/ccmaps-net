@@ -113,12 +113,14 @@ namespace CNCMaps.Engine.Game {
 				turret.Props.HasShadow = true;
 				turret.Props.FrameDecider = FrameDeciders.TurretFrameDecider;
 				SubDrawables.Add(turret);
-				
+
 				if (voxel && turret.Name.ToUpper().Contains("TUR")) {
-					string barrelFile = turret.Name.Replace("TUR", "BARL");
-					if (VFS.Exists(barrelFile + ".vxl")) {
-						var barrel = new VoxelDrawable(null, null,
-							VFS.Open<VxlFile>(barrelFile + ".vxl"), VFS.Open<HvaFile>(barrelFile + ".hva"));
+					string barrelName = turret.Name.Replace("TUR", "BARL");
+					if (VFS.Exists(barrelName + ".vxl")) {
+						IniFile.IniSection barrelRules = OwnerCollection.Rules.GetOrCreateSection(barrelName);
+						IniFile.IniSection barrelArt = OwnerCollection.Art.GetOrCreateSection(barrelName);
+						var barrel = new VoxelDrawable(barrelRules, barrelArt,
+							VFS.Open<VxlFile>(barrelName + ".vxl"), VFS.Open<HvaFile>(barrelName + ".hva"));
 						SubDrawables.Add(barrel);
 						barrel.Props = turret.Props;
 					}
@@ -228,7 +230,34 @@ namespace CNCMaps.Engine.Game {
 				var powerup = OwnerCollection.GetDrawable(strObj.Upgrade3);
 				DrawPowerup(obj, powerup, 2, ds);
 			}
+		}
 
+		public override Rectangle GetBounds(GameObject obj) {
+			Rectangle bounds = Rectangle.Empty;
+			var parts = new List<Drawable>();
+			parts.Add(_baseShp);
+			parts.AddRange(_anims);
+			parts.AddRange(SubDrawables);
+
+			foreach (var d in parts) {
+				var db = d.GetBounds(obj);
+				if (bounds == Rectangle.Empty) bounds = db;
+				else bounds = Rectangle.Union(bounds, db);
+			}
+			return bounds;
+		}
+
+		public override void DrawBoundingBox(GameObject obj, Graphics gfx) {
+			base.DrawBoundingBox(obj, gfx);
+
+			return;
+			var parts = new List<Drawable>();
+			parts.Add(_baseShp);
+			parts.AddRange(_anims);
+			parts.AddRange(SubDrawables);
+
+			foreach (var d in parts)
+				d.DrawBoundingBox(obj, gfx);
 		}
 
 		public void DrawPowerup(GameObject obj, Drawable powerup, int slot, DrawingSurface ds) {

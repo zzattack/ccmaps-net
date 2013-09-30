@@ -1,4 +1,5 @@
-﻿using CNCMaps.Engine.Map;
+﻿using System.Drawing;
+using CNCMaps.Engine.Map;
 using CNCMaps.Engine.Rendering;
 using CNCMaps.FileFormats;
 
@@ -20,9 +21,13 @@ namespace CNCMaps.Engine.Game {
 				TmpDrawer.Draw((MapTile)obj, tmpFile, ds);
 		}
 
-		public override System.Drawing.Rectangle GetBounds(GameObject obj) {
+		public override Rectangle GetBounds(GameObject obj) {
 			var tile = (MapTile)obj;
 			return TmpDrawer.GetBounds(tile, tsEntry.GetTmpFile(tile.SubTile));
+		}
+
+		public override void DrawBoundingBox(GameObject obj, Graphics gfx) {
+			// meh
 		}
 
 		public TileCollection.TileSetEntry GetTileSetEntry() {

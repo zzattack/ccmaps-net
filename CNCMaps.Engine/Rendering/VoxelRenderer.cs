@@ -8,7 +8,7 @@ using OpenTK.Graphics.OpenGL;
 
 namespace CNCMaps.Engine.Rendering {
 	public class VoxelRenderer : IDisposable {
-		static NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
+		private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
 		GraphicsContext _ctx;
 		GameWindow _gw;
 		bool _canRender;
@@ -16,25 +16,25 @@ namespace CNCMaps.Engine.Rendering {
 
 		// color contributors; the standard voxels.vpl already adds a lot of ambient,
 		// that's why these seem high
-		private static readonly Vector3 _diffuse = new Vector3(1.3f);
-		private static readonly Vector3 _ambient = new Vector3(0.8f);
+		private static readonly Vector3 Diffuse = new Vector3(1.3f);
+		private static readonly Vector3 Ambient = new Vector3(0.8f);
 
 		DrawingSurface _surface;
 		// VplFile _vplFile;
 
 		public void Initialize() {
-			logger.Info("Initializing voxel renderer");
+			Logger.Info("Initializing voxel renderer");
 			_isInit = true;
 
 			_surface = new DrawingSurface(400, 400, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
 			if (!CreateContext()) {
-				logger.Error("No graphics context could not be initialized, voxel rendering will be unavailable");
+				Logger.Error("No graphics context could not be initialized, voxel rendering will be unavailable");
 				return;
 			}
 
-			logger.Debug("GL context created");
+			Logger.Debug("GL context created");
 			try {
-				logger.Debug("GL functions loaded");
+				Logger.Debug("GL functions loaded");
 
 				GL.Enable(EnableCap.DepthTest);
 				GL.Enable(EnableCap.ColorMaterial);
@@ -44,7 +44,7 @@ namespace CNCMaps.Engine.Rendering {
 			}
 
 			catch (Exception exc) {
-				logger.Error("Voxel rendering will not be available because an exception occurred while initializing OpenGL: {0}", exc.ToString());
+				Logger.Error("Voxel rendering will not be available because an exception occurred while initializing OpenGL: {0}", exc.ToString());
 			}
 		}
 
@@ -54,7 +54,7 @@ namespace CNCMaps.Engine.Rendering {
 			//if (Program.Settings.PreferOSMesa)
 			//	return CreateMesaContext() || CreateGameWindow();
 			//else
-				return CreateGameWindow() || CreateMesaContext();
+			return CreateGameWindow() || CreateMesaContext();
 		}
 
 		private bool CreateGameWindow() {
@@ -63,7 +63,7 @@ namespace CNCMaps.Engine.Rendering {
 				return true;
 			}
 			catch {
-				logger.Warn("GameWindow could not be created.");
+				Logger.Warn("GameWindow could not be created.");
 				return false;
 			}
 		}
@@ -75,15 +75,15 @@ namespace CNCMaps.Engine.Rendering {
 				if (ctxPtr != 0) {
 					_ctx.MakeCurrent(new OpenTK.Platform.Mesa.BitmapWindowInfo(_surface.BitmapData));
 					if (!_ctx.IsCurrent) {
-						logger.Warn("Could not make context current");
+						Logger.Warn("Could not make context current");
 						throw new InvalidOperationException("Mesa context could not be made current");
 					}
 				}
-				logger.Info("Successfully acquired Mesa context");
+				Logger.Info("Successfully acquired Mesa context");
 				return true;
 			}
 			catch {
-				logger.Warn("Mesa context could not be created");
+				Logger.Warn("Mesa context could not be created");
 				return false;
 			}
 		}
@@ -97,11 +97,11 @@ namespace CNCMaps.Engine.Rendering {
 		public DrawingSurface Render(VxlFile vxl, HvaFile hva, GameObject obj, DrawProperties props) {
 			if (!_isInit) Initialize();
 			if (!_canRender) {
-				logger.Warn("Not rendering {0} because no OpenGL context could be obtained", vxl.FileName);
+				Logger.Warn("Not rendering {0} because no OpenGL context could be obtained", vxl.FileName);
 				return null;
 			}
 
-			logger.Debug("Rendering voxel {0}", vxl.FileName);
+			Logger.Debug("Rendering voxel {0}", vxl.FileName);
 			vxl.Initialize();
 			hva.Initialize();
 
@@ -139,7 +139,7 @@ namespace CNCMaps.Engine.Rendering {
 
 			var lookat = Matrix4.LookAt(0, 0, -10, 0, 0, 0, 0, 1, 0);
 			GL.LoadMatrix(ref lookat);
-			
+
 			GL.Translate(0, 0, 10);
 			float direction = (obj is OwnableObject) ? (obj as OwnableObject).Direction : 0;
 			float objectRotation = 45f - direction / 256f * 360f; // convert game rotation to world degrees
@@ -189,8 +189,8 @@ namespace CNCMaps.Engine.Rendering {
 
 				// undo world transformations on light direction
 				var lightDirection = ExtractRotationVector(ToOpenGL(Matrix4.Invert(world * frame * shadowTransform)));
-					
-				 // draw line in direction light comes from
+
+				// draw line in direction light comes from
 				/*GL.Color3(Color.Red);
 				GL.LineWidth(4f);
 				GL.Begin(BeginMode.Lines);
@@ -206,7 +206,7 @@ namespace CNCMaps.Engine.Rendering {
 							Vector3 normal = section.GetNormal(vx.NormalIndex);
 							// shader function taken from https://github.com/OpenRA/OpenRA/blob/bleed/cg/vxl.fx
 							// thanks to pchote for a LOT of help getting it right
-							Vector3 colorMult = Vector3.Add(_ambient, _diffuse * Math.Max(Vector3.Dot(normal, lightDirection), 0f));
+							Vector3 colorMult = Vector3.Add(Ambient, Diffuse * Math.Max(Vector3.Dot(normal, lightDirection), 0f));
 							GL.Color3(
 								(byte)Math.Min(255, color.R * colorMult.X),
 								(byte)Math.Min(255, color.G * colorMult.Y),
@@ -238,8 +238,9 @@ namespace CNCMaps.Engine.Rendering {
 			return _surface;
 		}
 
-		internal Rectangle GetBounds(GameObject obj, VxlFile vxl, HvaFile hva, DrawProperties props) {
-			Initialize();
+		public static Rectangle GetBounds(GameObject obj, VxlFile vxl, HvaFile hva, DrawProperties props) {
+			vxl.Initialize();
+			hva.Initialize();
 
 			float direction = (obj is OwnableObject) ? (obj as OwnableObject).Direction : 0;
 			float objectRotation = 45f - direction / 256f * 360f; // convert game rotation to world degrees
@@ -304,7 +305,6 @@ namespace CNCMaps.Engine.Rendering {
 				ret = Rectangle.Union(ret, Rectangle.FromLTRB(minX, minY, maxX, maxY));
 			}
 
-			ret.Offset(props.GetOffset(obj));
 			// return new Rectangle(-ret.Width / 2, -ret.Height / 2, ret.Width, ret.Height);
 			return ret;
 		}
@@ -318,7 +318,7 @@ namespace CNCMaps.Engine.Rendering {
 				GL.ReadBuffer(ReadBufferMode.ColorAttachment0);
 			}
 			catch {
-				logger.Error("Failed to initialize framebuffers. Voxels will not be rendered.");
+				Logger.Error("Failed to initialize framebuffers. Voxels will not be rendered.");
 				return false;
 			}
 			int depthbuffer;
