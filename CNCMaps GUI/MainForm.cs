@@ -391,7 +391,6 @@ namespace CNCMaps.GUI {
 				return;
 			}
 			tabControl.SelectTab(tpLog);
-			MakeLog();
 			ProcessCmd(exePath);
 		}
 
@@ -489,15 +488,7 @@ namespace CNCMaps.GUI {
 			else
 				Log(e.Data);
 		}
-		private bool _showlog;
-		private void MakeLog() {
-			if (_showlog)
-				return;
-
-			Height += gbLog.Height + 10;
-			gbLog.Visible = true;
-			_showlog = true;
-		}
+		
 		private delegate void LogDelegate(string s);
 		private void Log(string s) {
 			if (InvokeRequired) {

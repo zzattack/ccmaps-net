@@ -1,4 +1,5 @@
-using CNCMaps.Utility;
+using CNCMaps.Engine.Rendering;
+using CNCMaps.Shared;
 
 namespace CNCMaps {
 	internal struct RenderSettings {
@@ -44,18 +45,6 @@ namespace CNCMaps {
 				SizeMode = SizeMode.Auto,
 			};
 		}
-	}
-
-	public enum StartPositionMarking {
-		None,
-		Tiled,
-		Squared
-	}
-
-	public enum SizeMode {
-		Local,
-		Full,
-		Auto,
 	}
 
 }

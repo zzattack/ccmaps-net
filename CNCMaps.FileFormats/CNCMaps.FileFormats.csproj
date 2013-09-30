@@ -1,0 +1,98 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{761CEC32-9254-4EEE-AC76-07C8E4279835}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>CNCMaps.FileFormats</RootNamespace>
+    <AssemblyName>CNCMaps.FileFormats</AssemblyName>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <TargetFrameworkProfile>Client</TargetFrameworkProfile>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="NLog, Version=2.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\Lib\NLog.dll</HintPath>
+    </Reference>
+    <Reference Include="OpenTK, Version=1.0.0.0, Culture=neutral, PublicKeyToken=bad199fe84eb3df4, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\Lib\OpenTK.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="FileFormats\CsfFile.cs" />
+    <Compile Include="FileFormats\Encodings\Blowfish.cs" />
+    <Compile Include="FileFormats\Encodings\BlowfishKeyProvider.cs" />
+    <Compile Include="FileFormats\Encodings\CRC32.cs" />
+    <Compile Include="FileFormats\Encodings\Format2.cs" />
+    <Compile Include="FileFormats\Encodings\Format3.cs" />
+    <Compile Include="FileFormats\Encodings\Format40.cs" />
+    <Compile Include="FileFormats\Encodings\Format5.cs" />
+    <Compile Include="FileFormats\Encodings\Format80.cs" />
+    <Compile Include="FileFormats\Encodings\MiniLZO.cs" />
+    <Compile Include="FileFormats\FileFormat.cs" />
+    <Compile Include="FileFormats\FormatHelper.cs" />
+    <Compile Include="FileFormats\HvaFile.cs" />
+    <Compile Include="FileFormats\IniFile.cs" />
+    <Compile Include="FileFormats\MissionsFile.cs" />
+    <Compile Include="FileFormats\MixFile.cs" />
+    <Compile Include="FileFormats\PalFile.cs" />
+    <Compile Include="FileFormats\PktFile.cs" />
+    <Compile Include="FileFormats\ShpFile.cs" />
+    <Compile Include="FileFormats\TmpFile.cs" />
+    <Compile Include="FileFormats\VplFile.cs" />
+    <Compile Include="FileFormats\VxlFile.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="VirtualFileSystem\DirArchive.cs" />
+    <Compile Include="VirtualFileSystem\IArchive.cs" />
+    <Compile Include="VirtualFileSystem\MemoryFile.cs" />
+    <Compile Include="VirtualFileSystem\VFS.cs" />
+    <Compile Include="VirtualFileSystem\VirtualFile.cs" />
+    <Compile Include="VirtualFileSystem\VirtualTextFile.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\CNCMaps.Shared\CNCMaps.Shared.csproj">
+      <Project>{54d90137-e2cc-4d21-bbcb-9e3c626d875f}</Project>
+      <Name>CNCMaps.Shared</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

@@ -1,12 +1,20 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2012
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CNCMaps", "CNCMaps\CNCMaps.csproj", "{BA2CD618-F414-4AD5-960F-2232221323F1}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CNCMaps.Renderer", "CNCMaps\CNCMaps.Renderer.csproj", "{BA2CD618-F414-4AD5-960F-2232221323F1}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CNCMaps GUI", "CNCMaps GUI\CNCMaps GUI.csproj", "{516C4E3A-879E-4EB5-81A4-E89047668B53}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CNCMaps.Renderer.GUI", "CNCMaps GUI\CNCMaps.Renderer.GUI.csproj", "{516C4E3A-879E-4EB5-81A4-E89047668B53}"
 	ProjectSection(ProjectDependencies) = postProject
 		{BA2CD618-F414-4AD5-960F-2232221323F1} = {BA2CD618-F414-4AD5-960F-2232221323F1}
 	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CNCMaps.FileFormats", "CNCMaps.FileFormats\CNCMaps.FileFormats.csproj", "{761CEC32-9254-4EEE-AC76-07C8E4279835}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CNCMaps.Shared", "CNCMaps.Shared\CNCMaps.Shared.csproj", "{54D90137-E2CC-4D21-BBCB-9E3C626D875F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CNCMaps.Engine", "CNCMaps.Engine\CNCMaps.Engine.csproj", "{B687C2A7-6FD6-495A-927D-FFC29FFD9D1D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CNCMaps.GdiRenderer", "CNCMaps.GdiRenderer\CNCMaps.GdiRenderer.csproj", "{8E7AA1CE-1165-426E-A0B2-49FEA388A303}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -40,17 +48,54 @@ Global
 		{516C4E3A-879E-4EB5-81A4-E89047668B53}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 		{516C4E3A-879E-4EB5-81A4-E89047668B53}.Release|x86.ActiveCfg = Release|Any CPU
 		{516C4E3A-879E-4EB5-81A4-E89047668B53}.Release|x86.Build.0 = Release|Any CPU
+		{761CEC32-9254-4EEE-AC76-07C8E4279835}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{761CEC32-9254-4EEE-AC76-07C8E4279835}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{761CEC32-9254-4EEE-AC76-07C8E4279835}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{761CEC32-9254-4EEE-AC76-07C8E4279835}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{761CEC32-9254-4EEE-AC76-07C8E4279835}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{761CEC32-9254-4EEE-AC76-07C8E4279835}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{761CEC32-9254-4EEE-AC76-07C8E4279835}.Release|Any CPU.Build.0 = Release|Any CPU
+		{761CEC32-9254-4EEE-AC76-07C8E4279835}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{761CEC32-9254-4EEE-AC76-07C8E4279835}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{761CEC32-9254-4EEE-AC76-07C8E4279835}.Release|x86.ActiveCfg = Release|Any CPU
+		{54D90137-E2CC-4D21-BBCB-9E3C626D875F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{54D90137-E2CC-4D21-BBCB-9E3C626D875F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{54D90137-E2CC-4D21-BBCB-9E3C626D875F}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{54D90137-E2CC-4D21-BBCB-9E3C626D875F}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{54D90137-E2CC-4D21-BBCB-9E3C626D875F}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{54D90137-E2CC-4D21-BBCB-9E3C626D875F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{54D90137-E2CC-4D21-BBCB-9E3C626D875F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{54D90137-E2CC-4D21-BBCB-9E3C626D875F}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{54D90137-E2CC-4D21-BBCB-9E3C626D875F}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{54D90137-E2CC-4D21-BBCB-9E3C626D875F}.Release|x86.ActiveCfg = Release|Any CPU
+		{B687C2A7-6FD6-495A-927D-FFC29FFD9D1D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B687C2A7-6FD6-495A-927D-FFC29FFD9D1D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B687C2A7-6FD6-495A-927D-FFC29FFD9D1D}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{B687C2A7-6FD6-495A-927D-FFC29FFD9D1D}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{B687C2A7-6FD6-495A-927D-FFC29FFD9D1D}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{B687C2A7-6FD6-495A-927D-FFC29FFD9D1D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B687C2A7-6FD6-495A-927D-FFC29FFD9D1D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B687C2A7-6FD6-495A-927D-FFC29FFD9D1D}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{B687C2A7-6FD6-495A-927D-FFC29FFD9D1D}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{B687C2A7-6FD6-495A-927D-FFC29FFD9D1D}.Release|x86.ActiveCfg = Release|Any CPU
+		{8E7AA1CE-1165-426E-A0B2-49FEA388A303}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8E7AA1CE-1165-426E-A0B2-49FEA388A303}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8E7AA1CE-1165-426E-A0B2-49FEA388A303}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{8E7AA1CE-1165-426E-A0B2-49FEA388A303}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{8E7AA1CE-1165-426E-A0B2-49FEA388A303}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{8E7AA1CE-1165-426E-A0B2-49FEA388A303}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8E7AA1CE-1165-426E-A0B2-49FEA388A303}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8E7AA1CE-1165-426E-A0B2-49FEA388A303}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{8E7AA1CE-1165-426E-A0B2-49FEA388A303}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{8E7AA1CE-1165-426E-A0B2-49FEA388A303}.Release|x86.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
-		BuildVersion_AssemblyInfoFilename = CNCMaps\Properties\AssemblyInfoGlobal.cs
-		BuildVersion_UseGlobalSettings = True
-		BuildVersion_UpdateAssemblyVersion = True
 		BuildVersion_UpdateFileVersion = True
-	EndGlobalSection
-	GlobalSection(Performance) = preSolution
-		HasPerformanceSessions = true
+		BuildVersion_UpdateAssemblyVersion = True
+		BuildVersion_UseGlobalSettings = True
+		BuildVersion_AssemblyInfoFilename = CNCMaps\Properties\AssemblyInfoGlobal.cs
 	EndGlobalSection
 EndGlobal

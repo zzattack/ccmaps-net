@@ -4,9 +4,10 @@ using System.Linq;
 using System.Runtime.Serialization;
 using System.Text.RegularExpressions;
 using System.Xml;
+using CNCMaps.Engine.Map;
+using CNCMaps.Engine.Rendering;
 using CNCMaps.FileFormats;
-using CNCMaps.Map;
-using CNCMaps.Rendering;
+using CNCMaps.Shared;
 using CNCMaps.Utility;
 using CNCMaps.VirtualFileSystem;
 using System;
@@ -17,7 +18,7 @@ using NLog.Targets;
 namespace CNCMaps {
 	class Program {
 		static OptionSet _options;
-		static Logger _logger;
+		static Logger Logger;
 		public static RenderSettings Settings;
 
 		public static int Main(string[] args) {
@@ -27,7 +28,7 @@ namespace CNCMaps {
 				return 2;
 
 			try {
-				_logger.Info("Initializing virtual filesystem");
+				Logger.Info("Initializing virtual filesystem");
 
 				var mapStream = File.Open(Settings.InputFile, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
 				VirtualFile mapFile;
@@ -64,29 +65,33 @@ namespace CNCMaps {
 							ModConfig.ActiveConfig = cfg;
 							if (Settings.Engine != EngineType.AutoDetect) {
 								if (Settings.Engine != cfg.Engine)
-									_logger.Warn("Provided engine override does not match mod config.");
+									Logger.Warn("Provided engine override does not match mod config.");
 							}
 							else
 								Settings.Engine = ModConfig.ActiveConfig.Engine;
 						}
 						catch (IOException) {
-							_logger.Error("IOException while loading mod config");
+							Logger.Error("IOException while loading mod config");
 						}
 						catch (XmlException) {
-							_logger.Error("XmlException while loading mod config");
+							Logger.Error("XmlException while loading mod config");
 						}
 						catch (SerializationException) {
-							_logger.Error("Serialization exception while loading mod config");
+							Logger.Error("Serialization exception while loading mod config");
 						}
 					}
 					else {
-						_logger.Error("Invalid mod config file specified");
+						Logger.Error("Invalid mod config file specified");
 					}
 				}
 				if (!map.LoadMap(Settings.Engine)) {
-					_logger.Error("Could not successfully load this map. Try specifying the engine type manually.");
+					Logger.Error("Could not successfully load this map. Try specifying the engine type manually.");
 					return 1;
 				}
+
+				map.IgnoreLighting = Settings.IgnoreLighting;
+				map.StartPosMarking = Settings.StartPositionMarking;
+				map.MarkOreFields = Settings.MarkOreFields;
 
 				// enginetype is now definitive, load mod config
 				if (ModConfig.ActiveConfig == null)
@@ -103,12 +108,12 @@ namespace CNCMaps {
 				}
 				foreach (string mixFile in ModConfig.ActiveConfig.ExtraMixes)
 					VFS.Add(mixFile);
-				foreach (var dir in VFS.GetInstance().AllArchives.OfType<DirArchive>().Select(d => d.Directory).ToList())
-					VFS.GetInstance().ScanMixDir(dir, map.Engine);
+				foreach (var dir in VFS.Instance.AllArchives.OfType<DirArchive>().Select(d => d.Directory).ToList())
+					VFS.Instance.ScanMixDir(dir, map.Engine);
 				
 
 				if (!map.LoadTheater()) {
-					_logger.Error("Could not successfully load all required components for this map. Aborting.");
+					Logger.Error("Could not successfully load all required components for this map. Aborting.");
 					return 1;
 				}
 
@@ -132,7 +137,7 @@ namespace CNCMaps {
 					map.DrawSquaredStartPositions();
 
 				if (Settings.OutputFile == "")
-					Settings.OutputFile = map.DetermineMapName();
+					Settings.OutputFile = DetermineMapName(map);
 
 				if (Settings.OutputDir == "")
 					Settings.OutputDir = Path.GetDirectoryName(Settings.InputFile);
@@ -171,19 +176,22 @@ namespace CNCMaps {
 							dimensions.Width = (int)(dimensions.Height / aspectRatio);
 						}
 					}
-					_logger.Info("Saving thumbnail with dimensions {0}x{1}", dimensions.Width, dimensions.Height);
+					Logger.Info("Saving thumbnail with dimensions {0}x{1}", dimensions.Width, dimensions.Height);
 					ds.SaveThumb(dimensions, cutRect, Path.Combine(Settings.OutputDir, "thumb_" + Settings.OutputFile + ".jpg"));
 				}
 
 				if (Settings.GeneratePreviewPack) {
 					if (mapFile.BaseStream is MixFile)
-						_logger.Error("Cannot inject thumbnail into an archive (.mmx/.yro/.mix)!");
-					else
-						map.GeneratePreviewPack(Settings.OmitPreviewPackMarkers);
+						Logger.Error("Cannot inject thumbnail into an archive (.mmx/.yro/.mix)!");
+					else {
+						map.GeneratePreviewPack(Settings.OmitPreviewPackMarkers, Settings.SizeMode);
+						Logger.Info("Saving map");
+						map.Save(Settings.InputFile);
+					}
 				}
 			}
 			catch (Exception exc) {
-				_logger.Error(string.Format("An unknown fatal exception occured: {0}", exc), exc);
+				Logger.Error(string.Format("An unknown fatal exception occured: {0}", exc), exc);
 #if DEBUG
 				throw;
 #else
@@ -244,7 +252,7 @@ namespace CNCMaps {
 #endif
 				LogManager.ReconfigExistingLoggers();
 			}
-			_logger = LogManager.GetCurrentClassLogger();
+			Logger = LogManager.GetCurrentClassLogger();
 		}
 
 		private static void InitSettings(string[] args) {
@@ -277,7 +285,7 @@ namespace CNCMaps {
 						Settings.OmitPreviewPackMarkers = true;
 					}
 				}, 
-				{"G|graphics-winmgr", "Attempt rendering voxels using window manager context first (default)",v => Settings.PreferOSMesa = false},
+				// {"G|graphics-winmgr", "Attempt rendering voxels using window manager context first (default)",v => Settings.PreferOSMesa = false},
 				{"g|graphics-osmesa", "Attempt rendering voxels using OSMesa context first", v => Settings.PreferOSMesa = true},
 				{"z|create-thumbnail=", "Also save a thumbnail along with the fullmap in dimensions (x,y), prefix with + to keep aspect ratio	", v => Settings.ThumbnailSettings = v},
 			};
@@ -291,15 +299,15 @@ namespace CNCMaps {
 				return false; // not really false :/
 			}
 			else if (!File.Exists(Settings.InputFile)) {
-				_logger.Error("Specified input file does not exist");
+				Logger.Error("Specified input file does not exist");
 				return false;
 			}
 			else if (!Settings.SaveJPEG && !Settings.SavePNG && !Settings.GeneratePreviewPack) {
-				_logger.Error("No output format selected. Either specify -j, -p, -k or a combination");
+				Logger.Error("No output format selected. Either specify -j, -p, -k or a combination");
 				return false;
 			}
 			else if (Settings.OutputDir != "" && !System.IO.Directory.Exists(Settings.OutputDir)) {
-				_logger.Error("Specified output directory does not exist.");
+				Logger.Error("Specified output directory does not exist.");
 				return false;
 			}
 			return true;
@@ -321,5 +329,188 @@ namespace CNCMaps {
 				return (p == 4) || (p == 6) || (p == 128);
 			}
 		}
+
+		/// <summary>Gets the determine map name. </summary>
+		/// <returns>The filename to save the map as</returns>
+		public static string DetermineMapName(MapFile map) {
+			string fileNameWithoutExtension = Path.GetFileNameWithoutExtension(map.FileName);
+
+			IniFile.IniSection basic = map.GetSection("Basic");
+			if (basic.ReadBool("Official") == false)
+				return StripPlayersFromName(basic.ReadString("Name", fileNameWithoutExtension));
+
+			string mapExt = Path.GetExtension(Program.Settings.InputFile);
+			string missionName = "";
+			string mapName = "";
+			PktFile.PktMapEntry pktMapEntry = null;
+			MissionsFile.MissionEntry missionEntry = null;
+
+			// campaign mission
+			if (!basic.ReadBool("MultiplayerOnly") && basic.ReadBool("Official")) {
+				string missionsFile;
+				switch (map.Engine) {
+					case EngineType.TiberianSun:
+					case EngineType.RedAlert2:
+						missionsFile = "mission.ini";
+						break;
+					case EngineType.Firestorm:
+						missionsFile = "mission1.ini";
+						break;
+					case EngineType.YurisRevenge:
+						missionsFile = "missionmd.ini";
+						break;
+					default:
+						throw new ArgumentOutOfRangeException("engine");
+				}
+				var mf = VFS.Open<MissionsFile>(missionsFile);
+				missionEntry = mf.GetMissionEntry(Path.GetFileName(map.FileName));
+				if (missionEntry != null)
+					missionName = (map.Engine >= EngineType.RedAlert2) ? missionEntry.UIName : missionEntry.Name;
+			}
+
+			else {
+				// multiplayer map
+				string pktEntryName = fileNameWithoutExtension;
+				PktFile pkt = null;
+
+				if (FormatHelper.MixArchiveExtensions.Contains(mapExt)) {
+					// this is an 'official' map 'archive' containing a PKT file with its name
+					try {
+						var mix = new MixFile(File.Open(Settings.InputFile, FileMode.Open, FileAccess.Read, FileShare.ReadWrite));
+						pkt = mix.OpenFile(fileNameWithoutExtension + ".pkt", FileFormat.Pkt) as PktFile;
+						// pkt file is cached by default, so we can close the handle to the file
+						mix.Close();
+
+						if (pkt != null && pkt.MapEntries.Count > 0)
+							pktEntryName = pkt.MapEntries.First().Key;
+					}
+					catch (ArgumentException) { }
+				}
+
+				else {
+					// determine pkt file based on engine
+					switch (map.Engine) {
+						case EngineType.TiberianSun:
+						case EngineType.RedAlert2:
+							pkt = VFS.Open<PktFile>("missions.pkt");
+							break;
+						case EngineType.Firestorm:
+							pkt = VFS.Open<PktFile>("multi01.pkt");
+							break;
+						case EngineType.YurisRevenge:
+							pkt = VFS.Open<PktFile>("missionsmd.pkt");
+							break;
+						default:
+							throw new ArgumentOutOfRangeException("engine");
+					}
+				}
+
+
+				// fallback for multiplayer maps with, .map extension,
+				// no YR objects so assumed to be ra2, but actually meant to be used on yr
+				if (mapExt == ".map" && pkt != null && !pkt.MapEntries.ContainsKey(pktEntryName) && map.Engine >= EngineType.RedAlert2) {
+					var vfs = new VFS();
+					vfs.AddFile(Program.Settings.InputFile);
+					pkt = vfs.OpenFile<PktFile>("missionsmd.pkt");
+				}
+
+				if (pkt != null && !string.IsNullOrEmpty(pktEntryName))
+					pktMapEntry = pkt.GetMapEntry(pktEntryName);
+			}
+
+			// now, if we have a map entry from a PKT file, 
+			// for TS we are done, but for RA2 we need to look in the CSV file for the translated mapname
+			if (map.Engine <= EngineType.Firestorm) {
+				if (pktMapEntry != null)
+					mapName = pktMapEntry.Description;
+				else if (missionEntry != null) {
+					if (map.Engine == EngineType.TiberianSun) {
+						string campaignSide;
+						string missionNumber;
+
+						if (missionEntry.Briefing.Length >= 3) {
+							campaignSide = missionEntry.Briefing.Substring(0, 3);
+							missionNumber = missionEntry.Briefing.Length > 3 ? missionEntry.Briefing.Substring(3) : "";
+							missionName = "";
+							mapName = string.Format("{0} {1} - {2}", campaignSide, missionNumber.TrimEnd('A').PadLeft(2, '0'), missionName);
+						}
+						else if (missionEntry.Name.Length >= 10) {
+							mapName = missionEntry.Name;
+						}
+					}
+					else {
+						// FS map names are constructed a bit easier
+						mapName = missionName.Replace(":", " - ");
+					}
+				}
+				else if (!string.IsNullOrEmpty(basic.ReadString("Name")))
+					mapName = basic.ReadString("Name", fileNameWithoutExtension);
+			}
+
+				// if this is a RA2/YR mission (csfEntry set) or official map with valid pktMapEntry
+			else if (missionEntry != null || pktMapEntry != null) {
+				string csfEntryName = missionEntry != null ? missionName : pktMapEntry.Description;
+
+				string csfFile = map.Engine == EngineType.YurisRevenge ? "ra2md.csf" : "ra2.csf";
+				Logger.Info("Loading csf file {0}", csfFile);
+				var csf = VFS.Open<CsfFile>(csfFile);
+				mapName = csf.GetValue(csfEntryName.ToLower());
+
+				if (missionEntry != null) {
+					if (mapName.Contains("Operation: ")) {
+						string missionMapName = Path.GetFileName(map.FileName);
+						if (char.IsDigit(missionMapName[3]) && char.IsDigit(missionMapName[4])) {
+							string missionNr = Path.GetFileName(map.FileName).Substring(3, 2);
+							mapName = mapName.Substring(0, mapName.IndexOf(":")) + " " + missionNr + " -" +
+									  mapName.Substring(mapName.IndexOf(":") + 1);
+						}
+					}
+				}
+				else {
+					// not standard map
+					if ((pktMapEntry.GameModes & PktFile.GameMode.Standard) == 0) {
+						if ((pktMapEntry.GameModes & PktFile.GameMode.Megawealth) == PktFile.GameMode.Megawealth)
+							mapName += " (Megawealth)";
+						if ((pktMapEntry.GameModes & PktFile.GameMode.Duel) == PktFile.GameMode.Duel)
+							mapName += " (Land Rush)";
+						if ((pktMapEntry.GameModes & PktFile.GameMode.NavalWar) == PktFile.GameMode.NavalWar)
+							mapName += " (Naval War)";
+					}
+				}
+			}
+
+			// not really used, likely empty, but if this is filled in it's probably better than guessing
+			if (mapName == "" && basic.SortedEntries.ContainsKey("Name"))
+				mapName = basic.ReadString("Name");
+
+			if (mapName == "") {
+				Logger.Warn("No valid mapname given or found, reverting to default filename {0}", fileNameWithoutExtension);
+				mapName = fileNameWithoutExtension;
+			}
+			else {
+				Logger.Info("Mapname found: {0}", mapName);
+			}
+
+			mapName = StripPlayersFromName(MakeValidFileName(mapName));
+			return mapName;
+		}
+
+		private static string StripPlayersFromName(string mapName) {
+			if (mapName.IndexOf(" (") != -1)
+				mapName = mapName.Substring(0, mapName.IndexOf(" ("));
+			else if (mapName.IndexOf(" [") != -1)
+				mapName = mapName.Substring(0, mapName.IndexOf(" ["));
+			return mapName;
+		}
+
+		/// <summary>Makes a valid file name.</summary>
+		/// <param name="name">The filename to be made valid.</param>
+		/// <returns>The valid file name.</returns>
+		private static string MakeValidFileName(string name) {
+			string invalidChars = Regex.Escape(new string(Path.GetInvalidFileNameChars()));
+			string invalidReStr = string.Format(@"[{0}]+", invalidChars);
+			return Regex.Replace(name, invalidReStr, "_");
+		}
+
 	}
 }

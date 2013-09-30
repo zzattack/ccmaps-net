@@ -4,7 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Threading;
 using System.Windows.Forms;
-using CNCMaps.Utility;
+using CNCMaps.Shared;
 
 namespace CNCMaps.GUI {
 	static class Program {

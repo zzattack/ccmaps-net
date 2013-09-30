@@ -2,7 +2,7 @@
 using System.ComponentModel;
 using System.IO;
 using System.Windows.Forms;
-using CNCMaps.Utility;
+using CNCMaps.Shared;
 
 namespace CNCMaps.GUI {
 	public partial class ModConfigEditor : Form {
