@@ -43,14 +43,11 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
-    <Reference Include="System.Drawing" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\CNCMaps.Shared\Properties\AssemblyInfoGlobal.cs">
+      <Link>Properties\AssemblyInfoGlobal.cs</Link>
+    </Compile>
     <Compile Include="FileFormats\CsfFile.cs" />
     <Compile Include="FileFormats\Encodings\Blowfish.cs" />
     <Compile Include="FileFormats\Encodings\BlowfishKeyProvider.cs" />

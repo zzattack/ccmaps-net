@@ -1,7 +1,7 @@
 ﻿using System.IO;
-using CNCMaps.FileFormats;
+using CNCMaps.FileFormats.FileFormats;
 
-namespace CNCMaps.VirtualFileSystem {
+namespace CNCMaps.FileFormats.VirtualFileSystem {
 
 	public class DirArchive : IArchive {
 		public readonly string Directory;

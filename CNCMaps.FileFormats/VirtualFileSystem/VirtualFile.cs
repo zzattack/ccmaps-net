@@ -3,7 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 
-namespace CNCMaps.VirtualFileSystem {
+namespace CNCMaps.FileFormats.VirtualFileSystem {
 
 	/// <summary>
 	/// Virtual file class

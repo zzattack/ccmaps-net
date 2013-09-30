@@ -1,4 +1,4 @@
-﻿namespace CNCMaps.Utility {
+﻿namespace CNCMaps {
 	partial class DebugDrawingSurfaceWindow {
 		/// <summary>
 		/// Required designer variable.

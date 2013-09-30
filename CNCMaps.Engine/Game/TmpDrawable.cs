@@ -1,7 +1,7 @@
 ﻿using System.Drawing;
 using CNCMaps.Engine.Map;
 using CNCMaps.Engine.Rendering;
-using CNCMaps.FileFormats;
+using CNCMaps.FileFormats.FileFormats;
 
 namespace CNCMaps.Engine.Game {
 	public class TmpDrawable : Drawable {

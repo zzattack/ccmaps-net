@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using CNCMaps.VirtualFileSystem;
+using CNCMaps.FileFormats.VirtualFileSystem;
 
-namespace CNCMaps.FileFormats {
+namespace CNCMaps.FileFormats.FileFormats {
 
 	public class PktFile : IniFile {
 

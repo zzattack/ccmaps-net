@@ -2,12 +2,11 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
-using System.Windows.Forms;
 using CNCMaps.Engine.Map;
 using CNCMaps.Engine.Rendering;
-using CNCMaps.FileFormats;
+using CNCMaps.FileFormats.FileFormats;
+using CNCMaps.FileFormats.VirtualFileSystem;
 using CNCMaps.Shared;
-using CNCMaps.VirtualFileSystem;
 
 namespace CNCMaps.Engine.Game {
 	class BuildingDrawable : Drawable {
@@ -72,16 +71,16 @@ namespace CNCMaps.Engine.Game {
 
 			_baseShp = new ShpDrawable(Rules, Art);
 			_baseShp.OwnerCollection = this.OwnerCollection;
-			_baseShp.LoadFromRules();
+			_baseShp.LoadFromRulesEssential();
 			_baseShp.Props = this.Props;
 			_baseShp.Shp = VFS.Open<ShpFile>(_baseShp.GetFilename());
 
 			foreach (string extraImage in AnimImages) {
 				var extra = LoadExtraImage(extraImage);
-				if (extra != null) _anims.Add(extra);
+				if (extra != null && extra.Shp != null) _anims.Add(extra);
 
 				var extraDmg = LoadExtraImage(extraImage + "Damaged");
-				if (extraDmg != null) _animsDamaged.Add(extraDmg);
+				if (extraDmg != null && extraDmg.Shp != null) _animsDamaged.Add(extraDmg);
 			}
 
 			// Starkku: New code for adding fire animations to buildings, supports custom-paletted animations.
@@ -89,38 +88,20 @@ namespace CNCMaps.Engine.Game {
 				LoadFireAnimations();
 
 			// Add turrets
-			if (Rules.ReadBool("Turret")) {
-				IniFile.IniSection turretRules = OwnerCollection.Rules.GetOrCreateSection(Rules.ReadString("TurretAnim"));
-				IniFile.IniSection turretArt = OwnerCollection.Art.GetOrCreateSection(Rules.ReadString("TurretAnim"));
-				bool voxel = Rules.ReadBool("TurretAnimIsVoxel");
-				Drawable turret;
-				if (voxel) {
-					string img = turretArt.ReadString("Image", turretArt.Name);
-					var turretV = new VoxelDrawable(turretRules, turretArt,
-						VFS.Open<VxlFile>(img+".vxl"), VFS.Open<HvaFile>(img+".hva"));
-					turretV.OwnerCollection = OwnerCollection;
-					turretV.LoadFromRules();
-					turret = turretV;
-				}
-				else {
-					var turretS = new ShpDrawable(turretRules, turretArt);
-					turretS.OwnerCollection = OwnerCollection;
-					turretS.LoadFromRules();
-					turretS.Shp = VFS.Open<ShpFile>(turretS.GetFilename());
-					turret = turretS;
-				}
+			if (Rules.ReadBool("Turret") && Rules.HasKey("TurretAnim")) {
+				string turretName = Rules.ReadString("TurretAnim");
+				Drawable turret = Rules.ReadBool("TurretAnimIsVoxel")
+					? (Drawable)new VoxelDrawable(VFS.Open<VxlFile>(turretName+".vxl"), VFS.Open<HvaFile>(turretName+".hva"))
+					: new ShpDrawable(VFS.Open<ShpFile>(turretName + ".shp"));
 				turret.Props.Offset = Props.Offset + new Size(Rules.ReadInt("TurretAnimX"), Rules.ReadInt("TurretAnimY"));
 				turret.Props.HasShadow = true;
 				turret.Props.FrameDecider = FrameDeciders.TurretFrameDecider;
 				SubDrawables.Add(turret);
 
-				if (voxel && turret.Name.ToUpper().Contains("TUR")) {
-					string barrelName = turret.Name.Replace("TUR", "BARL");
+				if (turret is VoxelDrawable && turretName.ToUpper().Contains("TUR")) {
+					string barrelName =turretName.Replace("TUR", "BARL");
 					if (VFS.Exists(barrelName + ".vxl")) {
-						IniFile.IniSection barrelRules = OwnerCollection.Rules.GetOrCreateSection(barrelName);
-						IniFile.IniSection barrelArt = OwnerCollection.Art.GetOrCreateSection(barrelName);
-						var barrel = new VoxelDrawable(barrelRules, barrelArt,
-							VFS.Open<VxlFile>(barrelName + ".vxl"), VFS.Open<HvaFile>(barrelName + ".hva"));
+						var barrel = new VoxelDrawable(VFS.Open<VxlFile>(barrelName + ".vxl"), VFS.Open<HvaFile>(barrelName + ".hva"));
 						SubDrawables.Add(barrel);
 						barrel.Props = turret.Props;
 					}
@@ -202,6 +183,9 @@ namespace CNCMaps.Engine.Game {
 		}
 
 		public override void Draw(GameObject obj, DrawingSurface ds) {
+			if (InvisibleInGame)
+				return;
+
 			var drawList = new List<Drawable> { _baseShp };
 			drawList.AddRange(SubDrawables);
 
@@ -234,13 +218,17 @@ namespace CNCMaps.Engine.Game {
 
 		public override Rectangle GetBounds(GameObject obj) {
 			Rectangle bounds = Rectangle.Empty;
+			if (InvisibleInGame)
+				return bounds;
+
 			var parts = new List<Drawable>();
 			parts.Add(_baseShp);
 			parts.AddRange(_anims);
 			parts.AddRange(SubDrawables);
 
-			foreach (var d in parts) {
+			foreach (var d in parts.Where(p => !p.InvisibleInGame)) {
 				var db = d.GetBounds(obj);
+				if (db == Rectangle.Empty) continue;
 				if (bounds == Rectangle.Empty) bounds = db;
 				else bounds = Rectangle.Union(bounds, db);
 			}

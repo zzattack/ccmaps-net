@@ -1,4 +1,4 @@
-﻿using CNCMaps.FileFormats;
+﻿using CNCMaps.FileFormats.FileFormats;
 
 namespace CNCMaps.Engine.Map {
 	public class Lighting {

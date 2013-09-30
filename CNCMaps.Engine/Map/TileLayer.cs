@@ -78,7 +78,7 @@ namespace CNCMaps.Engine.Map {
 				return GetTile(dx, dy / 2);
 		}
 
-		public MapTile GetTileScreen(Point p) {
+		public MapTile GetTileScreen(Point p, bool fixOOB = true, bool omitHeight = false) {
 			// use inverse matrix of world projection for screen to world
 			int w = Drawable.TileWidth / 2;
 			int h = Drawable.TileHeight / 2;
@@ -86,22 +86,23 @@ namespace CNCMaps.Engine.Map {
 			int fy = h * (-1 - Width);
 			int rx = (p.X * h + p.Y * w - fx * h - fy * w) / (2 * w * h);
 			int ry = (p.X * -h + p.Y * w + fx * h - fy * w) / (2 * w * h);
-			var tile_noheight = GetTileR(rx, ry);
-			return tile_noheight != null ? this[tile_noheight.Dx, (tile_noheight.Dy + tile_noheight.Z) / 2] : null;
-		}
 
-		public MapTile GetTileScreenNoZ(Point p) {
-			// use inverse matrix of world projection for screen to world
-			int w = Drawable.TileWidth / 2;
-			int h = Drawable.TileHeight / 2;
-			int fx = w * Width;
-			int fy = h * (-1 - Width);
-			int fy2 = -h * (1 + Width);
-			int rx = (p.X * h + p.Y * w - fx * h - fy * w) / (2 * w * h);
-			int ry = (p.X * -h + p.Y * w + fx * h - fy * w) / (2 * w * h);
-			return GetTileR(rx, ry);
-		}
+			int dx = rx - ry + Width - 1;
+			int dy = rx + ry - Width - 1;
+			if (fixOOB) {
+				dx = Math.Min(Width*2 - 2, Math.Max(0, dx));
+				dy = Math.Min(Height - 1, Math.Max(0, dy));
+			}
+			var tile_noheight = this[dx, dy / 2];
+			if (omitHeight)
+				return tile_noheight;
 
+			else dy += tile_noheight.Z;
+			if (fixOOB)
+				dy = Math.Min(Height - 1, Math.Max(0, dy));
+			return this[dx, dy / 2];
+		}
+		
 		#region neighbouring tiles tests (auto-lat tests)
 		public void testNeighbours() {
 			testNeighbours(15, 9);
@@ -233,6 +234,7 @@ namespace CNCMaps.Engine.Map {
 			ByNormalData = 1,
 			ByExtraData = 2,
 		}
+
 	}
 
 }

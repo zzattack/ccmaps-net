@@ -4,9 +4,9 @@
 !include LogicLib.nsh
 
 ; Define your application name
-!define APPNAME "CNC Map Render"
+!define APPNAME "CNCMaps"
 !define VERSION $%VER% ; environment variable, call from .bat file
-!define APPNAMEANDVERSION "CNC Map Render ${VERSION}"
+!define APPNAMEANDVERSION "CNCMaps ${VERSION}"
 
 ; Main Install settings
 Name "${APPNAMEANDVERSION}"
@@ -21,7 +21,7 @@ SetCompressor LZMA
 !include "MUI.nsh"
 
 !define MUI_ABORTWARNING
-!define MUI_FINISHPAGE_RUN "$INSTDIR\CNCMaps_GUI.exe"
+!define MUI_FINISHPAGE_RUN "$INSTDIR\CNCMaps.Renderer.GUI.exe"
 
 !insertmacro MUI_PAGE_WELCOME
 !insertmacro MUI_PAGE_DIRECTORY
@@ -42,21 +42,23 @@ Section "Maps Renderer" Section1
 
 	; Set Section Files and Shortcuts
 	SetOutPath "$INSTDIR\"
-	File "CNCMaps\bin\${CONFIG}\CNCMaps.exe"
-	File "CNCMaps GUI\bin\${CONFIG}\CNCMaps_GUI.exe"
-	File "CNCMaps\NLog.dll"	
+	File "CNCMaps.Renderer\bin\${CONFIG}\CNCMaps.Renderer.exe"
+	File "CNCMaps.Renderer.GUI\bin\${CONFIG}\CNCMaps.Renderer.GUI.exe"
+	File "CNCMaps.Shared\bin\${CONFIG}\CNCMaps.Shared.dll"
+	File "CNCMaps.FileFormats\bin\${CONFIG}\CNCMaps.FileFormats.dll"
+	File "CNCMaps.Engine\bin\${CONFIG}\CNCMaps.Engine.dll"
+	File "Lib\NLog.dll"	
 	${If} ${CONFIG} == "Debug"
-		File "CNCMaps\NLog.Debug.config"
+		File "CNCMaps.Renderer\NLog.Debug.config"
 	${Else}
-		File "CNCMaps\NLog.config"
+		File "CNCMaps.Renderer\NLog.config"
 	${EndIf}
-	File "CNCMaps\OSMesa.dll"
-	File "CNCMaps\OpenTK.dll"
-	File "CNCMaps\OpenTK.dll.config"
-	CreateShortCut "$DESKTOP\CNC Maps renderer.lnk" "$INSTDIR\CNCMaps_GUI.exe"
-	CreateDirectory "$SMPROGRAMS\CNC Maps renderer"
-	CreateShortCut "$SMPROGRAMS\CNC Maps renderer\CNC Maps renderer.lnk" "$INSTDIR\CNCMaps_GUI.exe"
-	CreateShortCut "$SMPROGRAMS\CNC Maps renderer\Uninstall.lnk" "$INSTDIR\uninstall.exe"
+	File "Lib\OSMesa.dll"
+	File "Lib\OpenTK.dll"
+	CreateShortCut "$DESKTOP\CNCMaps Renderer.lnk" "$INSTDIR\CNCMaps.Renderer.GUI.exe"
+	CreateDirectory "$SMPROGRAMS\CNCMaps"
+	CreateShortCut "$SMPROGRAMS\CNCMaps\CNC Maps renderer.lnk" "$INSTDIR\CNCMaps.Renderer.GUI.exe"
+	CreateShortCut "$SMPROGRAMS\CNCMaps\Uninstall.lnk" "$INSTDIR\uninstall.exe"
 
 SectionEnd
 
@@ -84,22 +86,24 @@ Section Uninstall
 	Delete "$INSTDIR\uninstall.exe"
 
 	; Delete Shortcuts
-	Delete "$DESKTOP\CNC Maps Renderer.lnk"
-	Delete "$SMPROGRAMS\CNC Maps Renderer\CNC Maps renderer.lnk"
-	Delete "$SMPROGRAMS\CNC Maps Renderer\Uninstall.lnk"
+	Delete "$DESKTOP\CNCMaps Renderer.lnk"
+	Delete "$SMPROGRAMS\CNCMaps\CNC Maps renderer.lnk"
+	Delete "$SMPROGRAMS\CNCMaps\Uninstall.lnk"
 
 	; Clean up Maps Renderer
-	Delete "$INSTDIR\CNCMaps.exe"
-	Delete "$INSTDIR\CNCMaps_GUI.exe"
+	Delete "$INSTDIR\CNCMaps.Renderer.exe"
+	Delete "$INSTDIR\CNCMaps.Renderer.GUI.exe"
+	Delete "$INSTDIR\CNCMaps.Shared.dll"
+	Delete "$INSTDIR\CNCMaps.FileFormats.dll"
+	Delete "$INSTDIR\CNCMaps.Engine.dll"
 	Delete "$INSTDIR\NLog.dll"
 	Delete "$INSTDIR\NLog.Debug.config"
 	Delete "$INSTDIR\opengl32.dll"
 	Delete "$INSTDIR\OpenTK.dll"
-	Delete "$INSTDIR\OpenTK.dll.config"
 	Delete "$INSTDIR\osmesa.dll"
 
 	; Remove remaining directories
-	RMDir "$SMPROGRAMS\CNC Maps renderer"
+	RMDir "$SMPROGRAMS\CNCMaps"
 	RMDir "$INSTDIR\"
 SectionEnd
 

@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using CNCMaps.VirtualFileSystem;
+using CNCMaps.FileFormats.VirtualFileSystem;
 
-namespace CNCMaps.FileFormats {
+namespace CNCMaps.FileFormats.FileFormats {
 
 	public class TmpFile : VirtualFile {
 		bool _isInitialized;
@@ -61,8 +61,8 @@ namespace CNCMaps.FileFormats {
 				Height = f.ReadByte();
 				TerrainType = f.ReadByte();
 				RampType = f.ReadByte();
-				if (RampType != 0) 
-					Debug.WriteLine("{0}\t{1}\t{2}", f.FileName, index, RampType);
+				// if (RampType != 0) 
+				// 	Debug.WriteLine("{0}\t{1}\t{2}", f.FileName, index, RampType);
 				RadarRedLeft = f.ReadSByte();
 				RadarGreenLeft = f.ReadSByte(); ;
 				RadarBlueLeft = f.ReadSByte(); ;

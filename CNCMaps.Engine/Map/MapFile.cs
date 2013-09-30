@@ -8,10 +8,10 @@ using System.Linq;
 using CNCMaps.Engine.Game;
 using CNCMaps.Engine.Rendering;
 using CNCMaps.Engine.Utility;
-using CNCMaps.FileFormats;
-using CNCMaps.FileFormats.Encodings;
+using CNCMaps.FileFormats.FileFormats;
+using CNCMaps.FileFormats.FileFormats.Encodings;
+using CNCMaps.FileFormats.VirtualFileSystem;
 using CNCMaps.Shared;
-using CNCMaps.VirtualFileSystem;
 
 namespace CNCMaps.Engine.Map {
 
@@ -1298,12 +1298,7 @@ namespace CNCMaps.Engine.Map {
 		public void DrawMap() {
 			Logger.Info("Sorting objects map");
 			var sorter = new ObjectSorter(_theater, _tiles);
-			var orderedObjs = sorter.GetOrderedObjects().ToList();
-
-			Logger.Info("Sorting objects map2"); ;
-			var sorter2 = new ObjectSorter(_theater, _tiles);
-			var orderedObjs2 = sorter2.GetOrderedObjects().ToList();
-
+			var orderedObjs = sorter.GetOrderedObjects().ToList(); 
 			_drawingSurface = new DrawingSurface(FullSize.Width * TileWidth, FullSize.Height * TileHeight, PixelFormat.Format24bppRgb);
 
 			double lastReported = 0.0;
@@ -1321,12 +1316,12 @@ namespace CNCMaps.Engine.Map {
 #if DEBUG
 
 			// test that my bounds make some kind of sense
-			/*_drawingSurface.Unlock();
+			_drawingSurface.Unlock();
 			using (Graphics gfx = Graphics.FromImage(_drawingSurface.Bitmap)) {
 				foreach (var obj in orderedObjs)
 					if (obj.Drawable != null)
 						obj.Drawable.DrawBoundingBox(obj, gfx);
-			}*/
+			}
 #endif
 			/*
 			var tileCollection = _theater.GetTileCollection();

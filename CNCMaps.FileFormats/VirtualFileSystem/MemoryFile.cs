@@ -1,6 +1,6 @@
 ﻿using System.IO;
 
-namespace CNCMaps.VirtualFileSystem {
+namespace CNCMaps.FileFormats.VirtualFileSystem {
 
 	/// <summary>Virtual file from a memory buffer.</summary>
 	public class MemoryFile : VirtualFile {

@@ -4,9 +4,9 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
-using CNCMaps.VirtualFileSystem;
+using CNCMaps.FileFormats.VirtualFileSystem;
 
-namespace CNCMaps.FileFormats {
+namespace CNCMaps.FileFormats.FileFormats {
 
 	public class IniFile : VirtualTextFile {
 

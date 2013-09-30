@@ -11,7 +11,7 @@
 
 #endregion
 
-namespace CNCMaps.FileFormats.Encodings {
+namespace CNCMaps.FileFormats.FileFormats.Encodings {
 	internal class Blowfish {
 		public Blowfish(byte[] key) {
 			for (int i = 0, j = 0; i < 18; ++i) {

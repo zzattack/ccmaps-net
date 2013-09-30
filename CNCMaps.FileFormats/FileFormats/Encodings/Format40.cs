@@ -11,9 +11,9 @@
 
 #endregion
 
-using CNCMaps.VirtualFileSystem;
+using CNCMaps.FileFormats.VirtualFileSystem;
 
-namespace CNCMaps.FileFormats.Encodings {
+namespace CNCMaps.FileFormats.FileFormats.Encodings {
 	public static class Format40 {
 		public static int DecodeInto(byte[] src, byte[] dest) {
 			var ctx = new MemoryFile(src);

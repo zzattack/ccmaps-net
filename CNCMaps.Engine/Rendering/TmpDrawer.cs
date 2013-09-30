@@ -2,7 +2,7 @@
 using System.Drawing;
 using CNCMaps.Engine.Game;
 using CNCMaps.Engine.Map;
-using CNCMaps.FileFormats;
+using CNCMaps.FileFormats.FileFormats;
 using NLog;
 
 namespace CNCMaps.Engine.Rendering {
@@ -41,7 +41,7 @@ namespace CNCMaps.Engine.Rendering {
 
 			// make touched tiles (used for determining image cutoff)
 			Point center = offset + new Size(tmp.BlockWidth / 2, tmp.BlockHeight / 2);
-			var centerGridTile = tile.Layer.GetTileScreenNoZ(center);
+			var centerGridTile = tile.Layer.GetTileScreen(center, true, true);
 			if (centerGridTile != null) {
 				tile.Layer.GridTouched[centerGridTile.Dx, centerGridTile.Dy / 2] |= TileLayer.TouchType.ByNormalData;
 				tile.Layer.GridTouchedBy[centerGridTile.Dx, centerGridTile.Dy / 2] = tile;
@@ -122,7 +122,7 @@ namespace CNCMaps.Engine.Rendering {
 
 			for (int by = extraScreenBounds.Top; by < extraScreenBounds.Bottom; by += tmp.BlockHeight / 2) {
 				for (int bx = extraScreenBounds.Left; bx < extraScreenBounds.Right; bx += tmp.BlockWidth / 2) {
-					var gridTileNoZ = tile.Layer.GetTileScreenNoZ(new Point(bx, by));
+					var gridTileNoZ = tile.Layer.GetTileScreen(new Point(bx, by), true, true);
 					if (gridTileNoZ != null) {
 						Logger.Trace("Tile at ({0},{1}) has extradata affecting ({2},{3})", tile.Dx, tile.Dy, gridTileNoZ.Dx,
 							gridTileNoZ.Dy);

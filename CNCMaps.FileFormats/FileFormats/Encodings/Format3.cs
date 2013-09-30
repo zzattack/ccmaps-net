@@ -1,4 +1,4 @@
-﻿namespace CNCMaps.FileFormats.Encodings {
+﻿namespace CNCMaps.FileFormats.FileFormats.Encodings {
 	// based on code from XCC mixer
 
 	internal class Format3 {

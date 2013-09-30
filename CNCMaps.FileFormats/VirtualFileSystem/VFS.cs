@@ -2,17 +2,17 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using CNCMaps.FileFormats;
+using CNCMaps.FileFormats.FileFormats;
 using CNCMaps.Shared;
 using Microsoft.Win32;
 
-namespace CNCMaps.VirtualFileSystem {
+namespace CNCMaps.FileFormats.VirtualFileSystem {
 
 	public class VFS {
 		public static readonly VFS Instance = new VFS();
 		public readonly List<IArchive> AllArchives = new List<IArchive>();
 		private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
-		
+
 		public static VirtualFile Open(string filename) {
 			return Instance.OpenFile(filename);
 		}
@@ -137,14 +137,12 @@ namespace CNCMaps.VirtualFileSystem {
 			// try all expand\d{2}md?\.mix files
 			for (int i = 99; i >= 0; i--) {
 				string file = "expand" + i.ToString("00") + ".mix";
-				string path = Path.Combine(mixDir, file);
-				if (File.Exists(path))
-					AddFile(path);
+				if (FileExists(file))
+					AddFile(file);
 				if (engine == EngineType.YurisRevenge) {
 					file = "expandmd" + i.ToString("00") + ".mix";
-					path = Path.Combine(mixDir, file);
-					if (File.Exists(path))
-						AddFile(path);
+					if (FileExists(file))
+						AddFile(file);
 				}
 			}
 
@@ -177,12 +175,18 @@ namespace CNCMaps.VirtualFileSystem {
 			if (engine == EngineType.YurisRevenge)
 				AddFile("audiomd.mix");
 
-			foreach (string file in Directory.GetFiles(mixDir, "ecache*.mix"))
-				AddFile(Path.Combine(mixDir, file));
+			for (int i = 99; i >= 0; i--) {
+				string file = string.Format("ecache{0:d2}.mix", i);
+				if (FileExists(file))
+					AddFile(file);
+			}
 
 
-			foreach (string file in Directory.GetFiles(mixDir, "elocal*.mix"))
-				AddFile(Path.Combine(mixDir, file));
+			for (int i = 99; i >= 0; i--) {
+				string file = string.Format("elocal{0:d2}.mix", i);
+				if (FileExists(file))
+					AddFile(file);
+			}
 
 			if (engine >= EngineType.RedAlert2) {
 				foreach (string file in Directory.GetFiles(mixDir, "*.mmx"))
@@ -193,6 +197,8 @@ namespace CNCMaps.VirtualFileSystem {
 						AddFile(Path.Combine(mixDir, file));
 			}
 
+			AddFile("conquer.mix");
+
 			if (engine >= EngineType.RedAlert2) {
 				if (engine == EngineType.YurisRevenge) {
 					AddFile("conqmd.mix");
@@ -202,7 +208,6 @@ namespace CNCMaps.VirtualFileSystem {
 				if (engine == EngineType.YurisRevenge)
 					AddFile("isogenmd.mix");
 				AddFile("isogen.mix");
-				AddFile("conquer.mix");
 				if (engine == EngineType.YurisRevenge) AddFile("cameomd.mix");
 				AddFile("cameo.mix");
 				if (engine == EngineType.YurisRevenge) {
@@ -237,12 +242,16 @@ namespace CNCMaps.VirtualFileSystem {
 
 		public static string RA2InstallDir {
 			get {
-				return Path.GetDirectoryName(RA2InstallPath);
+				try { return Path.GetDirectoryName(RA2InstallPath); }
+				catch { return null; }
 			}
 		}
 
 		public static string TSInstallDir {
-			get { return Path.GetDirectoryName(TSInstallPath); }
+			get {
+				try { return Path.GetDirectoryName(TSInstallPath); }
+				catch { return null; }
+			}
 		}
 
 		public static string ReadRegistryString(RegistryKey rkey, string regpath, string keyname) {

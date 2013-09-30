@@ -2,7 +2,7 @@
 using System.Drawing;
 using CNCMaps.Engine.Game;
 using CNCMaps.Engine.Map;
-using CNCMaps.FileFormats;
+using CNCMaps.FileFormats.FileFormats;
 using NLog;
 
 namespace CNCMaps.Engine.Rendering {

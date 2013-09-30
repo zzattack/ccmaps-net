@@ -35,10 +35,6 @@
     <Reference Include="System.Core" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Windows.Forms" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
@@ -52,6 +48,7 @@
     <Compile Include="DynamicTypeDescription\StandardValueEditorUI.Designer.cs">
       <DependentUpon>StandardValueEditorUI.cs</DependentUpon>
     </Compile>
+    <Compile Include="Properties\AssemblyInfoGlobal.cs" />
     <Compile Include="StartPositionMarking.cs" />
     <Compile Include="LightingType.cs" />
     <Compile Include="ModConfig.cs" />

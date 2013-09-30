@@ -1,9 +1,8 @@
 ﻿using System.Drawing;
 using CNCMaps.Engine.Map;
 using CNCMaps.Engine.Rendering;
-using CNCMaps.FileFormats;
+using CNCMaps.FileFormats.FileFormats;
 using CNCMaps.Shared;
-using OpenTK.Graphics.ES20;
 
 namespace CNCMaps.Engine.Game {
 	class ShpDrawable : Drawable {
@@ -13,19 +12,25 @@ namespace CNCMaps.Engine.Game {
 			: base(rules, art) {
 		}
 
+		public ShpDrawable(ShpFile shpFile) {
+			this.Shp = shpFile;
+		}
+
 		public ShpDrawable(IniFile.IniSection rules, IniFile.IniSection art, ShpFile shpFile)
 			: base(rules, art) {
-			// TODO: Complete member initialization
 			this.Shp = shpFile;
 		}
 
 		public override void Draw(GameObject obj, DrawingSurface ds) {
+			if (InvisibleInGame || Shp == null) return;
 			ShpDrawer.Draw(obj, Shp, Props, ds);
 			if (Props.HasShadow)
 				ShpDrawer.DrawShadow(obj, Shp, Props, ds);
 		}
 
 		public override Rectangle GetBounds(GameObject obj) {
+			if (InvisibleInGame || Shp == null) return Rectangle.Empty;
+
 			var bounds = ShpDrawer.GetBounds(obj, Shp, Props);
 			bounds.Offset(obj.Tile.Dx * TileWidth / 2, (obj.Tile.Dy - obj.Tile.Z) * TileHeight / 2);
 			bounds.Offset(Props.GetOffset(obj));

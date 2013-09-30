@@ -1,15 +1,17 @@
 ﻿using System.Drawing;
 using CNCMaps.Engine.Map;
 using CNCMaps.Engine.Rendering;
-using CNCMaps.FileFormats;
+using CNCMaps.FileFormats.FileFormats;
 
 namespace CNCMaps.Engine.Game {
 	class AlphaDrawable  : ShpDrawable {
+		public AlphaDrawable(ShpFile alphaShpFile) : base(alphaShpFile) {
+			Props.Offset = new Point(0, 15);
+			Props.FrameDecider = FrameDeciders.AlphaImageFrameDecider(Shp);
+		}
 
 		public AlphaDrawable(IniFile.IniSection rules, IniFile.IniSection art, ShpFile alphaShpFile)
 			: base(rules, art, alphaShpFile) {
-			Shp = alphaShpFile;
-
 			Props.Offset = new Point(0, 15);
 			Props.FrameDecider = FrameDeciders.AlphaImageFrameDecider(Shp);
 		}

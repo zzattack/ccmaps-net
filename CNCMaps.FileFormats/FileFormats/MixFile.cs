@@ -14,10 +14,10 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using CNCMaps.FileFormats.Encodings;
-using CNCMaps.VirtualFileSystem;
+using CNCMaps.FileFormats.FileFormats.Encodings;
+using CNCMaps.FileFormats.VirtualFileSystem;
 
-namespace CNCMaps.FileFormats {
+namespace CNCMaps.FileFormats.FileFormats {
 
 	public class MixFile : VirtualFile, IArchive {
 		public Dictionary<uint, MixEntry> Index;

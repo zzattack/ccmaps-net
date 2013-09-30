@@ -16,7 +16,7 @@ using Microsoft.Win32;
 namespace CNCMaps.GUI {
 
 	public partial class MainForm : Form {
-		public const string RendererExe = "CNCMaps.exe";
+		public const string RendererExe = "CNCMaps.Renderer.exe";
 		private readonly bool _skipUpdateCheck;
 		// automatically swap between RA2/TS mix dir from registry
 		private bool _currentEngineRa2 = true;
@@ -104,7 +104,7 @@ namespace CNCMaps.GUI {
 			if (!IsLinux) {
 				try {
 					using (var key = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry32))
-						return (string)key.OpenSubKey("SOFTWARE\\CNC Map Render").GetValue("") + "\\" + RendererExe;
+						return (string)key.OpenSubKey("SOFTWARE\\CNCMaps").GetValue("") + "\\" + RendererExe;
 				}
 				catch (NullReferenceException) {
 				}
@@ -348,8 +348,8 @@ namespace CNCMaps.GUI {
 			if (rbSizeLocal.Checked) cmd += "-f ";
 			else if (rbSizeFullmap.Checked) cmd += "-F ";
 
-			if (rbPreferSoftwareRendering.Checked) cmd += "-g ";
-			else if (rbPreferHardwareRendering.Checked) cmd += "-G ";
+			//if (rbPreferSoftwareRendering.Checked) cmd += "-g ";
+			//else if (rbPreferHardwareRendering.Checked) cmd += "-G ";
 
 			if (cbReplacePreview.Checked)
 				cmd += cbOmitSquareMarkers.Checked ? "-K" : "-k ";

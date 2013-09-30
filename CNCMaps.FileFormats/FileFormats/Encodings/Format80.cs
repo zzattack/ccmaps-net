@@ -13,9 +13,9 @@
 
 using System;
 using System.IO;
-using CNCMaps.VirtualFileSystem;
+using CNCMaps.FileFormats.VirtualFileSystem;
 
-namespace CNCMaps.FileFormats.Encodings {
+namespace CNCMaps.FileFormats.FileFormats.Encodings {
 	public static class Format80 {
 		private static void ReplicatePrevious(byte[] dest, int destIndex, int srcIndex, int count) {
 			if (srcIndex > destIndex)

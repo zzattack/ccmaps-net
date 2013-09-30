@@ -2,11 +2,12 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using CNCMaps.FileFormats;
+using CNCMaps.Engine.Rendering;
+using CNCMaps.FileFormats.FileFormats;
+using CNCMaps.FileFormats.VirtualFileSystem;
 using CNCMaps.Shared;
-using CNCMaps.VirtualFileSystem;
 
-namespace CNCMaps.Engine.Rendering {
+namespace CNCMaps.Engine.Game {
 	public class PaletteCollection : IEnumerable<Palette> {
 		public List<Palette> CustomPalettes = new List<Palette>();
 		public Palette IsoPalette, OvlPalette, UnitPalette, AnimPalette;

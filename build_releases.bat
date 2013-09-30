@@ -12,19 +12,19 @@ set MAKENSIS="%PROGRAMFILES(X86)%\nsis\makensis.exe"
 
 %MSBUILD% CNCMaps.sln /p:Configuration=Release
 %MAKENSIS% nsisinstaller-rls.nsi
- 
+
+exit
+
 cd CNCMaps/bin/Release
-for /D %%f in (CNCMaps.exe NLog.config NLog.dll OpenTK.dll OpenTK.dll.config osmesa.dll) DO (
+for /D %%f in (*.exe  *.dll NLog.config) DO (
 	# zip -r -j ../../../CNCMaps_v%VER%_win.zip "%%f"
 )
 
-for /D %%f in (CNCMaps.exe NLog.config NLog.dll OpenTK.dll OpenTK.dll.config) DO (
+for /D %%f in (*.exe  *.dll NLog.config OpenTK.dll.config) DO (
 	# zip -r -j ../../../CNCMaps_v%VER%_nix.zip "%%f"
 )
 
 cd ../../../
-
-exit
 
 %MSBUILD% CNCMaps.sln /p:Configuration=Debug
 %MAKENSIS% nsisinstaller-dbg.nsi

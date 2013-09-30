@@ -2,7 +2,7 @@
 using System.Drawing;
 using System.IO;
 using CNCMaps.Engine.Map;
-using CNCMaps.FileFormats;
+using CNCMaps.FileFormats.FileFormats;
 
 namespace CNCMaps.Engine.Rendering {
 

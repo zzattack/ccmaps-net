@@ -1,8 +1,8 @@
 ﻿using System.IO;
 using System.Linq;
-using CNCMaps.VirtualFileSystem;
+using CNCMaps.FileFormats.VirtualFileSystem;
 
-namespace CNCMaps.FileFormats {
+namespace CNCMaps.FileFormats.FileFormats {
 	/// <summary>Format helper functions.</summary>
 	public static class FormatHelper {
 

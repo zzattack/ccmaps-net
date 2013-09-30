@@ -855,7 +855,6 @@ namespace CNCMaps.GUI {
 			this.gbLog.TabIndex = 7;
 			this.gbLog.TabStop = false;
 			this.gbLog.Text = "Log";
-			this.gbLog.Visible = false;
 			// 
 			// rtbLog
 			// 

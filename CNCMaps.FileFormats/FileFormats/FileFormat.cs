@@ -1,4 +1,4 @@
-namespace CNCMaps.FileFormats {
+namespace CNCMaps.FileFormats.FileFormats {
 	/// <summary>Values that represent FileFormat.</summary>
 	public enum FileFormat {
 		/// <summary>Strings file.</summary>

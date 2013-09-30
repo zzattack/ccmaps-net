@@ -2,9 +2,9 @@ using System.Collections.Generic;
 using System.Drawing;
 using CNCMaps.Engine.Map;
 using CNCMaps.Engine.Rendering;
-using CNCMaps.FileFormats;
+using CNCMaps.FileFormats.FileFormats;
+using CNCMaps.FileFormats.VirtualFileSystem;
 using CNCMaps.Shared;
-using CNCMaps.VirtualFileSystem;
 
 namespace CNCMaps.Engine.Game {
 	public abstract class Drawable {
@@ -39,13 +39,14 @@ namespace CNCMaps.Engine.Game {
 		public static ushort TileWidth { get; set; }
 		public static ushort TileHeight { get; set; }
 
+		protected Drawable() { }
 		protected Drawable(IniFile.IniSection rules, IniFile.IniSection art) {
 			Rules = rules;
 			Art = art;
 			Name = rules != null ? rules.Name : "";
 			Foundation = new Size(1, 1);
 		}
-		
+
 		public virtual void LoadFromRules() {
 			LoadFromRulesEssential();
 			LoadFromRulesFull();
@@ -87,8 +88,11 @@ namespace CNCMaps.Engine.Game {
 
 			if (Rules.ReadString("AlphaImage") != "") {
 				string alphaImageFile = Rules.ReadString("AlphaImage") + ".shp";
-				if (VFS.Exists(alphaImageFile))
-					SubDrawables.Add(new AlphaDrawable(Rules, Art, VFS.Open<ShpFile>(alphaImageFile)));
+				if (VFS.Exists(alphaImageFile)) {
+					var ad = new AlphaDrawable(VFS.Open<ShpFile>(alphaImageFile));
+					ad.OwnerCollection = this.OwnerCollection;
+					SubDrawables.Add(ad);
+				}
 			}
 
 			Props.HasShadow = Art.ReadBool("Shadow", Defaults.GetShadowAssumption(OwnerCollection.Type));

@@ -1,7 +1,7 @@
 ﻿using System.IO;
-using CNCMaps.VirtualFileSystem;
+using CNCMaps.FileFormats.VirtualFileSystem;
 
-namespace CNCMaps.FileFormats {
+namespace CNCMaps.FileFormats.FileFormats {
 
 	public class PalFile : VirtualFile {
 

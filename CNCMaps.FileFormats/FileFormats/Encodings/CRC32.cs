@@ -1,7 +1,7 @@
 ﻿// file:		Encryption\CRC32.cs
 // summary:		Implements a class for CRC32 calculation
 
-namespace CNCMaps.FileFormats.Encodings {
+namespace CNCMaps.FileFormats.FileFormats.Encodings {
 	/// <summary>
 	/// Static class that uses a lookup table to calculates CRC32
 	/// checksums of input strings.

@@ -1,4 +1,4 @@
-﻿using CNCMaps.FileFormats;
+﻿using CNCMaps.FileFormats.FileFormats;
 
 namespace CNCMaps.Engine.Game {
 	class AnimDrawable: ShpDrawable {
@@ -7,6 +7,10 @@ namespace CNCMaps.Engine.Game {
 		public AnimDrawable(IniFile.IniSection rules, IniFile.IniSection art, ShpFile shp) : base(rules, art, shp) {
 		}
 
+		public override void LoadFromRules() {
+			base.LoadFromRulesEssential();
+			// don't care for the rest..
+		}
 
 	}
 }

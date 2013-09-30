@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using CNCMaps.Engine.Map;
-using CNCMaps.FileFormats;
+using CNCMaps.FileFormats.FileFormats;
 using CNCMaps.Shared;
 
 namespace CNCMaps.Engine.Game {

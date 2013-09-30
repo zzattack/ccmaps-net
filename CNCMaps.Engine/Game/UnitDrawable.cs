@@ -2,8 +2,8 @@
 using System.Drawing;
 using CNCMaps.Engine.Map;
 using CNCMaps.Engine.Rendering;
-using CNCMaps.FileFormats;
-using CNCMaps.VirtualFileSystem;
+using CNCMaps.FileFormats.FileFormats;
+using CNCMaps.FileFormats.VirtualFileSystem;
 
 namespace CNCMaps.Engine.Game {
 	internal class UnitDrawable : Drawable {
@@ -35,7 +35,7 @@ namespace CNCMaps.Engine.Game {
 			if (Rules.ReadBool("Turret") && IsVoxel) {
 				var turretVxl = VFS.Open<VxlFile>(Image + "TUR.vxl");
 				var turretHva = VFS.Open<HvaFile>(Image + "TUR.hva");
-				var turret = new VoxelDrawable(Rules, Art, turretVxl, turretHva);
+				var turret = new VoxelDrawable(turretVxl, turretHva);
 				turret.Props.Offset = this.Props.Offset;
 				turret.Props.Offset += new Size(Rules.ReadInt("TurretAnimX"), Rules.ReadInt("TurretAnimY"));
 				turret.Props.TurretVoxelOffset = Art.ReadFloat("TurretOffset");
@@ -44,7 +44,7 @@ namespace CNCMaps.Engine.Game {
 				var barrelVxl = VFS.Open<VxlFile>(Image + "BARL.vxl");
 				var barrelHva = VFS.Open<HvaFile>(Image + "BARL.hva");
 				if (barrelVxl != null && barrelHva != null) {
-					var barrel = new VoxelDrawable(Rules, Art, barrelVxl, barrelHva);
+					var barrel = new VoxelDrawable(barrelVxl, barrelHva);
 					barrel.Props = turret.Props;
 					SubDrawables.Add(barrel);
 				}
@@ -70,6 +70,7 @@ namespace CNCMaps.Engine.Game {
 
 			foreach (var d in parts) {
 				var db = d.GetBounds(obj);
+				if (db == Rectangle.Empty) continue;
 				if (bounds == Rectangle.Empty) bounds = db;
 				else bounds = Rectangle.Union(bounds, db);
 			}

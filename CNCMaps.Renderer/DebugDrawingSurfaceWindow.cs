@@ -5,7 +5,7 @@ using CNCMaps.Engine.Game;
 using CNCMaps.Engine.Map;
 using CNCMaps.Engine.Rendering;
 
-namespace CNCMaps.Utility {
+namespace CNCMaps {
 	internal partial class DebugDrawingSurfaceWindow : Form {
 		private DrawingSurface _drawingSurface;
 		private TileLayer _tiles;
@@ -40,7 +40,7 @@ namespace CNCMaps.Utility {
 				var tileFile = (tile.Drawable as TmpDrawable).GetTileFile(tile);
 				sb.AppendFormat("   Tile {4}: d({0},{1}) r({2},{3})", tile.Dx, tile.Dy, tile.Rx, tile.Ry, tileFile.FileName.ToUpper());
 				
-				var gridTilenoZ = _tiles.GetTileScreenNoZ(e.Location);
+				var gridTilenoZ = _tiles.GetTileScreen(e.Location, true, true);
 				sb.AppendFormat("   Touched: {0}", _tiles.GridTouched[gridTilenoZ.Dx, gridTilenoZ.Dy / 2]);
 
 				if (_tiles.GridTouchedBy[gridTilenoZ.Dx, gridTilenoZ.Dy / 2] != null)

@@ -1,7 +1,7 @@
 ﻿using System;
-using CNCMaps.VirtualFileSystem;
+using CNCMaps.FileFormats.VirtualFileSystem;
 
-namespace CNCMaps.FileFormats.Encodings {
+namespace CNCMaps.FileFormats.FileFormats.Encodings {
 	// basec on code from XCC mixer
 
 	public class Format5 {

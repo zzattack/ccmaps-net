@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using CNCMaps.FileFormats.Encodings;
-using CNCMaps.VirtualFileSystem;
+using CNCMaps.FileFormats.FileFormats.Encodings;
+using CNCMaps.FileFormats.VirtualFileSystem;
 
-namespace CNCMaps.FileFormats {
+namespace CNCMaps.FileFormats.FileFormats {
 
 	public class ShpFile : VirtualFile {
 		static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();

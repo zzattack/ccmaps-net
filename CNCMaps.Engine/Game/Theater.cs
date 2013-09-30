@@ -2,9 +2,9 @@
 using System.Drawing;
 using CNCMaps.Engine.Map;
 using CNCMaps.Engine.Rendering;
-using CNCMaps.FileFormats;
+using CNCMaps.FileFormats.FileFormats;
+using CNCMaps.FileFormats.VirtualFileSystem;
 using CNCMaps.Shared;
-using CNCMaps.VirtualFileSystem;
 
 namespace CNCMaps.Engine.Game {
 	public class Theater {

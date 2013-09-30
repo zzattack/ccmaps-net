@@ -1,7 +1,8 @@
 ﻿using System.Drawing;
+using System.IO;
 using CNCMaps.Engine.Map;
 using CNCMaps.Engine.Rendering;
-using CNCMaps.FileFormats;
+using CNCMaps.FileFormats.FileFormats;
 
 namespace CNCMaps.Engine.Game {
 	class VoxelDrawable : Drawable {
@@ -9,23 +10,27 @@ namespace CNCMaps.Engine.Game {
 		public VxlFile Vxl;
 		public HvaFile Hva;
 
+		public VoxelDrawable() {
+		}
+
 		public VoxelDrawable(IniFile.IniSection rules, IniFile.IniSection art)
 			: base(rules, art) {
 		}
 
-		public VoxelDrawable(IniFile.IniSection rules, IniFile.IniSection art, VxlFile vxl, HvaFile hva)
-			: base(rules, art) {
+		public VoxelDrawable(VxlFile vxl, HvaFile hva) {
 			Vxl = vxl;
 			Hva = hva;
 		}
 
 		public override void Draw(GameObject obj, DrawingSurface ds) {
+			if (Vxl == null || Hva == Stream.Null) return;
 			DrawingSurface vxl_ds = VoxelRenderer.Render(Vxl, Hva, obj, Props);
 			if (vxl_ds != null)
 				BlitVoxelToSurface(ds, vxl_ds, obj, Props);
 		}
 
 		public override Rectangle GetBounds(GameObject obj) {
+			if (Vxl == null || Hva == null) return Rectangle.Empty;
 			var bounds = VoxelRenderer.GetBounds(obj, Vxl, Hva, Props);
 			bounds.Offset(obj.Tile.Dx * TileWidth / 2, (obj.Tile.Dy - obj.Tile.Z) * TileHeight / 2);
 			bounds.Offset(Props.GetOffset(obj));

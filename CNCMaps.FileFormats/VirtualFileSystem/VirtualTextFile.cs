@@ -1,7 +1,7 @@
 ﻿using System.IO;
 using System.Text;
 
-namespace CNCMaps.VirtualFileSystem {
+namespace CNCMaps.FileFormats.VirtualFileSystem {
 
 	public class VirtualTextFile : VirtualFile {
 		public VirtualTextFile(Stream file, string filename = "")

@@ -67,13 +67,11 @@ namespace CNCMaps.Engine.Map {
 			// Debug.WriteLine("Examining neighhourhood of " + obj);
 			// Debug.Assert(!_hist.Contains(obj), "examining neighbourhood for an object that's already in the draw list");
 			var objBB = GetBoundingBox(obj);
-			var tileTL = _map.GetTileScreen(objBB.Location);
+			var tileTL = _map.GetTileScreen(objBB.Location, true, false);
 			var tileBR = _map.GetTileScreen(objBB.Location + objBB.Size);
-			if (tileTL == null) tileTL = _map.GetTile(0, 0);
-			if (tileBR == null) tileBR = _map.GetTile(_map.Width*2 - 2, _map.Height - 1);
 
-			for (int y = tileTL.Dy - 1; y <= tileBR.Dy + 1; y++) {
-				for (int x = tileTL.Dx - 1; x <= tileBR.Dx + 1; x += 2) {
+			for (int y = tileTL.Dy - 3; y <= tileBR.Dy + 3; y++) {
+				for (int x = tileTL.Dx - 3; x <= tileBR.Dx + 3; x += 2) {
 					if ((x + (y + obj.TopTile.Dy)) < 0 || y < 0) continue;
 					var tile2 = _map[x + (y + obj.TopTile.Dy)%2, y/2];
 					if (tile2 == null) continue;
@@ -107,8 +105,8 @@ namespace CNCMaps.Engine.Map {
 
 			if (dependency != null) {
 				bool added = list.Add(dependency);
-				if (added)
-					Debug.WriteLine("dependency (" + obj + "@" + obj.Tile + " --> " + dependency + "@" + dependency.Tile + ") added because " + reason);
+				//if (added)
+				//	Debug.WriteLine("dependency (" + obj + "@" + obj.Tile + " --> " + dependency + "@" + dependency.Tile + ") added because " + reason);
 			}
 		}
 

@@ -14,7 +14,7 @@
 using System;
 using System.Linq;
 
-namespace CNCMaps.FileFormats.Encodings {
+namespace CNCMaps.FileFormats.FileFormats.Encodings {
 	/// <summary>Blowfish key provider.</summary>
 	internal class BlowfishKeyProvider {
 		/// <summary> The public key string </summary>

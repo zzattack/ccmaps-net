@@ -1,9 +1,9 @@
 ﻿using System.Collections.Generic;
 using System.IO;
-using CNCMaps.VirtualFileSystem;
+using CNCMaps.FileFormats.VirtualFileSystem;
 using OpenTK;
 
-namespace CNCMaps.FileFormats {
+namespace CNCMaps.FileFormats.FileFormats {
 
 	/// <summary>Hva file.</summary>
 	public class HvaFile : VirtualFile {

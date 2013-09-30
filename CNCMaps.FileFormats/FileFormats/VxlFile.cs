@@ -2,10 +2,10 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using CNCMaps.VirtualFileSystem;
+using CNCMaps.FileFormats.VirtualFileSystem;
 using OpenTK;
 
-namespace CNCMaps.FileFormats {
+namespace CNCMaps.FileFormats.FileFormats {
 	/// <summary>
 	/// Based on descriptions in Red Alert 2 File Format Descriptions by Shiny
 	/// http://www.ppmsite.com/forum/viewtopic.php?t=29369&sid=12b41f85a5578715a87fc323bf834cca
