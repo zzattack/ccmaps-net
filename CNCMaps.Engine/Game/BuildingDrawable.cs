@@ -90,18 +90,20 @@ namespace CNCMaps.Engine.Game {
 
 			// Add turrets
 			if (Rules.ReadBool("Turret")) {
+				IniFile.IniSection turretRules = OwnerCollection.Rules.GetOrCreateSection(Rules.ReadString("TurretAnim"));
 				IniFile.IniSection turretArt = OwnerCollection.Art.GetOrCreateSection(Rules.ReadString("TurretAnim"));
 				bool voxel = Rules.ReadBool("TurretAnimIsVoxel");
 				Drawable turret;
 				if (voxel) {
 					string img = turretArt.ReadString("Image", turretArt.Name);
-					var turretV = new VoxelDrawable(new IniFile.IniSection(), turretArt,
+					var turretV = new VoxelDrawable(turretRules, turretArt,
 						VFS.Open<VxlFile>(img+".vxl"), VFS.Open<HvaFile>(img+".hva"));
 					turretV.OwnerCollection = OwnerCollection;
+					turretV.LoadFromRules();
 					turret = turretV;
 				}
 				else {
-					var turretS = new ShpDrawable(new IniFile.IniSection(), turretArt);
+					var turretS = new ShpDrawable(turretRules, turretArt);
 					turretS.OwnerCollection = OwnerCollection;
 					turretS.LoadFromRules();
 					turretS.Shp = VFS.Open<ShpFile>(turretS.GetFilename());
@@ -111,11 +113,16 @@ namespace CNCMaps.Engine.Game {
 				turret.Props.HasShadow = true;
 				turret.Props.FrameDecider = FrameDeciders.TurretFrameDecider;
 				SubDrawables.Add(turret);
-
-				//string barrelFile = img.Replace("TUR", "BARL");
-				//if (VFS.Exists(barrelFile)) {
-				//	SubDrawables.Add(barrel);
-				//}
+				
+				if (voxel && turret.Name.ToUpper().Contains("TUR")) {
+					string barrelFile = turret.Name.Replace("TUR", "BARL");
+					if (VFS.Exists(barrelFile + ".vxl")) {
+						var barrel = new VoxelDrawable(null, null,
+							VFS.Open<VxlFile>(barrelFile + ".vxl"), VFS.Open<HvaFile>(barrelFile + ".hva"));
+						SubDrawables.Add(barrel);
+						barrel.Props = turret.Props;
+					}
+				}
 			}
 
 			// Powerup slots, at most 3
