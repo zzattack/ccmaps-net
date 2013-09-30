@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using CNCMaps.Engine.Game;
@@ -65,9 +66,14 @@ namespace CNCMaps.Engine.Map {
 		internal void ExamineNeighbourhood(GameObject obj) {
 			// Debug.WriteLine("Examining neighhourhood of " + obj);
 			// Debug.Assert(!_hist.Contains(obj), "examining neighbourhood for an object that's already in the draw list");
+			var objBB = GetBoundingBox(obj);
+			var tileTL = _map.GetTileScreen(objBB.Location);
+			var tileBR = _map.GetTileScreen(objBB.Location + objBB.Size);
+			if (tileTL == null) tileTL = _map.GetTile(0, 0);
+			if (tileBR == null) tileBR = _map.GetTile(_map.Width*2 - 2, _map.Height - 1);
 
-			for (int y = obj.TopTile.Dy - 2; y <= obj.BottomTile.Dy + 2; y++) {
-				for (int x = obj.TopTile.Dx - 3; x <= obj.TopTile.Dx + 3; x += 2) {
+			for (int y = tileTL.Dy - 1; y <= tileBR.Dy + 1; y++) {
+				for (int x = tileTL.Dx - 1; x <= tileBR.Dx + 1; x += 2) {
 					if ((x + (y + obj.TopTile.Dy)) < 0 || y < 0) continue;
 					var tile2 = _map[x + (y + obj.TopTile.Dy)%2, y/2];
 					if (tile2 == null) continue;
@@ -101,7 +107,8 @@ namespace CNCMaps.Engine.Map {
 
 			if (dependency != null) {
 				bool added = list.Add(dependency);
-				// if (added) Debug.WriteLine("dependency (" + obj + "@" + obj.Tile + " --> " + dependency + "@" + dependency.Tile + ") added because " + reason);
+				if (added)
+					Debug.WriteLine("dependency (" + obj + "@" + obj.Tile + " --> " + dependency + "@" + dependency.Tile + ") added because " + reason);
 			}
 		}
 
