@@ -152,7 +152,7 @@ namespace CNCMaps.Engine.Game {
 			if (Rules.ReadBool("SpawnsTiberium")) {
 				// For example on TIBTRE / Ore Poles
 				Props.Offset.Y = -1;
-				Props.LightingType = LightingType.None;
+				Props.LightingType = LightingType.Full; // todo: verify it's not NONE
 				Props.PaletteType = PaletteType.Unit;
 			}
 			if (Rules.HasKey("JumpjetHeight")) {

@@ -211,7 +211,6 @@ namespace CNCMaps.Engine.Game {
 				return;
 
 			var drawList = new List<Drawable>();
-			drawList.AddRange(SubDrawables); // bib
 			drawList.Add(_baseShp);
 
 			if (obj is StructureObject && (obj as StructureObject).Health < 128) {
@@ -221,6 +220,7 @@ namespace CNCMaps.Engine.Game {
 			else
 				drawList.AddRange(_anims);
 
+			drawList.AddRange(SubDrawables); // bib
 			/* order:
 			ActiveAnims+Flat=yes
 			BibShape

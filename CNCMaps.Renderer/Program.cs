@@ -8,6 +8,7 @@ using System.Xml;
 using CNCMaps.Engine.Game;
 using CNCMaps.Engine.Map;
 using CNCMaps.Engine.Rendering;
+using CNCMaps.Engine.Utility;
 using CNCMaps.FileFormats;
 using CNCMaps.FileFormats.Map;
 using CNCMaps.FileFormats.VirtualFileSystem;

@@ -47,8 +47,6 @@ Section "Maps Renderer" Section1
 	File "CNCMaps.Shared\bin\${CONFIG}\CNCMaps.Shared.dll"
 	File "CNCMaps.FileFormats\bin\${CONFIG}\CNCMaps.FileFormats.dll"
 	File "CNCMaps.Engine\bin\${CONFIG}\CNCMaps.Engine.dll"
-	File "CNCMaps.Engine\bin\${CONFIG}\Roslyn.Compilers.dll"
-	File "CNCMaps.Engine\bin\${CONFIG}\Roslyn.Compilers.CSharp.dll"
 		
 	SetOverwrite ifnewer
 	${If} ${CONFIG} == "Debug"
@@ -105,8 +103,6 @@ Section Uninstall
 	Delete "$INSTDIR\NLog.Debug.config"
 	Delete "$INSTDIR\opengl32.dll"
 	Delete "$INSTDIR\osmesa.dll"
-	Delete "$INSTDIR\Roslyn.Compilers.CSharp.dll"
-	Delete "$INSTDIR\Roslyn.Compilers.dll"
 
 	; Remove remaining directories
 	RMDir "$SMPROGRAMS\CNCMaps"
