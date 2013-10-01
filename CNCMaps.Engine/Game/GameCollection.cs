@@ -5,18 +5,6 @@ using CNCMaps.FileFormats;
 using CNCMaps.Shared;
 
 namespace CNCMaps.Engine.Game {
-	public enum CollectionType {
-		Aircraft,
-		Building,
-		Infantry,
-		Overlay,
-		Smudge,
-		Terrain,
-		Vehicle,
-		Animation,
-		Tiles,
-	}
-
 	public class GameCollection {
 		public readonly CollectionType Type;
 		public readonly TheaterType Theater;

@@ -11,6 +11,8 @@ namespace CNCMaps.Engine.Rendering {
 
 		public static Rectangle GetBounds(MapTile tile, TmpFile tmp) {
 			tmp.Initialize();
+
+			if (tile.SubTile >= tmp.Images.Count) return Rectangle.Empty;
 			var img = tmp.Images[tile.SubTile];
 
 			int left = tile.Dx * tmp.BlockWidth / 2;

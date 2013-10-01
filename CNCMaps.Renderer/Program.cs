@@ -46,18 +46,6 @@ namespace CNCMaps {
 				}
 				var mapFile = new MapFile(vmapFile, Path.GetFileName(Settings.InputFile));
 
-				// ---------------------------------------------------------------
-				// Code to organize moving of maps in a directory for themselves
-				/*map.EngineType = Settings.Engine;
-				string mapName = map.DetermineMapName();
-				string dir = Path.Combine(Path.GetDirectoryName(Settings.InputFile), mapName);
-				if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
-				map.Close();
-				map.Dispose();
-				File.Move(Settings.InputFile, Path.Combine(dir, Path.GetFileName(map.FileName)));
-				return 0;*/
-				// ---------------------------------------------------------------
-
 				if (!string.IsNullOrEmpty(Settings.ModConfig)) {
 					if (File.Exists(Settings.ModConfig)) {
 						ModConfig cfg;
@@ -91,6 +79,18 @@ namespace CNCMaps {
 					Settings.Engine = EngineDetector.DetectEngineType(mapFile);
 					Logger.Info("Engine autodetect result: {0}", Settings.Engine);
 				}
+
+				// ---------------------------------------------------------------
+				// Code to organize moving of maps in a directory for themselves
+				/*
+				string mapName = DetermineMapName(mapFile, Settings.Engine);
+				string ndir = Path.Combine(Path.GetDirectoryName(Settings.InputFile), mapName);
+				if (!Directory.Exists(ndir)) Directory.CreateDirectory(ndir);
+				mapFile.Close();
+				mapFile.Dispose();
+				File.Move(Settings.InputFile, Path.Combine(ndir, Path.GetFileName(mapFile.FileName)));
+				return 0;*/
+				// ---------------------------------------------------------------
 
 				// enginetype is now definitive, load mod config
 				if (ModConfig.ActiveConfig == null)
@@ -500,7 +500,7 @@ namespace CNCMaps {
 				Logger.Info("Mapname found: {0}", mapName);
 			}
 
-			mapName = StripPlayersFromName(MakeValidFileName(mapName));
+			mapName = StripPlayersFromName(MakeValidFileName(mapName)).Replace("  ", " ");
 			return mapName;
 		}
 

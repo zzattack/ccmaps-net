@@ -1,4 +1,5 @@
 using System;
+using System.Drawing;
 using CNCMaps.Engine.Game;
 using CNCMaps.Engine.Rendering;
 using CNCMaps.FileFormats;
@@ -7,8 +8,8 @@ using CNCMaps.Shared;
 using NLog;
 
 namespace CNCMaps.Engine.Map {
-	
-	interface OwnableObject {
+
+	public interface OwnableObject {
 		string Owner { get; set; }
 		short Health { get; set; }
 		short Direction { get; set; }
@@ -46,6 +47,17 @@ namespace CNCMaps.Engine.Map {
 		public int Id { get; set; }
 		private static int IdCounter = 0;
 		public int DrawOrderIndex = -1;
+
+		public bool RequiresBoundsInvalidation = true;
+		public bool RequiresFrameInvalidation = true;
+		private Rectangle cachedBounds = Rectangle.Empty;
+		public Rectangle GetBounds() {
+			if (RequiresBoundsInvalidation && Drawable != null) {
+				cachedBounds = Drawable.GetBounds(this);
+				RequiresBoundsInvalidation = false;
+			}
+			return cachedBounds;
+		}
 	}
 	public class NumberedObject : GameObject {
 		public virtual int Number { get; protected set; }
@@ -158,6 +170,12 @@ namespace CNCMaps.Engine.Map {
 		public OverlayObject(byte overlayID, byte overlayValue) {
 			OverlayID = overlayID;
 			OverlayValue = overlayValue;
+		}
+
+		public bool IsGeneratedVeins = false;
+
+		public override string ToString() {
+			return string.Format("{0} ({1})", Drawable != null ? Drawable.Name : OverlayID.ToString(), OverlayValue);
 		}
 	}
 	public class SmudgeObject : NamedObject {

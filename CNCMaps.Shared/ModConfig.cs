@@ -9,26 +9,6 @@ using CNCMaps.Shared.DynamicTypeDescription;
 
 namespace CNCMaps.Shared {
 
-	[Editor(typeof(StandardValueEditor), typeof(UITypeEditor))]
-	public enum EngineType {
-		[StandardValue("Auto Detect", Visible = false)]
-		AutoDetect = 0,
-		TiberianSun = 1,
-		Firestorm = 2,
-		RedAlert2 = 3,
-		YurisRevenge = 4,
-	}
-
-	[Editor(typeof(StandardValueEditor), typeof(UITypeEditor))]
-	public enum TheaterType {
-		Temperate,
-		Urban,
-		Snow,
-		Lunar,
-		Desert,
-		NewUrban
-	}
-
 	[Serializable]
 	public class ModConfig : INotifyPropertyChanged {
 
@@ -399,7 +379,6 @@ namespace CNCMaps.Shared {
 		}
 	}
 
-
 	[TypeConverter(typeof(ExpandableObjectConverter))]
 	[Serializable]
 	public class ObjectOverride {
@@ -408,10 +387,12 @@ namespace CNCMaps.Shared {
 
 		public ObjectOverride() {
 			InstallTypeDescriptor();
+			CollectionTypes = CollectionType.All;
+			TheaterTypes = TheaterType.All;
 			ObjRegex = "";
-			Palette = PaletteType.Iso;
+			Palette = PaletteType.Default;
 			CustomPaletteFile = "";
-			Lighting = LightingType.Full;
+			Lighting = LightingType.Default;
 		}
 
 		internal void InstallTypeDescriptor() {
@@ -420,20 +401,37 @@ namespace CNCMaps.Shared {
 		}
 
 		[Id(1, 1)]
+		[Description(".")]
+		public CollectionType CollectionTypes { get; set; }
+
+		[Id(2, 1)]
+		[Description(".")]
+		public TheaterType TheaterTypes { get; set; }
+
+		[Id(3, 1)]
 		[Description("Regex matching the name of objects that this override should be applied to (case insensitive).")]
 		public string ObjRegex { get; set; }
 
-		[Id(2, 1)]
+		[Id(4, 1)]
 		[Description("Palette type that should be used for these objects.")]
 		public PaletteType Palette { get; set; }
 
-		[Id(3, 1)]
+		[Id(5, 1)]
 		[Description("Filename of the custom palette, only used if PaletteType is set to custom.")]
 		public string CustomPaletteFile { get; set; }
 
-		[Id(4, 1)]
+		[Id(6, 1)]
 		[Description("The kind of lighting applied to these objects..")]
 		public LightingType Lighting { get; set; }
+
+		[Id(7, 1)]
+		[Description("Compilable piece of C# code to determine a GameObjects frame")]
+		[EditorAttribute("System.ComponentModel.Design.MultilineStringEditor, System.Design", "System.Drawing.Design.UITypeEditor")]
+		public string FrameDeciderCode { get; set; }
+
+		[Id(8, 1)]
+		[Description("Priority of this override entry. Lower values indicate higher priority.")]
+		public int Priority { get; set; }
 
 		internal ObjectOverride Clone() {
 			var ret = (ObjectOverride)MemberwiseClone();

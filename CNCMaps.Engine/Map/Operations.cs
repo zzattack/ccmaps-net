@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
-using System.Text;
 using CNCMaps.Engine.Game;
 using CNCMaps.Shared;
 using NLog;
@@ -95,40 +95,113 @@ namespace CNCMaps.Engine.Map {
 
 		public static void RecalculateVeinsSpread(IEnumerable<OverlayObject> ovls, TileLayer tiles) {
 			Random r = new Random();
-			foreach (OverlayObject o in ovls.Where(o => o.Drawable.IsVeins && !o.Drawable.IsVeinHoleMonster)) {
-				int veins = 0, rnd = 0;
+			OverlayObject anyVeins = null;
 
-				// see if veins are positioned on ramp
-				var tmpImg = (o.Tile.Drawable as TileDrawable).GetTileImage(o.Tile);
-				if (tmpImg != null && tmpImg.RampType != 0) {
-					if (tmpImg.RampType == 7) veins = 51;
-					else if (tmpImg.RampType == 2) veins = 53;
-					else if (tmpImg.RampType == 3) veins = 55;
-					else if (tmpImg.RampType == 4) veins = 57;
-					else {
-						continue;
-					}
-					rnd = 2;
-				}
-				else {
-					var ne = tiles.GetNeighbourTile(o.Tile, TileLayer.TileDirection.TopRight);
-					var se = tiles.GetNeighbourTile(o.Tile, TileLayer.TileDirection.BottomRight);
-					var sw = tiles.GetNeighbourTile(o.Tile, TileLayer.TileDirection.BottomLeft);
-					var nw = tiles.GetNeighbourTile(o.Tile, TileLayer.TileDirection.TopLeft);
-
-					if (ne != null && ne.AllObjects.OfType<OverlayObject>().Any(v => v.Drawable.IsVeins || v.Drawable.IsVeinHoleMonster))
-						veins += 1;
-					if (se != null && se.AllObjects.OfType<OverlayObject>().Any(v => v.Drawable.IsVeins || v.Drawable.IsVeinHoleMonster))
-						veins += 2;
-					if (sw != null && sw.AllObjects.OfType<OverlayObject>().Any(v => v.Drawable.IsVeins || v.Drawable.IsVeinHoleMonster))
-						veins += 4;
-					if (nw != null && nw.AllObjects.OfType<OverlayObject>().Any(v => v.Drawable.IsVeins || v.Drawable.IsVeinHoleMonster))
-						veins += 8;
-
-					rnd = 3;
-				}
-				o.OverlayValue = (byte)(veins * rnd + r.Next(rnd));
+			foreach (var o in ovls) {
+				if (IsVeins(o) && !o.Drawable.IsVeinHoleMonster && o.OverlayValue / 3 == 15)
+					o.IsGeneratedVeins = true;
 			}
+
+			foreach (var t in tiles) {
+				var o = t.AllObjects.OfType<OverlayObject>().FirstOrDefault();
+
+				int veins = 0, rnd = 0, mul = 1;
+				bool amIVeins = IsVeins(o);
+
+				if (amIVeins && !o.Drawable.IsVeinHoleMonster) {
+					// see if veins are positioned on ramp
+					anyVeins = o;
+					var tmpImg = (o.Tile.Drawable as TileDrawable).GetTileImage(o.Tile);
+					if (tmpImg != null && tmpImg.RampType != 0) {
+						if (tmpImg.RampType == 7) veins = 51;
+						else if (tmpImg.RampType == 2) veins = 55;
+						else if (tmpImg.RampType == 3) veins = 57;
+						else if (tmpImg.RampType == 4) veins = 59;
+						else {
+							continue;
+						}
+						rnd = 2;
+						mul = 1;
+					}
+					else {
+						var ne = t.Layer.GetNeighbourTile(t, TileLayer.TileDirection.TopRight);
+						var se = t.Layer.GetNeighbourTile(t, TileLayer.TileDirection.BottomRight);
+						var sw = t.Layer.GetNeighbourTile(t, TileLayer.TileDirection.BottomLeft);
+						var nw = t.Layer.GetNeighbourTile(t, TileLayer.TileDirection.TopLeft);
+
+						bool neV = ne != null && ne.AllObjects.OfType<OverlayObject>().Any(IsVeins);
+						bool seV = se != null && se.AllObjects.OfType<OverlayObject>().Any(IsVeins);
+						bool swV = sw != null && sw.AllObjects.OfType<OverlayObject>().Any(IsVeins);
+						bool nwV = nw != null && nw.AllObjects.OfType<OverlayObject>().Any(IsVeins);
+
+						int numNeighbours = CountNeighbouringVeins(ne, se, sw, nw, IsVeins);
+						int threshold = numNeighbours != 4 ? 4 : 0;
+						var compare = numNeighbours == 4 ? (Func<OverlayObject, bool>)IsFullVeins : IsVeins;
+						Func<OverlayObject, bool> thresholdCompare = ov => threshold <= CountNeighbouringVeins(ov.Tile, compare);
+
+						if (neV  && ne.AllObjects.OfType<OverlayObject>().Any(thresholdCompare))
+							veins += 1;
+
+						if (seV && se.AllObjects.OfType<OverlayObject>().Any(thresholdCompare))
+							veins += 2;
+
+						if (swV && sw.AllObjects.OfType<OverlayObject>().Any(thresholdCompare))
+							veins += 4;
+
+						if (nwV && nw.AllObjects.OfType<OverlayObject>().Any(thresholdCompare))
+							veins += 8;
+
+						if (veins == 15 && !o.IsGeneratedVeins)
+							veins++;
+
+						mul = 3;
+						rnd = 3;
+					}
+				}
+
+				if (veins != 0 || amIVeins) {
+					if (o == null) {
+						// on the fly veins creation..
+						o = new OverlayObject(anyVeins.OverlayID, (byte)r.Next(3));
+						o.IsGeneratedVeins = true;
+						o.Drawable = anyVeins.Drawable;
+						o.Palette = anyVeins.Palette;
+						o.TopTile = o.BottomTile = o.Tile;
+						t.AddObject(o);
+					}
+					else {
+						o.OverlayValue = (byte)(veins * mul + r.Next(rnd));
+						Debug.WriteLine("Replacing veins with value {0} ({1})", o.OverlayValue, veins);
+					}
+				}
+
+
+			}
+		}
+
+		public static bool IsVeins(OverlayObject o) {
+			return o != null && o.Drawable.IsVeins;
+		}
+		public static bool IsFullVeins(OverlayObject o) {
+			return o != null && !o.IsGeneratedVeins && o.Drawable.IsVeins && (o.Drawable.IsVeinHoleMonster || o.OverlayValue / 3 == 16);
+		}
+
+		public static int CountNeighbouringVeins(MapTile t, Func<OverlayObject, bool> test) {
+			var ne = t.Layer.GetNeighbourTile(t, TileLayer.TileDirection.TopRight);
+			var se = t.Layer.GetNeighbourTile(t, TileLayer.TileDirection.BottomRight);
+			var sw = t.Layer.GetNeighbourTile(t, TileLayer.TileDirection.BottomLeft);
+			var nw = t.Layer.GetNeighbourTile(t, TileLayer.TileDirection.TopLeft);
+			return CountNeighbouringVeins(ne, se, sw, nw, test);
+		}
+
+		private static int CountNeighbouringVeins(MapTile ne, MapTile se, MapTile sw, MapTile nw, Func<OverlayObject, bool> test) {
+			bool neV = ne != null && ne.AllObjects.OfType<OverlayObject>().Any(test);
+			bool seV = se != null && se.AllObjects.OfType<OverlayObject>().Any(test);
+			bool swV = sw != null && sw.AllObjects.OfType<OverlayObject>().Any(test);
+			bool nwV = nw != null && nw.AllObjects.OfType<OverlayObject>().Any(test);
+			int numNeighbours =
+							(neV ? 1 : 0) + (seV ? 1 : 0) + (swV ? 1 : 0) + (nwV ? 1 : 0);
+			return numNeighbours;
 		}
 
 

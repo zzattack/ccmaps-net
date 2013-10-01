@@ -49,11 +49,11 @@ namespace CNCMaps.Engine.Game {
 		}
 
 		public virtual void LoadFromRules() {
-			LoadFromRulesEssential();
+			LoadFromArtEssential();
 			LoadFromRulesFull();
 		}
 
-		public virtual void LoadFromRulesEssential() {
+		public virtual void LoadFromArtEssential() {
 			Image = Art.ReadString("Image", Art.Name);
 			IsVoxel = Art.ReadBool("Voxel");
 			TheaterExtension = Art.ReadBool("Theater");
@@ -123,9 +123,10 @@ namespace CNCMaps.Engine.Game {
 				Props.PaletteType = PaletteType.Unit;
 				IsVeins = true;
 				Flat = true;
+				Props.Offset.Y = -1; // why is this needed???
 			}
 			if (Rules.ReadBool("IsVeinholeMonster")) {
-				Props.Offset.Y = -48; // why is this needed???
+				Props.Offset.Y = -49; // why is this needed???
 				Props.LightingType = LightingType.None;
 				Props.PaletteType = PaletteType.Unit;
 				IsVeinHoleMonster = true;
@@ -146,7 +147,7 @@ namespace CNCMaps.Engine.Game {
 					Props.Offset.Y = 14;
 				Props.LightingType = LightingType.Full;
 				Props.PaletteType = PaletteType.Iso;
-				Foundation = new Size(2, 2); // hack to get these later in the drawing order
+				// Foundation = new Size(2, 2); // hack to get these later in the drawing order
 			}
 			if (Rules.ReadBool("SpawnsTiberium")) {
 				// For example on TIBTRE / Ore Poles
@@ -168,9 +169,9 @@ namespace CNCMaps.Engine.Game {
 		private static readonly Pen BoundsRectPenSHP = new Pen(Color.Red);
 		public virtual void DrawBoundingBox(GameObject obj, Graphics gfx) {
 			if (IsVoxel)
-				gfx.DrawRectangle(BoundsRectPenVoxel, GetBounds(obj));
+				gfx.DrawRectangle(BoundsRectPenVoxel, obj.GetBounds());
 			else
-				gfx.DrawRectangle(BoundsRectPenSHP, GetBounds(obj));
+				gfx.DrawRectangle(BoundsRectPenSHP, obj.GetBounds());
 		}
 
 

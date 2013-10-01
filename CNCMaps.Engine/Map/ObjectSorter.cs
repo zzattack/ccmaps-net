@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using CNCMaps.Engine.Game;
@@ -66,7 +65,7 @@ namespace CNCMaps.Engine.Map {
 		internal void ExamineNeighbourhood(GameObject obj) {
 			// Debug.WriteLine("Examining neighhourhood of " + obj);
 			// Debug.Assert(!_hist.Contains(obj), "examining neighbourhood for an object that's already in the draw list");
-			var objBB = GetBoundingBox(obj);
+			var objBB = obj.GetBounds();
 			var tileTL = _map.GetTileScreen(objBB.Location, true, false);
 			var tileBR = _map.GetTileScreen(objBB.Location + objBB.Size);
 
@@ -105,8 +104,7 @@ namespace CNCMaps.Engine.Map {
 
 			if (dependency != null) {
 				bool added = list.Add(dependency);
-				//if (added)
-				//	Debug.WriteLine("dependency (" + obj + "@" + obj.Tile + " --> " + dependency + "@" + dependency.Tile + ") added because " + reason);
+				// if (added) Debug.WriteLine("dependency (" + obj + "@" + obj.Tile + " --> " + dependency + "@" + dependency.Tile + ") added because " + reason);
 			}
 		}
 
@@ -141,8 +139,8 @@ namespace CNCMaps.Engine.Map {
 			// tiles never overlap
 			if (objA is MapTile && objB is MapTile) return null;
 
-			var boxA = GetBoundingBox(objA);
-			var boxB = GetBoundingBox(objB);
+			var boxA = objA.GetBounds();
+			var boxB = objB.GetBounds();
 			if (!boxA.IntersectsWith(boxB)) return null;
 
 			var hexA = GetIsoBoundingBox(objA);
@@ -214,10 +212,6 @@ namespace CNCMaps.Engine.Map {
 			// we'll use a tie-breaker that is at least guaranteed to yield
 			// the same result regardless of argument order
 			return objA.Id < objB.Id ? objA : objB;
-		}
-
-		public Rectangle GetBoundingBox(GameObject obj) {
-			return obj.Drawable.GetBounds(obj);
 		}
 
 		public Hexagon GetIsoBoundingBox(GameObject obj) {

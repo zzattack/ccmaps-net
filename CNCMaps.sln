@@ -76,9 +76,9 @@ Global
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
-		BuildVersion_UpdateFileVersion = True
-		BuildVersion_UpdateAssemblyVersion = True
-		BuildVersion_UseGlobalSettings = True
 		BuildVersion_AssemblyInfoFilename = CNCMaps\Properties\AssemblyInfoGlobal.cs
+		BuildVersion_UseGlobalSettings = True
+		BuildVersion_UpdateAssemblyVersion = True
+		BuildVersion_UpdateFileVersion = True
 	EndGlobalSection
 EndGlobal

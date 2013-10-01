@@ -4,6 +4,7 @@ using System.Windows.Forms;
 using CNCMaps.Engine.Game;
 using CNCMaps.Engine.Map;
 using CNCMaps.Engine.Rendering;
+using TileLayer = CNCMaps.Engine.Map.TileLayer;
 
 namespace CNCMaps {
 	internal partial class DebugDrawingSurfaceWindow : Form {
@@ -39,7 +40,9 @@ namespace CNCMaps {
 			else {
 				var tileFile = (tile.Drawable as TileDrawable).GetTileFile(tile);
 				sb.AppendFormat("   Tile {4}: d({0},{1}) r({2},{3})", tile.Dx, tile.Dy, tile.Rx, tile.Ry, tileFile.FileName.ToUpper());
-				
+				if (tileFile.Images[tile.SubTile].RampType != 0)
+					sb.AppendFormat(" ramp {0}", tileFile.Images[tile.SubTile].RampType);
+
 				var gridTilenoZ = _tiles.GetTileScreen(e.Location, true, true);
 				sb.AppendFormat("   Touched: {0}", _tiles.GridTouched[gridTilenoZ.Dx, gridTilenoZ.Dy / 2]);
 
@@ -49,12 +52,19 @@ namespace CNCMaps {
 				sb.AppendFormat("   S-buf: {0}", _drawingSurface.GetShadows()[rIdx]);
 				sb.AppendFormat("   H-buf: {0}", _drawingSurface.GetHeightBuffer()[rIdx]);
 				sb.AppendFormat("   Z-buf: {0}", _drawingSurface.GetZBuffer()[rIdx]);
-			
+
 				var objs = _map.GetObjectsAt(tile.Dx, tile.Dy / 2);
 				if (objs.Any()) {
 					sb.Append("   Objects: ");
 					foreach (var obj in objs) {
 						sb.Append(obj);
+
+						if (obj is OverlayObject) {
+							var ovl = (obj as OverlayObject);
+							if (ovl.IsGeneratedVeins)
+								sb.Append("(gen)");
+						}
+
 						sb.Append(" ");
 					}
 				}

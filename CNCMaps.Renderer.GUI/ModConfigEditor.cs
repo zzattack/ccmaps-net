@@ -8,6 +8,7 @@ namespace CNCMaps.GUI {
 	public partial class ModConfigEditor : Form {
 		public string ModConfigFile { get; private set; }
 		private bool _pendingChanges = false;
+		public ModConfig ModConfig { get; private set; }
 
 		public ModConfigEditor() {
 			InitializeComponent();
@@ -36,7 +37,7 @@ namespace CNCMaps.GUI {
 				_pendingChanges = true;
 				// propertyGrid1.ExpandAllGridItems();
 			};
-
+			ModConfig = modConfig;
 			bool expand = propertyGrid1.SelectedObject == null;
 			propertyGrid1.SelectedObject = modConfig;
 			if (expand) propertyGrid1.ExpandAllGridItems();

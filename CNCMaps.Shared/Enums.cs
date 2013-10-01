@@ -1,8 +1,49 @@
+using System;
 using System.ComponentModel;
 using System.Drawing.Design;
 using CNCMaps.Shared.DynamicTypeDescription;
 
 namespace CNCMaps.Shared {
+
+	[Editor(typeof(StandardValueEditor), typeof(UITypeEditor))]
+	public enum EngineType {
+		[StandardValue("Auto Detect", Visible = false)]
+		AutoDetect = 0,
+		TiberianSun = 1,
+		Firestorm = 2,
+		RedAlert2 = 3,
+		YurisRevenge = 4,
+	}
+
+	[Editor(typeof(StandardValueEditor), typeof(UITypeEditor))]
+	[Flags]
+	public enum TheaterType {
+		None = 0,
+		Temperate = 1,
+		Urban = 2,
+		Snow = 4,
+		Lunar = 8,
+		Desert = 16,
+		NewUrban = 32,
+		All = 63,
+	}
+
+	[Editor(typeof(StandardValueEditor), typeof(UITypeEditor))]
+	[Flags]
+	public enum CollectionType {
+		None = 0,
+		Aircraft = 1,
+		Building = 2,
+		Infantry = 4,
+		Overlay = 8,
+		Smudge = 16,
+		Terrain = 32 ,
+		Vehicle = 64,
+		Animation = 128,
+		Tiles = 256,
+		All = 511
+	}
+
 	[Editor(typeof(StandardValueEditor), typeof(UITypeEditor))]
 	public enum LightingType {
 		[StandardValue("No special lighting (default for ore/gems)")]
@@ -15,6 +56,8 @@ namespace CNCMaps.Shared {
 		Ambient,
 		[StandardValue("Full lighting, including r/g/b tints from lamps")]
 		Full,
+		[StandardValue("No change")]
+		Default,
 	};
 
 
@@ -31,7 +74,9 @@ namespace CNCMaps.Shared {
 		[StandardValue("Animations palette")]
 		Anim,
 		[StandardValue("Custom palette (officially only used for Statue of Liberty)")]
-		Custom
+		Custom,
+		[StandardValue("No change")]
+		Default,
 	};
 
 

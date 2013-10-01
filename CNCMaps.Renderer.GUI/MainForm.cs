@@ -11,6 +11,7 @@ using System.Reflection;
 using System.Security;
 using System.Threading;
 using System.Windows.Forms;
+using CNCMaps.Engine.Game;
 using CNCMaps.GUI.Properties;
 using Microsoft.Win32;
 
@@ -491,7 +492,7 @@ namespace CNCMaps.GUI {
 			else
 				Log(e.Data);
 		}
-		
+
 		private delegate void LogDelegate(string s);
 		private void Log(string s) {
 			if (InvokeRequired) {

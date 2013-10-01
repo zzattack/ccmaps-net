@@ -1,7 +1,7 @@
-﻿using System.Net;
-using CNCMaps.Engine.Map;
+﻿using CNCMaps.Engine.Map;
 using CNCMaps.Engine.Rendering;
 using CNCMaps.FileFormats;
+using CNCMaps.Shared;
 using NLog;
 
 namespace CNCMaps.Engine.Game {
@@ -18,12 +18,18 @@ namespace CNCMaps.Engine.Game {
 		}
 
 		public override void LoadFromRules() {
-			base.LoadFromRulesEssential();
-			// don't care for the rest..
-			if (Art.ReadBool("Translucent"))
-				TransLucency = 50;
-			else
-				TransLucency = Art.ReadInt("Translucency", 0);
+			base.LoadFromArtEssential();
+
+			TransLucency = Art.ReadBool("Translucent") ? 50 : Art.ReadInt("Translucency", 0);
+
+			Props.HasShadow = Art.ReadBool("Shadow", Defaults.GetShadowAssumption(CollectionType.Animation));
+
+			Props.FrameDecider = FrameDeciders.LoopFrameDecider(
+				Art.ReadInt("LoopStart"),
+				Art.ReadInt("LoopEnd", 1));
+
+			Flat = Art.ReadBool("DrawFlat", Defaults.GetFlatnessAssumption(OwnerCollection.Type))
+				|| Art.ReadBool("Flat");
 		}
 
 		public override void Draw(GameObject obj, DrawingSurface ds, bool omitShadow = false) {

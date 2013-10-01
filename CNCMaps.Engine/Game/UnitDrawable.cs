@@ -12,7 +12,7 @@ namespace CNCMaps.Engine.Game {
 			: base(rules, art) { }
 
 		public override void LoadFromRules() {
-			base.LoadFromRulesEssential();
+			base.LoadFromArtEssential();
 
 			if (IsVoxel) {
 				var vxl = new VoxelDrawable(Rules, Art);

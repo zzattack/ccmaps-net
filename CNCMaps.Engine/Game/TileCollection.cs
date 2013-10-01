@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
-using CNCMaps.Engine.Map;
 using CNCMaps.FileFormats;
 using CNCMaps.FileFormats.VirtualFileSystem;
 using CNCMaps.Shared;

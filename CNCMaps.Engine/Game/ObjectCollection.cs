@@ -67,16 +67,41 @@ namespace CNCMaps.Engine.Game {
 			}
 
 			// overrides from the modconfig
-			var cfgOverride = ModConfig.ActiveConfig.ObjectOverrides.FirstOrDefault(
-				ovr => Regex.IsMatch(objName, ovr.ObjRegex, RegexOptions.IgnoreCase));
-			if (cfgOverride != null) {
-				Logger.Debug("Object {0} receives overrides from regex {1}", objName, cfgOverride.ObjRegex);
-				drawable.Props.LightingType = cfgOverride.Lighting;
-				drawable.Props.PaletteType = cfgOverride.Palette;
-				drawable.Props.CustomPaletteName = cfgOverride.CustomPaletteFile;
-			}
+			var cfgOverrides = ModConfig.ActiveConfig.ObjectOverrides.Where(ovr =>
+				// matches collection
+				(ovr.CollectionTypes & Type) == Type &&
+				// matches collection
+				(ovr.TheaterTypes & Theater) == Theater &&
+				// matches object regex
+				Regex.IsMatch(objName, ovr.ObjRegex, RegexOptions.IgnoreCase))
+				.OrderByDescending(o => o.Priority);
 
+			foreach (var cfgOverride in cfgOverrides) {
+				Logger.Debug("Object {0} receives overrides from regex {1}", objName, cfgOverride.ObjRegex);
+
+				if (cfgOverride.Lighting != LightingType.Default)
+					drawable.Props.LightingType = cfgOverride.Lighting;
+
+				if (cfgOverride.Palette != PaletteType.Default) {
+					drawable.Props.PaletteType = cfgOverride.Palette;
+					drawable.Props.CustomPaletteName = cfgOverride.CustomPaletteFile;
+				}
+				if (!string.IsNullOrWhiteSpace(cfgOverride.FrameDeciderCode) && !cannotCompile) {
+					try {
+						var fdc = FrameDeciders.GetOverrideFrameDecider(cfgOverride);
+						if (fdc != null)
+							drawable.Props.FrameDecider = fdc;
+					}
+					catch (TypeLoadException exc) {
+						cannotCompile = true;
+						Logger.Error("Custom framedecider could not be compiled. You need .NET 4.5 for this."
+							+ " Functionality will be unavaiable.\r\n{0}", exc);
+					}
+				}
+			}
 		}
+
+		private static bool cannotCompile = false;
 
 		private Drawable InitAnimDrawable(IniFile.IniSection rules, IniFile.IniSection art) {
 			var anim = new AnimDrawable(rules, art);

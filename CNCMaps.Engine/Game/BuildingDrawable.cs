@@ -70,15 +70,15 @@ namespace CNCMaps.Engine.Game {
 
 			_baseShp = new ShpDrawable(Rules, Art);
 			_baseShp.OwnerCollection = OwnerCollection;
-			_baseShp.LoadFromRulesEssential();
+			_baseShp.LoadFromArtEssential();
 			_baseShp.Props = Props;
 			_baseShp.Shp = VFS.Open<ShpFile>(_baseShp.GetFilename());
 
+			var extraProps = Props.Clone();
+			extraProps.SortIndex = 0;
 			foreach (string extraImage in AnimImages) {
-				var p = Props.Clone();
-				p.SortIndex = 0;
 
-				var extra = LoadExtraImage(extraImage, p);
+				var extra = LoadExtraImage(extraImage, extraProps);
 				if (extra != null && extra.Shp != null) {
 					_anims.Add(extra);
 
@@ -160,12 +160,6 @@ namespace CNCMaps.Engine.Game {
 					- extraArt.ReadInt("ZAdjust", Art.ReadInt(extraImage + "ZAdjust"));
 			else
 				anim.Props.SortIndex = inheritProps.SortIndex;
-			anim.Props.HasShadow = extraArt.ReadBool("Shadow", Defaults.GetShadowAssumption(CollectionType.Animation));
-
-			anim.Props.FrameDecider = FrameDeciders.LoopFrameDecider(
-				extraArt.ReadInt("LoopStart"),
-				extraArt.ReadInt("LoopEnd", 1));
-
 			if (Art.HasKey(extraImage + "X") || Art.HasKey(extraImage + "Y"))
 				anim.Props.Offset = this.Props.Offset + new Size(Art.ReadInt(extraImage + "X"), Art.ReadInt(extraImage + "Y"));
 			else

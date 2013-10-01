@@ -10,7 +10,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>CNCMaps.GUI</RootNamespace>
     <AssemblyName>CNCMaps.Renderer.GUI</AssemblyName>
-    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <FileUpgradeFlags>
     </FileUpgradeFlags>
@@ -31,7 +31,8 @@
     <IsWebBootstrapper>false</IsWebBootstrapper>
     <UseApplicationTrust>false</UseApplicationTrust>
     <BootstrapperEnabled>true</BootstrapperEnabled>
-    <TargetFrameworkProfile>Client</TargetFrameworkProfile>
+    <TargetFrameworkProfile>
+    </TargetFrameworkProfile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -43,6 +44,7 @@
     <WarningLevel>4</WarningLevel>
     <PlatformTarget>AnyCPU</PlatformTarget>
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -53,6 +55,7 @@
     <WarningLevel>4</WarningLevel>
     <PlatformTarget>AnyCPU</PlatformTarget>
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationIcon>ra2mapicon.ico</ApplicationIcon>
@@ -128,6 +131,14 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\CNCMaps.Engine\CNCMaps.Engine.csproj">
+      <Project>{b687c2a7-6fd6-495a-927d-ffc29ffd9d1d}</Project>
+      <Name>CNCMaps.Engine</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\CNCMaps.FileFormats\CNCMaps.FileFormats.csproj">
+      <Project>{761cec32-9254-4eee-ac76-07c8e4279835}</Project>
+      <Name>CNCMaps.FileFormats</Name>
+    </ProjectReference>
     <ProjectReference Include="..\CNCMaps.Shared\CNCMaps.Shared.csproj">
       <Project>{54d90137-e2cc-4d21-bbcb-9e3c626d875f}</Project>
       <Name>CNCMaps.Shared</Name>

@@ -3,14 +3,11 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
-using System.IO;
 using System.Linq;
-using System.Text;
 using CNCMaps.Engine.Map;
 using CNCMaps.Engine.Rendering;
 using CNCMaps.Engine.Utility;
 using CNCMaps.FileFormats;
-using CNCMaps.FileFormats.Encodings;
 using CNCMaps.FileFormats.Map;
 using CNCMaps.FileFormats.VirtualFileSystem;
 using CNCMaps.Shared;
@@ -222,7 +219,7 @@ namespace CNCMaps.Engine.Game {
 			}
 
 			foreach (GameObject obj in _unitObjects.Cast<GameObject>().Union(_aircraftObjects).Union(_infantryObjects)) {
-				var bounds = obj.Drawable.GetBounds(obj);
+				var bounds = obj.GetBounds();
 				// bounds to foundation
 				Size occupy = new Size(
 					(int)Math.Max(1, Math.Ceiling(bounds.Width / (double)Drawable.TileWidth)),
@@ -717,12 +714,12 @@ namespace CNCMaps.Engine.Game {
 #if DEBUG
 
 			// test that my bounds make some kind of sense
-			_drawingSurface.Unlock();
+			/*_drawingSurface.Unlock();
 			using (Graphics gfx = Graphics.FromImage(_drawingSurface.Bitmap)) {
 				foreach (var obj in orderedObjs)
 					if (obj.Drawable != null)
 						obj.Drawable.DrawBoundingBox(obj, gfx);
-			}
+			}*/
 #endif
 			/*
 			var tileCollection = _theater.GetTileCollection();
@@ -852,6 +849,7 @@ namespace CNCMaps.Engine.Game {
 			_theater.Draw(tile, _drawingSurface);
 			foreach (GameObject o in GetObjectsAt(tile.Dx, tile.Dy / 2))
 				_theater.Draw(o, _drawingSurface);
+			 Operations.CountNeighbouringVeins(tile, Operations.IsVeins);
 		}
 
 		public List<GameObject> GetObjectsAt(int dx, int dy) {
