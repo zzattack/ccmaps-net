@@ -66,11 +66,11 @@ namespace CNCMaps.Engine.Game {
 				case CollectionType.Building:
 				case CollectionType.Infantry:
 				case CollectionType.Terrain:
+				case CollectionType.Vehicle:
+				case CollectionType.Aircraft:
 					return true;
 				default:
 				case CollectionType.Smudge:
-				case CollectionType.Aircraft:
-				case CollectionType.Vehicle:
 				case CollectionType.Animation:
 					return false;
 			}

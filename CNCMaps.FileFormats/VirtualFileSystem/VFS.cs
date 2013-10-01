@@ -135,7 +135,10 @@ namespace CNCMaps.FileFormats.VirtualFileSystem {
 
 			// see http://modenc.renegadeprojects.com/MIX for more info
 			Logger.Info("Initializing filesystem on {0} for the {1} engine", mixDir, engine.ToString());
-			AddFile(mixDir);
+			
+			// add mixdir if we didnt receive it yet
+			if (AllArchives.OfType<DirArchive>().All(d => d.Directory != mixDir))
+				AddFile(mixDir);
 
 			// try all expand\d{2}md?\.mix files
 			for (int i = 99; i >= 0; i--) {

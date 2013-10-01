@@ -247,7 +247,7 @@ namespace CNCMaps.Engine.Game {
 					var drawable = animations.GetDrawable(anim);
 
 					if (string.IsNullOrEmpty(anim) || drawable == null) {
-						Logger.Debug("Missing anim {0} ({1}) for tileset {2}", anim, n, tileSet.SetName);
+						Logger.Trace("Missing anim {0} ({1}) for tileset {2}", anim, n, tileSet.SetName);
 						continue;
 					}
 

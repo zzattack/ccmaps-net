@@ -101,7 +101,7 @@ namespace CNCMaps.Engine.Game {
 					? (Drawable)new VoxelDrawable(VFS.Open<VxlFile>(turretName+".vxl"), VFS.Open<HvaFile>(turretName+".hva"))
 					: new ShpDrawable(VFS.Open<ShpFile>(turretName + ".shp"));
 				turret.Props.Offset = Props.Offset + new Size(Rules.ReadInt("TurretAnimX"), Rules.ReadInt("TurretAnimY"));
-				turret.Props.HasShadow = true;
+				turret.Props.HasShadow = Rules.ReadBool("UseTurretShadow");
 				turret.Props.FrameDecider = FrameDeciders.TurretFrameDecider;
 				SubDrawables.Add(turret);
 
@@ -160,7 +160,7 @@ namespace CNCMaps.Engine.Game {
 					- extraArt.ReadInt("ZAdjust", Art.ReadInt(extraImage + "ZAdjust"));
 			else
 				anim.Props.SortIndex = inheritProps.SortIndex;
-			anim.Props.HasShadow = extraArt.ReadBool("Shadow", inheritProps.HasShadow);
+			anim.Props.HasShadow = extraArt.ReadBool("Shadow", Defaults.GetShadowAssumption(CollectionType.Animation));
 
 			anim.Props.FrameDecider = FrameDeciders.LoopFrameDecider(
 				extraArt.ReadInt("LoopStart"),
