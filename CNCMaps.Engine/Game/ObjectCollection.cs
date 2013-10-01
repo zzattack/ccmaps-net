@@ -6,9 +6,10 @@ using System.Text;
 using System.Text.RegularExpressions;
 using CNCMaps.Engine.Map;
 using CNCMaps.Engine.Rendering;
-using CNCMaps.FileFormats.FileFormats;
+using CNCMaps.FileFormats;
 using CNCMaps.FileFormats.VirtualFileSystem;
 using CNCMaps.Shared;
+using NLog;
 
 namespace CNCMaps.Engine.Game {
 
@@ -16,7 +17,7 @@ namespace CNCMaps.Engine.Game {
 		public readonly string[] FireNames;
 		public readonly PaletteCollection Palettes;
 
-		static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
+		static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
 		public ObjectCollection(CollectionType type, TheaterType theater, EngineType engine, IniFile rules, IniFile art,
 			IniFile.IniSection objectsList, PaletteCollection palettes)

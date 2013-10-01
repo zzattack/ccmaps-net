@@ -2,8 +2,8 @@
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.Globalization;
-using CNCMaps.FileFormats.FileFormats;
-using CNCMaps.FileFormats.FileFormats.Encodings;
+using CNCMaps.FileFormats;
+using CNCMaps.FileFormats.Encodings;
 
 namespace CNCMaps.Engine.Map {
 	class ThumbInjector {

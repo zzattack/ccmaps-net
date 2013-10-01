@@ -2,6 +2,7 @@
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
+using System.Text;
 using System.Threading;
 using System.Windows.Forms;
 using CNCMaps.Shared;
@@ -85,7 +86,7 @@ namespace CNCMaps.GUI {
 			Console.ForegroundColor = ConsoleColor.Gray;
 			Console.Write("Usage: ");
 			Console.WriteLine("");
-			var sb = new System.Text.StringBuilder();
+			var sb = new StringBuilder();
 			var sw = new StringWriter(sb);
 			_options.WriteOptionDescriptions(sw);
 			Console.WriteLine(sb.ToString());

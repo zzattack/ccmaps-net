@@ -19,7 +19,7 @@ namespace CNCMaps.GUI {
 
 		public ModConfigEditor(string modConfigFile)
 			: this() {
-			this.ModConfigFile = modConfigFile;
+			ModConfigFile = modConfigFile;
 			if (!string.IsNullOrEmpty(modConfigFile) && File.Exists(modConfigFile)) {
 				try {
 					using (var f = File.OpenRead(modConfigFile))

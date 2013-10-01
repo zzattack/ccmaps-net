@@ -43,33 +43,38 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Drawing" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\CNCMaps.Shared\Properties\AssemblyInfoGlobal.cs">
       <Link>Properties\AssemblyInfoGlobal.cs</Link>
     </Compile>
-    <Compile Include="FileFormats\CsfFile.cs" />
-    <Compile Include="FileFormats\Encodings\Blowfish.cs" />
-    <Compile Include="FileFormats\Encodings\BlowfishKeyProvider.cs" />
-    <Compile Include="FileFormats\Encodings\CRC32.cs" />
-    <Compile Include="FileFormats\Encodings\Format2.cs" />
-    <Compile Include="FileFormats\Encodings\Format3.cs" />
-    <Compile Include="FileFormats\Encodings\Format40.cs" />
-    <Compile Include="FileFormats\Encodings\Format5.cs" />
-    <Compile Include="FileFormats\Encodings\Format80.cs" />
-    <Compile Include="FileFormats\Encodings\MiniLZO.cs" />
-    <Compile Include="FileFormats\FileFormat.cs" />
-    <Compile Include="FileFormats\FormatHelper.cs" />
-    <Compile Include="FileFormats\HvaFile.cs" />
-    <Compile Include="FileFormats\IniFile.cs" />
-    <Compile Include="FileFormats\MissionsFile.cs" />
-    <Compile Include="FileFormats\MixFile.cs" />
-    <Compile Include="FileFormats\PalFile.cs" />
-    <Compile Include="FileFormats\PktFile.cs" />
-    <Compile Include="FileFormats\ShpFile.cs" />
-    <Compile Include="FileFormats\TmpFile.cs" />
-    <Compile Include="FileFormats\VplFile.cs" />
-    <Compile Include="FileFormats\VxlFile.cs" />
+    <Compile Include="CsfFile.cs" />
+    <Compile Include="Encodings\Blowfish.cs" />
+    <Compile Include="Encodings\BlowfishKeyProvider.cs" />
+    <Compile Include="Encodings\CRC32.cs" />
+    <Compile Include="Encodings\Format2.cs" />
+    <Compile Include="Encodings\Format3.cs" />
+    <Compile Include="Encodings\Format40.cs" />
+    <Compile Include="Encodings\Format5.cs" />
+    <Compile Include="Encodings\Format80.cs" />
+    <Compile Include="Encodings\MiniLZO.cs" />
+    <Compile Include="FileFormat.cs" />
+    <Compile Include="FormatHelper.cs" />
+    <Compile Include="HvaFile.cs" />
+    <Compile Include="IniFile.cs" />
+    <Compile Include="Map\Lighting.cs" />
+    <Compile Include="Map\MapFile.cs" />
+    <Compile Include="Map\MapObjects.cs" />
+    <Compile Include="Map\TileLayer.cs" />
+    <Compile Include="MissionsFile.cs" />
+    <Compile Include="MixFile.cs" />
+    <Compile Include="PalFile.cs" />
+    <Compile Include="PktFile.cs" />
+    <Compile Include="ShpFile.cs" />
+    <Compile Include="TmpFile.cs" />
+    <Compile Include="VplFile.cs" />
+    <Compile Include="VxlFile.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="VirtualFileSystem\DirArchive.cs" />
     <Compile Include="VirtualFileSystem\IArchive.cs" />

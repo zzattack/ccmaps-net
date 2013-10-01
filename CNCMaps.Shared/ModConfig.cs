@@ -127,7 +127,7 @@ namespace CNCMaps.Shared {
 		}
 
 		public ModConfig Clone() {
-			var ret = (ModConfig)this.MemberwiseClone();
+			var ret = (ModConfig)MemberwiseClone();
 			ret.ExtraMixes = new List<string>();
 			ret.Directories = new List<string>();
 
@@ -393,7 +393,7 @@ namespace CNCMaps.Shared {
 		}
 
 		internal TheaterSettings Clone() {
-			var ret = (TheaterSettings)this.MemberwiseClone();
+			var ret = (TheaterSettings)MemberwiseClone();
 			ret.InstallTypeDescriptor();
 			return ret;
 		}
@@ -436,7 +436,7 @@ namespace CNCMaps.Shared {
 		public LightingType Lighting { get; set; }
 
 		internal ObjectOverride Clone() {
-			var ret = (ObjectOverride)this.MemberwiseClone();
+			var ret = (ObjectOverride)MemberwiseClone();
 			ret.InstallTypeDescriptor();
 			return ret;
 		}

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using CNCMaps.Engine.Map;
-using CNCMaps.FileFormats.FileFormats;
+using CNCMaps.FileFormats;
 using CNCMaps.Shared;
 
 namespace CNCMaps.Engine.Game {

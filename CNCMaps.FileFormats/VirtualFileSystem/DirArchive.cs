@@ -1,5 +1,4 @@
 ﻿using System.IO;
-using CNCMaps.FileFormats.FileFormats;
 
 namespace CNCMaps.FileFormats.VirtualFileSystem {
 
@@ -7,7 +6,7 @@ namespace CNCMaps.FileFormats.VirtualFileSystem {
 		public readonly string Directory;
 
 		public DirArchive(string path) {
-			this.Directory = path;
+			Directory = path;
 		}
 
 		public bool ContainsFile(string filename) {

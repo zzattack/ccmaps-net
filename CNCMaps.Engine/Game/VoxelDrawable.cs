@@ -2,11 +2,11 @@
 using System.IO;
 using CNCMaps.Engine.Map;
 using CNCMaps.Engine.Rendering;
-using CNCMaps.FileFormats.FileFormats;
+using CNCMaps.FileFormats;
 
 namespace CNCMaps.Engine.Game {
 	class VoxelDrawable : Drawable {
-		internal static readonly VoxelRenderer VoxelRenderer = new VoxelRenderer();
+		internal static readonly VxlRenderer VoxelRenderer = new VxlRenderer();
 		public VxlFile Vxl;
 		public HvaFile Hva;
 
@@ -31,7 +31,7 @@ namespace CNCMaps.Engine.Game {
 
 		public override Rectangle GetBounds(GameObject obj) {
 			if (Vxl == null || Hva == null) return Rectangle.Empty;
-			var bounds = VoxelRenderer.GetBounds(obj, Vxl, Hva, Props);
+			var bounds = VxlRenderer.GetBounds(obj, Vxl, Hva, Props);
 			bounds.Offset(obj.Tile.Dx * TileWidth / 2, (obj.Tile.Dy - obj.Tile.Z) * TileHeight / 2);
 			bounds.Offset(Props.GetOffset(obj));
 			return bounds;

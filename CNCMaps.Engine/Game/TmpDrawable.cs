@@ -1,13 +1,13 @@
 ﻿using System.Drawing;
 using CNCMaps.Engine.Map;
 using CNCMaps.Engine.Rendering;
-using CNCMaps.FileFormats.FileFormats;
+using CNCMaps.FileFormats;
 
 namespace CNCMaps.Engine.Game {
-	public class TmpDrawable : Drawable {
+	public class TileDrawable : Drawable {
 		private readonly TileCollection.TileSetEntry tsEntry;
 
-		public TmpDrawable(IniFile.IniSection rules, IniFile.IniSection art, TileCollection.TileSetEntry entry)
+		public TileDrawable(IniFile.IniSection rules, IniFile.IniSection art, TileCollection.TileSetEntry entry)
 			: base(rules, art) {
 			tsEntry = entry;
 			Name = entry.ToString();
@@ -18,12 +18,12 @@ namespace CNCMaps.Engine.Game {
 
 			var tmpFile = tsEntry.GetTmpFile((obj as MapTile).SubTile);
 			if (tmpFile != null)
-				TmpDrawer.Draw((MapTile)obj, tmpFile, ds);
+				TmpRenderer.Draw((MapTile)obj, tmpFile, ds);
 		}
 
 		public override Rectangle GetBounds(GameObject obj) {
 			var tile = (MapTile)obj;
-			return TmpDrawer.GetBounds(tile, tsEntry.GetTmpFile(tile.SubTile));
+			return TmpRenderer.GetBounds(tile, tsEntry.GetTmpFile(tile.SubTile));
 		}
 
 		public override void DrawBoundingBox(GameObject obj, Graphics gfx) {

@@ -17,11 +17,11 @@ namespace CNCMaps.GUI {
 		public void CheckVersion() {
 			WebClient wc = new WebClient();
 			wc.Proxy = null;
-			wc.OpenReadCompleted += (sender, args) => Connected(this, EventArgs.Empty);
+			wc.OpenReadCompleted += (sender, args) => Connected(this, Empty);
 			wc.DownloadProgressChanged += (sender, args) => DownloadProgressChanged(this, args);
 			wc.DownloadStringCompleted += (sender, args) => {
 				if (args.Cancelled || args.Error != null)
-					UpdateCheckFailed(this, EventArgs.Empty);
+					UpdateCheckFailed(this, Empty);
 				else {
 					try {
 						XmlDocument xd = new XmlDocument();

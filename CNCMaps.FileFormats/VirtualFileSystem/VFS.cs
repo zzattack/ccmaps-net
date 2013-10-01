@@ -2,16 +2,16 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using CNCMaps.FileFormats.FileFormats;
 using CNCMaps.Shared;
 using Microsoft.Win32;
+using NLog;
 
 namespace CNCMaps.FileFormats.VirtualFileSystem {
 
 	public class VFS {
 		public static readonly VFS Instance = new VFS();
 		public readonly List<IArchive> AllArchives = new List<IArchive>();
-		private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
+		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
 		public static VirtualFile Open(string filename) {
 			return Instance.OpenFile(filename);
@@ -26,7 +26,7 @@ namespace CNCMaps.FileFormats.VirtualFileSystem {
 		}
 
 		public T OpenFile<T>(string filename, CacheMethod m = CacheMethod.Default) where T : VirtualFile {
-			return this.OpenFile(filename, GetFormatFromTypeclass(typeof(T)), m) as T;
+			return OpenFile(filename, GetFormatFromTypeclass(typeof(T)), m) as T;
 		}
 
 

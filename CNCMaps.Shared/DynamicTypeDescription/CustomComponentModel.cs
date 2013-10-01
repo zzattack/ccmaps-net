@@ -25,11 +25,11 @@ namespace CNCMaps.Shared.DynamicTypeDescription {
 		event EventHandler IPropertyValueUIService.PropertyUIValueItemsChanged {
 			add {
 				lock (this)
-					this.m_NotifyHandler += value;
+					m_NotifyHandler += value;
 			}
 			remove {
 				lock (this)
-					this.m_NotifyHandler -= value;
+					m_NotifyHandler -= value;
 			}
 		}
 
@@ -37,8 +37,8 @@ namespace CNCMaps.Shared.DynamicTypeDescription {
 		/// Tell the IPropertyValueUIService implementation that the global list of PropertyValueUIItems has been modified.
 		/// </summary>
 		void IPropertyValueUIService.NotifyPropertyValueUIItemsChanged() {
-			if (this.m_NotifyHandler != null) {
-				this.m_NotifyHandler(this, EventArgs.Empty);
+			if (m_NotifyHandler != null) {
+				m_NotifyHandler(this, EventArgs.Empty);
 			}
 		}
 
@@ -53,7 +53,7 @@ namespace CNCMaps.Shared.DynamicTypeDescription {
 				throw new ArgumentNullException("newHandler");
 			}
 			lock (this)
-				this.m_ValueUIHandler = (PropertyValueUIHandler)Delegate.Combine(this.m_ValueUIHandler, newHandler);
+				m_ValueUIHandler = (PropertyValueUIHandler)Delegate.Combine(m_ValueUIHandler, newHandler);
 		}
 
 		/// <summary>
@@ -67,7 +67,7 @@ namespace CNCMaps.Shared.DynamicTypeDescription {
 				throw new ArgumentNullException("newHandler");
 			}
 
-			this.m_ValueUIHandler = (PropertyValueUIHandler)Delegate.Remove(this.m_ValueUIHandler, newHandler);
+			m_ValueUIHandler = (PropertyValueUIHandler)Delegate.Remove(m_ValueUIHandler, newHandler);
 		}
 
 		/// <summary>
@@ -83,7 +83,7 @@ namespace CNCMaps.Shared.DynamicTypeDescription {
 				throw new ArgumentNullException("propDesc");
 			}
 
-			if (this.m_ValueUIHandler == null) {
+			if (m_ValueUIHandler == null) {
 				return new PropertyValueUIItem[0];
 			}
 
@@ -91,7 +91,7 @@ namespace CNCMaps.Shared.DynamicTypeDescription {
 			lock (this) {
 				ArrayList result = new ArrayList();
 
-				this.m_ValueUIHandler(context, propDesc, result);
+				m_ValueUIHandler(context, propDesc, result);
 
 				return (PropertyValueUIItem[])result.ToArray(typeof(PropertyValueUIItem));
 			}

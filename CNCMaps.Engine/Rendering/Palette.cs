@@ -2,7 +2,8 @@
 using System.Drawing;
 using System.IO;
 using CNCMaps.Engine.Map;
-using CNCMaps.FileFormats.FileFormats;
+using CNCMaps.FileFormats;
+using CNCMaps.FileFormats.Map;
 
 namespace CNCMaps.Engine.Rendering {
 
@@ -25,9 +26,9 @@ namespace CNCMaps.Engine.Rendering {
 		}
 
 		public Palette(PalFile originalPalette, string name = "") {
-			this._originalPalette = originalPalette;
+			_originalPalette = originalPalette;
 			if (!string.IsNullOrEmpty(name))
-				this.Name = name;
+				Name = name;
 			else
 				Name = Path.GetFileNameWithoutExtension(originalPalette.FileName);
 		}

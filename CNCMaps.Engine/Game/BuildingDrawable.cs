@@ -4,7 +4,7 @@ using System.Drawing;
 using System.Linq;
 using CNCMaps.Engine.Map;
 using CNCMaps.Engine.Rendering;
-using CNCMaps.FileFormats.FileFormats;
+using CNCMaps.FileFormats;
 using CNCMaps.FileFormats.VirtualFileSystem;
 using CNCMaps.Shared;
 
@@ -27,7 +27,6 @@ namespace CNCMaps.Engine.Game {
 			"IdleAnim",
 			"SuperAnim",
 			// "Turret",
-			"BibShape",
 			//"SpecialAnimFour",
 			//"SpecialAnimThree",
 			//"SpecialAnimTwo",
@@ -67,12 +66,12 @@ namespace CNCMaps.Engine.Game {
 				int fy = Art.ReadInt("Foundation.Y", 1);
 				Foundation = new Size(fx, fy);
 			}
-			Props.SortIndex = Int32.MinValue; // "main" building image always first
+			Props.SortIndex = -1; // "main" building image before anims
 
 			_baseShp = new ShpDrawable(Rules, Art);
-			_baseShp.OwnerCollection = this.OwnerCollection;
+			_baseShp.OwnerCollection = OwnerCollection;
 			_baseShp.LoadFromRulesEssential();
-			_baseShp.Props = this.Props;
+			_baseShp.Props = Props;
 			_baseShp.Shp = VFS.Open<ShpFile>(_baseShp.GetFilename());
 
 			foreach (string extraImage in AnimImages) {
@@ -108,6 +107,21 @@ namespace CNCMaps.Engine.Game {
 				}
 			}
 
+			// Bib
+			if (Art.HasKey("BibShape")) {
+				var bibImg = Art.ReadString("BibShape") + ".shp";
+				if (NewTheater)
+					bibImg = OwnerCollection.ApplyNewTheaterIfNeeded(bibImg, bibImg);
+				var bibShp = VFS.Open<ShpFile>(bibImg);
+				if (bibShp != null) {
+					var bib = new ShpDrawable(bibShp);
+					bib.Props = this.Props.Clone();
+					bib.Props.SortIndex = int.MinValue;
+					bib.Flat = true;
+					SubDrawables.Add(bib);
+				}
+			}
+
 			// Powerup slots, at most 3
 			for (int i = 1; i <= 3; i++) {
 				if (!Art.HasKey(String.Format("PowerUp{0}LocXX", i))) break;
@@ -127,12 +141,14 @@ namespace CNCMaps.Engine.Game {
 			IniFile.IniSection extraRules = OwnerCollection.Rules.GetOrCreateSection(animSection);
 			IniFile.IniSection extraArt = OwnerCollection.Art.GetOrCreateSection(animSection);
 			AnimDrawable anim = new AnimDrawable(extraRules, extraArt);
-			anim.OwnerCollection = this.OwnerCollection;
+			anim.OwnerCollection = OwnerCollection;
 			anim.LoadFromRules();
 
 			anim.Props.Offset = Props.Offset;
 			anim.NewTheater  =extraArt.ReadBool("NewTheater", NewTheater);
-			anim.Props.SortIndex = extraArt.ReadInt("YSort", Art.ReadInt(extraImage + "YSort"));
+			anim.Props.SortIndex = 
+				extraArt.ReadInt("YSort", Art.ReadInt(extraImage + "YSortAdjust")) 
+				- extraArt.ReadInt("ZAdjust", Art.ReadInt(extraImage + "ZAdjust"));
 			anim.Props.HasShadow = extraArt.ReadBool("Shadow", Props.HasShadow);
 
 			anim.Props.FrameDecider = FrameDeciders.LoopFrameDecider(

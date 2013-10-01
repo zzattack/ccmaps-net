@@ -166,7 +166,7 @@ namespace CNCMaps.Shared.DynamicTypeDescription {
 			listViewEnum.Columns[0].Width = listViewEnum.Width - 20;
 			listViewEnum.Invalidate();
 			lblDesc.Invalidate();
-			this.Invalidate();
+			Invalidate();
 		}
 
 		void UpdateCheckState() {

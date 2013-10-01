@@ -47,8 +47,8 @@ namespace CNCMaps.Shared.DynamicTypeDescription {
 		ExclusiveStandardValues = 16,
 
 		[StandardValue("Use resource for all string", "Use resource for all string for this property.")]
-		LocalizeAllString = PropertyFlags.LocalizeDisplayName | PropertyFlags.LocalizeDescription |
-			  PropertyFlags.LocalizeCategoryName | PropertyFlags.LocalizeEnumerations,
+		LocalizeAllString = LocalizeDisplayName | LocalizeDescription |
+			  LocalizeCategoryName | LocalizeEnumerations,
 
 		[StandardValue("Expandable", "Make property expandlabe if property type is IEnemerable")]
 		ExpandIEnumerable = 32,
@@ -57,9 +57,9 @@ namespace CNCMaps.Shared.DynamicTypeDescription {
 		SupportStandardValues = 64,
 
 		[StandardValue("All flags", "All of the flags should be applied to this property.")]
-		All = PropertyFlags.LocalizeAllString | PropertyFlags.ExclusiveStandardValues | PropertyFlags.ExpandIEnumerable | PropertyFlags.SupportStandardValues,
+		All = LocalizeAllString | ExclusiveStandardValues | ExpandIEnumerable | SupportStandardValues,
 
-		Default = PropertyFlags.LocalizeAllString | PropertyFlags.SupportStandardValues,
+		Default = LocalizeAllString | SupportStandardValues,
 	}
 
 	[AttributeUsage(AttributeTargets.Property, AllowMultiple = false, Inherited = false)]
@@ -163,8 +163,8 @@ namespace CNCMaps.Shared.DynamicTypeDescription {
 			}
 			ClassResourceAttribute other = obj as ClassResourceAttribute;
 
-			if (String.Compare(this.BaseName, other.BaseName, true) == 0 &&
-				String.Compare(this.AssemblyFullName, other.AssemblyFullName, true) == 0) {
+			if (String.Compare(BaseName, other.BaseName, true) == 0 &&
+				String.Compare(AssemblyFullName, other.AssemblyFullName, true) == 0) {
 				return true;
 			}
 
@@ -250,8 +250,8 @@ namespace CNCMaps.Shared.DynamicTypeDescription {
 			}
 			ClassResourceAttribute other = obj as ClassResourceAttribute;
 
-			if (String.Compare(this.BaseName, other.BaseName, true) == 0 &&
-				String.Compare(this.AssemblyFullName, other.AssemblyFullName, true) == 0) {
+			if (String.Compare(BaseName, other.BaseName, true) == 0 &&
+				String.Compare(AssemblyFullName, other.AssemblyFullName, true) == 0) {
 				return true;
 			}
 
@@ -336,8 +336,8 @@ namespace CNCMaps.Shared.DynamicTypeDescription {
 			}
 			ClassResourceAttribute other = obj as ClassResourceAttribute;
 
-			if (String.Compare(this.BaseName, other.BaseName, true) == 0 &&
-				String.Compare(this.AssemblyFullName, other.AssemblyFullName, true) == 0) {
+			if (String.Compare(BaseName, other.BaseName, true) == 0 &&
+				String.Compare(AssemblyFullName, other.AssemblyFullName, true) == 0) {
 				return true;
 			}
 
@@ -507,11 +507,11 @@ namespace CNCMaps.Shared.DynamicTypeDescription {
 
 		}
 
-		public override bool GetPaintValueSupported(System.ComponentModel.ITypeDescriptorContext context) {
+		public override bool GetPaintValueSupported(ITypeDescriptorContext context) {
 			return false;
 		}
 
-		public override UITypeEditorEditStyle GetEditStyle(System.ComponentModel.ITypeDescriptorContext context) {
+		public override UITypeEditorEditStyle GetEditStyle(ITypeDescriptorContext context) {
 			return UITypeEditorEditStyle.DropDown;
 		}
 
@@ -521,7 +521,7 @@ namespace CNCMaps.Shared.DynamicTypeDescription {
 			}
 		}
 
-		public override object EditValue(System.ComponentModel.ITypeDescriptorContext context, IServiceProvider provider, object value) {
+		public override object EditValue(ITypeDescriptorContext context, IServiceProvider provider, object value) {
 			if (provider != null) {
 				IWindowsFormsEditorService editorService = provider.GetService(typeof(IWindowsFormsEditorService)) as IWindowsFormsEditorService;
 				if (editorService == null)
@@ -989,12 +989,12 @@ namespace CNCMaps.Shared.DynamicTypeDescription {
 		}
 		public AttributeList(AttributeCollection ac) {
 			foreach (Attribute attr in ac) {
-				this.Add(attr);
+				Add(attr);
 			}
 		}
 		public AttributeList(Attribute[] aa) {
 			foreach (Attribute attr in aa) {
-				this.Add(attr);
+				Add(attr);
 			}
 		}
 	}
@@ -1266,7 +1266,7 @@ namespace CNCMaps.Shared.DynamicTypeDescription {
 			if (m_site == null) {
 				SimpleSite site = new SimpleSite();
 				IPropertyValueUIService service = new PropertyValueUIService();
-				service.AddPropertyValueUIHandler(new PropertyValueUIHandler(this.GenericPropertyValueUIHandler));
+				service.AddPropertyValueUIHandler(new PropertyValueUIHandler(GenericPropertyValueUIHandler));
 				site.AddService(service);
 				m_site = site;
 			}
@@ -1354,8 +1354,8 @@ namespace CNCMaps.Shared.DynamicTypeDescription {
 
 		internal CustomPropertyDescriptor(object owner, string sName, Type type, object value, params Attribute[] attributes)
 			: base(sName, attributes) {
-			this.m_owner = owner;
-			this.m_value = value;
+			m_owner = owner;
+			m_value = value;
 			m_PropType = type;
 			m_Attributes.AddRange(attributes);
 
@@ -1379,8 +1379,8 @@ namespace CNCMaps.Shared.DynamicTypeDescription {
 				if (StatandardValues.Count > 0) {
 					return new StandardValuesConverter();
 				}
-				IEnumerable en = this.GetValue(this.m_owner) as IEnumerable;
-				if (en != null && (this.PropertyFlags & PropertyFlags.ExpandIEnumerable) > 0) {
+				IEnumerable en = GetValue(m_owner) as IEnumerable;
+				if (en != null && (PropertyFlags & PropertyFlags.ExpandIEnumerable) > 0) {
 					return new StandardValuesConverter();
 				}
 				return base.Converter;
@@ -1395,11 +1395,11 @@ namespace CNCMaps.Shared.DynamicTypeDescription {
 
 			if (PropertyType.IsEnum) {
 				StandardValueAttribute[] sva = StandardValueAttribute.GetEnumItems(PropertyType);
-				this.m_StatandardValues.AddRange(sva);
+				m_StatandardValues.AddRange(sva);
 			}
 			else if (PropertyType == typeof(bool)) {
-				this.m_StatandardValues.Add(new StandardValueAttribute(true));
-				this.m_StatandardValues.Add(new StandardValueAttribute(false));
+				m_StatandardValues.Add(new StandardValueAttribute(true));
+				m_StatandardValues.Add(new StandardValueAttribute(false));
 			}
 		}
 
@@ -1411,7 +1411,7 @@ namespace CNCMaps.Shared.DynamicTypeDescription {
 		public override Type PropertyType {
 			get {
 				if (m_pd != null) {
-					return this.m_pd.PropertyType;
+					return m_pd.PropertyType;
 				}
 				return m_PropType;
 			}
@@ -1514,10 +1514,10 @@ namespace CNCMaps.Shared.DynamicTypeDescription {
 		public override string DisplayName {
 			get {
 
-				if (this.ResourceManager != null && (this.PropertyFlags & PropertyFlags.LocalizeDisplayName) > 0) {
+				if (ResourceManager != null && (PropertyFlags & PropertyFlags.LocalizeDisplayName) > 0) {
 					string sKey = KeyPrefix + base.Name + "_Name";
 
-					string sResult = this.ResourceManager.GetString(sKey, CultureInfo.CurrentUICulture);
+					string sResult = ResourceManager.GetString(sKey, CultureInfo.CurrentUICulture);
 					if (!String.IsNullOrEmpty(sResult)) {
 						return sResult;
 					}
@@ -1540,9 +1540,9 @@ namespace CNCMaps.Shared.DynamicTypeDescription {
 		public override string Category {
 			get {
 				string sResult = String.Empty;
-				if (this.ResourceManager != null && CategoryId != 0 && (this.PropertyFlags & PropertyFlags.LocalizeCategoryName) > 0) {
+				if (ResourceManager != null && CategoryId != 0 && (PropertyFlags & PropertyFlags.LocalizeCategoryName) > 0) {
 					string sKey = KeyPrefix + "Cat" + CategoryId.ToString();
-					sResult = this.ResourceManager.GetString(sKey, CultureInfo.CurrentUICulture);
+					sResult = ResourceManager.GetString(sKey, CultureInfo.CurrentUICulture);
 					if (!String.IsNullOrEmpty(sResult)) {
 						return sResult.PadLeft(sResult.Length + m_TabAppendCount, '\t');
 					}
@@ -1568,9 +1568,9 @@ namespace CNCMaps.Shared.DynamicTypeDescription {
 		}
 		public override string Description {
 			get {
-				if (this.ResourceManager != null && (this.PropertyFlags & PropertyFlags.LocalizeDescription) > 0) {
+				if (ResourceManager != null && (PropertyFlags & PropertyFlags.LocalizeDescription) > 0) {
 					string sKey = KeyPrefix + base.Name + "_Desc";
-					string sResult = this.ResourceManager.GetString(sKey, CultureInfo.CurrentUICulture);
+					string sResult = ResourceManager.GetString(sKey, CultureInfo.CurrentUICulture);
 					if (!String.IsNullOrEmpty(sResult)) {
 						return sResult;
 					}
@@ -1682,15 +1682,15 @@ namespace CNCMaps.Shared.DynamicTypeDescription {
 
 			if (m_pd != null) {
 				m_pd.SetValue(component, m_value);
-				this.OnValueChanged(this, new EventArgs());
+				OnValueChanged(this, new EventArgs());
 
 			}
 			else {
-				EventHandler eh = this.GetValueChangedHandler(m_owner);
+				EventHandler eh = GetValueChangedHandler(m_owner);
 				if (eh != null) {
 					eh.Invoke(this, new EventArgs());
 				}
-				this.OnValueChanged(this, new EventArgs());
+				OnValueChanged(this, new EventArgs());
 			}
 		}
 		protected override void OnValueChanged(object component, EventArgs e) {
@@ -1726,7 +1726,7 @@ namespace CNCMaps.Shared.DynamicTypeDescription {
 
 		public override PropertyDescriptorCollection GetChildProperties(object instance, Attribute[] filter) {
 			PropertyDescriptorCollection pdc = null;
-			TypeConverter tc = this.Converter;
+			TypeConverter tc = Converter;
 			if (tc.GetPropertiesSupported(null) == false) {
 				pdc = base.GetChildProperties(instance, filter);
 			}

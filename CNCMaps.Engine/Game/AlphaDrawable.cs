@@ -1,7 +1,7 @@
 ﻿using System.Drawing;
 using CNCMaps.Engine.Map;
 using CNCMaps.Engine.Rendering;
-using CNCMaps.FileFormats.FileFormats;
+using CNCMaps.FileFormats;
 
 namespace CNCMaps.Engine.Game {
 	class AlphaDrawable  : ShpDrawable {
@@ -17,7 +17,7 @@ namespace CNCMaps.Engine.Game {
 		}
 
 		public override void Draw(GameObject obj, DrawingSurface ds) {
-			ShpDrawer.DrawAlpha(obj, Shp, Props, ds);
+			ShpRenderer.DrawAlpha(obj, Shp, Props, ds);
 		}
 	}
 }

@@ -2,11 +2,14 @@
 using System.IO;
 using System.Linq;
 using System.Runtime.Serialization;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Xml;
+using CNCMaps.Engine.Game;
 using CNCMaps.Engine.Map;
 using CNCMaps.Engine.Rendering;
-using CNCMaps.FileFormats.FileFormats;
+using CNCMaps.FileFormats;
+using CNCMaps.FileFormats.Map;
 using CNCMaps.FileFormats.VirtualFileSystem;
 using CNCMaps.Shared;
 using System;
@@ -30,18 +33,18 @@ namespace CNCMaps {
 				Logger.Info("Initializing virtual filesystem");
 
 				var mapStream = File.Open(Settings.InputFile, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
-				VirtualFile mapFile;
+				VirtualFile vmapFile;
 				var mixMap = new MixFile(mapStream, Settings.InputFile, 0, mapStream.Length, false, false);
 				if (mixMap.IsValid()) { // input max is a mix
 					var mapArchive = new MixFile(mapStream, Path.GetFileName(Settings.InputFile), true);
 					// grab the largest file in the archive
 					var mixEntry = mapArchive.Index.OrderByDescending(me => me.Value.Length).First();
-					mapFile = mapArchive.OpenFile(mixEntry.Key);
+					vmapFile = mapArchive.OpenFile(mixEntry.Key);
 				}
 				else {
-					mapFile = new VirtualFile(mapStream, Path.GetFileName(Settings.InputFile), true);
+					vmapFile = new VirtualFile(mapStream, Path.GetFileName(Settings.InputFile), true);
 				}
-				var map = new MapFile(mapFile, Path.GetFileName(Settings.InputFile));
+				var mapFile = new MapFile(vmapFile, Path.GetFileName(Settings.InputFile));
 
 				// ---------------------------------------------------------------
 				// Code to organize moving of maps in a directory for themselves
@@ -83,33 +86,40 @@ namespace CNCMaps {
 						Logger.Error("Invalid mod config file specified");
 					}
 				}
-				if (!map.LoadMap(Settings.Engine)) {
-					Logger.Error("Could not successfully load this map. Try specifying the engine type manually.");
-					return 1;
-				}
 
-				map.IgnoreLighting = Settings.IgnoreLighting;
-				map.StartPosMarking = Settings.StartPositionMarking;
-				map.MarkOreFields = Settings.MarkOreFields;
+				if (Settings.Engine == EngineType.AutoDetect) {
+					Settings.Engine = EngineDetector.DetectEngineType(mapFile);
+					Logger.Info("Engine autodetect result: {0}", Settings.Engine);
+				}
 
 				// enginetype is now definitive, load mod config
 				if (ModConfig.ActiveConfig == null)
-					ModConfig.LoadDefaultConfig(map.Engine);
+					ModConfig.LoadDefaultConfig(Settings.Engine);
 
 				// first add the dirs, then load the extra mixes, then scan the dirs
 				foreach (string modDir in ModConfig.ActiveConfig.Directories)
 					VFS.Add(modDir);
-				
+
 				// add mixdir to VFS (if it's not included in the mod config)
 				if (!ModConfig.ActiveConfig.Directories.Any()) {
-					string mixDir = VFS.DetermineMixDir(Settings.MixFilesDirectory, map.Engine);
+					string mixDir = VFS.DetermineMixDir(Settings.MixFilesDirectory, Settings.Engine);
 					VFS.Add(mixDir);
 				}
 				foreach (string mixFile in ModConfig.ActiveConfig.ExtraMixes)
 					VFS.Add(mixFile);
 				foreach (var dir in VFS.Instance.AllArchives.OfType<DirArchive>().Select(d => d.Directory).ToList())
-					VFS.Instance.ScanMixDir(dir, map.Engine);
-				
+					VFS.Instance.ScanMixDir(dir, Settings.Engine);
+
+				var map = new Map {
+					IgnoreLighting = Settings.IgnoreLighting,
+					StartPosMarking = Settings.StartPositionMarking,
+					MarkOreFields = Settings.MarkOreFields
+				};
+
+				if (!map.Initialize(mapFile, Settings.Engine)) {
+					Logger.Error("Could not successfully load this map. Try specifying the engine type manually.");
+					return 1;
+				}
 
 				if (!map.LoadTheater()) {
 					Logger.Error("Could not successfully load all required components for this map. Aborting.");
@@ -122,7 +132,7 @@ namespace CNCMaps {
 				if (Settings.MarkOreFields)
 					map.MarkOreAndGems();
 
-				map.DrawMap();
+				map.Draw();
 
 #if DEBUG
 				// ====================================================================================
@@ -136,7 +146,7 @@ namespace CNCMaps {
 					map.DrawSquaredStartPositions();
 
 				if (Settings.OutputFile == "")
-					Settings.OutputFile = DetermineMapName(map);
+					Settings.OutputFile = DetermineMapName(mapFile, Settings.Engine);
 
 				if (Settings.OutputDir == "")
 					Settings.OutputDir = Path.GetDirectoryName(Settings.InputFile);
@@ -183,9 +193,9 @@ namespace CNCMaps {
 					if (mapFile.BaseStream is MixFile)
 						Logger.Error("Cannot inject thumbnail into an archive (.mmx/.yro/.mix)!");
 					else {
-						map.GeneratePreviewPack(Settings.OmitPreviewPackMarkers, Settings.SizeMode);
+						map.GeneratePreviewPack(Settings.OmitPreviewPackMarkers, Settings.SizeMode, mapFile);
 						Logger.Info("Saving map");
-						map.Save(Settings.InputFile);
+						mapFile.Save(Settings.InputFile);
 					}
 				}
 			}
@@ -305,7 +315,7 @@ namespace CNCMaps {
 				Logger.Error("No output format selected. Either specify -j, -p, -k or a combination");
 				return false;
 			}
-			else if (Settings.OutputDir != "" && !System.IO.Directory.Exists(Settings.OutputDir)) {
+			else if (Settings.OutputDir != "" && !Directory.Exists(Settings.OutputDir)) {
 				Logger.Error("Specified output directory does not exist.");
 				return false;
 			}
@@ -316,7 +326,7 @@ namespace CNCMaps {
 			Console.ForegroundColor = ConsoleColor.Gray;
 			Console.Write("Usage: ");
 			Console.WriteLine("");
-			var sb = new System.Text.StringBuilder();
+			var sb = new StringBuilder();
 			var sw = new StringWriter(sb);
 			_options.WriteOptionDescriptions(sw);
 			Console.WriteLine(sb.ToString());
@@ -331,14 +341,14 @@ namespace CNCMaps {
 
 		/// <summary>Gets the determine map name. </summary>
 		/// <returns>The filename to save the map as</returns>
-		public static string DetermineMapName(MapFile map) {
+		public static string DetermineMapName(MapFile map, EngineType engine) {
 			string fileNameWithoutExtension = Path.GetFileNameWithoutExtension(map.FileName);
 
 			IniFile.IniSection basic = map.GetSection("Basic");
 			if (basic.ReadBool("Official") == false)
 				return StripPlayersFromName(basic.ReadString("Name", fileNameWithoutExtension));
 
-			string mapExt = Path.GetExtension(Program.Settings.InputFile);
+			string mapExt = Path.GetExtension(Settings.InputFile);
 			string missionName = "";
 			string mapName = "";
 			PktFile.PktMapEntry pktMapEntry = null;
@@ -347,7 +357,7 @@ namespace CNCMaps {
 			// campaign mission
 			if (!basic.ReadBool("MultiplayerOnly") && basic.ReadBool("Official")) {
 				string missionsFile;
-				switch (map.Engine) {
+				switch (engine) {
 					case EngineType.TiberianSun:
 					case EngineType.RedAlert2:
 						missionsFile = "mission.ini";
@@ -364,7 +374,7 @@ namespace CNCMaps {
 				var mf = VFS.Open<MissionsFile>(missionsFile);
 				missionEntry = mf.GetMissionEntry(Path.GetFileName(map.FileName));
 				if (missionEntry != null)
-					missionName = (map.Engine >= EngineType.RedAlert2) ? missionEntry.UIName : missionEntry.Name;
+					missionName = (engine >= EngineType.RedAlert2) ? missionEntry.UIName : missionEntry.Name;
 			}
 
 			else {
@@ -388,7 +398,7 @@ namespace CNCMaps {
 
 				else {
 					// determine pkt file based on engine
-					switch (map.Engine) {
+					switch (engine) {
 						case EngineType.TiberianSun:
 						case EngineType.RedAlert2:
 							pkt = VFS.Open<PktFile>("missions.pkt");
@@ -407,9 +417,9 @@ namespace CNCMaps {
 
 				// fallback for multiplayer maps with, .map extension,
 				// no YR objects so assumed to be ra2, but actually meant to be used on yr
-				if (mapExt == ".map" && pkt != null && !pkt.MapEntries.ContainsKey(pktEntryName) && map.Engine >= EngineType.RedAlert2) {
+				if (mapExt == ".map" && pkt != null && !pkt.MapEntries.ContainsKey(pktEntryName) && engine >= EngineType.RedAlert2) {
 					var vfs = new VFS();
-					vfs.AddFile(Program.Settings.InputFile);
+					vfs.AddFile(Settings.InputFile);
 					pkt = vfs.OpenFile<PktFile>("missionsmd.pkt");
 				}
 
@@ -419,11 +429,11 @@ namespace CNCMaps {
 
 			// now, if we have a map entry from a PKT file, 
 			// for TS we are done, but for RA2 we need to look in the CSV file for the translated mapname
-			if (map.Engine <= EngineType.Firestorm) {
+			if (engine <= EngineType.Firestorm) {
 				if (pktMapEntry != null)
 					mapName = pktMapEntry.Description;
 				else if (missionEntry != null) {
-					if (map.Engine == EngineType.TiberianSun) {
+					if (engine == EngineType.TiberianSun) {
 						string campaignSide;
 						string missionNumber;
 
@@ -450,7 +460,7 @@ namespace CNCMaps {
 			else if (missionEntry != null || pktMapEntry != null) {
 				string csfEntryName = missionEntry != null ? missionName : pktMapEntry.Description;
 
-				string csfFile = map.Engine == EngineType.YurisRevenge ? "ra2md.csf" : "ra2.csf";
+				string csfFile = engine == EngineType.YurisRevenge ? "ra2md.csf" : "ra2.csf";
 				Logger.Info("Loading csf file {0}", csfFile);
 				var csf = VFS.Open<CsfFile>(csfFile);
 				mapName = csf.GetValue(csfEntryName.ToLower());

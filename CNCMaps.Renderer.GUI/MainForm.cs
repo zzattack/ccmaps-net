@@ -11,6 +11,7 @@ using System.Reflection;
 using System.Security;
 using System.Threading;
 using System.Windows.Forms;
+using CNCMaps.GUI.Properties;
 using Microsoft.Win32;
 
 namespace CNCMaps.GUI {
@@ -44,59 +45,59 @@ namespace CNCMaps.GUI {
 			else
 				UpdateStatus("not checking for newer version", 100);
 
-			rbAutoFilename.Checked = Properties.Settings.Default.outputauto;
-			rbCustomFilename.Checked = Properties.Settings.Default.outputcustom;
-			rbEngineAuto.Checked = Properties.Settings.Default.engineauto;
-			rbEngineFS.Checked = Properties.Settings.Default.enginefs;
-			rbEngineRA2.Checked = Properties.Settings.Default.enginera2;
-			rbEngineTS.Checked = Properties.Settings.Default.enginets;
-			rbEngineYR.Checked = Properties.Settings.Default.engineyr;
-			rbPreferHardwareRendering.Checked = Properties.Settings.Default.hwvoxels;
-			rbPreferSoftwareRendering.Checked = Properties.Settings.Default.swvoxels;
-			rbSizeFullmap.Checked = Properties.Settings.Default.fullsize;
-			rbSizeLocal.Checked = Properties.Settings.Default.localsize;
-			rbSizeAuto.Checked = Properties.Settings.Default.autosize;
+			rbAutoFilename.Checked = Settings.Default.outputauto;
+			rbCustomFilename.Checked = Settings.Default.outputcustom;
+			rbEngineAuto.Checked = Settings.Default.engineauto;
+			rbEngineFS.Checked = Settings.Default.enginefs;
+			rbEngineRA2.Checked = Settings.Default.enginera2;
+			rbEngineTS.Checked = Settings.Default.enginets;
+			rbEngineYR.Checked = Settings.Default.engineyr;
+			rbPreferHardwareRendering.Checked = Settings.Default.hwvoxels;
+			rbPreferSoftwareRendering.Checked = Settings.Default.swvoxels;
+			rbSizeFullmap.Checked = Settings.Default.fullsize;
+			rbSizeLocal.Checked = Settings.Default.localsize;
+			rbSizeAuto.Checked = Settings.Default.autosize;
 
-			cbEmphasizeOre.Checked = Properties.Settings.Default.emphore;
-			cbModConfig.Checked = Properties.Settings.Default.modconfig;
-			cbOmitSquareMarkers.Checked = Properties.Settings.Default.omitsquarespreview;
-			cbSquaredStartPositions.Checked = Properties.Settings.Default.squaredpos;
-			cbTiledStartPositions.Checked = Properties.Settings.Default.tiledpos;
-			cbOutputJPG.Checked = Properties.Settings.Default.outputjpg;
-			cbOutputPNG.Checked = Properties.Settings.Default.outputpng;
-			cbOutputThumbnail.Checked = Properties.Settings.Default.outputthumb;
-			cbReplacePreview.Checked = Properties.Settings.Default.injectthumb;
-			cbPreserveThumbAspect.Checked = Properties.Settings.Default.thumbpreserveaspect;
+			cbEmphasizeOre.Checked = Settings.Default.emphore;
+			cbModConfig.Checked = Settings.Default.modconfig;
+			cbOmitSquareMarkers.Checked = Settings.Default.omitsquarespreview;
+			cbSquaredStartPositions.Checked = Settings.Default.squaredpos;
+			cbTiledStartPositions.Checked = Settings.Default.tiledpos;
+			cbOutputJPG.Checked = Settings.Default.outputjpg;
+			cbOutputPNG.Checked = Settings.Default.outputpng;
+			cbOutputThumbnail.Checked = Settings.Default.outputthumb;
+			cbReplacePreview.Checked = Settings.Default.injectthumb;
+			cbPreserveThumbAspect.Checked = Settings.Default.thumbpreserveaspect;
 
 			UpdateCommandline();
 		}
 
 		private void MainFormClosing(object sender, FormClosingEventArgs e) {
-			Properties.Settings.Default.outputauto = rbAutoFilename.Checked;
-			Properties.Settings.Default.outputcustom = rbCustomFilename.Checked;
-			Properties.Settings.Default.engineauto = rbEngineAuto.Checked;
-			Properties.Settings.Default.enginefs = rbEngineFS.Checked;
-			Properties.Settings.Default.enginera2 = rbEngineRA2.Checked;
-			Properties.Settings.Default.enginets = rbEngineTS.Checked;
-			Properties.Settings.Default.engineyr = rbEngineYR.Checked;
-			Properties.Settings.Default.hwvoxels = rbPreferHardwareRendering.Checked; ;
-			Properties.Settings.Default.swvoxels = rbPreferSoftwareRendering.Checked; ;
-			Properties.Settings.Default.fullsize = rbSizeFullmap.Checked; ;
-			Properties.Settings.Default.localsize = rbSizeLocal.Checked;
-			Properties.Settings.Default.autosize = rbSizeAuto.Checked;
+			Settings.Default.outputauto = rbAutoFilename.Checked;
+			Settings.Default.outputcustom = rbCustomFilename.Checked;
+			Settings.Default.engineauto = rbEngineAuto.Checked;
+			Settings.Default.enginefs = rbEngineFS.Checked;
+			Settings.Default.enginera2 = rbEngineRA2.Checked;
+			Settings.Default.enginets = rbEngineTS.Checked;
+			Settings.Default.engineyr = rbEngineYR.Checked;
+			Settings.Default.hwvoxels = rbPreferHardwareRendering.Checked; ;
+			Settings.Default.swvoxels = rbPreferSoftwareRendering.Checked; ;
+			Settings.Default.fullsize = rbSizeFullmap.Checked; ;
+			Settings.Default.localsize = rbSizeLocal.Checked;
+			Settings.Default.autosize = rbSizeAuto.Checked;
 
-			Properties.Settings.Default.emphore = cbEmphasizeOre.Checked;
-			Properties.Settings.Default.modconfig = cbModConfig.Checked;
-			Properties.Settings.Default.omitsquarespreview = cbOmitSquareMarkers.Checked;
-			Properties.Settings.Default.squaredpos = cbSquaredStartPositions.Checked;
-			Properties.Settings.Default.tiledpos = cbTiledStartPositions.Checked;
-			Properties.Settings.Default.outputjpg = cbOutputJPG.Checked;
-			Properties.Settings.Default.outputpng = cbOutputPNG.Checked;
-			Properties.Settings.Default.outputthumb = cbOutputThumbnail.Checked;
-			Properties.Settings.Default.thumbpreserveaspect = cbPreserveThumbAspect.Checked;
-			Properties.Settings.Default.injectthumb = cbReplacePreview.Checked;
+			Settings.Default.emphore = cbEmphasizeOre.Checked;
+			Settings.Default.modconfig = cbModConfig.Checked;
+			Settings.Default.omitsquarespreview = cbOmitSquareMarkers.Checked;
+			Settings.Default.squaredpos = cbSquaredStartPositions.Checked;
+			Settings.Default.tiledpos = cbTiledStartPositions.Checked;
+			Settings.Default.outputjpg = cbOutputJPG.Checked;
+			Settings.Default.outputpng = cbOutputPNG.Checked;
+			Settings.Default.outputthumb = cbOutputThumbnail.Checked;
+			Settings.Default.thumbpreserveaspect = cbPreserveThumbAspect.Checked;
+			Settings.Default.injectthumb = cbReplacePreview.Checked;
 
-			Properties.Settings.Default.Save();
+			Settings.Default.Save();
 		}
 
 		#region registry searching

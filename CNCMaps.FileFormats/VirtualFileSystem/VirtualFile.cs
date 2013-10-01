@@ -21,17 +21,17 @@ namespace CNCMaps.FileFormats.VirtualFileSystem {
 
 		public VirtualFile(Stream baseStream, string filename, int baseOffset, long fileSize, bool isBuffered = false) {
 			Size = fileSize;
-			this.BaseOffset = baseOffset;
-			this.BaseStream = baseStream;
-			this._isBuffered = isBuffered;
+			BaseOffset = baseOffset;
+			BaseStream = baseStream;
+			_isBuffered = isBuffered;
 			FileName = filename;
 		}
 
 		public VirtualFile(Stream baseStream, string filename = "", bool isBuffered = false) {
-			this.BaseStream = baseStream;
+			BaseStream = baseStream;
 			BaseOffset = 0;
 			Size = baseStream.Length;
-			this._isBuffered = isBuffered;
+			_isBuffered = isBuffered;
 			FileName = filename;
 		}
 

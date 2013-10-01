@@ -2,15 +2,16 @@
 using System.Collections.Generic;
 using System.Drawing;
 using CNCMaps.Engine.Map;
-using CNCMaps.FileFormats.FileFormats;
+using CNCMaps.FileFormats;
 using CNCMaps.FileFormats.VirtualFileSystem;
 using CNCMaps.Shared;
+using NLog;
 
 namespace CNCMaps.Engine.Game {
 
 	public class TileCollection : GameCollection {
 
-		static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
+		static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 		readonly IniFile _theaterIni;
 		readonly List<short> _tileNumToSet = new List<short>();
 		readonly List<short> _setNumToFirstTile = new List<short>();
@@ -225,7 +226,7 @@ namespace CNCMaps.Engine.Game {
 						else break;
 					}
 					ts.Entries.Add(rs);
-					_drawables.Add(new TmpDrawable(null, null, rs));
+					_drawables.Add(new TileDrawable(null, null, rs));
 				}
 				setNum++;
 			}
@@ -335,63 +336,6 @@ namespace CNCMaps.Engine.Game {
 
 		public short GetTileNumFromSet(short setNum, byte tileNumWithinSet = 0) {
 			return (short)(_setNumToFirstTile[setNum] + tileNumWithinSet);
-		}
-
-		/// <summary>Recalculates tile system. </summary>
-		public void RecalculateTileSystem(TileLayer tiles) {
-			Logger.Info("Recalculating tile LAT system");
-
-			// change all CLAT tiles to their corresponding LAT tiles
-			foreach (MapTile t in tiles) {
-				if (t == null) continue;
-
-				// If this tile comes from a CLAT (connecting lat) set,
-				// then replace it's set and tilenr by corresponding LAT sets'
-				t.SetNum = GetSetNum(t.TileNum);
-
-				if (IsCLAT(t.SetNum)) {
-					t.SetNum = GetLAT(t.SetNum);
-					t.TileNum = GetTileNumFromSet(t.SetNum);
-				}
-			}
-
-			foreach (MapTile t in tiles) {
-				if (t == null) continue;
-
-				// If this tile is a LAT tile, we might have to connect it
-				if (IsLAT(t.SetNum)) {
-					// Which tile to use from CLAT tileset
-					byte transitionTile = 0;
-
-					// Find out setnums of adjacent cells
-
-					MapTile tileTopRight = tiles.GetNeighbourTile(t, TileLayer.TileDirection.TopRight);
-					if (tileTopRight != null && ConnectTiles(t.SetNum, tileTopRight.SetNum))
-						transitionTile += 1;
-
-					MapTile tileBottomRight = tiles.GetNeighbourTile(t, TileLayer.TileDirection.BottomRight);
-					if (tileBottomRight != null && ConnectTiles(t.SetNum, tileBottomRight.SetNum))
-						transitionTile += 2;
-
-					MapTile tileBottomLeft = tiles.GetNeighbourTile(t, TileLayer.TileDirection.BottomLeft);
-					if (tileBottomLeft != null && ConnectTiles(t.SetNum, tileBottomLeft.SetNum))
-						transitionTile += 4;
-
-					MapTile tileTopLeft = tiles.GetNeighbourTile(t, TileLayer.TileDirection.TopLeft);
-					if (tileTopLeft != null && ConnectTiles(t.SetNum, tileTopLeft.SetNum))
-						transitionTile += 8;
-
-					if (transitionTile > 0) {
-						// Find Tileset that contains the connecting pieces
-						short clatSet = GetCLATSet(t.SetNum);
-						// Do not change this setnum, as then we could recognize it as
-						// a different tileset for later tiles around this one.
-						// (T->SetNum = clatSet;)
-						t.TileNum = GetTileNumFromSet(clatSet, transitionTile);
-					}
-				}
-
-			}
 		}
 
 		public int NumTiles {

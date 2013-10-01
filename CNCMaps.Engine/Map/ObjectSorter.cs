@@ -17,8 +17,8 @@ namespace CNCMaps.Engine.Map {
 		private readonly List<GameObject> _histOrdered = new List<GameObject>();
 
 		public ObjectSorter(Theater t, TileLayer map) {
-			this._map = map;
-			this._t = t;
+			_map = map;
+			_t = t;
 		}
 
 
@@ -155,9 +155,9 @@ namespace CNCMaps.Engine.Map {
 				return (objA is MapTile) ? objB : objA;
 
 			// flat stuff always loses
-			if (objA.Drawable.DrawFlat ^ objB.Drawable.DrawFlat) {
+			if (objA.Drawable.Flat ^ objB.Drawable.Flat) {
 				if (sepAxis != Axis.Z)
-					return (objA.Drawable.DrawFlat) ? objB : objA;
+					return (objA.Drawable.Flat) ? objB : objA;
 			}
 
 			switch (sepAxis) {
@@ -184,8 +184,8 @@ namespace CNCMaps.Engine.Map {
 			// no proper separation is possible, if one of both
 			// objects is flat then mark the other one as in front,
 			// otherwise use the one with lowest y
-			if (objA.Drawable.DrawFlat && !objB.Drawable.DrawFlat) return objB;
-			else if (objB.Drawable.DrawFlat && !objA.Drawable.DrawFlat) return objA;
+			if (objA.Drawable.Flat && !objB.Drawable.Flat) return objB;
+			else if (objB.Drawable.Flat && !objA.Drawable.Flat) return objA;
 
 			// try to make distinction based on object type
 			// tile, smudge, overlay, terrain, unit/building, aircraft

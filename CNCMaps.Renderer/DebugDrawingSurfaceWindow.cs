@@ -10,13 +10,13 @@ namespace CNCMaps {
 		private DrawingSurface _drawingSurface;
 		private TileLayer _tiles;
 		private Theater _theater;
-		private MapFile _map;
+		private Map _map;
 
 		public DebugDrawingSurfaceWindow() {
 			InitializeComponent();
 		}
 
-		public DebugDrawingSurfaceWindow(DrawingSurface ds, TileLayer tiles, Theater t, MapFile map)
+		public DebugDrawingSurfaceWindow(DrawingSurface ds, TileLayer tiles, Theater t, Map map)
 			: this() {
 			_drawingSurface = ds;
 			_tiles = tiles;
@@ -37,7 +37,7 @@ namespace CNCMaps {
 				sb.Append("No valid tile under mouse");
 			}
 			else {
-				var tileFile = (tile.Drawable as TmpDrawable).GetTileFile(tile);
+				var tileFile = (tile.Drawable as TileDrawable).GetTileFile(tile);
 				sb.AppendFormat("   Tile {4}: d({0},{1}) r({2},{3})", tile.Dx, tile.Dy, tile.Rx, tile.Ry, tileFile.FileName.ToUpper());
 				
 				var gridTilenoZ = _tiles.GetTileScreen(e.Location, true, true);

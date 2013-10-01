@@ -4,6 +4,9 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using CNCMaps.Engine.Game;
+using CNCMaps.FileFormats.Map;
+using CNCMaps.Shared.Utility;
+using NLog;
 
 namespace CNCMaps.Engine.Map {
 	public class TileLayer : IEnumerable<MapTile> {
@@ -16,7 +19,7 @@ namespace CNCMaps.Engine.Map {
 		ry = dy - rx + mapwidth + 1
 		*/
 
-		static NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
+		static Logger logger = LogManager.GetCurrentClassLogger();
 
 		public TouchType[,] GridTouched { get; private set; }
 		public MapTile[,] GridTouchedBy { get; private set; }
@@ -29,9 +32,9 @@ namespace CNCMaps.Engine.Map {
 
 		public TileLayer(Size fullSize) {
 			this.fullSize = fullSize;
-			this.tiles = new MapTile[fullSize.Width * 2 - 1, fullSize.Height];
-			this.GridTouched = new TouchType[fullSize.Width * 2 - 1, fullSize.Height];
-			this.GridTouchedBy = new MapTile[fullSize.Width * 2 - 1, fullSize.Height];
+			tiles = new MapTile[fullSize.Width * 2 - 1, fullSize.Height];
+			GridTouched = new TouchType[fullSize.Width * 2 - 1, fullSize.Height];
+			GridTouchedBy = new MapTile[fullSize.Width * 2 - 1, fullSize.Height];
 		}
 
 		public int Width {
@@ -90,8 +93,8 @@ namespace CNCMaps.Engine.Map {
 			int dx = rx - ry + Width - 1;
 			int dy = rx + ry - Width - 1;
 			if (fixOOB) {
-				dx = Math.Min(Width*2 - 2, Math.Max(0, dx));
-				dy = Math.Min(Height - 1, Math.Max(0, dy));
+				dx = Math.Min(Width * 2 - 2, Math.Max(0, dx));
+				dy = Math.Min(Height * 2 - 2, Math.Max(0, dy));
 			}
 			var tile_noheight = this[dx, dy / 2];
 			if (omitHeight)
@@ -99,10 +102,10 @@ namespace CNCMaps.Engine.Map {
 
 			else dy += tile_noheight.Z;
 			if (fixOOB)
-				dy = Math.Min(Height - 1, Math.Max(0, dy));
+				dy = Math.Min(Height * 2 - 2, Math.Max(0, dy));
 			return this[dx, dy / 2];
 		}
-		
+
 		#region neighbouring tiles tests (auto-lat tests)
 		public void testNeighbours() {
 			testNeighbours(15, 9);
@@ -194,38 +197,6 @@ namespace CNCMaps.Engine.Map {
 		IEnumerator IEnumerable.GetEnumerator() {
 			return new TwoDimensionalEnumerator<MapTile>(tiles);
 		}
-
-		class TwoDimensionalEnumerator<T> : IEnumerator<T> {
-			T[,] array;
-			int curX, curY;
-			public TwoDimensionalEnumerator(T[,] array) {
-				this.array = array;
-				Reset();
-			}
-			public bool MoveNext() {
-				curX++;
-				if (curX == array.GetLength(0)) {
-					curX = 0;
-					curY++;
-				}
-				return curY < array.GetLength(1);
-			}
-			public void Reset() {
-				curX = -1;
-				curY = 0;
-			}
-			T IEnumerator<T>.Current {
-				get {
-					return array[curX, curY];
-				}
-			}
-			object IEnumerator.Current {
-				get { return array[curX, curY]; }
-			}
-			public void Dispose() { }
-
-		}
-
 		#endregion
 
 		[Flags]
@@ -235,6 +206,10 @@ namespace CNCMaps.Engine.Map {
 			ByExtraData = 2,
 		}
 
+
+		public MapTile GetTile(IsoTile isoTile) {
+			return this[isoTile.Dx, isoTile.Dy / 2];
+		}
 	}
 
 }

@@ -51,15 +51,16 @@
     </Compile>
     <Compile Include="Game\Defaults.cs" />
     <Compile Include="Game\GameCollection.cs" />
+    <Compile Include="Map\Map.cs" />
     <Compile Include="Game\ObjectCollection.cs" />
     <Compile Include="Game\SpecialOverlays.cs" />
     <Compile Include="Game\Theater.cs" />
     <Compile Include="Game\TileCollection.cs" />
-    <Compile Include="Map\Lighting.cs" />
-    <Compile Include="Map\MapFile.cs" />
-    <Compile Include="Map\MapObjects.cs" />
+    <Compile Include="Map\EngineDetector.cs" />
+    <Compile Include="Map\GameObjects.cs" />
     <Compile Include="Map\MapTile.cs" />
     <Compile Include="Map\ObjectSorter.cs" />
+    <Compile Include="Map\Operations.cs" />
     <Compile Include="Map\ThumbInjector.cs" />
     <Compile Include="Map\TileLayer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -68,17 +69,16 @@
     <Compile Include="Game\BuildingDrawable.cs" />
     <Compile Include="Game\Drawable.cs" />
     <Compile Include="Rendering\DrawingSurface.cs" />
-    <Compile Include="Rendering\DrawProperties.cs" />
+    <Compile Include="Game\DrawProperties.cs" />
     <Compile Include="Rendering\Palette.cs" />
     <Compile Include="Game\PaletteCollection.cs" />
     <Compile Include="Game\ShpDrawable.cs" />
-    <Compile Include="Rendering\ShpDrawer.cs" />
+    <Compile Include="Rendering\ShpRenderer.cs" />
     <Compile Include="Game\TmpDrawable.cs" />
-    <Compile Include="Rendering\TmpDrawer.cs" />
+    <Compile Include="Rendering\TmpRenderer.cs" />
     <Compile Include="Game\UnitDrawable.cs" />
     <Compile Include="Game\VoxelDrawable.cs" />
-    <Compile Include="Rendering\VoxelRenderer.cs" />
-    <Compile Include="Utility\Compare.cs" />
+    <Compile Include="Rendering\VxlRenderer.cs" />
     <Compile Include="Utility\Hexagon.cs" />
     <Compile Include="Utility\HsvColor.cs" />
   </ItemGroup>

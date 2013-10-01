@@ -2,9 +2,10 @@
 using System.Drawing;
 using CNCMaps.Engine.Map;
 using CNCMaps.Engine.Rendering;
-using CNCMaps.FileFormats.FileFormats;
+using CNCMaps.FileFormats;
 using CNCMaps.FileFormats.VirtualFileSystem;
 using CNCMaps.Shared;
+using NLog;
 
 namespace CNCMaps.Engine.Game {
 	public class Theater {
@@ -24,18 +25,18 @@ namespace CNCMaps.Engine.Game {
 		TileCollection _tileTypes;
 		PaletteCollection _palettes;
 
-		static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
+		static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
 		public Theater(TheaterType theaterType, EngineType engine, IniFile rules, IniFile art) {
-			this._theaterType = theaterType;
-			this._engine = engine;
-			this._rules = rules;
-			this._art = art;
+			_theaterType = theaterType;
+			_engine = engine;
+			_rules = rules;
+			_art = art;
 		}
 
 		public Theater(TheaterType theaterType, EngineType engine) {
-			this._theaterType = theaterType;
-			this._engine = engine;
+			_theaterType = theaterType;
+			_engine = engine;
 			if (engine == EngineType.RedAlert2 || engine == EngineType.TiberianSun) {
 				_rules = VFS.Open<IniFile>("rules.ini") ;
 				_art = VFS.Open<IniFile>("art.ini");

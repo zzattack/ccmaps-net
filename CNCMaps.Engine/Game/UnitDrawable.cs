@@ -2,7 +2,7 @@
 using System.Drawing;
 using CNCMaps.Engine.Map;
 using CNCMaps.Engine.Rendering;
-using CNCMaps.FileFormats.FileFormats;
+using CNCMaps.FileFormats;
 using CNCMaps.FileFormats.VirtualFileSystem;
 
 namespace CNCMaps.Engine.Game {
@@ -16,8 +16,8 @@ namespace CNCMaps.Engine.Game {
 
 			if (IsVoxel) {
 				var vxl = new VoxelDrawable(Rules, Art);
-				vxl.OwnerCollection = this.OwnerCollection;
-				vxl.Props = this.Props;
+				vxl.OwnerCollection = OwnerCollection;
+				vxl.Props = Props;
 				vxl.LoadFromRules();
 				vxl.Vxl = VFS.Open<VxlFile>(vxl.Image + ".vxl");
 				vxl.Hva = VFS.Open<HvaFile>(vxl.Image + ".hva");
@@ -25,8 +25,8 @@ namespace CNCMaps.Engine.Game {
 			}
 			else {
 				var shp = new ShpDrawable(Rules, Art);
-				shp.Props = this.Props;
-				shp.OwnerCollection = this.OwnerCollection;
+				shp.Props = Props;
+				shp.OwnerCollection = OwnerCollection;
 				shp.LoadFromRules();
 				shp.Shp = VFS.Open<ShpFile>(shp.GetFilename());
 				SubDrawables.Add(shp);
@@ -36,7 +36,7 @@ namespace CNCMaps.Engine.Game {
 				var turretVxl = VFS.Open<VxlFile>(Image + "TUR.vxl");
 				var turretHva = VFS.Open<HvaFile>(Image + "TUR.hva");
 				var turret = new VoxelDrawable(turretVxl, turretHva);
-				turret.Props.Offset = this.Props.Offset;
+				turret.Props.Offset = Props.Offset;
 				turret.Props.Offset += new Size(Rules.ReadInt("TurretAnimX"), Rules.ReadInt("TurretAnimY"));
 				turret.Props.TurretVoxelOffset = Art.ReadFloat("TurretOffset");
 				SubDrawables.Add(turret);

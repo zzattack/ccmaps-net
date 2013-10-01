@@ -2,6 +2,7 @@
 using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 using System.Linq;
+using NLog;
 
 namespace CNCMaps.Engine.Rendering {
 	public class DrawingSurface {
@@ -12,7 +13,7 @@ namespace CNCMaps.Engine.Rendering {
 		int[] _heightBuffer;
 		bool[] _shadowBuffer;
 		short[] zBuffer;
-		static NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
+		static Logger logger = LogManager.GetCurrentClassLogger();
 
 		public DrawingSurface(int width, int height, PixelFormat pixelFormat) {
 			logger.Debug("Initializing DrawingSurface with dimensions ({0},{1}), pixel format {2}", width, height, pixelFormat.ToString());
@@ -118,16 +119,16 @@ namespace CNCMaps.Engine.Rendering {
 		}
 
 		public void FreeNonBitmap() {
-			this.zBuffer = null;
-			this._shadowBuffer = null;
-			this._heightBuffer = null;
+			zBuffer = null;
+			_shadowBuffer = null;
+			_heightBuffer = null;
 		}
 
 
 		internal void Dispose() {
 			Unlock();
-			this.zBuffer = null;
-			this._shadowBuffer = null;
+			zBuffer = null;
+			_shadowBuffer = null;
 			Bitmap.Dispose();
 		}
 	}

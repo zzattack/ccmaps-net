@@ -2,13 +2,14 @@ using System.Collections.Generic;
 using System.Drawing;
 using CNCMaps.Engine.Map;
 using CNCMaps.Engine.Rendering;
-using CNCMaps.FileFormats.FileFormats;
+using CNCMaps.FileFormats;
 using CNCMaps.FileFormats.VirtualFileSystem;
 using CNCMaps.Shared;
+using NLog;
 
 namespace CNCMaps.Engine.Game {
 	public abstract class Drawable {
-		static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
+		static readonly Logger logger = LogManager.GetCurrentClassLogger();
 
 		public string Name { get; protected set; }
 		internal IniFile.IniSection Rules { get; private set; }
@@ -27,7 +28,7 @@ namespace CNCMaps.Engine.Game {
 		public bool IsVeins { get; set; }
 		public bool IsVeinHoleMonster { get; set; }
 		public int TileElevation { get; set; }
-		public bool DrawFlat { get; set; }
+		public bool Flat { get; set; }
 		public bool Theater { get; set; }
 		public bool IsValid { get; set; }
 
@@ -90,18 +91,18 @@ namespace CNCMaps.Engine.Game {
 				string alphaImageFile = Rules.ReadString("AlphaImage") + ".shp";
 				if (VFS.Exists(alphaImageFile)) {
 					var ad = new AlphaDrawable(VFS.Open<ShpFile>(alphaImageFile));
-					ad.OwnerCollection = this.OwnerCollection;
+					ad.OwnerCollection = OwnerCollection;
 					SubDrawables.Add(ad);
 				}
 			}
 
 			Props.HasShadow = Art.ReadBool("Shadow", Defaults.GetShadowAssumption(OwnerCollection.Type));
-			DrawFlat = Rules.ReadBool("DrawFlat", Defaults.GetFlatnessAssumption(OwnerCollection.Type))
+			Flat = Rules.ReadBool("DrawFlat", Defaults.GetFlatnessAssumption(OwnerCollection.Type))
 				|| Rules.ReadBool("Flat");
 
 			if (Rules.ReadBool("Wall")) {
 				IsWall = true;
-				DrawFlat = false;
+				Flat = false;
 				// RA2 walls appear a bit higher
 				if (OwnerCollection.Engine >= EngineType.RedAlert2) {
 					Props.Offset.Offset(0, 3); // seems walls are located 3 pixels lower
@@ -112,7 +113,7 @@ namespace CNCMaps.Engine.Game {
 			}
 			if (Rules.ReadBool("Gate")) {
 				IsGate = true;
-				DrawFlat = false;
+				Flat = false;
 				Props.PaletteType = PaletteType.Unit;
 				Props.FrameDecider = FrameDeciders.NullFrameDecider;
 			}
@@ -121,6 +122,7 @@ namespace CNCMaps.Engine.Game {
 				Props.LightingType = LightingType.None;
 				Props.PaletteType = PaletteType.Unit;
 				IsVeins = true;
+				Flat = true;
 			}
 			if (Rules.ReadBool("IsVeinholeMonster")) {
 				Props.Offset.Y = -48; // why is this needed???
@@ -153,7 +155,7 @@ namespace CNCMaps.Engine.Game {
 				Props.PaletteType = PaletteType.Unit;
 			}
 			if (Rules.HasKey("JumpjetHeight")) {
-				Props.Offset.Offset(0, (int)(-Rules.ReadInt("JumpjetHeight") / 256.0 * Drawable.TileHeight));
+				Props.Offset.Offset(0, (int)(-Rules.ReadInt("JumpjetHeight") / 256.0 * TileHeight));
 			}
 			Props.Offset.Offset(Art.ReadInt("XDrawOffset"), Art.ReadInt("YDrawOffset"));
 		}
