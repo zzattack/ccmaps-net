@@ -47,14 +47,17 @@ Section "Maps Renderer" Section1
 	File "CNCMaps.Shared\bin\${CONFIG}\CNCMaps.Shared.dll"
 	File "CNCMaps.FileFormats\bin\${CONFIG}\CNCMaps.FileFormats.dll"
 	File "CNCMaps.Engine\bin\${CONFIG}\CNCMaps.Engine.dll"
-	File "Lib\NLog.dll"	
+		
+	SetOverwrite ifnewer
 	${If} ${CONFIG} == "Debug"
 		File "CNCMaps.Renderer\NLog.Debug.config"
 	${Else}
 		File "CNCMaps.Renderer\NLog.config"
-	${EndIf}
+	${EndIf}	
+	File "Lib\NLog.dll"
 	File "Lib\OSMesa.dll"
 	File "Lib\OpenTK.dll"
+	
 	CreateShortCut "$DESKTOP\CNCMaps Renderer.lnk" "$INSTDIR\CNCMaps.Renderer.GUI.exe"
 	CreateDirectory "$SMPROGRAMS\CNCMaps"
 	CreateShortCut "$SMPROGRAMS\CNCMaps\CNC Maps renderer.lnk" "$INSTDIR\CNCMaps.Renderer.GUI.exe"

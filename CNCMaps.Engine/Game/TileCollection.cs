@@ -242,12 +242,12 @@ namespace CNCMaps.Engine.Game {
 				if (tileSet == null) continue;
 
 				for (int a = 1; a <= tileSet.TilesInSet; a++) {
-					string n = string.Format("Tile{0:00}", a);
+					string n = string.Format("Tile{0:d2}", a);
 					string anim = extraSection.ReadString(n + "Anim");
 					var drawable = animations.GetDrawable(anim);
 
 					if (string.IsNullOrEmpty(anim) || drawable == null) {
-						Logger.Debug("Missing anim {0} for tileset {1}", anim, tileSet.SetName);
+						Logger.Debug("Missing anim {0} ({1}) for tileset {2}", anim, n, tileSet.SetName);
 						continue;
 					}
 

@@ -22,11 +22,13 @@ namespace CNCMaps.Engine.Game {
 			Hva = hva;
 		}
 
-		public override void Draw(GameObject obj, DrawingSurface ds) {
+		public override void Draw(GameObject obj, DrawingSurface ds, bool shadows = true) {
 			if (Vxl == null || Hva == Stream.Null) return;
 			DrawingSurface vxl_ds = VoxelRenderer.Render(Vxl, Hva, obj, Props);
 			if (vxl_ds != null)
 				BlitVoxelToSurface(ds, vxl_ds, obj, Props);
+
+			// todo: voxel shadows
 		}
 
 		public override Rectangle GetBounds(GameObject obj) {

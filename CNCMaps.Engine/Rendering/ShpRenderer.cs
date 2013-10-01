@@ -117,8 +117,10 @@ namespace CNCMaps.Engine.Rendering {
 			int zIdx = offset.X + offset.Y * ds.Width;
 			int rIdx = 0;
 
-			float a = (100f - transLucency) / 100f;
-			float b = transLucency / 100f;
+			// clip to 25-50-75-100
+			transLucency = (transLucency / 25) * 25;
+			float a = transLucency / 100f;
+			float b = 1 - a;
 
 			for (int y = 0; y < img.Height; y++) {
 				if (offset.Y + y < 0) {
@@ -181,8 +183,10 @@ namespace CNCMaps.Engine.Rendering {
 			int zIdx = offset.X + offset.Y * ds.Width;
 			int rIdx = 0;
 			int castHeight = obj.Tile.Z * Drawable.TileHeight / 2;
-			//if (obj.Drawable != null)
-			//	castHeight += obj.Drawable.TileElevation * Drawable.TileHeight / 2;
+			if (obj.Drawable != null && !obj.Drawable.Flat) {
+				castHeight += shp.Height;
+				castHeight += obj.Drawable.TileElevation * Drawable.TileHeight / 2;
+			}
 
 			for (int y = 0; y < img.Height; y++) {
 				if (offset.Y + y < 0) {
@@ -193,10 +197,10 @@ namespace CNCMaps.Engine.Rendering {
 				}
 
 				short zBufVal = (short)((obj.Tile.Rx + obj.Tile.Ry + obj.Tile.Z) * Drawable.TileHeight / 2);
-				zBufVal += (short)(shp.Height / 2);// + image.Header.y + y);
+				zBufVal += (short)(shp.Height / 2 + img.Y + y);
 				// zBufVal += (short)(-Header.Height / 2 + image.Header.y + image.Header.cy);
 				for (int x = 0; x < img.Width; x++) {
-					if (w_low <= w && w < w_high && imgData[rIdx] != 0 && zBufVal >= zBuffer[zIdx] && castHeight >= heightBuffer[zIdx]) {
+					if (w_low <= w && w < w_high && imgData[rIdx] != 0 && !shadows[zIdx] && zBufVal >= zBuffer[zIdx] && castHeight >= heightBuffer[zIdx]) {
 						*(w + 0) /= 2;
 						*(w + 1) /= 2;
 						*(w + 2) /= 2;

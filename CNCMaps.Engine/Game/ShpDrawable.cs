@@ -21,9 +21,15 @@ namespace CNCMaps.Engine.Game {
 			Shp = shpFile;
 		}
 
-		public override void Draw(GameObject obj, DrawingSurface ds) {
+		public override void Draw(GameObject obj, DrawingSurface ds, bool shadow = true) {
 			if (InvisibleInGame || Shp == null) return;
 			ShpRenderer.Draw(obj, Shp, Props, ds);
+			if (Props.HasShadow && shadow)
+				ShpRenderer.DrawShadow(obj, Shp, Props, ds);
+		}
+
+		public override void DrawShadow(GameObject obj, DrawingSurface ds) {
+			if (InvisibleInGame || Shp == null) return;
 			if (Props.HasShadow)
 				ShpRenderer.DrawShadow(obj, Shp, Props, ds);
 		}

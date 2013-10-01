@@ -32,6 +32,8 @@ namespace CNCMaps.GUI {
 		}
 
 		private void MainFormLoad(object sender, EventArgs args) {
+			Settings.Default.Upgrade();
+
 			Text += " - v" + Assembly.GetEntryAssembly().GetName().Version;
 
 			if (string.IsNullOrEmpty(tbRenderProg.Text))
@@ -334,7 +336,7 @@ namespace CNCMaps.GUI {
 
 			if (cbModConfig.Checked)
 				cmd += "-M \"" + tbModConfig.Text + "\" ";
-			else if (tbMixDir.Text != FindMixDir(rbEngineAuto.Checked || rbEngineRA2.Checked || rbEngineYR.Checked))
+			else if (!string.IsNullOrWhiteSpace(tbMixDir.Text) && tbMixDir.Text != FindMixDir(rbEngineAuto.Checked || rbEngineRA2.Checked || rbEngineYR.Checked))
 				cmd += "-m " + "\"" + tbMixDir.Text + "\" ";
 
 			if (cbEmphasizeOre.Checked) cmd += "-r ";

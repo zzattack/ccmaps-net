@@ -13,12 +13,14 @@ namespace CNCMaps.Engine.Game {
 			Name = entry.ToString();
 		}
 
-		public override void Draw(GameObject obj, DrawingSurface ds) {
+		public override void Draw(GameObject obj, DrawingSurface ds, bool shadows = true) {
 			if (obj == null || tsEntry == null) return;
 
 			var tmpFile = tsEntry.GetTmpFile((obj as MapTile).SubTile);
 			if (tmpFile != null)
 				TmpRenderer.Draw((MapTile)obj, tmpFile, ds);
+
+			// todo: tile shadows
 		}
 
 		public override Rectangle GetBounds(GameObject obj) {

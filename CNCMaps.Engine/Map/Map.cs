@@ -60,6 +60,8 @@ namespace CNCMaps.Engine.Game {
 			Engine = et;
 			TheaterType = Theater.TheaterTypeFromString(mf.ReadString("Map", "Theater"));
 			FullSize = mf.FullSize;
+			LocalSize = mf.LocalSize;
+
 			_tiles = new TileLayer(FullSize.Size);
 
 			LoadAllObjects(mf);
@@ -87,7 +89,7 @@ namespace CNCMaps.Engine.Game {
 
 			// import tiles
 			foreach (var iso in mf.Tiles)
-				_tiles[iso.Dx, iso.Dy/2] = new MapTile(iso.Dx, iso.Dy, iso.Rx, iso.Ry, 0, 0, 0, _tiles);
+				_tiles[iso.Dx, iso.Dy/2] = new MapTile(iso.Dx, iso.Dy, iso.Rx, iso.Ry, iso.Z, iso.TileNum, iso.SubTile, _tiles);
 
 			// import terrain
 			foreach (var terr in mf.Terrains) {

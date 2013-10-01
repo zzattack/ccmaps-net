@@ -83,6 +83,7 @@ namespace CNCMaps.FileFormats.VirtualFileSystem {
 			// directory
 			if (Directory.Exists(path)) {
 				AllArchives.Add(new DirArchive(path));
+				Logger.Trace("Added <DirArchive> {0} to VFS", path);
 				return true;
 			}
 			// regular file
@@ -93,6 +94,7 @@ namespace CNCMaps.FileFormats.VirtualFileSystem {
 					var mf = new MixFile(File.Open(path, FileMode.Open, FileAccess.Read, FileShare.Read));
 					mf.FileName = path;
 					AllArchives.Add(mf);
+					Logger.Trace("Added <MixFile> {0} to VFS", path);
 					return true;
 				}
 			}
@@ -100,6 +102,7 @@ namespace CNCMaps.FileFormats.VirtualFileSystem {
 			else if (FileExists(path)) {
 				var mx = OpenFile(path, FileFormat.Mix) as MixFile;
 				AllArchives.Add(mx);
+				Logger.Trace("Added <VirtualMixFile> {0} to VFS", path);
 				return true;
 			}
 			return false;
@@ -180,7 +183,6 @@ namespace CNCMaps.FileFormats.VirtualFileSystem {
 				if (FileExists(file))
 					AddFile(file);
 			}
-
 
 			for (int i = 99; i >= 0; i--) {
 				string file = string.Format("elocal{0:d2}.mix", i);

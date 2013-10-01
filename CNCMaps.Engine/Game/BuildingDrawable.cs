@@ -66,7 +66,7 @@ namespace CNCMaps.Engine.Game {
 				int fy = Art.ReadInt("Foundation.Y", 1);
 				Foundation = new Size(fx, fy);
 			}
-			Props.SortIndex = -1; // "main" building image before anims
+			Props.SortIndex = Art.ReadInt("NormalYSort") - Art.ReadInt("NormalZAdjust"); // "main" building image before anims
 
 			_baseShp = new ShpDrawable(Rules, Art);
 			_baseShp.OwnerCollection = OwnerCollection;
@@ -75,11 +75,19 @@ namespace CNCMaps.Engine.Game {
 			_baseShp.Shp = VFS.Open<ShpFile>(_baseShp.GetFilename());
 
 			foreach (string extraImage in AnimImages) {
-				var extra = LoadExtraImage(extraImage);
-				if (extra != null && extra.Shp != null) _anims.Add(extra);
+				var p = Props.Clone();
+				p.SortIndex = 0;
 
-				var extraDmg = LoadExtraImage(extraImage + "Damaged");
-				if (extraDmg != null && extraDmg.Shp != null) _animsDamaged.Add(extraDmg);
+				var extra = LoadExtraImage(extraImage, p);
+				if (extra != null && extra.Shp != null) {
+					_anims.Add(extra);
+
+					var extraDmg = LoadExtraImage(extraImage + "Damaged", extra.Props);
+					if (extraDmg != null && extraDmg.Shp != null)
+						_animsDamaged.Add(extraDmg);
+					else // no damaged anim --> use normal anim also in damaged state
+						_animsDamaged.Add(extra);
+				}
 			}
 
 			// Starkku: New code for adding fire animations to buildings, supports custom-paletted animations.
@@ -116,7 +124,6 @@ namespace CNCMaps.Engine.Game {
 				if (bibShp != null) {
 					var bib = new ShpDrawable(bibShp);
 					bib.Props = this.Props.Clone();
-					bib.Props.SortIndex = int.MinValue;
 					bib.Flat = true;
 					SubDrawables.Add(bib);
 				}
@@ -125,7 +132,7 @@ namespace CNCMaps.Engine.Game {
 			// Powerup slots, at most 3
 			for (int i = 1; i <= 3; i++) {
 				if (!Art.HasKey(String.Format("PowerUp{0}LocXX", i))) break;
-				_powerupSlots.Add(new PowerupSlot() {
+				_powerupSlots.Add(new PowerupSlot {
 					X = Art.ReadInt(String.Format("PowerUp{0}LocXX", i)),
 					Y = Art.ReadInt(String.Format("PowerUp{0}LocYY", i)),
 					Z = Art.ReadInt(String.Format("PowerUp{0}LocZZ", i)),
@@ -134,28 +141,35 @@ namespace CNCMaps.Engine.Game {
 			}
 		}
 
-		private AnimDrawable LoadExtraImage(string extraImage) {
+		private AnimDrawable LoadExtraImage(string extraImage, DrawProperties inheritProps) {
 			string animSection = Art.ReadString(extraImage);
 			if (animSection == "") return null;
 
 			IniFile.IniSection extraRules = OwnerCollection.Rules.GetOrCreateSection(animSection);
 			IniFile.IniSection extraArt = OwnerCollection.Art.GetOrCreateSection(animSection);
-			AnimDrawable anim = new AnimDrawable(extraRules, extraArt);
+			var anim = new AnimDrawable(extraRules, extraArt);
 			anim.OwnerCollection = OwnerCollection;
 			anim.LoadFromRules();
 
-			anim.Props.Offset = Props.Offset;
-			anim.NewTheater  =extraArt.ReadBool("NewTheater", NewTheater);
-			anim.Props.SortIndex = 
-				extraArt.ReadInt("YSort", Art.ReadInt(extraImage + "YSortAdjust")) 
-				- extraArt.ReadInt("ZAdjust", Art.ReadInt(extraImage + "ZAdjust"));
-			anim.Props.HasShadow = extraArt.ReadBool("Shadow", Props.HasShadow);
+			anim.NewTheater = this.NewTheater;
+
+			if (extraArt.HasKey("YSortAdjust") || Art.HasKey(extraImage + "YSort") || 
+				extraArt.HasKey("ZAdjust") || Art.HasKey(extraImage + "ZAdjust"))
+
+				anim.Props.SortIndex = extraArt.ReadInt("YSortAdjust", Art.ReadInt(extraImage + "YSort"))
+					- extraArt.ReadInt("ZAdjust", Art.ReadInt(extraImage + "ZAdjust"));
+			else
+				anim.Props.SortIndex = inheritProps.SortIndex;
+			anim.Props.HasShadow = extraArt.ReadBool("Shadow", inheritProps.HasShadow);
 
 			anim.Props.FrameDecider = FrameDeciders.LoopFrameDecider(
 				extraArt.ReadInt("LoopStart"),
 				extraArt.ReadInt("LoopEnd", 1));
 
-			anim.Props.Offset.Offset(Art.ReadInt(extraImage + "X"), Art.ReadInt(extraImage + "Y"));
+			if (Art.HasKey(extraImage + "X") || Art.HasKey(extraImage + "Y"))
+				anim.Props.Offset = this.Props.Offset + new Size(Art.ReadInt(extraImage + "X"), Art.ReadInt(extraImage + "Y"));
+			else
+				anim.Props.Offset = inheritProps.Offset;
 
 			anim.Shp = VFS.Open<ShpFile>(anim.GetFilename());
 			return anim;
@@ -198,12 +212,13 @@ namespace CNCMaps.Engine.Game {
 				return OwnerCollection.Palettes.AnimPalette;
 		}
 
-		public override void Draw(GameObject obj, DrawingSurface ds) {
+		public override void Draw(GameObject obj, DrawingSurface ds, bool shadows = true) {
 			if (InvisibleInGame)
 				return;
 
-			var drawList = new List<Drawable> { _baseShp };
-			drawList.AddRange(SubDrawables);
+			var drawList = new List<Drawable>();
+			drawList.AddRange(SubDrawables); // bib
+			drawList.Add(_baseShp);
 
 			if (obj is StructureObject && (obj as StructureObject).Health < 128) {
 				drawList.AddRange(_animsDamaged);
@@ -212,8 +227,19 @@ namespace CNCMaps.Engine.Game {
 			else
 				drawList.AddRange(_anims);
 
-			foreach (var d in drawList.OrderBy(d => d.Props.SortIndex))
-				d.Draw(obj, ds);
+			/* order:
+			ActiveAnims+Flat=yes
+			BibShape
+			ActiveAnims (+ZAdjust=0)
+			Building
+			ActiveAnims+ZAdjust=-32 */
+			drawList = drawList.OrderBy(d => d.Flat ? -1 : 1).ThenBy(d => d.Props.SortIndex).ToList();
+
+			foreach (var d in drawList)
+				d.Draw(obj, ds, false);
+			if (shadows)
+				foreach (var d in drawList)
+					d.DrawShadow(obj, ds);
 
 			var strObj = obj as StructureObject;
 			if (!strObj.Upgrade1.Equals("None", StringComparison.InvariantCultureIgnoreCase) && _powerupSlots.Count >= 1) {

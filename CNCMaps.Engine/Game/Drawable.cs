@@ -160,7 +160,8 @@ namespace CNCMaps.Engine.Game {
 			Props.Offset.Offset(Art.ReadInt("XDrawOffset"), Art.ReadInt("YDrawOffset"));
 		}
 
-		public abstract void Draw(GameObject obj, DrawingSurface ds);
+		public abstract void Draw(GameObject obj, DrawingSurface ds, bool shadow = true);
+		public virtual void DrawShadow(GameObject obj, DrawingSurface ds) { }
 		public abstract Rectangle GetBounds(GameObject obj);
 
 		private static readonly Pen BoundsRectPenVoxel = new Pen(Color.Blue);

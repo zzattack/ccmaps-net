@@ -16,7 +16,7 @@ namespace CNCMaps.Engine.Game {
 			Props.FrameDecider = FrameDeciders.AlphaImageFrameDecider(Shp);
 		}
 
-		public override void Draw(GameObject obj, DrawingSurface ds) {
+		public override void Draw(GameObject obj, DrawingSurface ds, bool shadow = true) {
 			ShpRenderer.DrawAlpha(obj, Shp, Props, ds);
 		}
 	}

@@ -31,7 +31,6 @@ namespace CNCMaps.FileFormats.Map {
 		/// <param name="baseStream">The base stream.</param>
 		public MapFile(Stream baseStream, string filename = "")
 			: this(baseStream, filename, 0, baseStream.Length) {
-			Initialize();
 		}
 
 		public MapFile(Stream baseStream, string filename, int offset, long length, bool isBuffered = true) :

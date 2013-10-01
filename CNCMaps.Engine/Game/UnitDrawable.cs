@@ -51,14 +51,14 @@ namespace CNCMaps.Engine.Game {
 			}
 		}
 
-		public override void Draw(GameObject obj, DrawingSurface ds) {
+		public override void Draw(GameObject obj, DrawingSurface ds, bool shadows = true) {
 			Size onBridgeOffset = Size.Empty;
 			if (obj is OwnableObject && (obj as OwnableObject).OnBridge)
 				onBridgeOffset = new Size(0, -4 * TileHeight / 2);
 
 			foreach (var drawable in SubDrawables) {
 				drawable.Props.Offset += onBridgeOffset;
-				drawable.Draw(obj, ds);
+				drawable.Draw(obj, ds, shadows);
 				drawable.Props.Offset -= onBridgeOffset;
 			}
 		}
