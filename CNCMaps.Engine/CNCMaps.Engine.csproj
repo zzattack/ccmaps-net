@@ -84,6 +84,27 @@
     <Compile Include="Game\UnitDrawable.cs" />
     <Compile Include="Game\VoxelDrawable.cs" />
     <Compile Include="Rendering\VxlRenderer.cs" />
+    <Compile Include="Types\AbstractType.cs" />
+    <Compile Include="Types\AircraftType.cs" />
+    <Compile Include="Types\Animation.cs" />
+    <Compile Include="Types\BuildingType.cs" />
+    <Compile Include="Types\Enums.cs" />
+    <Compile Include="Types\House.cs" />
+    <Compile Include="Types\InfantryType.cs" />
+    <Compile Include="Types\ObjectType.cs" />
+    <Compile Include="Types\OverlayType.cs" />
+    <Compile Include="Types\ParticleSystem.cs" />
+    <Compile Include="Types\ParticleType.cs" />
+    <Compile Include="Types\Prerequisite.cs" />
+    <Compile Include="Types\SmudgeType.cs" />
+    <Compile Include="Types\Sound.cs" />
+    <Compile Include="Types\TechnoType.cs" />
+    <Compile Include="Types\TerrainType.cs" />
+    <Compile Include="Types\TypesRepository.cs" />
+    <Compile Include="Types\VehicleType.cs" />
+    <Compile Include="Types\VoxelAnimation.cs" />
+    <Compile Include="Types\WarHead.cs" />
+    <Compile Include="Types\WeaponType.cs" />
     <Compile Include="Utility\FrameDeciderCompiler.cs" />
     <Compile Include="Utility\Hexagon.cs" />
     <Compile Include="Utility\HsvColor.cs" />
@@ -103,11 +124,7 @@
       <Name>CNCMaps.Shared</Name>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup>
-    <None Include="packages.config" />
-  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <Import Project="$(SolutionDir)\.nuget\nuget.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">

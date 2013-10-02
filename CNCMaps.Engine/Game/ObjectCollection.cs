@@ -113,7 +113,6 @@ namespace CNCMaps.Engine.Game {
 
 		private void InitDrawableDefaults(Drawable drawable, IniFile.IniSection artSection) {
 			drawable.OwnerCollection = this;
-			drawable.IsValid = true;
 			_drawables.Add(drawable);
 			_drawablesDict[drawable.Name] = drawable;
 

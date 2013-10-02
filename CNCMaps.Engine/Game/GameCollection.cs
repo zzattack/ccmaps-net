@@ -44,8 +44,7 @@ namespace CNCMaps.Engine.Game {
 			return ret;
 		}
 		public bool HasObject(GameObject o) {
-			var obj = GetDrawable(o);
-			return obj != null && obj.IsValid;
+			return GetDrawable(o) != null;
 		}
 	}
 }

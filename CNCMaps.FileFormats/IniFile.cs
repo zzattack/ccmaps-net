@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
+using System.Drawing.Imaging;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -276,6 +278,31 @@ namespace CNCMaps.FileFormats {
 					return defaultValue;
 			}
 
+			public Color ReadColor(string key) {
+				string colorStr = ReadString(key, "0,0,0");
+				string[] colorParts = colorStr.Split(new[] { "," }, StringSplitOptions.RemoveEmptyEntries);
+
+				int r, g, b;
+				if (colorParts.Length == 3 && int.TryParse(colorParts[0], out r) && int.TryParse(colorParts[0], out g) && int.TryParse(colorParts[0], out b))
+					return Color.FromArgb(r, g, b);
+
+				KnownColor known;
+				if (KnownColor.TryParse(colorStr, true, out known))
+					return Color.FromKnownColor(known);
+
+				return Color.Empty;
+			}
+
+			public T ReadEnum<T>(string key, T @default) {
+				if (HasKey(key))
+					return (T)Enum.Parse(typeof(T), ReadString(key));
+				return @default;
+			}
+
+			public List<string> ReadList(string key) {
+				return ReadString(key).Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries).ToList();
+			}
+
 			public string ConcatenatedValues() {
 				var sb = new StringBuilder();
 				foreach (var v in OrderedEntries)
@@ -295,7 +322,6 @@ namespace CNCMaps.FileFormats {
 				return -1;
 			}
 
-
 			public void WriteTo(StreamWriter sw) {
 				sw.Write('[');
 				sw.Write(Name);
@@ -306,7 +332,18 @@ namespace CNCMaps.FileFormats {
 					sw.WriteLine(kvp.Value);
 				}
 			}
+			
+			public OpenTK.Vector3 ReadXYZ(string key) {
+				throw new NotImplementedException();
+			}
 
+			public Size ReadSize(string key, Size size) {
+				throw new NotImplementedException();
+			}
+
+			public Tuple<int, int> ReadXY(string p) {
+				throw new NotImplementedException();
+			}
 		}
 
 		public void Save(string filename) {

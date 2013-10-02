@@ -29,8 +29,9 @@ namespace CNCMaps.Engine.Game {
 		public bool IsVeinHoleMonster { get; set; }
 		public int TileElevation { get; set; }
 		public bool Flat { get; set; }
+		public int StartWalkFrame { get; set; }
+		public int StartStandFrame { get; set; }
 		public bool Theater { get; set; }
-		public bool IsValid { get; set; }
 
 		public bool IsVoxel { get; set; }
 		public bool NewTheater { get; set; }
@@ -151,13 +152,15 @@ namespace CNCMaps.Engine.Game {
 			}
 			if (Rules.ReadBool("SpawnsTiberium")) {
 				// For example on TIBTRE / Ore Poles
-				Props.Offset.Y = -1;
+				Props.Offset.Y = -12;
 				Props.LightingType = LightingType.Full; // todo: verify it's not NONE
 				Props.PaletteType = PaletteType.Unit;
 			}
 			if (Rules.HasKey("JumpjetHeight")) {
 				Props.Offset.Offset(0, (int)(-Rules.ReadInt("JumpjetHeight") / 256.0 * TileHeight));
 			}
+			StartWalkFrame = Rules.ReadInt("StartWalkFrame");
+			StartStandFrame = Rules.ReadInt("StartStandFrame", StartWalkFrame);
 			Props.Offset.Offset(Art.ReadInt("XDrawOffset"), Art.ReadInt("YDrawOffset"));
 		}
 
