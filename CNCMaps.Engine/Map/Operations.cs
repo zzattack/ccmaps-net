@@ -207,13 +207,11 @@ namespace CNCMaps.Engine.Map {
 
 
 		/// <summary>Recalculates tile system. </summary>
-		public static void RecalculateTileSystem(TileLayer tiles, TileCollection collection) {
+		public static void FixTiles(TileLayer tiles, TileCollection collection) {
 			Logger.Info("Recalculating tile LAT system");
 
 			// change all CLAT tiles to their corresponding LAT tiles
 			foreach (MapTile t in tiles) {
-				if (t == null) continue;
-
 				// If this tile comes from a CLAT (connecting lat) set,
 				// then replace it's set and tilenr by corresponding LAT sets'
 				t.SetNum = collection.GetSetNum(t.TileNum);
@@ -224,8 +222,12 @@ namespace CNCMaps.Engine.Map {
 				}
 			}
 
+			// apply autolat
 			foreach (MapTile t in tiles) {
-				if (t == null) continue;
+				MapTile tileTopRight = tiles.GetNeighbourTile(t, TileLayer.TileDirection.TopRight);
+				MapTile tileBottomRight = tiles.GetNeighbourTile(t, TileLayer.TileDirection.BottomRight);
+				MapTile tileBottomLeft = tiles.GetNeighbourTile(t, TileLayer.TileDirection.BottomLeft);
+				MapTile tileTopLeft = tiles.GetNeighbourTile(t, TileLayer.TileDirection.TopLeft);
 
 				// If this tile is a LAT tile, we might have to connect it
 				if (collection.IsLAT(t.SetNum)) {
@@ -233,20 +235,15 @@ namespace CNCMaps.Engine.Map {
 					byte transitionTile = 0;
 
 					// Find out setnums of adjacent cells
-
-					MapTile tileTopRight = tiles.GetNeighbourTile(t, TileLayer.TileDirection.TopRight);
 					if (tileTopRight != null && collection.ConnectTiles(t.SetNum, tileTopRight.SetNum))
 						transitionTile += 1;
 
-					MapTile tileBottomRight = tiles.GetNeighbourTile(t, TileLayer.TileDirection.BottomRight);
 					if (tileBottomRight != null && collection.ConnectTiles(t.SetNum, tileBottomRight.SetNum))
 						transitionTile += 2;
 
-					MapTile tileBottomLeft = tiles.GetNeighbourTile(t, TileLayer.TileDirection.BottomLeft);
 					if (tileBottomLeft != null && collection.ConnectTiles(t.SetNum, tileBottomLeft.SetNum))
 						transitionTile += 4;
 
-					MapTile tileTopLeft = tiles.GetNeighbourTile(t, TileLayer.TileDirection.TopLeft);
 					if (tileTopLeft != null && collection.ConnectTiles(t.SetNum, tileTopLeft.SetNum))
 						transitionTile += 8;
 
@@ -260,7 +257,52 @@ namespace CNCMaps.Engine.Map {
 					}
 				}
 
+				// apply ramp fixup
+				else {
+					var ti = t.GetTileImage();
+					int fixup = -1;
+
+					switch (ti.RampType) {
+						case 1:
+							// northwest facing
+							if (tileTopLeft != null && tileTopLeft.GetTileImage().RampType == 0)
+								fixup++;
+							if (tileBottomRight != null && tileBottomRight.GetTileImage().RampType == 0)
+								fixup+=2;
+							break;
+
+						case 2: // northeast facing
+							if (tileTopRight != null && tileTopRight.GetTileImage().RampType == 0)
+								fixup++;
+							if (tileBottomLeft != null && tileBottomLeft.GetTileImage().RampType == 0)
+								fixup+=2;
+							break;
+
+						case 3: // southeast facing
+							if (tileBottomRight != null && tileBottomRight.GetTileImage().RampType == 0)
+								fixup++;
+							if (tileTopLeft != null && tileTopLeft.GetTileImage().RampType == 0)
+								fixup+=2;
+							break;
+
+						case 4: // southwest facing
+							if (tileBottomLeft != null && tileBottomLeft.GetTileImage().RampType == 0)
+								fixup++;
+							if (tileTopRight != null && tileTopRight.GetTileImage().RampType == 0)
+								fixup+=2;
+							break;
+					}
+
+					if (fixup != -1) {
+						t.TileNum = collection.GetTileNumFromSet(collection.RampSmooth, (byte)((ti.RampType - 1) * 3 + fixup));
+						// update drawable too
+						t.Drawable = collection.GetDrawable(t);
+					}
+				}
+
 			}
+
+
 		}
 
 	}
