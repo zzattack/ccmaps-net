@@ -49,9 +49,8 @@ namespace CNCMaps {
 				if (_tiles.GridTouchedBy[gridTilenoZ.Dx, gridTilenoZ.Dy / 2] != null)
 					sb.AppendFormat(" by {0} ", _tiles.GridTouchedBy[gridTilenoZ.Dx, gridTilenoZ.Dy / 2]);
 
-				sb.AppendFormat("   S-buf: {0}", _drawingSurface.GetShadows()[rIdx]);
-				sb.AppendFormat("   H-buf: {0}", _drawingSurface.GetHeightBuffer()[rIdx]);
 				sb.AppendFormat("   Z-buf: {0}", _drawingSurface.GetZBuffer()[rIdx]);
+				sb.AppendFormat("   S-buf: {0}", _drawingSurface.GetShadows()[rIdx]);
 
 				var objs = _map.GetObjectsAt(tile.Dx, tile.Dy / 2);
 				if (objs.Any()) {

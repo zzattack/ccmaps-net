@@ -6,6 +6,19 @@ using CNCMaps.Shared.DynamicTypeDescription;
 namespace CNCMaps.Shared {
 
 	[Editor(typeof(StandardValueEditor), typeof(UITypeEditor))]
+	[Flags]
+	public enum OverlayTibType {
+		NotSpecial = 0,
+		Riparius = 1, // note: don't change the indices of 0-3! they're hardcoded in the game too!
+		Cruentus = 2,
+		Vinifera = 4,
+		Aboreus = 8,
+		Ore = 1, // ts: rip
+		Gems = 2, // ts: cru
+		All = 15,
+	};
+
+	[Editor(typeof(StandardValueEditor), typeof(UITypeEditor))]
 	public enum EngineType {
 		[StandardValue("Auto Detect", Visible = false)]
 		AutoDetect = 0,

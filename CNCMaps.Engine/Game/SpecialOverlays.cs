@@ -3,16 +3,6 @@ using CNCMaps.Shared;
 
 namespace CNCMaps.Engine.Game {
 
-	public enum OverlayTibType {
-		Riparius = 0, // note: don't change the indices of 0-3! they're hardcoded in the game too!
-		Cruentus = 1,
-		Vinifera = 2,
-		Aboreus = 3,
-		Ore = 0, // ts: rip
-		Gems = 1, // ts: cru
-		NotSpecial = -1,
-	};
-
 	public static class SpecialOverlays {
 		// Riparius = 1, Cruentus = 2, Vinifera = 3, Aboreus = 4
 		public const byte Ra2MinIdRiparius = 102; // Ore

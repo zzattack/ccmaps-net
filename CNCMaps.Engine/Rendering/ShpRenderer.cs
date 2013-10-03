@@ -43,7 +43,6 @@ namespace CNCMaps.Engine.Rendering {
 			Logger.Trace("Drawing SHP file {0} (Frame {1}) at ({2},{3})", shp.FileName, frameIndex, offset.X, offset.Y);
 
 			int stride = ds.BitmapData.Stride;
-			var heightBuffer = ds.GetHeightBuffer();
 			var zBuffer = ds.GetZBuffer();
 
 			var w_low = (byte*)ds.BitmapData.Scan0;
@@ -53,9 +52,7 @@ namespace CNCMaps.Engine.Rendering {
 			byte* w = (byte*)ds.BitmapData.Scan0 + offset.X * 3 + stride * offset.Y;
 			int zIdx = offset.X + offset.Y * ds.Width;
 			int rIdx = 0;
-			short hBufVal = (short)(obj.Tile.Z * Drawable.TileHeight / 2);
-			if (!obj.Drawable.Flat)
-				hBufVal += shp.Height;
+			short zOffset = (short)((obj.Tile.Rx + obj.Tile.Ry) * Drawable.TileHeight / 2 - shp.Height / 2 + img.Y);
 
 			for (int y = 0; y < img.Height; y++) {
 				if (offset.Y + y < 0) {
@@ -64,20 +61,20 @@ namespace CNCMaps.Engine.Rendering {
 					zIdx += ds.Width;
 					continue; // out of bounds
 				}
-
-				short zBufVal = (short)((obj.BottomTile.Rx + obj.BottomTile.Ry + obj.BottomTile.Z) * Drawable.TileHeight / 2);
-				if (obj.Drawable != null && !obj.Drawable.Flat)
-					zBufVal += (short)(shp.Height - img.Y - y);
-				// zBufVal += (short)(image.Header.cy - y);
+				
+				short zBufVal = zOffset;
+				if (obj.Drawable.Flat)
+					zBufVal += (short)y;
+				else
+					zBufVal += img.Height;
 
 				for (int x = 0; x < img.Width; x++) {
 					byte paletteValue = imgData[rIdx];
 					if (paletteValue != 0 && w_low <= w && w < w_high) {
-						*(w + 0) = p.Colors[paletteValue].B;
-						*(w + 1) = p.Colors[paletteValue].G;
-						*(w + 2) = p.Colors[paletteValue].R;
+						*(w + 0) =  p.Colors[paletteValue].B;
+						*(w + 1) =  p.Colors[paletteValue].G;
+						*(w + 2) =  p.Colors[paletteValue].R;
 						zBuffer[zIdx] = zBufVal;
-						heightBuffer[zIdx] = hBufVal;
 					}
 					// Up to the next pixel
 					rIdx++;
@@ -110,7 +107,6 @@ namespace CNCMaps.Engine.Rendering {
 			Logger.Trace("Drawing SHP file {0} (Frame {1}) at ({2},{3})", shp.FileName, frameIndex, offset.X, offset.Y);
 
 			int stride = ds.BitmapData.Stride;
-			var heightBuffer = ds.GetHeightBuffer();
 			var zBuffer = ds.GetZBuffer();
 
 			var w_low = (byte*)ds.BitmapData.Scan0;
@@ -133,10 +129,9 @@ namespace CNCMaps.Engine.Rendering {
 					continue; // out of bounds
 				}
 
-				short zBufVal = (short)((obj.BottomTile.Rx + obj.BottomTile.Ry + obj.BottomTile.Z) * Drawable.TileHeight / 2);
+				short zBufVal = (short)((obj.Tile.Rx + obj.Tile.Ry) * Drawable.TileHeight / 2);
 				if (obj.Drawable != null && !obj.Drawable.Flat)
 					zBufVal += (short)(shp.Height - img.Y - y);
-				// zBufVal += (short)(image.Header.cy - y);
 
 				for (int x = 0; x < img.Width; x++) {
 					byte paletteValue = imgData[rIdx];
@@ -145,7 +140,6 @@ namespace CNCMaps.Engine.Rendering {
 						*(w + 1) = (byte)(a * *(w + 1) + b * p.Colors[paletteValue].G);
 						*(w + 2) = (byte)(a * *(w + 2) + b * p.Colors[paletteValue].R);
 						zBuffer[zIdx] = zBufVal;
-						heightBuffer[zIdx] = (short)(shp.Height + obj.Tile.Z * Drawable.TileHeight / 2);
 					}
 					// Up to the next pixel
 					rIdx++;
@@ -177,7 +171,6 @@ namespace CNCMaps.Engine.Rendering {
 			int stride = ds.BitmapData.Stride;
 			var shadows = ds.GetShadows();
 			var zBuffer = ds.GetZBuffer();
-			var heightBuffer = ds.GetHeightBuffer();
 
 			var w_low = (byte*)ds.BitmapData.Scan0;
 			byte* w_high = (byte*)ds.BitmapData.Scan0 + stride * ds.BitmapData.Height;
@@ -185,11 +178,7 @@ namespace CNCMaps.Engine.Rendering {
 			byte* w = (byte*)ds.BitmapData.Scan0 + offset.X * 3 + stride * offset.Y;
 			int zIdx = offset.X + offset.Y * ds.Width;
 			int rIdx = 0;
-			int castHeight = obj.Tile.Z * Drawable.TileHeight / 2;
-			if (obj.Drawable != null && !obj.Drawable.Flat) {
-				castHeight += shp.Height;
-				castHeight += obj.Drawable.TileElevation * Drawable.TileHeight / 2;
-			}
+			short zOffset = (short)((obj.Tile.Rx + obj.Tile.Ry) * Drawable.TileHeight / 2 - shp.Height / 2 + img.Y);
 
 			for (int y = 0; y < img.Height; y++) {
 				if (offset.Y + y < 0) {
@@ -199,11 +188,14 @@ namespace CNCMaps.Engine.Rendering {
 					continue; // out of bounds
 				}
 
-				short zBufVal = (short)((obj.Tile.Rx + obj.Tile.Ry + obj.Tile.Z) * Drawable.TileHeight / 2);
-				zBufVal += (short)(shp.Height / 2 + img.Y + y);
-				// zBufVal += (short)(-Header.Height / 2 + image.Header.y + image.Header.cy);
+				short zBufVal = zOffset;
+				if (obj.Drawable.Flat)
+					zBufVal += (short)y;
+				else
+					zBufVal += img.Height;
+
 				for (int x = 0; x < img.Width; x++) {
-					if (w_low <= w && w < w_high && imgData[rIdx] != 0 && !shadows[zIdx] && zBufVal >= zBuffer[zIdx] && castHeight >= heightBuffer[zIdx]) {
+					if (w_low <= w && w < w_high && imgData[rIdx] != 0 && !shadows[zIdx] && zBufVal > zBuffer[zIdx]) {
 						*(w + 0) /= 2;
 						*(w + 1) /= 2;
 						*(w + 2) /= 2;
@@ -261,7 +253,7 @@ namespace CNCMaps.Engine.Rendering {
 			int dx = offset.X + Drawable.TileWidth / 2 - shp.Width / 2 + img.X,
 				dy = offset.Y - shp.Height / 2 + img.Y;
 			byte* w = (byte*)ds.BitmapData.Scan0 + dx * 3 + stride * dy;
-
+			short zOffset = (short)((obj.Tile.Rx + obj.Tile.Ry) * Drawable.TileHeight / 2 - shp.Height / 2 + img.Y);
 			int rIdx = 0;
 
 			for (int y = 0; y < img.Height; y++) {
@@ -280,7 +272,6 @@ namespace CNCMaps.Engine.Rendering {
 				// adjust the writing pointer accordingy
 			}
 		}
-
 		private static byte limit(float mult, byte p) {
 			return (byte)Math.Max(0f, Math.Min(255f, mult * p));
 		}

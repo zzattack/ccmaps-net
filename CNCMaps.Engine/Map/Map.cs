@@ -694,11 +694,13 @@ namespace CNCMaps.Engine.Game {
 		}
 
 		public void Draw() {
-			Logger.Info("Sorting objects map");
+			/*Logger.Info("Sorting objects map");
 			var sorter = new ObjectSorter(_theater, _tiles);
-			var orderedObjs = sorter.GetOrderedObjects().ToList();
+			var orderedObjs = sorter.GetOrderedObjects().ToList();*/
+
 			_drawingSurface = new DrawingSurface(FullSize.Width * TileWidth, FullSize.Height * TileHeight, PixelFormat.Format24bppRgb);
 
+			/*
 			double lastReported = 0.0;
 			Logger.Info("Drawing map... 0%");
 			for (int i = 0; i < orderedObjs.Count; i++) {
@@ -709,7 +711,7 @@ namespace CNCMaps.Engine.Game {
 					Logger.Info("Drawing map... {0}%", Math.Round(pct, 0));
 					lastReported = pct;
 				}
-			}
+			}*/
 
 #if DEBUG
 
@@ -721,18 +723,18 @@ namespace CNCMaps.Engine.Game {
 						obj.Drawable.DrawBoundingBox(obj, gfx);
 			}*/
 #endif
-			/*
-			var tileCollection = _theater.GetTileCollection();
-			// zig-zag drawing technique explanation: http://stackoverflow.com/questions/892811/drawing-isometric-game-worlds
+
+			// var obj = _overlayObjects[_overlayObjects.Count / 2];
+			// ShpRenderer.Draw(obj, VFS.Open<ShpFile>("buildngz.shp"), obj.Drawable.Props, _drawingSurface);
+			// return;
+
 			double lastReported = 0.0;
 			for (int y = 0; y < FullSize.Height; y++) {
 				Logger.Trace("Drawing tiles row {0}", y);
-				for (int x = FullSize.Width * 2 - 2; x >= 0; x -= 2) {
-					tileCollection.DrawTile(_tiles.GetTile(x, y), _drawingSurface);
-				}
-				for (int x = FullSize.Width * 2 - 3; x >= 0; x -= 2) {
-					tileCollection.DrawTile(_tiles.GetTile(x, y), _drawingSurface);
-				}
+				for (int x = FullSize.Width * 2 - 2; x >= 0; x -= 2)
+					_theater.Draw(_tiles.GetTile(x, y), _drawingSurface);
+				for (int x = FullSize.Width * 2 - 3; x >= 0; x -= 2)
+					_theater.Draw(_tiles.GetTile(x, y), _drawingSurface);
 
 				double pct = 50.0 * y / FullSize.Height;
 				if (pct > lastReported + 5) {
@@ -740,21 +742,17 @@ namespace CNCMaps.Engine.Game {
 					lastReported = pct;
 				}
 			}
-
 			Logger.Info("Tiles drawn");
 
 			for (int y = 0; y < FullSize.Height; y++) {
 				Logger.Trace("Drawing objects row {0}", y);
-				for (int x = FullSize.Width * 2 - 2; x >= 0; x -= 2) {
-					List<GameObject> objs = GetObjectsAt(x, y);
-					foreach (GameObject o in objs)
+				for (int x = FullSize.Width * 2 - 2; x >= 0; x -= 2)
+					foreach (GameObject o in GetObjectsAt(x, y))
 						_theater.Draw(o, _drawingSurface);
-				}
-				for (int x = FullSize.Width * 2 - 3; x >= 0; x -= 2) {
-					List<GameObject> objs = GetObjectsAt(x, y);
-					foreach (GameObject o in objs)
+
+				for (int x = FullSize.Width * 2 - 3; x >= 0; x -= 2)
+					foreach (GameObject o in GetObjectsAt(x, y))
 						_theater.Draw(o, _drawingSurface);
-				}
 
 				double pct = 50 + 50.0 * y / FullSize.Height;
 				if (pct > lastReported + 5) {
@@ -762,7 +760,7 @@ namespace CNCMaps.Engine.Game {
 					lastReported = pct;
 				}
 			}
-			*/
+
 			Logger.Info("Map drawing completed");
 		}
 
@@ -849,7 +847,7 @@ namespace CNCMaps.Engine.Game {
 			_theater.Draw(tile, _drawingSurface);
 			foreach (GameObject o in GetObjectsAt(tile.Dx, tile.Dy / 2))
 				_theater.Draw(o, _drawingSurface);
-			 Operations.CountNeighbouringVeins(tile, Operations.IsVeins);
+			Operations.CountNeighbouringVeins(tile, Operations.IsVeins);
 		}
 
 		public List<GameObject> GetObjectsAt(int dx, int dy) {
