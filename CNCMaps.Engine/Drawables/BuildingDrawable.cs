@@ -51,9 +51,8 @@ namespace CNCMaps.Engine.Game {
 		public override void LoadFromRules() {
 			base.LoadFromRules();
 
-			InvisibleInGame = Rules.ReadBool("InvisibleInGame") ||
-                // TS/FS have hardcoded lamps
-                (OwnerCollection.Engine <= EngineType.Firestorm && LampNames.Contains(Name.ToUpper()));
+			IsBuildingPart = true;
+			InvisibleInGame = Rules.ReadBool("InvisibleInGame") || LampNames.Contains(Name.ToUpper());
 
 			string foundation = Art.ReadString("Foundation", "1x1");
 			if (!foundation.Equals("custom", StringComparison.InvariantCultureIgnoreCase)) {
@@ -98,15 +97,16 @@ namespace CNCMaps.Engine.Game {
 			if (Rules.ReadBool("Turret") && Rules.HasKey("TurretAnim")) {
 				string turretName = Rules.ReadString("TurretAnim");
 				Drawable turret = Rules.ReadBool("TurretAnimIsVoxel")
-					? (Drawable)new VoxelDrawable(VFS.Open<VxlFile>(turretName+".vxl"), VFS.Open<HvaFile>(turretName+".hva"))
+					? (Drawable)new VoxelDrawable(VFS.Open<VxlFile>(turretName + ".vxl"), VFS.Open<HvaFile>(turretName + ".hva"))
 					: new ShpDrawable(VFS.Open<ShpFile>(turretName + ".shp"));
 				turret.Props.Offset = Props.Offset + new Size(Rules.ReadInt("TurretAnimX"), Rules.ReadInt("TurretAnimY"));
 				turret.Props.HasShadow = Rules.ReadBool("UseTurretShadow");
 				turret.Props.FrameDecider = FrameDeciders.TurretFrameDecider;
+				turret.Props.ZAdjust = Rules.ReadInt("TurretAnimZAdjust");
 				SubDrawables.Add(turret);
 
 				if (turret is VoxelDrawable && turretName.ToUpper().Contains("TUR")) {
-					string barrelName =turretName.Replace("TUR", "BARL");
+					string barrelName = turretName.Replace("TUR", "BARL");
 					if (VFS.Exists(barrelName + ".vxl")) {
 						var barrel = new VoxelDrawable(VFS.Open<VxlFile>(barrelName + ".vxl"), VFS.Open<HvaFile>(barrelName + ".hva"));
 						SubDrawables.Add(barrel);
@@ -153,9 +153,8 @@ namespace CNCMaps.Engine.Game {
 
 			anim.NewTheater = this.NewTheater;
 
-			if (extraArt.HasKey("YSortAdjust") || Art.HasKey(extraImage + "YSort") || 
+			if (extraArt.HasKey("YSortAdjust") || Art.HasKey(extraImage + "YSort") ||
 				extraArt.HasKey("ZAdjust") || Art.HasKey(extraImage + "ZAdjust"))
-
 				anim.Props.SortIndex = extraArt.ReadInt("YSortAdjust", Art.ReadInt(extraImage + "YSort"))
 					- extraArt.ReadInt("ZAdjust", Art.ReadInt(extraImage + "ZAdjust"));
 			else
@@ -164,6 +163,8 @@ namespace CNCMaps.Engine.Game {
 				anim.Props.Offset = this.Props.Offset + new Size(Art.ReadInt(extraImage + "X"), Art.ReadInt(extraImage + "Y"));
 			else
 				anim.Props.Offset = inheritProps.Offset;
+			anim.Props.ZAdjust = Art.ReadInt(extraImage + "ZAdjust");
+			anim.IsBuildingPart = true;
 
 			anim.Shp = VFS.Open<ShpFile>(anim.GetFilename());
 			return anim;
@@ -259,8 +260,8 @@ namespace CNCMaps.Engine.Game {
 
 			var parts = new List<Drawable>();
 			parts.Add(_baseShp);
-			parts.AddRange(_anims);
-			parts.AddRange(SubDrawables);
+			//parts.AddRange(_anims);
+			//parts.AddRange(SubDrawables);
 
 			foreach (var d in parts.Where(p => !p.InvisibleInGame)) {
 				var db = d.GetBounds(obj);

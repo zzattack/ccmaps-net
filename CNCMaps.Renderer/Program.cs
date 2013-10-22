@@ -1,4 +1,5 @@
-﻿using System.Drawing;
+﻿using System.Diagnostics;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Runtime.Serialization;
@@ -27,6 +28,9 @@ namespace CNCMaps {
 		public static int Main(string[] args) {
 			InitLoggerConfig();
 			InitSettings(args);
+
+			// DumpTileProperties();
+
 			if (!ValidateSettings())
 				return 2;
 
@@ -212,6 +216,28 @@ namespace CNCMaps {
 			LogManager.Configuration = null; // required for mono release to flush possible targets
 			return 0;
 		}
+
+		/*private static void DumpTileProperties() {
+			ModConfig.LoadDefaultConfig(EngineType.YurisRevenge);
+			VFS.Instance.ScanMixDir("", EngineType.YurisRevenge);
+
+			foreach (var th in new[] { TheaterType.Temperate, TheaterType.Urban, TheaterType.Snow, TheaterType.Lunar, TheaterType.Desert, TheaterType.NewUrban }) {
+				ModConfig.SetActiveTheater(th);
+				foreach (var m in ModConfig.ActiveTheater.Mixes) VFS.Add(m);
+
+				var tc = new TileCollection(ModConfig.ActiveTheater, VFS.Open<IniFile>(ModConfig.ActiveTheater.TheaterIni));
+				tc.InitTilesets();
+				for (int i = 0; i < tc.NumTiles; i++) {
+					var mt = new MapTile(0, 0, 0, 0, 0, (short)i, 0, null);
+					var td = tc.GetDrawable(mt) as TileDrawable;
+					var tf = td.GetTileFile(mt);
+					if (tf != null) tf.Initialize(i);
+				}
+
+				Debug.WriteLine("_-----------------------------------------");
+
+			}
+		}*/
 
 
 		private static void InitLoggerConfig() {

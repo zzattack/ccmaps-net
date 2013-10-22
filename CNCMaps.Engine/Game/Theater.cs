@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.ObjectModel;
 using System.Drawing;
 using CNCMaps.Engine.Map;
 using CNCMaps.Engine.Rendering;
@@ -129,7 +130,7 @@ namespace CNCMaps.Engine.Game {
 				return _palettes.GetPalette(drawable.Props.PaletteType);
 		}
 
-		public ObjectCollection GetObjectCollection(GameObject o) {
+		public GameCollection GetObjectCollection(GameObject o) {
 			if (o is InfantryObject) return _infantryTypes;
 			else if (o is UnitObject) return _vehicleTypes;
 			else if (o is AircraftObject) return _aircraftTypes;
@@ -143,6 +144,7 @@ namespace CNCMaps.Engine.Game {
 			else if (o is TerrainObject) return _terrainTypes;
 			else if (o is SmudgeObject) return _smudgeTypes;
 			else if (o is AnimationObject) return _animations;
+			else if (o is MapTile) return _tileTypes;
 			else return null;
 		}
 

@@ -183,10 +183,9 @@ namespace CNCMaps.Engine.Game {
 			if (Engine >= EngineType.RedAlert2)
 				LoadCountries();
 			LoadHouses();
-
-			if (Engine >= EngineType.RedAlert2)
-				Operations.RecalculateTileSystem(_tiles, _theater.GetTileCollection());
-			else if (Engine <= EngineType.Firestorm)
+			
+			Operations.FixTiles(_tiles, _theater.GetTileCollection());
+			if (Engine <= EngineType.Firestorm)
 				Operations.RecalculateVeinsSpread(_overlayObjects, _tiles);
 
 			CreateLevelPalettes();
@@ -712,18 +711,7 @@ namespace CNCMaps.Engine.Game {
 					lastReported = pct;
 				}
 			}*/
-
-#if DEBUG
-
-			// test that my bounds make some kind of sense
-			/*_drawingSurface.Unlock();
-			using (Graphics gfx = Graphics.FromImage(_drawingSurface.Bitmap)) {
-				foreach (var obj in orderedObjs)
-					if (obj.Drawable != null)
-						obj.Drawable.DrawBoundingBox(obj, gfx);
-			}*/
-#endif
-
+			
 			// var obj = _overlayObjects[_overlayObjects.Count / 2];
 			// ShpRenderer.Draw(obj, VFS.Open<ShpFile>("buildngz.shp"), obj.Drawable.Props, _drawingSurface);
 			// return;
@@ -760,6 +748,18 @@ namespace CNCMaps.Engine.Game {
 					lastReported = pct;
 				}
 			}
+
+
+#if DEBUG
+
+			// test that my bounds make some kind of sense
+			_drawingSurface.Unlock();
+			using (Graphics gfx = Graphics.FromImage(_drawingSurface.Bitmap)) {
+				foreach (var obj in _tiles.SelectMany(t=>t.AllObjects))
+					if (obj.Drawable != null)
+						obj.Drawable.DrawBoundingBox(obj, gfx);
+			}
+#endif
 
 			Logger.Info("Map drawing completed");
 		}

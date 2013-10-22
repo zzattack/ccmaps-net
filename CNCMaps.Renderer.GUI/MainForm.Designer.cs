@@ -92,6 +92,7 @@ namespace CNCMaps.GUI {
 			this.tpLog = new System.Windows.Forms.TabPage();
 			this.gbLog = new System.Windows.Forms.GroupBox();
 			this.rtbLog = new System.Windows.Forms.RichTextBox();
+			this.tpAbout = new System.Windows.Forms.TabPage();
 			this.gbMiscOptions.SuspendLayout();
 			this.gbThumbs.SuspendLayout();
 			this.gbVoxelsMode.SuspendLayout();
@@ -124,7 +125,7 @@ namespace CNCMaps.GUI {
 			this.gbMiscOptions.Controls.Add(this.cbEmphasizeOre);
 			this.gbMiscOptions.Location = new System.Drawing.Point(6, 6);
 			this.gbMiscOptions.Name = "gbMiscOptions";
-			this.gbMiscOptions.Size = new System.Drawing.Size(546, 277);
+			this.gbMiscOptions.Size = new System.Drawing.Size(583, 275);
 			this.gbMiscOptions.TabIndex = 1;
 			this.gbMiscOptions.TabStop = false;
 			this.gbMiscOptions.Text = "Misc. Options";
@@ -173,7 +174,7 @@ namespace CNCMaps.GUI {
 			this.gbVoxelsMode.Controls.Add(this.rbPreferHardwareRendering);
 			this.gbVoxelsMode.Location = new System.Drawing.Point(13, 228);
 			this.gbVoxelsMode.Name = "gbVoxelsMode";
-			this.gbVoxelsMode.Size = new System.Drawing.Size(493, 40);
+			this.gbVoxelsMode.Size = new System.Drawing.Size(530, 40);
 			this.gbVoxelsMode.TabIndex = 19;
 			this.gbVoxelsMode.TabStop = false;
 			this.gbVoxelsMode.Text = "Voxels rendering mode";
@@ -432,9 +433,9 @@ namespace CNCMaps.GUI {
 			this.gbInputOutput.Controls.Add(this.cbOutputJPG);
 			this.gbInputOutput.Controls.Add(this.cbOutputPNG);
 			this.gbInputOutput.Controls.Add(this.nudCompression);
-			this.gbInputOutput.Location = new System.Drawing.Point(6, 11);
+			this.gbInputOutput.Location = new System.Drawing.Point(6, 6);
 			this.gbInputOutput.Name = "gbInputOutput";
-			this.gbInputOutput.Size = new System.Drawing.Size(544, 239);
+			this.gbInputOutput.Size = new System.Drawing.Size(581, 239);
 			this.gbInputOutput.TabIndex = 0;
 			this.gbInputOutput.TabStop = false;
 			this.gbInputOutput.Text = "Input && output";
@@ -463,7 +464,7 @@ namespace CNCMaps.GUI {
 			this.tbThumbDimensions.DataBindings.Add(new System.Windows.Forms.Binding("Text", global::CNCMaps.GUI.Properties.Settings.Default, "thumbdimensions", true, System.Windows.Forms.DataSourceUpdateMode.OnPropertyChanged));
 			this.tbThumbDimensions.Location = new System.Drawing.Point(390, 90);
 			this.tbThumbDimensions.Name = "tbThumbDimensions";
-			this.tbThumbDimensions.Size = new System.Drawing.Size(67, 20);
+			this.tbThumbDimensions.Size = new System.Drawing.Size(104, 20);
 			this.tbThumbDimensions.TabIndex = 16;
 			this.tbThumbDimensions.Text = global::CNCMaps.GUI.Properties.Settings.Default.thumbdimensions;
 			this.tbThumbDimensions.Visible = false;
@@ -482,9 +483,8 @@ namespace CNCMaps.GUI {
 			// 
 			// btnModEditor
 			// 
-			this.btnModEditor.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-			this.btnModEditor.Location = new System.Drawing.Point(463, 206);
+			this.btnModEditor.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+			this.btnModEditor.Location = new System.Drawing.Point(500, 206);
 			this.btnModEditor.Name = "btnModEditor";
 			this.btnModEditor.Size = new System.Drawing.Size(75, 23);
 			this.btnModEditor.TabIndex = 14;
@@ -500,7 +500,7 @@ namespace CNCMaps.GUI {
 			this.tbModConfig.DataBindings.Add(new System.Windows.Forms.Binding("Text", global::CNCMaps.GUI.Properties.Settings.Default, "modconfigfile", true, System.Windows.Forms.DataSourceUpdateMode.OnPropertyChanged));
 			this.tbModConfig.Location = new System.Drawing.Point(165, 208);
 			this.tbModConfig.Name = "tbModConfig";
-			this.tbModConfig.Size = new System.Drawing.Size(292, 20);
+			this.tbModConfig.Size = new System.Drawing.Size(329, 20);
 			this.tbModConfig.TabIndex = 13;
 			this.tbModConfig.Text = global::CNCMaps.GUI.Properties.Settings.Default.modconfigfile;
 			this.tbModConfig.Visible = false;
@@ -526,7 +526,7 @@ namespace CNCMaps.GUI {
 			this.tbCustomOutput.DataBindings.Add(new System.Windows.Forms.Binding("Text", global::CNCMaps.GUI.Properties.Settings.Default, "customfilename", true, System.Windows.Forms.DataSourceUpdateMode.OnPropertyChanged));
 			this.tbCustomOutput.Location = new System.Drawing.Point(273, 136);
 			this.tbCustomOutput.Name = "tbCustomOutput";
-			this.tbCustomOutput.Size = new System.Drawing.Size(184, 20);
+			this.tbCustomOutput.Size = new System.Drawing.Size(221, 20);
 			this.tbCustomOutput.TabIndex = 10;
 			this.tbCustomOutput.Text = global::CNCMaps.GUI.Properties.Settings.Default.customfilename;
 			this.tbCustomOutput.Visible = false;
@@ -539,7 +539,7 @@ namespace CNCMaps.GUI {
 			this.tbRenderProg.DataBindings.Add(new System.Windows.Forms.Binding("Text", global::CNCMaps.GUI.Properties.Settings.Default, "renderprog", true, System.Windows.Forms.DataSourceUpdateMode.OnPropertyChanged));
 			this.tbRenderProg.Location = new System.Drawing.Point(124, 64);
 			this.tbRenderProg.Name = "tbRenderProg";
-			this.tbRenderProg.Size = new System.Drawing.Size(333, 20);
+			this.tbRenderProg.Size = new System.Drawing.Size(370, 20);
 			this.tbRenderProg.TabIndex = 7;
 			this.tbRenderProg.Text = global::CNCMaps.GUI.Properties.Settings.Default.renderprog;
 			this.tbRenderProg.TextChanged += new System.EventHandler(this.UIChanged);
@@ -569,7 +569,7 @@ namespace CNCMaps.GUI {
 			// btnBrowseRenderer
 			// 
 			this.btnBrowseRenderer.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-			this.btnBrowseRenderer.Location = new System.Drawing.Point(463, 64);
+			this.btnBrowseRenderer.Location = new System.Drawing.Point(500, 64);
 			this.btnBrowseRenderer.Name = "btnBrowseRenderer";
 			this.btnBrowseRenderer.Size = new System.Drawing.Size(75, 23);
 			this.btnBrowseRenderer.TabIndex = 8;
@@ -598,7 +598,7 @@ namespace CNCMaps.GUI {
 			this.tbMixDir.DataBindings.Add(new System.Windows.Forms.Binding("Text", global::CNCMaps.GUI.Properties.Settings.Default, "mixdir", true, System.Windows.Forms.DataSourceUpdateMode.OnPropertyChanged));
 			this.tbMixDir.Location = new System.Drawing.Point(124, 41);
 			this.tbMixDir.Name = "tbMixDir";
-			this.tbMixDir.Size = new System.Drawing.Size(333, 20);
+			this.tbMixDir.Size = new System.Drawing.Size(370, 20);
 			this.tbMixDir.TabIndex = 4;
 			this.tbMixDir.Text = global::CNCMaps.GUI.Properties.Settings.Default.mixdir;
 			this.tbMixDir.TextChanged += new System.EventHandler(this.UIChanged);
@@ -618,7 +618,7 @@ namespace CNCMaps.GUI {
 			// btnBrowseMixDir
 			// 
 			this.btnBrowseMixDir.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-			this.btnBrowseMixDir.Location = new System.Drawing.Point(463, 39);
+			this.btnBrowseMixDir.Location = new System.Drawing.Point(500, 39);
 			this.btnBrowseMixDir.Name = "btnBrowseMixDir";
 			this.btnBrowseMixDir.Size = new System.Drawing.Size(75, 23);
 			this.btnBrowseMixDir.TabIndex = 5;
@@ -644,7 +644,7 @@ namespace CNCMaps.GUI {
 			this.tbInput.DataBindings.Add(new System.Windows.Forms.Binding("Text", global::CNCMaps.GUI.Properties.Settings.Default, "input", true, System.Windows.Forms.DataSourceUpdateMode.OnPropertyChanged));
 			this.tbInput.Location = new System.Drawing.Point(124, 15);
 			this.tbInput.Name = "tbInput";
-			this.tbInput.Size = new System.Drawing.Size(333, 20);
+			this.tbInput.Size = new System.Drawing.Size(370, 20);
 			this.tbInput.TabIndex = 1;
 			this.tbInput.Text = global::CNCMaps.GUI.Properties.Settings.Default.input;
 			this.tbInput.TextChanged += new System.EventHandler(this.UIChanged);
@@ -685,7 +685,7 @@ namespace CNCMaps.GUI {
 			// btnBrowseInput
 			// 
 			this.btnBrowseInput.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-			this.btnBrowseInput.Location = new System.Drawing.Point(463, 13);
+			this.btnBrowseInput.Location = new System.Drawing.Point(500, 13);
 			this.btnBrowseInput.Name = "btnBrowseInput";
 			this.btnBrowseInput.Size = new System.Drawing.Size(75, 23);
 			this.btnBrowseInput.TabIndex = 2;
@@ -739,7 +739,7 @@ namespace CNCMaps.GUI {
 			// btnRenderExecute
 			// 
 			this.btnRenderExecute.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-			this.btnRenderExecute.Location = new System.Drawing.Point(469, 258);
+			this.btnRenderExecute.Location = new System.Drawing.Point(506, 258);
 			this.btnRenderExecute.Name = "btnRenderExecute";
 			this.btnRenderExecute.Size = new System.Drawing.Size(75, 23);
 			this.btnRenderExecute.TabIndex = 5;
@@ -753,7 +753,7 @@ namespace CNCMaps.GUI {
             | System.Windows.Forms.AnchorStyles.Right)));
 			this.tbCommandPreview.Location = new System.Drawing.Point(77, 260);
 			this.tbCommandPreview.Name = "tbCommandPreview";
-			this.tbCommandPreview.Size = new System.Drawing.Size(386, 20);
+			this.tbCommandPreview.Size = new System.Drawing.Size(423, 20);
 			this.tbCommandPreview.TabIndex = 4;
 			// 
 			// ofd
@@ -766,9 +766,9 @@ namespace CNCMaps.GUI {
             this.lblStatus,
             this.lblFill,
             this.pbProgress});
-			this.statusStrip.Location = new System.Drawing.Point(0, 312);
+			this.statusStrip.Location = new System.Drawing.Point(0, 328);
 			this.statusStrip.Name = "statusStrip";
-			this.statusStrip.Size = new System.Drawing.Size(566, 22);
+			this.statusStrip.Size = new System.Drawing.Size(606, 22);
 			this.statusStrip.TabIndex = 7;
 			this.statusStrip.Text = "statusStrip1";
 			// 
@@ -781,7 +781,7 @@ namespace CNCMaps.GUI {
 			// lblFill
 			// 
 			this.lblFill.Name = "lblFill";
-			this.lblFill.Size = new System.Drawing.Size(407, 17);
+			this.lblFill.Size = new System.Drawing.Size(447, 17);
 			this.lblFill.Spring = true;
 			// 
 			// pbProgress
@@ -792,14 +792,17 @@ namespace CNCMaps.GUI {
 			// 
 			// tabControl
 			// 
+			this.tabControl.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
 			this.tabControl.Controls.Add(this.tpMain);
 			this.tabControl.Controls.Add(this.tpMisc);
 			this.tabControl.Controls.Add(this.tpLog);
-			this.tabControl.Dock = System.Windows.Forms.DockStyle.Fill;
-			this.tabControl.Location = new System.Drawing.Point(0, 0);
+			this.tabControl.Controls.Add(this.tpAbout);
+			this.tabControl.Location = new System.Drawing.Point(3, 4);
 			this.tabControl.Name = "tabControl";
 			this.tabControl.SelectedIndex = 0;
-			this.tabControl.Size = new System.Drawing.Size(566, 312);
+			this.tabControl.Size = new System.Drawing.Size(603, 310);
 			this.tabControl.TabIndex = 8;
 			// 
 			// tpMain
@@ -811,7 +814,7 @@ namespace CNCMaps.GUI {
 			this.tpMain.Location = new System.Drawing.Point(4, 22);
 			this.tpMain.Name = "tpMain";
 			this.tpMain.Padding = new System.Windows.Forms.Padding(3);
-			this.tpMain.Size = new System.Drawing.Size(558, 286);
+			this.tpMain.Size = new System.Drawing.Size(595, 284);
 			this.tpMain.TabIndex = 0;
 			this.tpMain.Text = "Main settings";
 			this.tpMain.UseVisualStyleBackColor = true;
@@ -830,7 +833,7 @@ namespace CNCMaps.GUI {
 			this.tpMisc.Location = new System.Drawing.Point(4, 22);
 			this.tpMisc.Name = "tpMisc";
 			this.tpMisc.Padding = new System.Windows.Forms.Padding(3);
-			this.tpMisc.Size = new System.Drawing.Size(558, 286);
+			this.tpMisc.Size = new System.Drawing.Size(595, 284);
 			this.tpMisc.TabIndex = 1;
 			this.tpMisc.Text = "Misc settings";
 			this.tpMisc.UseVisualStyleBackColor = true;
@@ -840,18 +843,20 @@ namespace CNCMaps.GUI {
 			this.tpLog.Controls.Add(this.gbLog);
 			this.tpLog.Location = new System.Drawing.Point(4, 22);
 			this.tpLog.Name = "tpLog";
-			this.tpLog.Size = new System.Drawing.Size(558, 286);
+			this.tpLog.Size = new System.Drawing.Size(595, 284);
 			this.tpLog.TabIndex = 2;
 			this.tpLog.Text = "Log";
 			this.tpLog.UseVisualStyleBackColor = true;
 			// 
 			// gbLog
 			// 
+			this.gbLog.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
 			this.gbLog.Controls.Add(this.rtbLog);
-			this.gbLog.Dock = System.Windows.Forms.DockStyle.Fill;
-			this.gbLog.Location = new System.Drawing.Point(0, 0);
+			this.gbLog.Location = new System.Drawing.Point(6, 6);
 			this.gbLog.Name = "gbLog";
-			this.gbLog.Size = new System.Drawing.Size(558, 286);
+			this.gbLog.Size = new System.Drawing.Size(581, 275);
 			this.gbLog.TabIndex = 7;
 			this.gbLog.TabStop = false;
 			this.gbLog.Text = "Log";
@@ -861,22 +866,34 @@ namespace CNCMaps.GUI {
 			this.rtbLog.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-			this.rtbLog.Location = new System.Drawing.Point(17, 19);
+			this.rtbLog.Location = new System.Drawing.Point(6, 18);
 			this.rtbLog.Name = "rtbLog";
 			this.rtbLog.ReadOnly = true;
 			this.rtbLog.ScrollBars = System.Windows.Forms.RichTextBoxScrollBars.ForcedVertical;
-			this.rtbLog.Size = new System.Drawing.Size(533, 261);
+			this.rtbLog.Size = new System.Drawing.Size(569, 250);
 			this.rtbLog.TabIndex = 0;
 			this.rtbLog.Text = "";
+			this.rtbLog.LinkClicked += new System.Windows.Forms.LinkClickedEventHandler(this.rtbLog_LinkClicked);
+			// 
+			// tpAbout
+			// 
+			this.tpAbout.Location = new System.Drawing.Point(4, 22);
+			this.tpAbout.Name = "tpAbout";
+			this.tpAbout.Padding = new System.Windows.Forms.Padding(3);
+			this.tpAbout.Size = new System.Drawing.Size(595, 284);
+			this.tpAbout.TabIndex = 3;
+			this.tpAbout.Text = "About";
+			this.tpAbout.UseVisualStyleBackColor = true;
 			// 
 			// MainForm
 			// 
 			this.AllowDrop = true;
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-			this.ClientSize = new System.Drawing.Size(566, 334);
+			this.ClientSize = new System.Drawing.Size(606, 350);
 			this.Controls.Add(this.tabControl);
 			this.Controls.Add(this.statusStrip);
+			this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
 			this.MinimumSize = new System.Drawing.Size(582, 372);
 			this.Name = "MainForm";
 			this.Text = "Red Alert 2 and Tiberian Sun map renderer";
@@ -978,6 +995,7 @@ namespace CNCMaps.GUI {
 		private TabPage tpLog;
 		private GroupBox gbLog;
 		private RichTextBox rtbLog;
+		private TabPage tpAbout;
 
 	}
 }

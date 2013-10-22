@@ -10,6 +10,7 @@ using System.Net;
 using System.Reflection;
 using System.Security;
 using System.Threading;
+using System.Web;
 using System.Windows.Forms;
 using CNCMaps.Engine.Game;
 using CNCMaps.GUI.Properties;
@@ -494,17 +495,31 @@ namespace CNCMaps.GUI {
 		}
 
 		private delegate void LogDelegate(string s);
+
+		private string outputName; // filename of saved jpg
 		private void Log(string s) {
 			if (InvokeRequired) {
 				Invoke(new LogDelegate(Log), s);
 				return;
 			}
-			rtbLog.Text += s + "\r\n";
+
+			if (s.Contains("Saving ")) {
+				outputName = s;
+				int sIdx = s.IndexOf(" to ") + 4;
+				int endIdx = s.IndexOf(", quality");
+				string file = s.Substring(sIdx, endIdx - sIdx);
+				rtbLog.AppendText(s.Substring(0, sIdx));
+				rtbLog.AppendText("file:///"  + Uri.EscapeUriString(file));
+				rtbLog.AppendText(s.Substring(endIdx));
+			}
+			else {
+				rtbLog.Text += s + "\r\n";
+			}
 			rtbLog.SelectionStart = rtbLog.TextLength - 1;
 			rtbLog.SelectionLength = 1;
 			rtbLog.ScrollToCaret();
 
-			var progressEntry = progressIndicators.FirstOrDefault(kvp => s.Contains(kvp.Value));
+			var progressEntry = _progressIndicators.FirstOrDefault(kvp => s.Contains(kvp.Value));
 			if (!progressEntry.Equals(default(KeyValuePair<int, string>))) {
 				UpdateStatus("rendering: " + progressEntry.Key + "%", progressEntry.Key);
 			}
@@ -514,7 +529,7 @@ namespace CNCMaps.GUI {
 				UpdateStatus("drawing, " + pct + "%", (int)pct);
 			}
 		}
-		private Dictionary<int, string> progressIndicators = new Dictionary<int, string>() {
+		private readonly Dictionary<int, string> _progressIndicators = new Dictionary<int, string>() {
 			{5, "Initializing filesystem"},
 			{8, "Reading tiles"},
 			{10, "Parsing rules.ini"},
@@ -526,7 +541,11 @@ namespace CNCMaps.GUI {
 			{22, "Calculating palette-values for all objects"},
 			{90, "Map drawing completed"},
 		};
+		private void rtbLog_LinkClicked(object sender, LinkClickedEventArgs e) {
+			Process.Start(e.LinkText);
+		}
 		#endregion
+
 
 
 	}

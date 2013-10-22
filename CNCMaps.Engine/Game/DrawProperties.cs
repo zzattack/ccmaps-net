@@ -49,6 +49,8 @@ namespace CNCMaps.Engine.Rendering {
 		public DrawProperties Clone() {
 			return (DrawProperties)MemberwiseClone();
 		}
+
+		public int ZAdjust { get; set; }
 	}
 
 	internal static class OffsetHacks {

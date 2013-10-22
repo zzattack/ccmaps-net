@@ -37,7 +37,7 @@ namespace CNCMaps.Engine.Game {
 				base.Draw(obj, ds, omitShadow);
 			else {
 				Logger.Debug("Drawing object {0} with {1}% translucency", obj, TransLucency);
-				ShpRenderer.DrawTranslucent(obj, Shp, Props, ds, TransLucency);
+				ShpRenderer.Draw(Shp, obj, this, Props, ds, TransLucency);
 			}
 			if (Props.HasShadow && !omitShadow)
 				ShpRenderer.DrawShadow(obj, Shp, Props, ds);

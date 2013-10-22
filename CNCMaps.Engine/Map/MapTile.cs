@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using CNCMaps.Engine.Game;
+using CNCMaps.FileFormats;
 using NLog;
 
 namespace CNCMaps.Engine.Map {
@@ -20,7 +22,7 @@ namespace CNCMaps.Engine.Map {
 		}
 
 		public short SetNum { get; set; }
-		public ushort SubTile { get; private set; }
+		public ushort SubTile { get; set; }
 
 		internal TileLayer Layer { get; private set; }
 		internal bool ExtraDataAffected { get; set; }
@@ -60,6 +62,14 @@ namespace CNCMaps.Engine.Map {
 		public override MapTile Tile {
 			get { return this; }
 			set { throw new InvalidOperationException("lol wat u tryin bra"); }
+		}
+
+		public TmpFile GetTileFile() {
+			return (Drawable as TileDrawable).GetTileFile(this);
+		}
+
+		public TmpFile.TmpImage GetTileImage() {
+			return (Drawable as TileDrawable).GetTileImage(this);
 		}
 	}
 }

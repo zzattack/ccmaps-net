@@ -30,7 +30,7 @@ namespace CNCMaps.Engine.Map {
 			set { throw new InvalidOperationException("Override this property if you want to use it"); }
 		}
 
-		public ObjectCollection Collection { get; set; }
+		public GameCollection Collection { get; set; }
 		public Drawable Drawable { get; set; }
 		public Palette Palette { get; set; }
 
@@ -58,6 +58,7 @@ namespace CNCMaps.Engine.Map {
 			}
 			return cachedBounds;
 		}
+
 	}
 	public class NumberedObject : GameObject {
 		public virtual int Number { get; protected set; }

@@ -32,6 +32,7 @@ namespace CNCMaps.Engine.Game {
 		public int StartWalkFrame { get; set; }
 		public int StartStandFrame { get; set; }
 		public bool Theater { get; set; }
+		public bool IsBuildingPart = true;
 
 		public bool IsVoxel { get; set; }
 		public bool NewTheater { get; set; }
@@ -104,6 +105,7 @@ namespace CNCMaps.Engine.Game {
 			if (Rules.ReadBool("Wall")) {
 				IsWall = true;
 				Flat = false;
+				IsBuildingPart = true;
 				// RA2 walls appear a bit higher
 				if (OwnerCollection.Engine >= EngineType.RedAlert2) {
 					Props.Offset.Offset(0, 3); // seems walls are located 3 pixels lower
@@ -115,6 +117,7 @@ namespace CNCMaps.Engine.Game {
 			if (Rules.ReadBool("Gate")) {
 				IsGate = true;
 				Flat = false;
+				IsBuildingPart = true;
 				Props.PaletteType = PaletteType.Unit;
 				Props.FrameDecider = FrameDeciders.NullFrameDecider;
 			}
@@ -152,8 +155,8 @@ namespace CNCMaps.Engine.Game {
 			}
 			if (Rules.ReadBool("SpawnsTiberium")) {
 				// For example on TIBTRE / Ore Poles
-				Props.Offset.Y = -12;
-				Props.LightingType = LightingType.Full; // todo: verify it's not NONE
+				Props.Offset.Y = -1;
+				Props.LightingType = LightingType.None; // todo: verify it's not NONE
 				Props.PaletteType = PaletteType.Unit;
 			}
 			if (Rules.HasKey("JumpjetHeight")) {
@@ -170,11 +173,32 @@ namespace CNCMaps.Engine.Game {
 
 		private static readonly Pen BoundsRectPenVoxel = new Pen(Color.Blue);
 		private static readonly Pen BoundsRectPenSHP = new Pen(Color.Red);
+		private static readonly Pen BoundsRectPenISO = new Pen(Color.Purple);
 		public virtual void DrawBoundingBox(GameObject obj, Graphics gfx) {
 			if (IsVoxel)
 				gfx.DrawRectangle(BoundsRectPenVoxel, obj.GetBounds());
 			else
 				gfx.DrawRectangle(BoundsRectPenSHP, obj.GetBounds());
+
+			var top = obj.TopTile;
+			var left = obj.Tile.Layer.GetTileR(obj.TopTile.Rx, obj.TopTile.Ry + obj.Drawable.Foundation.Height);
+			var bottom = obj.Tile.Layer.GetTileR(obj.TopTile.Rx + obj.Drawable.Foundation.Width, obj.TopTile.Ry + obj.Drawable.Foundation.Height);
+			var right = obj.Tile.Layer.GetTileR(obj.TopTile.Rx + obj.Drawable.Foundation.Width, obj.TopTile.Ry);
+
+			List<Point> verts = new List<Point>();
+			verts.Add(new Point(top.Dx * TileWidth / 2, top.Dy * TileHeight / 2));
+			verts.Add(new Point(left.Dx * TileWidth / 2 - TileWidth / 4, left.Dy * TileHeight / 2 + TileHeight / 4));
+			verts.Add(new Point(bottom.Dx * TileWidth / 2, bottom.Dy * TileHeight / 2 + TileHeight / 2));
+			verts.Add(new Point(right.Dx * TileWidth / 2 + TileHeight / 2, right.Dy * TileHeight / 2 + TileHeight / 4));
+			verts.Add(new Point(top.Dx * TileWidth / 2, top.Dy * TileHeight / 2));
+
+			List<Point> verts2 = new List<Point>();
+			foreach (var p in verts) {
+				p.Offset(30, 0);
+				verts2.Add(p);
+			}
+			gfx.DrawLines(BoundsRectPenISO, verts2.ToArray());
+
 		}
 
 
@@ -185,6 +209,6 @@ namespace CNCMaps.Engine.Game {
 		public override string ToString() {
 			return Name;
 		}
-
+		
 	}
 }

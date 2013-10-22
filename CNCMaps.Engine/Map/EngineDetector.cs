@@ -46,14 +46,21 @@ namespace CNCMaps.Engine.Map {
 			TheaterSettings thsRA2 = ModConfig.DefaultsRA2.GetTheater(theater);
 			TheaterSettings thsYR = ModConfig.DefaultsYR.GetTheater(theater);
 
-			foreach (var f in thsTS.Mixes)
-				vfsTS.AddFile(f);
-			foreach (var f in thsFS.Mixes)
-				vfsFS.AddFile(f);
-			foreach (var f in thsRA2.Mixes)
-				vfsRA2.AddFile(f);
-			foreach (var f in thsYR.Mixes)
-				vfsYR.AddFile(f);
+			if (thsTS != null)
+				foreach (var f in thsTS.Mixes)
+					vfsTS.AddFile(f);
+
+			if (thsFS != null)
+				foreach (var f in thsFS.Mixes)
+					vfsFS.AddFile(f);
+
+			if (thsRA2 != null)
+				foreach (var f in thsRA2.Mixes)
+					vfsRA2.AddFile(f);
+
+			if (thsYR != null)
+				foreach (var f in thsYR.Mixes)
+					vfsYR.AddFile(f);
 
 			var ret = DetectEngineFromRules(mf, rulesTS, rulesFS, rulesRA2, rulesYR, thsTS, thsFS, thsRA2, thsYR, vfsTS, vfsFS, vfsRA2, vfsYR);
 			Logger.Debug("Engine type detected as {0}", ret);
@@ -79,8 +86,9 @@ namespace CNCMaps.Engine.Map {
 		}
 
 		private static double PercentageObjectsKnown(MapFile mf, VFS vfs, IniFile rules, TheaterSettings ths) {
+			if (rules == null || ths == null) return 0.0;
 			var theaterIni = vfs.OpenFile<IniFile>(ths.TheaterIni);
-			if (rules == null || theaterIni == null) return 0.0;
+			if (theaterIni == null) return 0.0;
 
 			Func<MapObject, IniFile.IniSection, bool> objectKnown = (obj, section) => {
 				if (obj is NamedMapObject) {

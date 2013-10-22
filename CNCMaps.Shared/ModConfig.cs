@@ -314,7 +314,7 @@ namespace CNCMaps.Shared {
 		#endregion
 
 		public TheaterSettings GetTheater(TheaterType th) {
-			return Theaters.First(t => t.Type.Equals(th));
+			return Theaters.FirstOrDefault(t => t.Type.Equals(th));
 		}
 
 		public event PropertyChangedEventHandler PropertyChanged;

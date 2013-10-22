@@ -44,12 +44,9 @@ namespace CNCMaps.FileFormats {
 			public byte[] ExtraData; // available is presency flags says so
 			public byte[] ZData; // available is presency flags says so
 			public byte[] ExtraZData; // available is presency flags says so
-			public int Index;
-
-			public void Read(TmpFile f, int index) {
-				Index = index;
-				X = f.ReadInt32();
-				Y = f.ReadInt32();
+			
+			public void Read(TmpFile f) {
+				X = f.ReadInt32();				Y = f.ReadInt32();
 				_extraDataOffset = f.ReadInt32();
 				_zDataOffset = f.ReadInt32();
 				_extraZDataOffset = f.ReadInt32();
@@ -61,8 +58,6 @@ namespace CNCMaps.FileFormats {
 				Height = f.ReadByte();
 				TerrainType = f.ReadByte();
 				RampType = f.ReadByte();
-				// if (RampType != 0) 
-				// 	Debug.WriteLine("{0}\t{1}\t{2}", f.FileName, index, RampType);
 				RadarRedLeft = f.ReadSByte();
 				RadarGreenLeft = f.ReadSByte(); ;
 				RadarBlueLeft = f.ReadSByte(); ;
@@ -102,14 +97,12 @@ namespace CNCMaps.FileFormats {
 
 		public TmpFile(Stream baseStream, string filename, int baseOffset, int fileSize, bool isBuffered = true)
 			: base(baseStream, filename, baseOffset, fileSize, isBuffered) {
-
-			Initialize();
+			// Initialize();
 		}
 
 		public void Initialize() {
 			if (_isInitialized) return;
-
-			logger.Trace("Initializing TMP data for file {0}", FileName);
+						logger.Trace("Initializing TMP data for file {0}", FileName);
 			_isInitialized = true;
 			Position = 0;
 
@@ -124,7 +117,7 @@ namespace CNCMaps.FileFormats {
 				int imageData = BitConverter.ToInt32(index, x * 4);
 				Seek(imageData, SeekOrigin.Begin);
 				var img = new TmpImage();
-				img.Read(this, Images.Count);
+				img.Read(this);
 				Images.Add(img);
 			}
 		}

@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Drawing;
+using CNCMaps.Engine.Map;
 using CNCMaps.FileFormats;
 using CNCMaps.FileFormats.VirtualFileSystem;
 using CNCMaps.Shared;
@@ -57,13 +59,14 @@ namespace CNCMaps.Engine.Game {
 				AnimationDrawable = drawable;
 			}
 
-			public TmpFile GetTmpFile(int subTile, bool damaged = false) {
-				if (TmpFiles.Count == 0) return null;
+			public TmpFile GetTmpFile(MapTile t, bool damaged = false) {
+				if (TmpFiles.Count == 0)
+					return null;
 				var randomChosen = TmpFiles[RandomTileChooser.Next(TmpFiles.Count)];
 				// if this is not a randomizing tileset, but instead one with damaged data,
 				// then return the "undamaged" version
 				randomChosen.Initialize();
-				if (randomChosen.Images[Math.Min(subTile, randomChosen.Images.Count - 1)].HasDamagedData)
+				if (randomChosen.Images[Math.Min(t.SubTile, randomChosen.Images.Count - 1)].HasDamagedData)
 					return TmpFiles[Math.Min(damaged ? 1 : 0, TmpFiles.Count - 1)];
 				else
 					return randomChosen;
@@ -75,28 +78,71 @@ namespace CNCMaps.Engine.Game {
 		}
 
 		// ReSharper disable InconsistentNaming
-		int ACliffMMPieces; short ACliffPieces; short BlackTile;
-		short BridgeBottomLeft1; short BridgeBottomLeft2; short BridgeBottomRight1;
-		short BridgeBottomRight2; short BridgeMiddle1; short BridgeMiddle2;
-		short BridgeSet; short BridgeTopLeft1; short BridgeTopLeft2;
-		short BridgeTopRight1; short BridgeTopRight2; short ClearTile;
-		short ClearToGreenLat; short ClearToPaveLat; short ClearToRoughLat;
-		short ClearToSandLat; short CliffRamps; short CliffSet;
-		short DestroyableCliffs; short DirtRoadCurve; short DirtRoadJunction;
-		short DirtRoadSlopes; short DirtRoadStraight; short DirtTrackTunnels;
-		short DirtTunnels; short GreenTile; short HeightBase;
-		short Ice1Set; short Ice2Set; short Ice3Set;
-		short IceShoreSet; short MMRampBase; short MMWaterCliffAPieces;
-		short Medians; short MiscPaveTile; short MonorailSlopes;
-		short PaveTile; short PavedRoadEnds; short PavedRoadSlopes;
-		short PavedRoads; short RampBase; short RampSmooth;
-		short Rocks; short RoughGround; short RoughTile;
-		short SandTile; short ShorePieces; short SlopeSetPieces;
-		short SlopeSetPieces2; short TrackTunnels; short TrainBridgeSet;
-		short Tunnels; short WaterBridge; short WaterCaves;
-		short WaterCliffAPieces; short WaterCliffs; short WaterSet;
-		short WaterfallEast; short WaterfallNorth; short WaterfallSouth;
-		short WaterfallWest; short WoodBridgeSet;
+		public short ACliffMMPieces;
+		public short ACliffPieces;
+		public short BlackTile; 
+		public short BridgeBottomLeft1;
+		public short BridgeBottomLeft2;
+		public short BridgeBottomRight1;
+		public short BridgeBottomRight2;
+		public short BridgeMiddle1;
+		public short BridgeMiddle2;
+		public short BridgeSet;
+		public short BridgeTopLeft1;
+		public short BridgeTopLeft2;
+		public short BridgeTopRight1;
+		public short BridgeTopRight2;
+		public short ClearTile;
+		public short ClearToGreenLat;
+		public short ClearToPaveLat;
+		public short ClearToRoughLat;
+		public short ClearToSandLat;
+		public short CliffRamps;
+		public short CliffSet;
+		public short DestroyableCliffs;
+		public short DirtRoadCurve;
+		public short DirtRoadJunction;
+		public short DirtRoadSlopes;
+		public short DirtRoadStraight;
+		public short DirtTrackTunnels;
+		public short DirtTunnels;
+		public short GreenTile;
+		public short HeightBase;
+		public short Ice1Set;
+		public short Ice2Set;
+		public short Ice3Set;
+		public short IceShoreSet;
+		public short MMRampBase;
+		public short MMWaterCliffAPieces;
+		public short Medians;
+		public short MiscPaveTile;
+		public short MonorailSlopes;
+		public short PaveTile;
+		public short PavedRoadEnds;
+		public short PavedRoadSlopes;
+		public short PavedRoads;
+		public short RampBase;
+		public short RampSmooth;
+		public short Rocks;
+		public short RoughGround;
+		public short RoughTile;
+		public short SandTile;
+		public short ShorePieces;
+		public short SlopeSetPieces;
+		public short SlopeSetPieces2;
+		public short TrackTunnels;
+		public short TrainBridgeSet;
+		public short Tunnels;
+		public short WaterBridge;
+		public short WaterCaves;
+		public short WaterCliffAPieces;
+		public short WaterCliffs;
+		public short WaterSet;
+		public short WaterfallEast;
+		public short WaterfallNorth;
+		public short WaterfallSouth;
+		public short WaterfallWest;
+		public short WoodBridgeSet;
 		// ReSharper restore InconsistentNaming
 
 		private int _animsSectionsStartIdx = -1;
@@ -108,7 +154,7 @@ namespace CNCMaps.Engine.Game {
 		}
 
 		public TileCollection(CollectionType type, TheaterType theater, EngineType engine, IniFile rules, IniFile art,
-			TheaterSettings theaterSettings, IniFile theaterIni = null)
+			TheaterSettings theaterSettings, IniFile theaterIni=null)
 			: base(type, theater, engine, rules, art) {
 
 			_theaterSettings = theaterSettings;
@@ -292,6 +338,9 @@ namespace CNCMaps.Engine.Game {
 				setNum == SandTile ||
 				setNum == GreenTile ||
 				setNum == PaveTile;
+		}
+		public bool IsSlope(short setNum) {
+			return setNum == SlopeSetPieces || setNum == SlopeSetPieces2;
 		}
 
 		public bool IsCLAT(short setNum) {

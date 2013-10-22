@@ -16,7 +16,7 @@ namespace CNCMaps.Engine.Game {
 		public override void Draw(GameObject obj, DrawingSurface ds, bool shadows = true) {
 			if (obj == null || tsEntry == null) return;
 
-			var tmpFile = tsEntry.GetTmpFile((obj as MapTile).SubTile);
+			var tmpFile = tsEntry.GetTmpFile(obj as MapTile);
 			if (tmpFile != null)
 				TmpRenderer.Draw((MapTile)obj, tmpFile, ds);
 
@@ -25,7 +25,7 @@ namespace CNCMaps.Engine.Game {
 
 		public override Rectangle GetBounds(GameObject obj) {
 			var tile = (MapTile)obj;
-			return TmpRenderer.GetBounds(tile, tsEntry.GetTmpFile(tile.SubTile));
+			return TmpRenderer.GetBounds(tile, tsEntry.GetTmpFile(tile));
 		}
 
 		public override void DrawBoundingBox(GameObject obj, Graphics gfx) {
@@ -37,13 +37,13 @@ namespace CNCMaps.Engine.Game {
 		}
 
 		public TmpFile GetTileFile(MapTile t) {
-			return tsEntry.GetTmpFile(t.SubTile);
+			return tsEntry.GetTmpFile(t);
 		}
 
 		public TmpFile.TmpImage GetTileImage(MapTile t) {
-			var tmp = tsEntry.GetTmpFile(t.SubTile);
+			var tmp = tsEntry.GetTmpFile(t);
 			if (tmp.Images.Count > t.SubTile) return tmp.Images[t.SubTile];
-			return null;
+			return tmp.Images.Count > 0 ? tmp.Images[0] : null;
 		}
 
 	}
