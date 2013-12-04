@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using CNCMaps.Engine.Game;
-using CNCMaps.FileFormats;
-using CNCMaps.Shared;
+﻿using CNCMaps.FileFormats;
 
 namespace CNCMaps.Engine.Types {
 	public class VoxelAnimation : Animation {

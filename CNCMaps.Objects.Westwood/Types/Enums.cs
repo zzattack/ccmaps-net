@@ -135,7 +135,6 @@ namespace CNCMaps.Engine.Types {
 		HunterSeeker,
 		ChemMissile,
 		DropPod,
-		MultiMissile,
 		IronCurtain,
 		LightningStorm,
 		ChronoSphere,

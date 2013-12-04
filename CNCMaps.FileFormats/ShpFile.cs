@@ -89,7 +89,7 @@ namespace CNCMaps.FileFormats {
 						Format3.DecodeInto(_f.Read(compressedEnd - ImgDataOffset), _decompressedImage, Width, Height);
 					}
 					else {
-						Logger.Warn("SHP image {0} frame {1} has unknown compression!", _f.FileName, _frameIndex);
+						Logger.Debug("SHP image {0} frame {1} has unknown compression!", _f.FileName, _frameIndex);
 					}
 				}
 
@@ -115,7 +115,6 @@ namespace CNCMaps.FileFormats {
 			}
 		}
 
-		private static Random R = new Random();
 		public ShpImage GetImage(int imageIndex) {
 			if (imageIndex >= Images.Count) return new ShpImage();
 			return Images[imageIndex];

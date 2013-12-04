@@ -54,6 +54,7 @@
     <Compile Include="Option.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Utility\Compare.cs" />
+    <Compile Include="Utility\Rand.cs" />
     <Compile Include="Utility\TwoDimensionalEnumerator.cs" />
   </ItemGroup>
   <ItemGroup>
