@@ -6,6 +6,7 @@ using CNCMaps.Engine.Rendering;
 using CNCMaps.Engine.Utility;
 using CNCMaps.FileFormats;
 using CNCMaps.Shared;
+using CNCMaps.Shared.Utility;
 using NLog;
 
 namespace CNCMaps.Engine.Game {
@@ -42,10 +43,9 @@ namespace CNCMaps.Engine.Game {
 		public static Func<GameObject, int> LoopFrameDecider(int loopstart, int loopend) {
 			return delegate(GameObject obj) {
 				// loopstart > loopend is possible
-				return Math.Min(loopstart, loopend) + R.Next(Math.Abs(loopend - loopstart));
+				return Math.Min(loopstart, loopend) + Rand.Next(Math.Abs(loopend - loopstart));
 			};
 		}
-		public static Random R = new Random();
 
 		public static Func<GameObject, int> RandomFrameDecider = delegate(GameObject obj) {
 			return (int)DrawFrame.Random;

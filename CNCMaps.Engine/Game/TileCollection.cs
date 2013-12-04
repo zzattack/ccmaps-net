@@ -6,6 +6,7 @@ using CNCMaps.Engine.Map;
 using CNCMaps.FileFormats;
 using CNCMaps.FileFormats.VirtualFileSystem;
 using CNCMaps.Shared;
+using CNCMaps.Shared.Utility;
 using NLog;
 
 namespace CNCMaps.Engine.Game {
@@ -38,7 +39,6 @@ namespace CNCMaps.Engine.Game {
 			}
 		}
 		public class TileSetEntry {
-			static readonly Random RandomTileChooser = new Random();
 			public readonly List<TmpFile> TmpFiles = new List<TmpFile>();
 			public Drawable AnimationDrawable;
 			public int AnimationSubtile = -1;
@@ -62,7 +62,7 @@ namespace CNCMaps.Engine.Game {
 			public TmpFile GetTmpFile(MapTile t, bool damaged = false) {
 				if (TmpFiles.Count == 0)
 					return null;
-				var randomChosen = TmpFiles[RandomTileChooser.Next(TmpFiles.Count)];
+				var randomChosen = TmpFiles[Rand.Next(TmpFiles.Count)];
 				// if this is not a randomizing tileset, but instead one with damaged data,
 				// then return the "undamaged" version
 				randomChosen.Initialize();

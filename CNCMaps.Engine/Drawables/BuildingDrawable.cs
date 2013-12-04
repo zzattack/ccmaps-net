@@ -7,6 +7,7 @@ using CNCMaps.Engine.Rendering;
 using CNCMaps.FileFormats;
 using CNCMaps.FileFormats.VirtualFileSystem;
 using CNCMaps.Shared;
+using CNCMaps.Shared.Utility;
 
 namespace CNCMaps.Engine.Game {
 	class BuildingDrawable : Drawable {
@@ -19,8 +20,6 @@ namespace CNCMaps.Engine.Game {
 			"TEMNITLAMP", "SNOMORLAMP",
 			"SNODAYLAMP", "SNODUSLAMP", "SNONITLAMP"
 		};
-
-		private static readonly Random R = new Random();
 
 		private static readonly string[] AnimImages = {
 			// "ProductionAnim",  // you don't want ProductionAnims on map renders, but IdleAnim instead
@@ -180,7 +179,7 @@ namespace CNCMaps.Engine.Game {
 					break;
 
 				string[] coords = dfo.Split(new[] { ',', '.' }, StringSplitOptions.RemoveEmptyEntries);
-				string fireAnim = OwnerCollection.FireNames[R.Next(OwnerCollection.FireNames.Length)];
+				string fireAnim = OwnerCollection.FireNames[Rand.Next(OwnerCollection.FireNames.Length)];
 				IniFile.IniSection fireArt = OwnerCollection.Art.GetOrCreateSection(fireAnim);
 
 				var fire = new AnimDrawable(Rules, Art, VFS.Open<ShpFile>(fireAnim + ".shp"));
