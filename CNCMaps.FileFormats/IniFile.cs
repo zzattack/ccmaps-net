@@ -5,9 +5,11 @@ using System.Drawing.Imaging;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Net.NetworkInformation;
 using System.Text;
 using CNCMaps.FileFormats.VirtualFileSystem;
 using NLog;
+using OpenTK;
 
 namespace CNCMaps.FileFormats {
 
@@ -332,17 +334,41 @@ namespace CNCMaps.FileFormats {
 					sw.WriteLine(kvp.Value);
 				}
 			}
-			
-			public OpenTK.Vector3 ReadXYZ(string key) {
-				throw new NotImplementedException();
+
+			public Vector3 ReadXYZ(string key) {
+				return ReadXYZ(key, new Vector3(0, 0, 0));
+			}
+			public Vector3 ReadXYZ(string key, Vector3 @default) {
+				string size = ReadString(key);
+				string[] parts = size.Split(',');
+				int x, y, z;
+				if (int.TryParse(parts[0], out x) && int.TryParse(parts[1], out y) && int.TryParse(parts[2], out z))
+					return new Vector3(x, y, z);
+				return @default;
 			}
 
-			public Size ReadSize(string key, Size size) {
-				throw new NotImplementedException();
+			public Size ReadSize(string key) {
+				return ReadSize(key, new Size(0, 0));
+			}
+			public Size ReadSize(string key, Size @default) {
+				string size = ReadString(key);
+				string[] parts = size.Split(',');
+				int x, y;
+				if (int.TryParse(parts[0], out x) && int.TryParse(parts[1], out y))
+					return new Size(x, y);
+				return @default;
 			}
 
-			public Tuple<int, int> ReadXY(string p) {
-				throw new NotImplementedException();
+			public Point ReadPoint(string key) {
+				return ReadPoint(key, Point.Empty);
+			}
+			public Point ReadPoint(string key, Point @default) {
+				string point = ReadString(key);
+				string[] parts = point.Split(',');
+				int x, y;
+				if (int.TryParse(parts[0], out x) && int.TryParse(parts[1], out y))
+					return new Point(x, y);
+				return @default;
 			}
 		}
 
