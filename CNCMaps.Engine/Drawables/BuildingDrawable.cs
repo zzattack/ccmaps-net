@@ -52,7 +52,6 @@ namespace CNCMaps.Engine.Game {
 
 			IsBuildingPart = true;
 			InvisibleInGame = Rules.ReadBool("InvisibleInGame") || LampNames.Contains(Name.ToUpper());
-
 			string foundation = Art.ReadString("Foundation", "1x1");
 			if (!foundation.Equals("custom", StringComparison.InvariantCultureIgnoreCase)) {
 				int fx = foundation[0] - '0';
@@ -65,6 +64,7 @@ namespace CNCMaps.Engine.Game {
 				Foundation = new Size(fx, fy);
 			}
 			Props.SortIndex = Art.ReadInt("NormalYSort") - Art.ReadInt("NormalZAdjust"); // "main" building image before anims
+			Props.ZShapePointMove = Art.ReadPoint("ZShapePointMove");
 
 			_baseShp = new ShpDrawable(Rules, Art);
 			_baseShp.OwnerCollection = OwnerCollection;
@@ -274,7 +274,6 @@ namespace CNCMaps.Engine.Game {
 		public override void DrawBoundingBox(GameObject obj, Graphics gfx) {
 			base.DrawBoundingBox(obj, gfx);
 
-			return;
 			var parts = new List<Drawable>();
 			parts.Add(_baseShp);
 			parts.AddRange(_anims);

@@ -194,7 +194,7 @@ namespace CNCMaps.Engine.Game {
 
 			List<Point> verts2 = new List<Point>();
 			foreach (var p in verts) {
-				p.Offset(30, 0);
+				p.Offset(30, -15);
 				verts2.Add(p);
 			}
 			gfx.DrawLines(BoundsRectPenISO, verts2.ToArray());
