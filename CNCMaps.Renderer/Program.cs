@@ -173,7 +173,7 @@ namespace CNCMaps {
 					ds.SavePNG(Path.Combine(Settings.OutputDir, Settings.OutputFile + ".png"), Settings.PNGQuality, saveRect);
 
 				Regex reThumb = new Regex(@"(\+)?\((\d+),(\d+)\)");
-				var match = reThumb.Match(Settings.ThumbnailSettings);
+				var match = reThumb.Match(Settings.ThumbnailDimensions);
 				if (match.Success) {
 					Size dimensions = new Size(
 						int.Parse(match.Groups[2].Captures[0].Value),
@@ -198,7 +198,7 @@ namespace CNCMaps {
 					if (mapFile.BaseStream is MixFile)
 						Logger.Error("Cannot inject thumbnail into an archive (.mmx/.yro/.mix)!");
 					else {
-						map.GeneratePreviewPack(Settings.OmitPreviewPackMarkers, Settings.SizeMode, mapFile);
+						map.GeneratePreviewPack(Settings.PreviewMarkers, Settings.SizeMode, mapFile);
 						Logger.Info("Saving map");
 						mapFile.Save(Settings.InputFile);
 					}
@@ -313,17 +313,36 @@ namespace CNCMaps {
 				{"r|mark-ore", "Mark ore and gem fields more explicity, looks good when resizing to a preview",v => Settings.MarkOreFields = true},
 				{"F|force-fullmap", "Ignore LocalSize definition and just save the full map", v => Settings.SizeMode = SizeMode.Full},
 				{"f|force-localsize", "Use localsize for map dimensions (default)", v => Settings.SizeMode = SizeMode.Local}, 
-				{"k|replace-preview", "Update the maps [PreviewPack] data with the rendered image",v => Settings.GeneratePreviewPack = true}, 
-				{"n|ignore-lighting", "Ignore all lighting and lamps on the map",v => Settings.IgnoreLighting = true}, 
-				{"K|replace-preview-nosquares", "Update the maps [PreviewPack] data with the rendered image, without squares",
+				
+				{"k|replace-preview-nomarkers", "Update the maps [PreviewPack] data with the rendered image, using no markers on the start positions",
 					v => {
 						Settings.GeneratePreviewPack = true;
-						Settings.OmitPreviewPackMarkers = true;
+						Settings.PreviewMarkers = PreviewMarkersType.None;
 					}
-				}, 
+				},
+				{"K|preview-markers-squared", "Update the maps [PreviewPack] data with the rendered image, using a red squared marker on the start positions",
+					v => {
+						Settings.GeneratePreviewPack = true;
+						Settings.PreviewMarkers = PreviewMarkersType.Squared;
+					}
+				},
+				{"l|preview-markers-bittah", "Update the maps [PreviewPack] data with the rendered image, using Bittah's image on the start positions",
+					v => {
+						Settings.GeneratePreviewPack = true;
+						Settings.PreviewMarkers = PreviewMarkersType.Bittah;
+					}
+				},
+				{"L|preview-markers-aro", "Update the maps [PreviewPack] data with the rendered image, using Aro's image on the start positions",
+					v => {
+						Settings.GeneratePreviewPack = true;
+						Settings.PreviewMarkers = PreviewMarkersType.Aro;
+					}
+				},
+
+				{"n|ignore-lighting", "Ignore all lighting and lamps on the map",v => Settings.IgnoreLighting = true}, 
 				// {"G|graphics-winmgr", "Attempt rendering voxels using window manager context first (default)",v => Settings.PreferOSMesa = false},
 				{"g|graphics-osmesa", "Attempt rendering voxels using OSMesa context first", v => Settings.PreferOSMesa = true},
-				{"z|create-thumbnail=", "Also save a thumbnail along with the fullmap in dimensions (x,y), prefix with + to keep aspect ratio	", v => Settings.ThumbnailSettings = v},
+				{"z|create-thumbnail=", "Also save a thumbnail along with the fullmap in dimensions (x,y), prefix with + to keep aspect ratio	", v => Settings.ThumbnailDimensions = v},
 			};
 
 			_options.Parse(args);

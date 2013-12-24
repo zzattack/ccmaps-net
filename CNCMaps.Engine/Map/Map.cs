@@ -86,7 +86,7 @@ namespace CNCMaps.Engine.Game {
 
 			// import tiles
 			foreach (var iso in mf.Tiles)
-				_tiles[iso.Dx, iso.Dy/2] = new MapTile(iso.Dx, iso.Dy, iso.Rx, iso.Ry, iso.Z, iso.TileNum, iso.SubTile, _tiles);
+				_tiles[iso.Dx, iso.Dy / 2] = new MapTile(iso.Dx, iso.Dy, iso.Rx, iso.Ry, iso.Z, iso.TileNum, iso.SubTile, _tiles);
 
 			// import terrain
 			foreach (var terr in mf.Terrains) {
@@ -183,7 +183,7 @@ namespace CNCMaps.Engine.Game {
 			if (Engine >= EngineType.RedAlert2)
 				LoadCountries();
 			LoadHouses();
-			
+
 			Operations.FixTiles(_tiles, _theater.GetTileCollection());
 			if (Engine <= EngineType.Firestorm)
 				Operations.RecalculateVeinsSpread(_overlayObjects, _tiles);
@@ -488,6 +488,40 @@ namespace CNCMaps.Engine.Game {
 			}
 		}
 
+		void DrawStartMarkersBittah(Graphics gfx, Rectangle fullImage, Rectangle previewImage) {
+			foreach (var w in _wayPoints.Where(w => w.Number < 8)) {
+				var t = _tiles.GetTile(w.Tile);
+				var center = new Point(t.Dx * Drawable.TileWidth / 2, (t.Dy - t.Z) * Drawable.TileHeight / 2);
+				// project to preview dimensions
+				double pctFullX = (center.X - fullImage.Left) / (double)fullImage.Width;
+				double pctFullY = (center.Y - fullImage.Top) / (double)fullImage.Height;
+				Point dest = new Point((int)(pctFullX * previewImage.Width), (int)(pctFullY * previewImage.Height));
+				var img = Resources.ResourceManager.GetObject("bittah_marker_" + (w.Number + 1)) as Image;
+				if (img != null) {
+					// center marker img
+					dest.Offset(-img.Width / 2, -img.Height / 2);
+					// draw it
+					gfx.DrawImage(img, dest);
+				}
+			}
+		}
+
+		void DrawStartMarkersAro(Graphics gfx, Rectangle fullImage, Rectangle previewImage) {
+			foreach (var w in _wayPoints.Where(w => w.Number < 8)) {
+				var center = TileLayer.GetTilePixelCenter(w.Tile);
+				// project to preview dimensions
+				double pctFullX = (center.X - fullImage.Left) / (double)previewImage.Width;
+				double pctFullY = (center.Y - fullImage.Top) / (double)previewImage.Height;
+				Point dest = new Point((int)(pctFullX * previewImage.Width), (int)(pctFullY * previewImage.Height));
+				var img = Resources.ResourceManager.GetObject("aro_marker_" + w) as Image;
+				// center marker img
+				dest.Offset(-img.Width / 2, -img.Height / 2);
+				// draw it
+				gfx.DrawImage(img, dest);
+			}
+		}
+
+
 		/// <summary>Loads the colors. </summary>
 		private void LoadColors() {
 			var colorsSection = _rules.GetSection("Colors");
@@ -541,7 +575,7 @@ namespace CNCMaps.Engine.Game {
 			// searches in 10 rows, starting from the bottom up, for the first fully tiled row
 			int y;
 
-#if DEBUG
+#if DEBUG && FALSE
 			// print map:
 			var tileTouchGrid = _tiles.GridTouched;
 			var sb = new System.Text.StringBuilder();
@@ -711,7 +745,7 @@ namespace CNCMaps.Engine.Game {
 					lastReported = pct;
 				}
 			}*/
-			
+
 			// var obj = _overlayObjects[_overlayObjects.Count / 2];
 			// ShpRenderer.Draw(obj, VFS.Open<ShpFile>("buildngz.shp"), obj.Drawable.Props, _drawingSurface);
 			// return;
@@ -750,8 +784,7 @@ namespace CNCMaps.Engine.Game {
 			}
 
 
-#if DEBUG
-
+#if DEBUG && FALSE
 			// test that my bounds make some kind of sense
 			_drawingSurface.Unlock();
 			using (Graphics gfx = Graphics.FromImage(_drawingSurface.Bitmap)) {
@@ -764,10 +797,10 @@ namespace CNCMaps.Engine.Game {
 			Logger.Info("Map drawing completed");
 		}
 
-		public void GeneratePreviewPack(bool omitPreviewMarkers, SizeMode sizeMode, IniFile map) {
+		public void GeneratePreviewPack(PreviewMarkersType previewMarkers, SizeMode sizeMode, IniFile map) {
 			Logger.Info("Generating PreviewPack data");
-			// we will have to re-lock the BitmapData
 
+			// we will have to re-lock the BitmapData
 			_drawingSurface.Lock(_drawingSurface.Bitmap.PixelFormat);
 			if (MarkOreFields == false) {
 				Logger.Trace("Marking ore and gems areas");
@@ -775,16 +808,22 @@ namespace CNCMaps.Engine.Game {
 				Logger.Debug("Redrawing ore and gems areas");
 				RedrawOreAndGems();
 			}
-			if (StartPosMarking != StartPositionMarking.Squared) {
-				// undo tiled, if needed
-				if (StartPosMarking == StartPositionMarking.Tiled)
-					UndrawTiledStartPositions();
-
-				if (!omitPreviewMarkers)
-					DrawSquaredStartPositions();
-			}
-
+			// undo tiled, if needed
+			if (StartPosMarking == StartPositionMarking.Tiled)
+				UndrawTiledStartPositions();
 			_drawingSurface.Unlock();
+
+			switch (previewMarkers) {
+				case PreviewMarkersType.None:
+					break;
+				case PreviewMarkersType.Squared:
+					DrawSquaredStartPositions();
+					break;
+				case PreviewMarkersType.Bittah:
+				case PreviewMarkersType.Aro:
+					// to be injected later
+					break;
+			}
 
 			// Number magic explained: http://modenc.renegadeprojects.com/Maps/PreviewPack
 			int pw, ph;
@@ -821,7 +860,20 @@ namespace CNCMaps.Engine.Game {
 					var srcRect = GetSizePixels(sizeMode);
 					var dstRect = new Rectangle(0, 0, preview.Width, preview.Height);
 					gfx.DrawImage(_drawingSurface.Bitmap, dstRect, srcRect, GraphicsUnit.Pixel);
+
+					switch (previewMarkers) {
+						case PreviewMarkersType.None:
+						case PreviewMarkersType.Squared:
+							break;
+						case PreviewMarkersType.Bittah:
+							DrawStartMarkersBittah(gfx, srcRect, dstRect);
+							break;
+						case PreviewMarkersType.Aro:
+							DrawStartMarkersAro(gfx, srcRect, dstRect);
+							break;
+					}
 				}
+
 
 				Logger.Info("Injecting thumbnail into map");
 				ThumbInjector.InjectThumb(preview, map);
@@ -829,7 +881,6 @@ namespace CNCMaps.Engine.Game {
 				// debug thing to dump original previewpack dimensions
 				// preview.Save("C:\\thumbs\\" + Program.Settings.OutputFile + ".png");
 				// var originalPreview = ThumbInjector.ExtractThumb(this);
-				// originalPreview.Save("C:\\soms.png");
 				/*var prev = GetSection("Preview");
 				if (prev != null) {
 					var name = DetermineMapName(this.EngineType);

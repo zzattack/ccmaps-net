@@ -93,6 +93,8 @@ namespace CNCMaps.GUI {
 			this.gbLog = new System.Windows.Forms.GroupBox();
 			this.rtbLog = new System.Windows.Forms.RichTextBox();
 			this.tpAbout = new System.Windows.Forms.TabPage();
+			this.cbMarkersType = new System.Windows.Forms.ComboBox();
+			this.lblMarkersType = new System.Windows.Forms.Label();
 			this.gbMiscOptions.SuspendLayout();
 			this.gbThumbs.SuspendLayout();
 			this.gbVoxelsMode.SuspendLayout();
@@ -408,6 +410,8 @@ namespace CNCMaps.GUI {
 			// 
 			this.gbInputOutput.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
+			this.gbInputOutput.Controls.Add(this.lblMarkersType);
+			this.gbInputOutput.Controls.Add(this.cbMarkersType);
 			this.gbInputOutput.Controls.Add(this.cbPreserveThumbAspect);
 			this.gbInputOutput.Controls.Add(this.tbThumbDimensions);
 			this.gbInputOutput.Controls.Add(this.cbOutputThumbnail);
@@ -447,7 +451,7 @@ namespace CNCMaps.GUI {
 			this.cbPreserveThumbAspect.AutoSize = true;
 			this.cbPreserveThumbAspect.Checked = true;
 			this.cbPreserveThumbAspect.CheckState = System.Windows.Forms.CheckState.Checked;
-			this.cbPreserveThumbAspect.Location = new System.Drawing.Point(304, 111);
+			this.cbPreserveThumbAspect.Location = new System.Drawing.Point(449, 92);
 			this.cbPreserveThumbAspect.Name = "cbPreserveThumbAspect";
 			this.cbPreserveThumbAspect.Size = new System.Drawing.Size(126, 17);
 			this.cbPreserveThumbAspect.TabIndex = 17;
@@ -464,7 +468,7 @@ namespace CNCMaps.GUI {
 			this.tbThumbDimensions.DataBindings.Add(new System.Windows.Forms.Binding("Text", global::CNCMaps.GUI.Properties.Settings.Default, "thumbdimensions", true, System.Windows.Forms.DataSourceUpdateMode.OnPropertyChanged));
 			this.tbThumbDimensions.Location = new System.Drawing.Point(390, 90);
 			this.tbThumbDimensions.Name = "tbThumbDimensions";
-			this.tbThumbDimensions.Size = new System.Drawing.Size(104, 20);
+			this.tbThumbDimensions.Size = new System.Drawing.Size(51, 20);
 			this.tbThumbDimensions.TabIndex = 16;
 			this.tbThumbDimensions.Text = global::CNCMaps.GUI.Properties.Settings.Default.thumbdimensions;
 			this.tbThumbDimensions.Visible = false;
@@ -885,6 +889,30 @@ namespace CNCMaps.GUI {
 			this.tpAbout.Text = "About";
 			this.tpAbout.UseVisualStyleBackColor = true;
 			// 
+			// cbMarkersType
+			// 
+			this.cbMarkersType.FormattingEnabled = true;
+			this.cbMarkersType.Items.AddRange(new object[] {
+            "None",
+            "Squared",
+            "Aro",
+            "Bittah"});
+			this.cbMarkersType.Location = new System.Drawing.Point(373, 107);
+			this.cbMarkersType.Name = "cbMarkersType";
+			this.cbMarkersType.Size = new System.Drawing.Size(121, 21);
+			this.cbMarkersType.TabIndex = 18;
+			this.cbMarkersType.Text = "Bittah";
+			this.cbMarkersType.SelectedIndexChanged += new System.EventHandler(this.UIChanged);
+			// 
+			// lblMarkersType
+			// 
+			this.lblMarkersType.AutoSize = true;
+			this.lblMarkersType.Location = new System.Drawing.Point(299, 110);
+			this.lblMarkersType.Name = "lblMarkersType";
+			this.lblMarkersType.Size = new System.Drawing.Size(68, 13);
+			this.lblMarkersType.TabIndex = 19;
+			this.lblMarkersType.Text = "Markers type";
+			// 
 			// MainForm
 			// 
 			this.AllowDrop = true;
@@ -996,6 +1024,8 @@ namespace CNCMaps.GUI {
 		private GroupBox gbLog;
 		private RichTextBox rtbLog;
 		private TabPage tpAbout;
+		private ComboBox cbMarkersType;
+		private Label lblMarkersType;
 
 	}
 }

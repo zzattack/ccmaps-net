@@ -25,6 +25,7 @@
     <WarningLevel>4</WarningLevel>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <Prefer32Bit>false</Prefer32Bit>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -84,6 +85,11 @@
     <Compile Include="Drawables\UnitDrawable.cs" />
     <Compile Include="Drawables\VoxelDrawable.cs" />
     <Compile Include="Rendering\VxlRenderer.cs" />
+    <Compile Include="Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
     <Compile Include="Utility\FrameDeciderCompiler.cs" />
     <Compile Include="Utility\Hexagon.cs" />
     <Compile Include="Utility\HsvColor.cs" />
@@ -92,6 +98,14 @@
     <Content Include="OpenTK.dll.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <None Include="Resources\bittah_marker_3.png" />
+    <None Include="Resources\bittah_marker_2.png" />
+    <None Include="Resources\bittah_marker_1.png" />
+    <None Include="Resources\bittah_marker_8.png" />
+    <None Include="Resources\bittah_marker_7.png" />
+    <None Include="Resources\bittah_marker_6.png" />
+    <None Include="Resources\bittah_marker_5.png" />
+    <None Include="Resources\bittah_marker_4.png" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\CNCMaps.FileFormats\CNCMaps.FileFormats.csproj">
@@ -102,6 +116,12 @@
       <Project>{54d90137-e2cc-4d21-bbcb-9e3c626d875f}</Project>
       <Name>CNCMaps.Shared</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Resources.resx">
+      <Generator>PublicResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

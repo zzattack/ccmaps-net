@@ -308,7 +308,8 @@ namespace CNCMaps.GUI {
 			}
 		}
 		private void CbOutputThumbnailCheckedChanged(object sender, EventArgs e) {
-			tbThumbDimensions.Visible = cbPreserveThumbAspect.Visible = cbOutputThumbnail.Checked;
+			tbThumbDimensions.Visible = cbPreserveThumbAspect.Visible =
+				lblMarkersType.Visible = cbMarkersType.Visible = cbOutputThumbnail.Checked;
 			UpdateCommandline();
 		}
 
@@ -368,6 +369,15 @@ namespace CNCMaps.GUI {
 						cmd += "+";
 					cmd += string.Format("({0},{1})", w, h);
 				}
+				if (!cmd.EndsWith(" ")) cmd += " ";
+				if (cbMarkersType.Text == "None")
+					cmd += "--preview-markers-none ";
+				else if (cbMarkersType.Text == "Squared")
+					cmd += "--preview-markers-squared ";
+				else if (cbMarkersType.Text == "Aro")
+					cmd += "--preview-markers-aro ";
+				else if (cbMarkersType.Text == "Bittah")
+					cmd += "--preview-markers-bittah ";
 			}
 
 			return cmd;
@@ -509,7 +519,7 @@ namespace CNCMaps.GUI {
 				int endIdx = s.IndexOf(", quality");
 				string file = s.Substring(sIdx, endIdx - sIdx);
 				rtbLog.AppendText(s.Substring(0, sIdx));
-				rtbLog.AppendText("file:///"  + Uri.EscapeUriString(file));
+				rtbLog.AppendText("file:///" + Uri.EscapeUriString(file));
 				rtbLog.AppendText(s.Substring(endIdx));
 			}
 			else {

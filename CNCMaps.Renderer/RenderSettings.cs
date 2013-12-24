@@ -20,10 +20,9 @@ namespace CNCMaps {
 		public EngineType Engine { get; set; }
 		public StartPositionMarking StartPositionMarking;
 		public bool PreferOSMesa { get; set; }
-		public string ThumbnailSettings { get; set; }
-
+		public string ThumbnailDimensions { get; set; }
 		public bool GeneratePreviewPack { get; set; }
-		public bool OmitPreviewPackMarkers { get; set; }
+		public PreviewMarkersType PreviewMarkers { get; set; }
 
 
 		internal static RenderSettings CreateDefaults() {
@@ -41,10 +40,10 @@ namespace CNCMaps {
 				OutputFile = "",
 				MixFilesDirectory = "",
 				ModConfig = "",
-				ThumbnailSettings = "",
+				ThumbnailDimensions = "",
 				SizeMode = SizeMode.Auto,
 			};
 		}
 	}
-
+	
 }
