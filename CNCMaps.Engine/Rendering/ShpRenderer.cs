@@ -1,9 +1,12 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Drawing;
 using CNCMaps.Engine.Game;
 using CNCMaps.Engine.Map;
 using CNCMaps.FileFormats;
 using CNCMaps.FileFormats.VirtualFileSystem;
+using CNCMaps.Shared;
+using CNCMaps.Shared.Utility;
 using NLog;
 
 namespace CNCMaps.Engine.Rendering {
@@ -74,14 +77,15 @@ namespace CNCMaps.Engine.Rendering {
 
 				for (int x = 0; x < img.Width; x++) {
 					byte paletteValue = imgData[rIdx];
+					short zshapeOffset = (short)(GetBuildingZ(x, y, shp, img, obj));
+					
 					if (paletteValue != 0) {
 						short zBufVal = zOffset;
 						if (dr.Flat)
 							zBufVal += (short)(y - img.Height);
 						else if (dr.IsBuildingPart) {
-							// notflat building
-							zBufVal += GetBuildingZ(x, y, shp, img, obj, props);
-							zBufVal -= 90;
+							// nonflat building
+							zBufVal += zshapeOffset;
 						}
 						else
 							zBufVal += img.Height;
@@ -96,15 +100,12 @@ namespace CNCMaps.Engine.Rendering {
 								*(w + 0) = p.Colors[paletteValue].B;
 								*(w + 1) = p.Colors[paletteValue].G;
 								*(w + 2) = p.Colors[paletteValue].R;
-							}
 
-							if (dr.IsBuildingPart && shp.FileName.Contains("3456")) {
-								*(w + 0) = GetBuildingZ(x, y, shp, img, obj, props);
-								*(w + 1) = GetBuildingZ(x, y, shp, img, obj, props);
-								*(w + 2) = GetBuildingZ(x, y, shp, img, obj, props);
+								//var pal = Theater.Active.GetPalettes().UnitPalette.Colors;
+								//*(w + 0) = pal[zshapeOffset].R;
+								//*(w + 1) = pal[zshapeOffset].G;
+								//*(w + 2) = pal[zshapeOffset].B;
 							}
-							zBufVal = GetBuildingZ(x, y, shp, img, obj, props);
-
 							zBuffer[zIdx] = zBufVal;
 							heightBuffer[zIdx] = hBufVal;
 						}
@@ -127,7 +128,6 @@ namespace CNCMaps.Engine.Rendering {
 
 
 		unsafe public static void DrawShadow(GameObject obj, ShpFile shp, DrawProperties props, DrawingSurface ds) {
-			return;
 			int frameIndex = props.FrameDecider(obj);
 			frameIndex = DecideFrameIndex(frameIndex, shp.NumImages);
 			frameIndex += shp.Images.Count / 2; // latter half are shadow Images
@@ -194,7 +194,6 @@ namespace CNCMaps.Engine.Rendering {
 			}
 		}
 
-
 		unsafe public static void DrawAlpha(GameObject obj, ShpFile shp, DrawProperties props, DrawingSurface ds) {
 			shp.Initialize();
 
@@ -244,11 +243,10 @@ namespace CNCMaps.Engine.Rendering {
 			return (byte)Math.Max(0f, Math.Min(255f, mult * p));
 		}
 
-		private static Random R = new Random();
 		private static int DecideFrameIndex(int frameIndex, int numImages) {
 			DrawFrame f = (DrawFrame)frameIndex;
 			if (f == DrawFrame.Random)
-				frameIndex = R.Next(numImages);
+				frameIndex = Rand.Next(numImages);
 			//else if (f == DrawFrame.RandomHealthy) {
 			//	// pick from the 1st 25% of the the Images
 			//	frameIndex = R.Next(Images.Count / 4);
@@ -261,7 +259,7 @@ namespace CNCMaps.Engine.Rendering {
 		}
 
 		static ShpFile BuildingZ;
-		private static byte GetBuildingZ(int x, int y, ShpFile shp, ShpFile.ShpImage img, GameObject obj, DrawProperties props) {
+		private static short GetBuildingZ(int x, int y, ShpFile shp, ShpFile.ShpImage img, GameObject obj) {
 			if (BuildingZ == null) {
 				BuildingZ = VFS.Open<ShpFile>("buildngz.shp");
 				BuildingZ.Initialize();
@@ -271,14 +269,24 @@ namespace CNCMaps.Engine.Rendering {
 			byte[] zData = zImg.GetImageData();
 
 			// center x
-			x += zImg.Width / 2;
-			x += obj.Drawable.Foundation.Width * Drawable.TileHeight / 2;
+			x += zImg.Width / 2 - shp.Width / 2 + img.X;
+			
+			// correct for foundation
+			x -= (obj.Drawable.Foundation.Width - obj.Drawable.Foundation.Height) * 30;
+			
+			// add zshapepointmove
+			x += obj.Drawable.Props.ZShapePointMove.X;
 
-			// align y 
+			// align y on bottom
 			y += zImg.Height - shp.Height;
-			// y += props.ZAdjust;
 
-			return zData[y * zImg.Width + x];
+			// add zshapepointmove
+			y -= obj.Drawable.Props.ZShapePointMove.Y;
+
+			x = Math.Min(zImg.Width - 1, Math.Max(0, x));
+			y = Math.Min(zImg.Height - 1, Math.Max(0, y));
+			
+			return (short)(-64 + zData[y * zImg.Width + x]);
 		}
 
 	}
