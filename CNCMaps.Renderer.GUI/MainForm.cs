@@ -507,6 +507,8 @@ namespace CNCMaps.GUI {
 				outputName = s;
 				int sIdx = s.IndexOf(" to ") + 4;
 				int endIdx = s.IndexOf(", quality");
+                // Starkku: A small and quick change to fix a crash when saving PNG image.
+                if (endIdx < 1) endIdx = s.IndexOf(", compression level");
 				string file = s.Substring(sIdx, endIdx - sIdx);
 				rtbLog.AppendText(s.Substring(0, sIdx));
 				rtbLog.AppendText("file:///"  + Uri.EscapeUriString(file));
