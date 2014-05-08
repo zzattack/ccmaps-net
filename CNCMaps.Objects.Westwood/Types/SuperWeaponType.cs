@@ -36,8 +36,10 @@ namespace CNCMaps.Objects.Westwood.Types {
 		public override void LoadRules(IniFile.IniSection rules) {
 			base.LoadRules(rules);
 
-			WeaponType = rules.ReadEnum<WeaponType>("WeaponType");
-			Action = rules.ReadEnum<Action>("Action", Action.);
+            // Starkku: Commented things to make the program build.
+            // TODO Probably need to fix all of this later to make it actually work.
+			//WeaponType = rules.ReadEnum<WeaponType>("WeaponType");
+			//Action = rules.ReadEnum<Action>("Action", Action.);
 			IsPowered = rules.ReadBool("IsPowered", true);
 			DisableableFromShell = rules.ReadBool("DisableableFromShell");
 			SidebarFlashTabFrames = rules.ReadInt("SidebarFlashTabFrames", -1);
@@ -45,12 +47,12 @@ namespace CNCMaps.Objects.Westwood.Types {
 			PreClick = rules.ReadBool("PreClick");
 			PostClick = rules.ReadBool("PostClick");
 			ShowTimer = rules.ReadBool("ShowTimer");
-			SpecialSound = Get<Sound>(rules.ReadString("SpecialSound"1));
+			SpecialSound = Get<Sound>(rules.ReadString("SpecialSound"));
 			StartSound = Get<Sound>(rules.ReadString("StartSound"));
 			Range = rules.ReadFloat("Range", 0);
 			LineMultiplier = rules.ReadInt("LineMultiplier", 0);
-			Type = rules.ReadType("Type", -1);
-			PreDependent = rules.ReadType("PreDependent", -1);
+			//Type = rules.ReadType("Type", -1);
+			//PreDependent = rules.ReadType("PreDependent", -1);
 			AuxBuilding = Get<BuildingType>(rules.ReadString("AuxBuilding"));
 			UseChargeDrain = rules.ReadBool("UseChargeDrain");
 			ManualControl = rules.ReadBool("ManualControl");
