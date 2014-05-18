@@ -81,7 +81,8 @@ namespace CNCMaps.Engine.Rendering {
 						else if (dr.IsBuildingPart) {
 							// notflat building
 							zBufVal += GetBuildingZ(x, y, shp, img, obj, props);
-							zBufVal -= 90;
+                            // Starkku: Deducting 90 from the Z-buffer value pretty much clipped a part out of every building graphic.
+							//zBufVal -= 90;
 						}
 						else
 							zBufVal += img.Height;
@@ -278,6 +279,8 @@ namespace CNCMaps.Engine.Rendering {
 
 			// align y 
 			y += zImg.Height - shp.Height;
+            // Starkku: If SHP height goes above the zImg height, y goes below zero and that causes a crash.
+            if (y < 0) y = 1;
 			// y += props.ZAdjust;
 
 			return zData[y * zImg.Width + x];
