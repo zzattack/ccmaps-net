@@ -219,8 +219,10 @@ namespace CNCMaps.Engine.Game {
 			else {
 				//  In Yuri's Revenge, the ID can also start with Y."
                 // Starkku: It can also use D, L & N as theater ID's.
-                // TODO YR+Ares allows use of any letter as first letter of the filename even with NewTheater. Should probably be the case here as well.
-				if (new[] { 'G', 'N', 'C', 'Y' }.Contains(artName[0]) && new[] { 'A', 'T', 'U', 'D', 'L', 'N' }.Contains(artName[1]))
+                // Ares allows use of any letter as the first letter. This is an experimental change seeing if enabling this behaviour without checking if Ares is in use
+                // or not leads to detrimental effects.
+				// if (new[] { 'G', 'N', 'C', 'Y' }.Contains(artName[0]) && new[] { 'A', 'T', 'U', 'D', 'L', 'N' }.Contains(artName[1]))
+                if (new[] { 'A', 'T', 'U', 'D', 'L', 'N' }.Contains(artName[1]))
 					ApplyNewTheater(ref imageFileName);
 			}
 			return imageFileName;
