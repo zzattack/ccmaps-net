@@ -96,9 +96,11 @@ namespace CNCMaps.Engine.Game {
 			// Add turrets
 			if (Rules.ReadBool("Turret") && Rules.HasKey("TurretAnim")) {
 				string turretName = Rules.ReadString("TurretAnim");
+                // Starkku: NewTheater/generic image fallback support for turrets.
+                string turretNameShp = NewTheater ? OwnerCollection.ApplyNewTheaterIfNeeded(turretName, turretName + ".shp") : turretName;
 				Drawable turret = Rules.ReadBool("TurretAnimIsVoxel")
 					? (Drawable)new VoxelDrawable(VFS.Open<VxlFile>(turretName + ".vxl"), VFS.Open<HvaFile>(turretName + ".hva"))
-					: new ShpDrawable(VFS.Open<ShpFile>(turretName + ".shp"));
+					: new ShpDrawable(VFS.Open<ShpFile>(turretNameShp));
 				turret.Props.Offset = Props.Offset + new Size(Rules.ReadInt("TurretAnimX"), Rules.ReadInt("TurretAnimY"));
 				turret.Props.HasShadow = Rules.ReadBool("UseTurretShadow");
 				turret.Props.FrameDecider = FrameDeciders.TurretFrameDecider;
@@ -197,14 +199,23 @@ namespace CNCMaps.Engine.Game {
 		 * from the custom object palettes).
 		 */
 		private Palette GetFireAnimPalette(IniFile.IniSection animation) {
-			if (animation.ReadString("Palette") != "")
-				return OwnerCollection.Palettes.GetCustomPalette(animation.ReadString("Palette"));
-			else if (animation.ReadString("CustomPalette") != "")
-				return OwnerCollection.Palettes.GetCustomPalette(animation.ReadString("CustomPalette"));
-			else if (animation.ReadString("AltPalette") != "")
-				return OwnerCollection.Palettes.UnitPalette;
-			else
-				return OwnerCollection.Palettes.AnimPalette;
+            // Starkku: Altered as a part of a fix for crash that happened if custom palette was declared but file wasn't there.
+            Palette pal = null;
+            if (animation.ReadString("Palette") != "")
+            {
+                pal = OwnerCollection.Palettes.GetCustomPalette(animation.ReadString("Palette"));
+                if (pal == null) pal = OwnerCollection.Palettes.AnimPalette;
+            }
+            else if (animation.ReadString("CustomPalette") != "")
+            {
+                pal = OwnerCollection.Palettes.GetCustomPalette(animation.ReadString("CustomPalette"));
+                if (pal == null) pal = OwnerCollection.Palettes.AnimPalette;
+            }
+            else if (animation.ReadString("AltPalette") != "")
+                pal = OwnerCollection.Palettes.UnitPalette;
+            else
+                pal = OwnerCollection.Palettes.AnimPalette;
+            return pal;
 		}
 
 		public override void Draw(GameObject obj, DrawingSurface ds, bool shadows = true) {

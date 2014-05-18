@@ -13,6 +13,8 @@ namespace CNCMaps.Engine.Rendering {
 		public Color[] Colors = new Color[256];
 		readonly PalFile _originalPalette;
 		bool _originalColorsLoaded;
+        // Starkku: Necessary to distinguish between object and theater/animation palettes when recalculating values.
+        bool _objectPalette;
 		byte[] _origColors;
 		public bool IsShared { get; set; }
 
@@ -25,8 +27,9 @@ namespace CNCMaps.Engine.Rendering {
 			Name = "";
 		}
 
-		public Palette(PalFile originalPalette, string name = "") {
+		public Palette(PalFile originalPalette, string name = "", bool objectPalette = false) {
 			_originalPalette = originalPalette;
+            _objectPalette = objectPalette;
 			if (!string.IsNullOrEmpty(name))
 				Name = name;
 			else
@@ -80,10 +83,19 @@ namespace CNCMaps.Engine.Rendering {
 			_redMult = Math.Min(Math.Max(_redMult, 0), clipMult);
 			_greenMult = Math.Min(Math.Max(_greenMult, 0), clipMult);
 			_blueMult = Math.Min(Math.Max(_blueMult, 0), clipMult);
+            double rmult, gmult, bmult;
 			for (int i = 0; i < 256; i++) {
-				var r = (byte)Math.Min(255, _origColors[i * 3 + 0] * (_ambientMult * _redMult) / 63.0 * 255.0);
-				var g = (byte)Math.Min(255, _origColors[i * 3 + 1] * (_ambientMult * _greenMult) / 63.0 * 255.0);
-				var b = (byte)Math.Min(255, _origColors[i * 3 + 2] * (_ambientMult * _blueMult) / 63.0 * 255.0);
+                rmult = _ambientMult * _redMult;
+                gmult = _ambientMult * _greenMult;
+                bmult = _ambientMult * _blueMult;
+                // Starkku: For object palettes colors 240-254 do not get any lighting applied on them.
+                if (i >= 240 && i <= 254 && _objectPalette) 
+                {
+                    rmult = gmult = bmult = 1.0;
+                }
+				var r = (byte)Math.Min(255, _origColors[i * 3 + 0] * (rmult) / 63.0 * 255.0);
+                var g = (byte)Math.Min(255, _origColors[i * 3 + 1] * (gmult) / 63.0 * 255.0);
+                var b = (byte)Math.Min(255, _origColors[i * 3 + 2] * (bmult) / 63.0 * 255.0);
 				Colors[i] = Color.FromArgb(r, g, b);
 			}
 		}
