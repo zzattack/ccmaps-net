@@ -69,14 +69,14 @@ namespace CNCMaps.Shared {
 
         // Starkku: Custom INI filename support that certain mods alas require to function correctly with the renderer.
         [Id(5, 1)]
-        [Description("Custom rules.ini filenames that should be loaded specific to your mod. First one listed is primary one, overriding standard game file. Contents of the rest get appended to it. Can be entered as a comma-separated list.")]
+        [Description("Custom rules.ini filenames that should be loaded specific to your mod. First one listed is primary one, overriding standard game file. Contents of the rest get merged to it. Can be entered as a comma-separated list.")]
         [PropertyStateFlags((PropertyFlags.Default | PropertyFlags.ExpandIEnumerable) & ~PropertyFlags.SupportStandardValues)]
         [Editor(@"System.Windows.Forms.Design.StringCollectionEditor, System.Design, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a", typeof(UITypeEditor))]
         [TypeConverter(typeof(CsvConverter))]
         public List<string> CustomRulesIniFiles { get; set; }
 
         [Id(6, 1)]
-        [Description("Custom art.ini filenames that should be used with your mod. First one listed is primary one, overriding standard game file. Contents of the rest get appended to it. Can be entered as a comma-separated list.")]
+        [Description("Custom art.ini filenames that should be used with your mod. First one listed is primary one, overriding standard game file. Contents of the rest get merged to it. Can be entered as a comma-separated list.")]
         [PropertyStateFlags((PropertyFlags.Default | PropertyFlags.ExpandIEnumerable) & ~PropertyFlags.SupportStandardValues)]
         [Editor(@"System.Windows.Forms.Design.StringCollectionEditor, System.Design, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a", typeof(UITypeEditor))]
         [TypeConverter(typeof(CsvConverter))]
