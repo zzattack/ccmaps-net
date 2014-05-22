@@ -128,7 +128,7 @@ namespace CNCMaps.Engine.Rendering {
 
 
 		unsafe public static void DrawShadow(GameObject obj, ShpFile shp, DrawProperties props, DrawingSurface ds) {
-			return;
+			//return; // Starkku: Maybe should render the shadows, I guess for Z-buffering testing maybe not but...
 			int frameIndex = props.FrameDecider(obj);
 			frameIndex = DecideFrameIndex(frameIndex, shp.NumImages);
 			frameIndex += shp.Images.Count / 2; // latter half are shadow Images
