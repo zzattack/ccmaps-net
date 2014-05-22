@@ -78,7 +78,9 @@ namespace CNCMaps.Engine.Rendering {
 			if (!_originalColorsLoaded) LoadOriginalColors();
 			if (!_originalColorsLoaded) return;
 
-			const double clipMult = 1.3;
+            // Starkku: What is the purpose of this? Can cause weird discoloration issues when you hit this ceiling when recalculating palettes f.ex
+            // from light sources, something that does not happen in the game (it lightens stuff up until it's near white and so on.
+            const double clipMult = Double.MaxValue; //1.3;
 			_ambientMult = Math.Min(Math.Max(_ambientMult, 0), clipMult);
 			_redMult = Math.Min(Math.Max(_redMult, 0), clipMult);
 			_greenMult = Math.Min(Math.Max(_greenMult, 0), clipMult);
