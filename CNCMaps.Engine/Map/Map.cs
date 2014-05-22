@@ -66,7 +66,7 @@ namespace CNCMaps.Engine.Game {
 			if (!IgnoreLighting)
 				_lighting = mf.Lighting;
 			else
-				_lighting = new Lighting { Level = 0.0 };
+				_lighting = new Lighting();
 
 			_wayPoints.AddRange(mf.Waypoints);
 
