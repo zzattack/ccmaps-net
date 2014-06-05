@@ -95,7 +95,7 @@ namespace CNCMaps.Engine.Game {
 					catch (TypeLoadException exc) {
 						cannotCompile = true;
 						Logger.Error("Custom framedecider could not be compiled. You need .NET 4.5 for this."
-							+ " Functionality will be unavaiable.\r\n{0}", exc);
+							+ " Functionality will be unavailable.\r\n{0}", exc);
 					}
 				}
 			}
