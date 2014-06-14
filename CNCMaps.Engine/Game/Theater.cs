@@ -65,7 +65,7 @@ namespace CNCMaps.Engine.Game {
 			_palettes = new PaletteCollection();
 			_palettes.IsoPalette = new Palette(VFS.Open<PalFile>(ModConfig.ActiveTheater.IsoPaletteName));
 			_palettes.OvlPalette = new Palette(VFS.Open<PalFile>(ModConfig.ActiveTheater.OverlayPaletteName));
-			_palettes.UnitPalette = new Palette(VFS.Open<PalFile>(ModConfig.ActiveTheater.UnitPaletteName));
+            _palettes.UnitPalette = new Palette(VFS.Open<PalFile>(ModConfig.ActiveTheater.UnitPaletteName), ModConfig.ActiveTheater.UnitPaletteName, true);
 
 			foreach (string mix in ModConfig.ActiveTheater.Mixes)
 				VFS.Add(mix, CacheMethod.Cache); // we wish for these to be cached as they're gonna be hit often
@@ -124,10 +124,23 @@ namespace CNCMaps.Engine.Game {
 		}
 
 		internal Palette GetPalette(Drawable drawable) {
-			if (drawable.Props.PaletteType == PaletteType.Custom)
-				return _palettes.GetCustomPalette(drawable.Props.CustomPaletteName);
-			else
-				return _palettes.GetPalette(drawable.Props.PaletteType);
+            // Starkku: Altered as a part of a fix for crash that happened if custom palette was declared but file wasn't there.
+            Palette pal = null;
+            if (drawable.Props.PaletteType == PaletteType.Custom)
+            {
+                pal = _palettes.GetCustomPalette(drawable.Props.CustomPaletteName);
+                if (pal == null)
+                {
+                    if (drawable is BuildingDrawable || drawable is UnitDrawable) return _palettes.UnitPalette;
+                    else if (drawable is AnimDrawable) return _palettes.AnimPalette;
+                    else return _palettes.IsoPalette;
+                }
+            }
+            else
+            {
+                pal = _palettes.GetPalette(drawable.Props.PaletteType);
+            }
+            return pal;
 		}
 
 		public GameCollection GetObjectCollection(GameObject o) {

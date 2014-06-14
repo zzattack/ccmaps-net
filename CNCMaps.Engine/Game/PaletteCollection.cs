@@ -48,15 +48,25 @@ namespace CNCMaps.Engine.Game {
 		/// <returns>The correct custom palette.</returns>
 		public Palette GetCustomPalette(string paletteName) {
 			string fileName;
-			if (paletteName.ToLower().EndsWith(".pal")) // full name already given
-				fileName = paletteName; 
-			else // filename = <paletteName><theaterExtension>.pal (e.g. lib<tem/sno/urb>.pal)
-				fileName = paletteName + ModConfig.ActiveTheater.Extension.Substring(1) + ".pal";
+            // Starkku: Necessary to distinguish between object and theater/animation palettes when recalculating values.
+            bool objectPalette = false;
+            if (paletteName.ToLower().EndsWith(".pal")) // full name already given
+                fileName = paletteName;
+            else
+            { 
+                // filename = <paletteName><theaterExtension>.pal (e.g. lib<tem/sno/urb>.pal)
+                fileName = paletteName + ModConfig.ActiveTheater.Extension.Substring(1) + ".pal";
+                objectPalette = true;
+            }
 
 			var pal = CustomPalettes.FirstOrDefault(p => p.Name == paletteName);
 			if (pal == null) {
 				// palette hasn't been loaded yet
-				pal = new Palette(VFS.Open<PalFile>(fileName), paletteName);
+                // Starkku: If the original does not exist, it means the file it should use does not exist. It now returns a null in this case, which is
+                // handled appropriately wherever this method is called to fall back to the default palette for that type of object.
+                PalFile orig = VFS.Open<PalFile>(fileName);
+                if (orig == null) return null;
+                pal = new Palette(VFS.Open<PalFile>(fileName), paletteName, objectPalette);
 				CustomPalettes.Add(pal);
 			}
 			return pal;

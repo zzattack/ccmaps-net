@@ -78,6 +78,20 @@ namespace CNCMaps.Engine.Game {
 			};
 		}
 
+        // Starkku: Necessary due to SHP vehicles not obeying the unwritten rule that infantry have with standing frames coming first.
+        // Plus the frame order is different compared to infantry.
+        public static Func<GameObject, int> SHPVehicleFrameDecider(int StartStandFrame, int StandingFrames, int Facings)
+        {
+            return delegate(GameObject obj)
+            {
+                int direction = 0;
+				if (obj is OwnableObject)
+					direction = (obj as OwnableObject).Direction;
+                if (StandingFrames > 0) return StartStandFrame + (((direction / 32)+1) * StandingFrames);
+                return StartStandFrame;
+            };
+        }
+
 		private static Dictionary<ObjectOverride, Func<GameObject, int>> cachedDeciders =
 			new Dictionary<ObjectOverride, Func<GameObject, int>>();
 		public static Func<GameObject, int> GetOverrideFrameDecider(ObjectOverride ovr) {

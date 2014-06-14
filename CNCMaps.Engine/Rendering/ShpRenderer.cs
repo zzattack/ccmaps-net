@@ -81,7 +81,8 @@ namespace CNCMaps.Engine.Rendering {
 						else if (dr.IsBuildingPart) {
 							// notflat building
 							zBufVal += GetBuildingZ(x, y, shp, img, obj, props);
-							zBufVal -= 90;
+                            // Starkku: Deducting 90 from the Z-buffer value pretty much clipped a part out of every building graphic.
+							//zBufVal -= 90;
 						}
 						else
 							zBufVal += img.Height;
@@ -127,7 +128,7 @@ namespace CNCMaps.Engine.Rendering {
 
 
 		unsafe public static void DrawShadow(GameObject obj, ShpFile shp, DrawProperties props, DrawingSurface ds) {
-			return;
+			//return; // Starkku: Maybe should render the shadows, I guess for Z-buffering testing maybe not but...
 			int frameIndex = props.FrameDecider(obj);
 			frameIndex = DecideFrameIndex(frameIndex, shp.NumImages);
 			frameIndex += shp.Images.Count / 2; // latter half are shadow Images
@@ -264,6 +265,8 @@ namespace CNCMaps.Engine.Rendering {
 		private static byte GetBuildingZ(int x, int y, ShpFile shp, ShpFile.ShpImage img, GameObject obj, DrawProperties props) {
 			if (BuildingZ == null) {
 				BuildingZ = VFS.Open<ShpFile>("buildngz.shp");
+                // Starkku: Yuri's Revenge uses .sha as a file extension for this file for whatever reason.
+                if (BuildingZ == null) BuildingZ = VFS.Open<ShpFile>("buildngz.sha");
 				BuildingZ.Initialize();
 			}
 
@@ -276,6 +279,8 @@ namespace CNCMaps.Engine.Rendering {
 
 			// align y 
 			y += zImg.Height - shp.Height;
+            // Starkku: If SHP height goes above the zImg height, y goes below zero and that causes a crash.
+            if (y < 0) y = 1;
 			// y += props.ZAdjust;
 
 			return zData[y * zImg.Width + x];

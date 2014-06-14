@@ -49,7 +49,7 @@ namespace CNCMaps.Engine.Game {
 
 		private DrawingSurface _drawingSurface;
 
-		public bool Initialize(MapFile mf, EngineType et) {
+		public bool Initialize(MapFile mf, EngineType et, List<string> customRulesININames, List<string> customArtININames) {
 			if (et == EngineType.AutoDetect) {
 				Logger.Fatal("Engine type needs to be known by now!");
 				return false;
@@ -66,11 +66,12 @@ namespace CNCMaps.Engine.Game {
 			if (!IgnoreLighting)
 				_lighting = mf.Lighting;
 			else
-				_lighting = new Lighting { Level = 0.0 };
+				_lighting = new Lighting();
 
 			_wayPoints.AddRange(mf.Waypoints);
 
-			if (!LoadInis()) {
+            if (!LoadInis(customRulesININames, customArtININames))
+            {
 				Logger.Fatal("Ini files couldn't be loaded");
 				return false;
 			}
@@ -138,23 +139,53 @@ namespace CNCMaps.Engine.Game {
 			}
 		}
 
-		public bool LoadInis() {
-			if (Engine == EngineType.YurisRevenge) {
-				_rules = VFS.Open<IniFile>("rulesmd.ini");
-				_art = VFS.Open<IniFile>("artmd.ini");
-			}
-			else if (Engine == EngineType.Firestorm) {
-				_rules = VFS.Open<IniFile>("rules.ini");
-				_art = VFS.Open<IniFile>("art.ini");
+        // Starkku: Added support for custom ini filenames declared in mod config.
+		public bool LoadInis(List<string> customRulesIniFiles, List<string> customArtIniFiles) {
 
-				Logger.Info("Merging Firestorm rules with TS rules");
-				_rules.MergeWith(VFS.Open<IniFile>("firestrm.ini"));
-				_art.MergeWith(VFS.Open<IniFile>("artfs.ini"));
-			}
-			else {
-				_rules = VFS.Open<IniFile>("rules.ini");
-				_art = VFS.Open<IniFile>("art.ini");
-			}
+            if (customRulesIniFiles.Count < 1)
+            {
+                if (Engine == EngineType.YurisRevenge)
+                {
+                    _rules = VFS.Open<IniFile>("rulesmd.ini");
+                }
+                else if (Engine == EngineType.Firestorm)
+                {
+                    _rules = VFS.Open<IniFile>("rules.ini");
+                    Logger.Info("Merging Firestorm rules with TS rules");
+                    _rules.MergeWith(VFS.Open<IniFile>("firestrm.ini"));
+                }
+                else
+                {
+                    _rules = VFS.Open<IniFile>("rules.ini");
+                } 
+            }
+            else
+            {
+                _rules = LoadCustomInis(customRulesIniFiles);
+
+            }
+
+            if (customArtIniFiles.Count < 1)
+            {
+                if (Engine == EngineType.YurisRevenge)
+                {
+                    _art = VFS.Open<IniFile>("artmd.ini");
+                }
+                else if (Engine == EngineType.Firestorm)
+                {
+                    _art = VFS.Open<IniFile>("art.ini");
+                    Logger.Info("Merging Firestorm art with TS art");
+                    _art.MergeWith(VFS.Open<IniFile>("artfs.ini"));
+                }
+                else
+                {
+                    _art = VFS.Open<IniFile>("art.ini");
+                }
+            }
+            else
+            {
+                _art = LoadCustomInis(customArtIniFiles);
+            }
 
 			if (_rules == null || _art == null) {
 				Logger.Fatal("Rules or art config file could not be loaded! You cannot render a YR/FS map" +
@@ -163,6 +194,17 @@ namespace CNCMaps.Engine.Game {
 			}
 			return true;
 		}
+
+        private IniFile LoadCustomInis(List<string> fileNames)
+        {
+            IniFile ini = VFS.Open<IniFile>(fileNames[0]);
+            for (int i = 1; i < fileNames.Count; i++)
+            {
+                Logger.Info("Merging " + fileNames[i] + " with " + fileNames[0]);
+                ini.MergeWith(VFS.Open<IniFile>(fileNames[i]));
+            }
+            return ini;
+        }
 
 		// between LoadMap and LoadTheater, the VFS should be initialized
 		public bool LoadTheater() {
