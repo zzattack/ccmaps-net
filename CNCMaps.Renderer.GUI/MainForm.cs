@@ -203,6 +203,11 @@ namespace CNCMaps.GUI {
 		}
 		private void UpdateStatus(string text, int progressBarValue) {
 			var invokable = new Action(delegate {
+				if (progressBarValue < pbProgress.Value && pbProgress.Value != 100) {
+					// probably re-initializing filesystem after map autodetect
+					return;
+				}
+
 				lblStatus.Text = "Status: " + text;
 				if (progressBarValue < 100)
 					// forces 'instant update'
@@ -517,6 +522,8 @@ namespace CNCMaps.GUI {
 				outputName = s;
 				int sIdx = s.IndexOf(" to ") + 4;
 				int endIdx = s.IndexOf(", quality");
+				if (endIdx == -1) endIdx = s.IndexOf(", compression");
+				if (endIdx == -1) return;
 				string file = s.Substring(sIdx, endIdx - sIdx);
 				rtbLog.AppendText(s.Substring(0, sIdx));
 				rtbLog.AppendText("file:///" + Uri.EscapeUriString(file));
@@ -531,12 +538,19 @@ namespace CNCMaps.GUI {
 
 			var progressEntry = _progressIndicators.FirstOrDefault(kvp => s.Contains(kvp.Value));
 			if (!progressEntry.Equals(default(KeyValuePair<int, string>))) {
-				UpdateStatus("rendering: " + progressEntry.Key + "%", progressEntry.Key);
+				if (s.Contains("Saving")) {
+					UpdateStatus("saving: " + progressEntry.Key + "%", progressEntry.Key);
+				}
+				else {
+					UpdateStatus("preparing: " + progressEntry.Key + "%", progressEntry.Key);
+				}
 			}
-			if (s.Contains("Drawing map...")) {
+			// tiles and objects is progress 27%-90%, program automatically
+			// determines ratios for tiles/objects
+			if (s.Contains("Drawing tiles") || s.Contains("Drawing objects")) {
 				int idx = s.LastIndexOf(" ") + 1;
 				double pct = Math.Round(27 + (90.0 - 27.0) * int.Parse(s.Substring(idx, s.Length - idx - 1)) / 100.0, 0);
-				UpdateStatus("drawing, " + pct + "%", (int)pct);
+				UpdateStatus("rendering, " + pct + "%", (int)pct);
 			}
 		}
 		private readonly Dictionary<int, string> _progressIndicators = new Dictionary<int, string>() {
@@ -550,6 +564,8 @@ namespace CNCMaps.GUI {
 			{20, "Loading light sources"},
 			{22, "Calculating palette-values for all objects"},
 			{90, "Map drawing completed"},
+			{92, "Saving"},
+			 
 		};
 		private void rtbLog_LinkClicked(object sender, LinkClickedEventArgs e) {
 			Process.Start(e.LinkText);

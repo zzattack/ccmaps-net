@@ -547,8 +547,13 @@ namespace CNCMaps.Engine.Game {
 					color = "LightGrey"; // this is hardcoded in the game
 				else
 					color = houseSection.ReadString("Color");
-				if (!string.IsNullOrEmpty(color) && !string.IsNullOrEmpty(v.Value))
-					_countryColors[v.Value] = _namedColors[color];
+				if (!string.IsNullOrEmpty(color) && !string.IsNullOrEmpty(v.Value)) {
+					if (_namedColors.ContainsKey(color))
+						_countryColors[v.Value] = _namedColors[color];
+					else
+						_countryColors[v.Value] = _namedColors["LightGrey"];
+
+				}
 			}
 		}
 
