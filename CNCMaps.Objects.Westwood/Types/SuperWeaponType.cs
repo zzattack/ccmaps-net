@@ -37,8 +37,10 @@ namespace CNCMaps.Objects.Westwood.Types {
 		public override void LoadRules(IniFile.IniSection rules) {
 			base.LoadRules(rules);
 
-			WeaponType = Get<WeaponType>(rules.ReadString("WeaponType"));
-			Action = rules.ReadEnum<Action>("Action", Action.MultiMissile);
+            // Starkku: Commented things to make the program build.
+            // TODO Probably need to fix all of this later to make it actually work.
+			//WeaponType = rules.ReadEnum<WeaponType>("WeaponType");
+			//Action = rules.ReadEnum<Action>("Action", Action.);
 			IsPowered = rules.ReadBool("IsPowered", true);
 			DisableableFromShell = rules.ReadBool("DisableableFromShell");
 			SidebarFlashTabFrames = rules.ReadInt("SidebarFlashTabFrames", -1);
@@ -50,8 +52,8 @@ namespace CNCMaps.Objects.Westwood.Types {
 			StartSound = Get<Sound>(rules.ReadString("StartSound"));
 			Range = rules.ReadFloat("Range", 0);
 			LineMultiplier = rules.ReadInt("LineMultiplier", 0);
-			Type = rules.ReadString("Type");
-			PreDependent = Get<WeaponType>(rules.ReadString("PreDependent"));
+			//Type = rules.ReadType("Type", -1);
+			//PreDependent = rules.ReadType("PreDependent", -1);
 			AuxBuilding = Get<BuildingType>(rules.ReadString("AuxBuilding"));
 			UseChargeDrain = rules.ReadBool("UseChargeDrain");
 			ManualControl = rules.ReadBool("ManualControl");

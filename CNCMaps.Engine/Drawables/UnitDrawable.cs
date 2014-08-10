@@ -29,6 +29,7 @@ namespace CNCMaps.Engine.Game {
 				shp.OwnerCollection = OwnerCollection;
 				shp.LoadFromRules();
 				shp.Shp = VFS.Open<ShpFile>(shp.GetFilename());
+                shp.Props.FrameDecider = FrameDeciders.SHPVehicleFrameDecider(shp.StartStandFrame, shp.StandingFrames, shp.Facings);
 				SubDrawables.Add(shp);
 			}
 

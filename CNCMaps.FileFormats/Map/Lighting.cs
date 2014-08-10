@@ -11,7 +11,15 @@ namespace CNCMaps.FileFormats.Map {
 
 		static Logger logger = LogManager.GetCurrentClassLogger();
 
-		public Lighting() { }
+        public Lighting()
+        {
+            Level = 0.0;
+            Ambient = 1.0;
+            Red = 1.0;
+            Green = 1.0;
+            Blue = 1.0;
+            Ground = 0.0;
+        }
 
 		public Lighting(IniFile.IniSection iniSection) {
 			Level = iniSection.ReadDouble("Level", 0.032);

@@ -121,7 +121,8 @@ namespace CNCMaps {
 					MarkOreFields = Settings.MarkOreFields
 				};
 
-				if (!map.Initialize(mapFile, Settings.Engine)) {
+                if (!map.Initialize(mapFile, Settings.Engine, ModConfig.ActiveConfig.CustomRulesIniFiles, ModConfig.ActiveConfig.CustomArtIniFiles))
+                {
 					Logger.Error("Could not successfully load this map. Try specifying the engine type manually.");
 					return 1;
 				}

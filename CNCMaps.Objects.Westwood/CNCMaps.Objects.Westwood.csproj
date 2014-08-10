@@ -36,7 +36,8 @@
     <StartupObject />
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="OpenTK">
+    <Reference Include="OpenTK, Version=1.1.0.0, Culture=neutral, PublicKeyToken=bad199fe84eb3df4, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
       <HintPath>..\Lib\OpenTK.dll</HintPath>
     </Reference>
     <Reference Include="System" />
@@ -50,34 +51,21 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Types\AbstractType.cs" />
-    <Compile Include="Types\AircraftType.cs" />
-    <Compile Include="Types\Animation.cs" />
-    <Compile Include="Types\BuildingType.cs" />
-    <Compile Include="Types\Enums.cs" />
-    <Compile Include="Types\House.cs" />
-    <Compile Include="Types\InfantryType.cs" />
-    <Compile Include="Types\ObjectType.cs" />
-    <Compile Include="Types\OverlayType.cs" />
-    <Compile Include="Types\ParticleSystem.cs" />
-    <Compile Include="Types\ParticleType.cs" />
-    <Compile Include="Types\Prerequisite.cs" />
-    <Compile Include="Types\SmudgeType.cs" />
-    <Compile Include="Types\Sound.cs" />
     <Compile Include="Types\SuperWeaponType.cs" />
-    <Compile Include="Types\TechnoType.cs" />
-    <Compile Include="Types\TerrainType.cs" />
-    <Compile Include="Types\TypesRepository.cs" />
-    <Compile Include="Types\VehicleType.cs" />
-    <Compile Include="Types\VoxelAnimation.cs" />
-    <Compile Include="Types\WarHead.cs" />
-    <Compile Include="Types\WeaponType.cs" />
     <Compile Include="Types\XYZ.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\CNCMaps.Engine\CNCMaps.Engine.csproj">
+      <Project>{B687C2A7-6FD6-495A-927D-FFC29FFD9D1D}</Project>
+      <Name>CNCMaps.Engine</Name>
+    </ProjectReference>
     <ProjectReference Include="..\CNCMaps.FileFormats\CNCMaps.FileFormats.csproj">
       <Project>{761cec32-9254-4eee-ac76-07c8e4279835}</Project>
       <Name>CNCMaps.FileFormats</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\CNCMaps.Shared\CNCMaps.Shared.csproj">
+      <Project>{54D90137-E2CC-4D21-BBCB-9E3C626D875F}</Project>
+      <Name>CNCMaps.Shared</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

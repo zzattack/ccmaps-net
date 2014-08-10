@@ -25,12 +25,16 @@ namespace CNCMaps.Engine.Game {
 		public bool Overrides { get; set; }
 		public bool IsWall { get; set; }
 		public bool IsGate { get; set; }
+        public bool IsRubble { get; set; }
 		public bool IsVeins { get; set; }
 		public bool IsVeinHoleMonster { get; set; }
 		public int TileElevation { get; set; }
 		public bool Flat { get; set; }
 		public int StartWalkFrame { get; set; }
 		public int StartStandFrame { get; set; }
+        public int StandingFrames { get; set; }
+        public int WalkFrames { get; set; }
+        public int Facings { get; set; }
 		public bool Theater { get; set; }
 		public bool IsBuildingPart = true;
 
@@ -121,7 +125,11 @@ namespace CNCMaps.Engine.Game {
 				Props.PaletteType = PaletteType.Unit;
 				Props.FrameDecider = FrameDeciders.NullFrameDecider;
 			}
-
+            // Starkku: Overlays with IsRubble are not drawn.
+            if (Rules.ReadBool("IsRubble"))
+            {
+                InvisibleInGame = true;
+            }
 			if (Rules.ReadBool("IsVeins")) {
 				Props.LightingType = LightingType.None;
 				Props.PaletteType = PaletteType.Unit;
@@ -159,11 +167,18 @@ namespace CNCMaps.Engine.Game {
 				Props.LightingType = LightingType.None; // todo: verify it's not NONE
 				Props.PaletteType = PaletteType.Unit;
 			}
-			if (Rules.HasKey("JumpjetHeight")) {
+            // Starkku: Jumpjet units placed on maps actually start at same height as ground units so adjusting this for the renderer makes no sense.
+			/*
+            if (Rules.HasKey("JumpjetHeight")) {
 				Props.Offset.Offset(0, (int)(-Rules.ReadInt("JumpjetHeight") / 256.0 * TileHeight));
 			}
-			StartWalkFrame = Rules.ReadInt("StartWalkFrame");
-			StartStandFrame = Rules.ReadInt("StartStandFrame", StartWalkFrame);
+            */
+            // Starkku: Better support for SHP vehicles.
+            Facings = 8; //Art.ReadInt("Facings", 8); // Hardcoded atm in the game, other values do not work properly.
+			StartWalkFrame = Art.ReadInt("StartWalkFrame", 0);
+            WalkFrames = Art.ReadInt("WalkFrames", 0);
+			StartStandFrame = Art.ReadInt("StartStandFrame", StartWalkFrame + (WalkFrames * Facings));
+            StandingFrames = Art.ReadInt("StandingFrames", 1);
 			Props.Offset.Offset(Art.ReadInt("XDrawOffset"), Art.ReadInt("YDrawOffset"));
 		}
 
