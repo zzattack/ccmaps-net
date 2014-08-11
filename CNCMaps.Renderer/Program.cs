@@ -245,10 +245,12 @@ namespace CNCMaps {
 			// for release, logmanager automatically picks the correct NLog.config file
 #if DEBUG
 			try {
-				LogManager.Configuration = new XmlLoggingConfiguration("NLog.Debug.config");
+				if (File.Exists("NLog.Debug.config")) {
+					LogManager.Configuration = new XmlLoggingConfiguration("NLog.Debug.config");
+				}
 			}
-			catch {
-			}
+			catch (XmlException) { }
+			catch (NLogConfigurationException) { }
 #endif
 			if (LogManager.Configuration == null) {
 				// init default config
@@ -311,7 +313,7 @@ namespace CNCMaps {
 				{"M|modconfig=", "Filename of a game configuration specific to your mod (create with GUI)",v => Settings.ModConfig = v},
 				{"s|start-pos-tiled", "Mark starting positions in a tiled manner",v => Settings.StartPositionMarking = StartPositionMarking.Tiled},
 				{"S|start-pos-squared", "Mark starting positions in a squared manner",v => Settings.StartPositionMarking = StartPositionMarking.Squared}, 
-				{"r|mark-ore", "Mark ore and gem fields more explicity, looks good when resizing to a preview",v => Settings.MarkOreFields = true},
+				{"r|mark-ore", "Mark ore and gem fields more explicity, looks good when resizing to a preview", v => Settings.MarkOreFields = true},
 				{"F|force-fullmap", "Ignore LocalSize definition and just save the full map", v => Settings.SizeMode = SizeMode.Full},
 				{"f|force-localsize", "Use localsize for map dimensions (default)", v => Settings.SizeMode = SizeMode.Local}, 
 				
@@ -419,7 +421,8 @@ namespace CNCMaps {
 						throw new ArgumentOutOfRangeException("engine");
 				}
 				var mf = VFS.Open<MissionsFile>(missionsFile);
-				missionEntry = mf.GetMissionEntry(Path.GetFileName(map.FileName));
+				if (mf != null)
+					missionEntry = mf.GetMissionEntry(Path.GetFileName(map.FileName));
 				if (missionEntry != null)
 					missionName = (engine >= EngineType.RedAlert2) ? missionEntry.UIName : missionEntry.Name;
 			}
