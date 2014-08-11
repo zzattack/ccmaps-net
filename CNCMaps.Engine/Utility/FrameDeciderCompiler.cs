@@ -46,9 +46,10 @@ namespace CNCMaps.Engine.Utility {
 			// compile DOM
 			CodeDomProvider cp = CodeDomProvider.CreateProvider("CS");
 			var options = new CompilerParameters();
+			
 			options.GenerateInMemory = true;
-			options.ReferencedAssemblies.Add("CNCMaps.Engine.dll");
-			options.ReferencedAssemblies.Add("CNCMaps.Shared.dll");
+			options.ReferencedAssemblies.Add(typeof(CNCMaps.Engine.Game.Map).Assembly.Location);
+			options.ReferencedAssemblies.Add(typeof(CNCMaps.Shared.ModConfig).Assembly.Location);
 			var cpRes = cp.CompileAssemblyFromDom(options, unit);
 			AppDomain localDom = AppDomain.CreateDomain("x");
 
