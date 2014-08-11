@@ -26,16 +26,19 @@ namespace CNCMaps.GUI {
 
 
 		public MainForm() {
+			const string GuiConfig = "CNCMaps.Renderer.GUI.exe.config";
+			Settings.Default.SettingsKey = File.Exists(GuiConfig) 
+				? GuiConfig 
+				: Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "CNCMaps", GuiConfig);
 			InitializeComponent();
 		}
-		public MainForm(bool skipUpdateCheck)
-			: this() {
+		public MainForm(bool skipUpdateCheck) : this() {
 			_skipUpdateCheck = skipUpdateCheck;
 		}
 
 		private void MainFormLoad(object sender, EventArgs args) {
 			Settings.Default.Upgrade();
-
+			
 			Text += " - v" + Assembly.GetEntryAssembly().GetName().Version;
 
 			if (string.IsNullOrEmpty(tbRenderProg.Text))
