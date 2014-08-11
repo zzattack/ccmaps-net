@@ -64,7 +64,6 @@ namespace CNCMaps.FileFormats.Map {
 	public class Overlay : NumberedMapObject {
 		public byte OverlayID { get; set; }
 		public byte OverlayValue { get; set; }
-		public IsoTile Tile { get; set; }
 		public Overlay(byte overlayID, byte overlayValue) {
 			OverlayID = overlayID;
 			OverlayValue = overlayValue;
