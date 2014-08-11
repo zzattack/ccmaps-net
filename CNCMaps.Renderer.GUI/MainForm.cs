@@ -26,7 +26,7 @@ namespace CNCMaps.GUI {
 
 
 		public MainForm() {
-			const string GuiConfig = "CNCMaps.Renderer.GUI.exe.config";
+			const string GuiConfig = "gui_settings.xml";
 			Settings.Default.SettingsKey = File.Exists(GuiConfig) 
 				? GuiConfig 
 				: Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "CNCMaps", GuiConfig);
