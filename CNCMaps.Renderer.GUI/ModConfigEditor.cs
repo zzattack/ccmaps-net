@@ -89,5 +89,23 @@ namespace CNCMaps.GUI {
 				saveToolStripMenuItem_Click(null, null);
 		}
 
+		private void btnLoadTSTheaters_Click(object sender, EventArgs e) {
+			ModConfig.Theaters.Clear();
+			foreach (var t in ModConfig.DefaultsTS.Theaters)
+				ModConfig.Theaters.Add(t);
+		}
+
+		private void btnLoadRA2Theaters_Click(object sender, EventArgs e) {
+			ModConfig.Theaters.Clear();
+			foreach (var t in ModConfig.DefaultsRA2.Theaters)
+				ModConfig.Theaters.Add(t);
+		}
+
+		private void btnLoadYRTheaters_Click(object sender, EventArgs e) {
+			ModConfig.Theaters.Clear();
+			foreach (var t in ModConfig.DefaultsYR.Theaters)
+				ModConfig.Theaters.Add(t);
+		}
+
 	}
 }
