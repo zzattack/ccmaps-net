@@ -4,6 +4,7 @@ using System.Drawing;
 using CNCMaps.Engine.Game;
 using CNCMaps.Engine.Map;
 using CNCMaps.FileFormats;
+using CNCMaps.FileFormats.Map;
 using CNCMaps.FileFormats.VirtualFileSystem;
 using CNCMaps.Shared;
 using CNCMaps.Shared.Utility;
@@ -77,7 +78,8 @@ namespace CNCMaps.Engine.Rendering {
 
 				for (int x = 0; x < img.Width; x++) {
 					byte paletteValue = imgData[rIdx];
-					short zshapeOffset = (short)(GetBuildingZ(x, y, shp, img, obj));
+
+					short zshapeOffset = obj is StructureObject ? (GetBuildingZ(x, y, shp, img, obj)) : (short)0;
 					
 					if (paletteValue != 0) {
 						short zBufVal = zOffset;
@@ -90,7 +92,7 @@ namespace CNCMaps.Engine.Rendering {
 						else
 							zBufVal += img.Height;
 
-						if (w_low <= w && w < w_high && zBufVal >= zBuffer[zIdx]) {
+						if (w_low <= w && w < w_high  /*&& zBufVal >= zBuffer[zIdx]*/) {
 							if (transLucency != 0) {
 								*(w + 0) = (byte)(a * *(w + 0) + b * p.Colors[paletteValue].B);
 								*(w + 1) = (byte)(a * *(w + 1) + b * p.Colors[paletteValue].G);
@@ -177,7 +179,10 @@ namespace CNCMaps.Engine.Rendering {
 					zBufVal += img.Height;
 
 				for (int x = 0; x < img.Width; x++) {
-					if (w_low <= w && w < w_high && imgData[rIdx] != 0 && !shadows[zIdx] && zBufVal >= zBuffer[zIdx] && castHeight >= heightBuffer[zIdx]) {
+					if (w_low <= w && w < w_high && imgData[rIdx] != 0 && !shadows[zIdx] 
+						//&& zBufVal >= zBuffer[zIdx] 
+						&& castHeight >= heightBuffer[zIdx]
+						) {
 						*(w + 0) /= 2;
 						*(w + 1) /= 2;
 						*(w + 2) /= 2;
