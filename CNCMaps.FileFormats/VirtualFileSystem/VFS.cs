@@ -135,7 +135,7 @@ namespace CNCMaps.FileFormats.VirtualFileSystem {
 
 			// see http://modenc.renegadeprojects.com/MIX for more info
 			Logger.Info("Initializing filesystem on {0} for the {1} engine", mixDir, engine.ToString());
-			
+
 			// add mixdir if we didnt receive it yet
 			if (AllArchives.OfType<DirArchive>().All(d => d.Directory != mixDir))
 				AddFile(mixDir);
@@ -147,6 +147,14 @@ namespace CNCMaps.FileFormats.VirtualFileSystem {
 					AddFile(file);
 				if (engine == EngineType.YurisRevenge) {
 					file = "expandmd" + i.ToString("00") + ".mix";
+					if (FileExists(file))
+						AddFile(file);
+				}
+			}
+
+			if (engine <= EngineType.Firestorm) {
+				for (int i = 99; i >= 0; i--) {
+					string file = string.Format("ecache{0:d2}.mix", i);
 					if (FileExists(file))
 						AddFile(file);
 				}
@@ -169,10 +177,11 @@ namespace CNCMaps.FileFormats.VirtualFileSystem {
 					AddFile("patch.mix");
 				AddFile("tibsun.mix");
 			}
-
+			
 			if (engine == EngineType.YurisRevenge)
 				AddFile("cachemd.mix");
 			AddFile("cache.mix");
+
 
 			if (engine == EngineType.YurisRevenge)
 				AddFile("localmd.mix");
@@ -181,10 +190,12 @@ namespace CNCMaps.FileFormats.VirtualFileSystem {
 			if (engine == EngineType.YurisRevenge)
 				AddFile("audiomd.mix");
 
-			for (int i = 99; i >= 0; i--) {
-				string file = string.Format("ecache{0:d2}.mix", i);
-				if (FileExists(file))
-					AddFile(file);
+			if (engine >= EngineType.RedAlert2) {
+				for (int i = 99; i >= 0; i--) {
+					string file = string.Format("ecache{0:d2}.mix", i);
+					if (FileExists(file))
+						AddFile(file);
+				}
 			}
 
 			for (int i = 99; i >= 0; i--) {
