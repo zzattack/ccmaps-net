@@ -50,7 +50,7 @@ namespace CNCMaps.FileFormats.VirtualFileSystem {
 		}
 
 		public static bool Add(string filename, CacheMethod cache = CacheMethod.Default) {
-			return Instance.AddFile(filename, cache);
+			return Instance.AddItem(filename, cache);
 		}
 
 		public static bool Exists(string imageFileName) {
@@ -79,7 +79,7 @@ namespace CNCMaps.FileFormats.VirtualFileSystem {
 			}
 		}
 
-		public bool AddFile(string path, CacheMethod m = CacheMethod.Default) {
+		public bool AddItem(string path, CacheMethod m = CacheMethod.Default) {
 			// directory
 			if (Directory.Exists(path)) {
 				AllArchives.Add(new DirArchive(path));
@@ -119,36 +119,35 @@ namespace CNCMaps.FileFormats.VirtualFileSystem {
 			return mixDirOverride;
 		}
 
-		public bool ScanMixDir(string mixDir, EngineType engine) {
+		public bool LoadMixes(string dir, EngineType engine) {
+			// if we don't have this directory in the VFS yet
+			if (!AllArchives.OfType<DirArchive>().Any(da => string.Equals(
+				Path.GetFullPath(dir).TrimEnd('\\'),
+				Path.GetFullPath(da.Directory).TrimEnd('\\'),
+				StringComparison.InvariantCultureIgnoreCase))) {
+				this.AddItem(dir);
+			}
+			return LoadMixes(engine);
+		}
+
+		public bool LoadMixes(EngineType engine) {
 			if (engine == EngineType.AutoDetect) {
 				Logger.Fatal("Scanning mixdir for auto detect theater is no longer supported!");
 				return false;
 			}
-
-			if (string.IsNullOrEmpty(mixDir))
-				mixDir = DetermineMixDir(mixDir, engine);
-
-			if (string.IsNullOrEmpty(mixDir)) {
-				Logger.Fatal("No mix directory detected!");
-				return false;
-			}
-
+			
 			// see http://modenc.renegadeprojects.com/MIX for more info
-			Logger.Info("Initializing filesystem on {0} for the {1} engine", mixDir, engine.ToString());
-
-			// add mixdir if we didnt receive it yet
-			if (AllArchives.OfType<DirArchive>().All(d => d.Directory != mixDir))
-				AddFile(mixDir);
+			Logger.Info("Initializing filesystem for the {0} engine", engine.ToString());
 
 			// try all expand\d{2}md?\.mix files
 			for (int i = 99; i >= 0; i--) {
 				string file = "expand" + i.ToString("00") + ".mix";
 				if (FileExists(file))
-					AddFile(file);
+					AddItem(file);
 				if (engine == EngineType.YurisRevenge) {
 					file = "expandmd" + i.ToString("00") + ".mix";
 					if (FileExists(file))
-						AddFile(file);
+						AddItem(file);
 				}
 			}
 
@@ -156,80 +155,82 @@ namespace CNCMaps.FileFormats.VirtualFileSystem {
 				for (int i = 99; i >= 0; i--) {
 					string file = string.Format("ecache{0:d2}.mix", i);
 					if (FileExists(file))
-						AddFile(file);
+						AddItem(file);
 				}
 			}
 
 			// the game actually loads these earlier, but modders like to override them
 			// with ares or something
 			if (engine >= EngineType.RedAlert2) {
-				if (engine == EngineType.YurisRevenge) AddFile("langmd.mix");
-				AddFile("language.mix");
+				if (engine == EngineType.YurisRevenge) AddItem("langmd.mix");
+				AddItem("language.mix");
 			}
 
 			if (engine >= EngineType.RedAlert2) {
 				if (engine == EngineType.YurisRevenge)
-					AddFile("ra2md.mix");
-				AddFile("ra2.mix");
+					AddItem("ra2md.mix");
+				AddItem("ra2.mix");
 			}
 			else {
 				if (engine == EngineType.Firestorm)
-					AddFile("patch.mix");
-				AddFile("tibsun.mix");
+					AddItem("patch.mix");
+				AddItem("tibsun.mix");
 			}
 			
 			if (engine == EngineType.YurisRevenge)
-				AddFile("cachemd.mix");
-			AddFile("cache.mix");
+				AddItem("cachemd.mix");
+			AddItem("cache.mix");
 
 
 			if (engine == EngineType.YurisRevenge)
-				AddFile("localmd.mix");
-			AddFile("local.mix");
+				AddItem("localmd.mix");
+			AddItem("local.mix");
 
 			if (engine == EngineType.YurisRevenge)
-				AddFile("audiomd.mix");
+				AddItem("audiomd.mix");
 
 			if (engine >= EngineType.RedAlert2) {
 				for (int i = 99; i >= 0; i--) {
 					string file = string.Format("ecache{0:d2}.mix", i);
 					if (FileExists(file))
-						AddFile(file);
+						AddItem(file);
 				}
 			}
 
 			for (int i = 99; i >= 0; i--) {
 				string file = string.Format("elocal{0:d2}.mix", i);
 				if (FileExists(file))
-					AddFile(file);
+					AddItem(file);
 			}
 
 			if (engine >= EngineType.RedAlert2) {
-				foreach (string file in Directory.GetFiles(mixDir, "*.mmx"))
-					AddFile(Path.Combine(mixDir, file));
+				foreach (var dir in AllArchives.OfType<DirArchive>()) {
+					foreach (string file in Directory.GetFiles(dir.Directory, "*.mmx"))
+						AddItem(Path.Combine(dir.Directory, file));
 
-				if (engine == EngineType.YurisRevenge)
-					foreach (string file in Directory.GetFiles(mixDir, "*.yro"))
-						AddFile(Path.Combine(mixDir, file));
-			}
-
-			AddFile("conquer.mix");
-
-			if (engine >= EngineType.RedAlert2) {
-				if (engine == EngineType.YurisRevenge) {
-					AddFile("conqmd.mix");
-					AddFile("genermd.mix");
+					if (engine == EngineType.YurisRevenge)
+						foreach (string file in Directory.GetFiles(dir.Directory, "*.yro"))
+							AddItem(Path.Combine(dir.Directory, file));
 				}
-				AddFile("generic.mix");
-				if (engine == EngineType.YurisRevenge)
-					AddFile("isogenmd.mix");
-				AddFile("isogen.mix");
-				if (engine == EngineType.YurisRevenge) AddFile("cameomd.mix");
-				AddFile("cameo.mix");
+			}
+
+			AddItem("conquer.mix");
+
+			if (engine >= EngineType.RedAlert2) {
 				if (engine == EngineType.YurisRevenge) {
-					AddFile("mapsmd03.mix");
-					AddFile("multimd.mix");
-					AddFile("thememd.mix");
+					AddItem("conqmd.mix");
+					AddItem("genermd.mix");
+				}
+				AddItem("generic.mix");
+				if (engine == EngineType.YurisRevenge)
+					AddItem("isogenmd.mix");
+				AddItem("isogen.mix");
+				if (engine == EngineType.YurisRevenge) AddItem("cameomd.mix");
+				AddItem("cameo.mix");
+				if (engine == EngineType.YurisRevenge) {
+					AddItem("mapsmd03.mix");
+					AddItem("multimd.mix");
+					AddItem("thememd.mix");
 				}
 			}
 

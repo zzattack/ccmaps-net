@@ -72,17 +72,17 @@ namespace CNCMaps.Engine {
 								Settings.Engine = ModConfig.ActiveConfig.Engine;
 						}
 						catch (IOException) {
-							_logger.Error("IOException while loading mod config");
+							_logger.Fatal("IOException while loading mod config");
 						}
 						catch (XmlException) {
-							_logger.Error("XmlException while loading mod config");
+							_logger.Fatal("XmlException while loading mod config");
 						}
 						catch (SerializationException) {
-							_logger.Error("Serialization exception while loading mod config");
+							_logger.Fatal("Serialization exception while loading mod config");
 						}
 					}
 					else {
-						_logger.Error("Invalid mod config file specified");
+						_logger.Fatal("Invalid mod config file specified");
 					}
 				}
 
@@ -118,8 +118,8 @@ namespace CNCMaps.Engine {
 				}
 				foreach (string mixFile in ModConfig.ActiveConfig.ExtraMixes)
 					VFS.Add(mixFile);
-				foreach (var dir in VFS.Instance.AllArchives.OfType<DirArchive>().Select(d => d.Directory).ToList())
-					VFS.Instance.ScanMixDir(dir, Settings.Engine);
+
+				VFS.Instance.LoadMixes(Settings.Engine);
 
 				var map = new Game.Map {
 					IgnoreLighting = Settings.IgnoreLighting,
@@ -219,7 +219,6 @@ namespace CNCMaps.Engine {
 #endif
 			}
 
-			LogManager.Configuration = null; // required for mono release to flush possible targets
 			return 0;
 		}
 
@@ -416,7 +415,7 @@ namespace CNCMaps.Engine {
 				// no YR objects so assumed to be ra2, but actually meant to be used on yr
 				if (mapExt == ".map" && pkt != null && !pkt.MapEntries.ContainsKey(pktEntryName) && engine >= EngineType.RedAlert2) {
 					var vfs = new VFS();
-					vfs.AddFile(Settings.InputFile);
+					vfs.AddItem(Settings.InputFile);
 					pkt = vfs.OpenFile<PktFile>("missionsmd.pkt");
 				}
 

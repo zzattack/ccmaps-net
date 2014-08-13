@@ -23,13 +23,13 @@ namespace CNCMaps.Engine.Map {
 			var vfsYR = new VFS();
 
 			if (Directory.Exists(VFS.TSInstallDir)) {
-				vfsTS.ScanMixDir(VFS.TSInstallDir, EngineType.TiberianSun);
-				vfsFS.ScanMixDir(VFS.TSInstallDir, EngineType.Firestorm);
+				vfsTS.LoadMixes(VFS.TSInstallDir, EngineType.TiberianSun);
+				vfsFS.LoadMixes(VFS.TSInstallDir, EngineType.Firestorm);
 			}
 
 			if (Directory.Exists(VFS.RA2InstallDir)) {
-				vfsRA2.ScanMixDir(VFS.RA2InstallDir, EngineType.RedAlert2);
-				vfsYR.ScanMixDir(VFS.RA2InstallDir, EngineType.YurisRevenge);
+				vfsRA2.LoadMixes(VFS.RA2InstallDir, EngineType.RedAlert2);
+				vfsYR.LoadMixes(VFS.RA2InstallDir, EngineType.YurisRevenge);
 			}
 
 			IniFile rulesTS = vfsTS.OpenFile<IniFile>("rules.ini");
@@ -48,19 +48,19 @@ namespace CNCMaps.Engine.Map {
 
 			if (thsTS != null)
 				foreach (var f in thsTS.Mixes)
-					vfsTS.AddFile(f);
+					vfsTS.AddItem(f);
 
 			if (thsFS != null)
 				foreach (var f in thsFS.Mixes)
-					vfsFS.AddFile(f);
+					vfsFS.AddItem(f);
 
 			if (thsRA2 != null)
 				foreach (var f in thsRA2.Mixes)
-					vfsRA2.AddFile(f);
+					vfsRA2.AddItem(f);
 
 			if (thsYR != null)
 				foreach (var f in thsYR.Mixes)
-					vfsYR.AddFile(f);
+					vfsYR.AddItem(f);
 
 			var ret = DetectEngineFromRules(mf, rulesTS, rulesFS, rulesRA2, rulesYR, thsTS, thsFS, thsRA2, thsYR, vfsTS, vfsFS, vfsRA2, vfsYR);
 			Logger.Debug("Engine type detected as {0}", ret);
