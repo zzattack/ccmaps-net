@@ -49,11 +49,14 @@
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\CNCMaps.Shared\Properties\AssemblyInfoGlobal.cs">
       <Link>Properties\AssemblyInfoGlobal.cs</Link>
     </Compile>
+    <Compile Include="EngineSettings.cs" />
     <Compile Include="Game\Defaults.cs" />
     <Compile Include="Game\FrameDeciders.cs" />
     <Compile Include="Game\GameCollection.cs" />
@@ -74,6 +77,12 @@
     <Compile Include="Drawables\AnimDrawable.cs" />
     <Compile Include="Drawables\BuildingDrawable.cs" />
     <Compile Include="Drawables\Drawable.cs" />
+    <Compile Include="Rendering\DebugDrawingSurfaceWindow.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Rendering\DebugDrawingSurfaceWindow.Designer.cs">
+      <DependentUpon>DebugDrawingSurfaceWindow.cs</DependentUpon>
+    </Compile>
     <Compile Include="Rendering\DrawingSurface.cs" />
     <Compile Include="Game\DrawProperties.cs" />
     <Compile Include="Rendering\Palette.cs" />
@@ -118,6 +127,9 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="Rendering\DebugDrawingSurfaceWindow.resx">
+      <DependentUpon>DebugDrawingSurfaceWindow.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Resources.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>

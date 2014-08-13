@@ -344,7 +344,7 @@ namespace CNCMaps.FileFormats.Map {
 		private void ReadWaypoints() {
 			IniSection basic = GetSection("Basic");
 			if (basic == null || !basic.ReadBool("MultiplayerOnly")) return;
-			IniSection waypoints = GetSection("Waypoints");
+			IniSection waypoints = GetOrCreateSection("Waypoints");
 
 			foreach (var entry in waypoints.OrderedEntries) {
 				try {

@@ -3,21 +3,19 @@ using System.Text;
 using System.Windows.Forms;
 using CNCMaps.Engine.Game;
 using CNCMaps.Engine.Map;
-using CNCMaps.Engine.Rendering;
-using TileLayer = CNCMaps.Engine.Map.TileLayer;
 
-namespace CNCMaps {
+namespace CNCMaps.Engine.Rendering {
 	internal partial class DebugDrawingSurfaceWindow : Form {
 		private DrawingSurface _drawingSurface;
 		private TileLayer _tiles;
 		private Theater _theater;
-		private Map _map;
+		private Game.Map _map;
 
 		public DebugDrawingSurfaceWindow() {
 			InitializeComponent();
 		}
 
-		public DebugDrawingSurfaceWindow(DrawingSurface ds, TileLayer tiles, Theater t, Map map)
+		public DebugDrawingSurfaceWindow(DrawingSurface ds, TileLayer tiles, Theater t, Game.Map map)
 			: this() {
 			_drawingSurface = ds;
 			_tiles = tiles;

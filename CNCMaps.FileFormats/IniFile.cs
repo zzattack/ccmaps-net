@@ -394,9 +394,15 @@ namespace CNCMaps.FileFormats {
 				var ownSection = GetOrCreateSection(v.Name);
 				// numbered arrays are 'appended' instead of overwritten
 				if (IsObjectArray(v.Name)) {
-					int number = 1 + int.Parse(ownSection.OrderedEntries.Last().Key);
-					foreach (var kvp in v.OrderedEntries)
-						ownSection.SetValue(number++.ToString(), kvp.Value);
+					try {
+						int number = 1 + int.Parse(ownSection.OrderedEntries.Last().Key);
+						foreach (var kvp in v.OrderedEntries)
+							ownSection.SetValue(number++.ToString(), kvp.Value);
+					}
+					catch (FormatException) {
+						foreach (var kvp in v.OrderedEntries)
+							ownSection.SetValue(kvp.Key, kvp.Value);
+					}
 				}
 				else
 					foreach (var kvp in v.OrderedEntries)

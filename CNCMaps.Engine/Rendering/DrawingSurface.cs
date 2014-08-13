@@ -132,9 +132,4 @@ namespace CNCMaps.Engine.Rendering {
 		}
 	}
 
-	public enum SizeMode {
-		Local,
-		Full,
-		Auto,
-	}
 }
