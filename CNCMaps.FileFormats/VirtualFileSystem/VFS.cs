@@ -204,7 +204,7 @@ namespace CNCMaps.FileFormats.VirtualFileSystem {
 			}
 
 			if (engine >= EngineType.RedAlert2) {
-				foreach (var dir in AllArchives.OfType<DirArchive>()) {
+				foreach (var dir in AllArchives.OfType<DirArchive>().ToList()) {
 					foreach (string file in Directory.GetFiles(dir.Directory, "*.mmx"))
 						AddItem(Path.Combine(dir.Directory, file));
 

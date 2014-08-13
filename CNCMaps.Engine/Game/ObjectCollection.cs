@@ -33,14 +33,13 @@ namespace CNCMaps.Engine.Game {
 			foreach (var entry in objectsList.OrderedEntries) {
 				if (!string.IsNullOrEmpty(entry.Value)) {
 					Logger.Trace("Loading object {0}.{1}", objectsList.Name, entry.Value);
-					LoadObject(entry.Value);
+					AddObject(entry.Value);
 				}
 			}
 		}
 
-		private void LoadObject(string objName) {
+		protected override Drawable LoadObject(string objName) {
 			Drawable drawable;
-
 			var rulesSection = Rules.GetOrCreateSection(objName);
 			string artSectionName = rulesSection.ReadString("Image", objName);
 			var artSection = Art.GetOrCreateSection(artSectionName);
@@ -86,22 +85,24 @@ namespace CNCMaps.Engine.Game {
 					drawable.Props.PaletteType = cfgOverride.Palette;
 					drawable.Props.CustomPaletteName = cfgOverride.CustomPaletteFile;
 				}
-				if (!string.IsNullOrWhiteSpace(cfgOverride.FrameDeciderCode) && !cannotCompile) {
+				if (!string.IsNullOrWhiteSpace(cfgOverride.FrameDeciderCode) && !_cannotCompile) {
 					try {
 						var fdc = FrameDeciders.GetOverrideFrameDecider(cfgOverride);
 						if (fdc != null)
 							drawable.Props.FrameDecider = fdc;
 					}
 					catch (TypeLoadException exc) {
-						cannotCompile = true;
+						_cannotCompile = true;
 						Logger.Error("Custom framedecider could not be compiled. You need .NET 4.5 for this."
 							+ " Functionality will be unavailable.\r\n{0}", exc);
 					}
 				}
 			}
+
+			return drawable;
 		}
 
-		private static bool cannotCompile = false;
+		private static bool _cannotCompile = false;
 
 		private Drawable InitAnimDrawable(IniFile.IniSection rules, IniFile.IniSection art) {
 			var anim = new AnimDrawable(rules, art);

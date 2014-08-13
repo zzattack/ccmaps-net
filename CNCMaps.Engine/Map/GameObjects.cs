@@ -31,7 +31,15 @@ namespace CNCMaps.Engine.Map {
 		}
 
 		public GameCollection Collection { get; set; }
-		public Drawable Drawable { get; set; }
+
+		public Drawable Drawable {
+			get {
+				if (_drawable == null) _drawable = Collection.GetDrawable(this);
+				return _drawable; 
+			}
+			set { _drawable = value; }
+		}
+
 		public Palette Palette { get; set; }
 
 		public override string ToString() {
@@ -51,6 +59,8 @@ namespace CNCMaps.Engine.Map {
 		public bool RequiresBoundsInvalidation = true;
 		public bool RequiresFrameInvalidation = true;
 		private Rectangle cachedBounds = Rectangle.Empty;
+		private Drawable _drawable;
+
 		public Rectangle GetBounds() {
 			if (RequiresBoundsInvalidation && Drawable != null) {
 				cachedBounds = Drawable.GetBounds(this);

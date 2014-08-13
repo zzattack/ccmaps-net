@@ -271,6 +271,7 @@ namespace CNCMaps.Engine.Game {
 						else break;
 					}
 					ts.Entries.Add(rs);
+					_drawableIndexNameMap[_drawables.Count] = ts.SetName;
 					_drawables.Add(new TileDrawable(null, null, rs));
 				}
 				setNum++;
