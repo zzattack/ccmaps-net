@@ -1,5 +1,4 @@
 using System;
-using System.CodeDom.Compiler;
 using System.Collections.Generic;
 using CNCMaps.Engine.Map;
 using CNCMaps.Engine.Rendering;

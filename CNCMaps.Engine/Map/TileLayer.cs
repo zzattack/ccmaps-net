@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
-using CNCMaps.Engine.Game;
+using CNCMaps.Engine.Drawables;
 using CNCMaps.FileFormats.Map;
 using CNCMaps.Shared.Utility;
 using NLog;

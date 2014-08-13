@@ -48,9 +48,6 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
-    <Reference Include="System.Drawing" />
-    <Reference Include="System.Windows.Forms" />
-    <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Program.cs" />
@@ -70,19 +67,11 @@
       <Project>{b687c2a7-6fd6-495a-927d-ffc29ffd9d1d}</Project>
       <Name>CNCMaps.Engine</Name>
     </ProjectReference>
-    <ProjectReference Include="..\CNCMaps.FileFormats\CNCMaps.FileFormats.csproj">
-      <Project>{761cec32-9254-4eee-ac76-07c8e4279835}</Project>
-      <Name>CNCMaps.FileFormats</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\CNCMaps.Shared\CNCMaps.Shared.csproj">
-      <Project>{54d90137-e2cc-4d21-bbcb-9e3c626d875f}</Project>
-      <Name>CNCMaps.Shared</Name>
-    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <ProjectExtensions>
     <VisualStudio>
-      <UserProperties BuildVersion_AssemblyInfoFilename="CNCMaps\Properties\AssemblyInfoGlobal.cs" BuildVersion_UseGlobalSettings="True" BuildVersion_UpdateAssemblyVersion="True" BuildVersion_UpdateFileVersion="True" />
+      <UserProperties BuildVersion_UpdateFileVersion="True" BuildVersion_UpdateAssemblyVersion="True" BuildVersion_UseGlobalSettings="True" BuildVersion_AssemblyInfoFilename="CNCMaps\Properties\AssemblyInfoGlobal.cs" />
     </VisualStudio>
   </ProjectExtensions>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

@@ -16,7 +16,6 @@ using CNCMaps.Shared;
 using Microsoft.Win32;
 using NLog;
 using NLog.Config;
-using NLog.Targets;
 
 namespace CNCMaps.GUI {
 

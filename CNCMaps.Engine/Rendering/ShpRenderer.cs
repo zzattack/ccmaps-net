@@ -1,10 +1,8 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Drawing;
-using CNCMaps.Engine.Game;
+using CNCMaps.Engine.Drawables;
 using CNCMaps.Engine.Map;
 using CNCMaps.FileFormats;
-using CNCMaps.FileFormats.Map;
 using CNCMaps.FileFormats.VirtualFileSystem;
 using CNCMaps.Shared;
 using CNCMaps.Shared.Utility;

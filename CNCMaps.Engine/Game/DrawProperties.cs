@@ -1,6 +1,5 @@
 using System;
 using System.Drawing;
-using CNCMaps.Engine.Game;
 using CNCMaps.Engine.Map;
 using CNCMaps.Shared;
 

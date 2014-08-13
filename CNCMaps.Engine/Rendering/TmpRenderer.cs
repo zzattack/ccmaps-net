@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Drawing;
-using CNCMaps.Engine.Game;
+using CNCMaps.Engine.Drawables;
 using CNCMaps.Engine.Map;
 using CNCMaps.FileFormats;
 using NLog;

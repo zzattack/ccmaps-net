@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Drawing;
+using CNCMaps.Engine.Drawables;
 using CNCMaps.Engine.Map;
 using CNCMaps.FileFormats;
 using CNCMaps.FileFormats.VirtualFileSystem;
@@ -272,12 +272,18 @@ namespace CNCMaps.Engine.Game {
 					}
 					ts.Entries.Add(rs);
 					_drawableIndexNameMap[_drawables.Count] = ts.SetName;
-					_drawables.Add(new TileDrawable(null, null, rs));
+
+					var td = AddObject(sectionName) as TileDrawable;
+					td.TsEntry = rs;
 				}
 				setNum++;
 			}
 
 			_animsSectionsStartIdx = sectionIdx + 1;
+		}
+
+		protected override Drawable MakeDrawable(string objName) {
+			return new TileDrawable(null, null, null) { Name = objName };
 		}
 
 		public void InitAnimations(ObjectCollection animations) {

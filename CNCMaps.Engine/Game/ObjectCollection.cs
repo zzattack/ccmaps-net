@@ -4,6 +4,7 @@ using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using CNCMaps.Engine.Drawables;
 using CNCMaps.Engine.Map;
 using CNCMaps.Engine.Rendering;
 using CNCMaps.FileFormats;
@@ -38,7 +39,7 @@ namespace CNCMaps.Engine.Game {
 			}
 		}
 
-		protected override Drawable LoadObject(string objName) {
+		protected override Drawable MakeDrawable(string objName) {
 			Drawable drawable;
 			var rulesSection = Rules.GetOrCreateSection(objName);
 			string artSectionName = rulesSection.ReadString("Image", objName);
@@ -47,19 +48,43 @@ namespace CNCMaps.Engine.Game {
 			switch (Type) {
 				case CollectionType.Aircraft:
 				case CollectionType.Vehicle:
-					drawable = InitUnitDrawable(rulesSection, artSection);
+					drawable = new UnitDrawable(rulesSection, artSection);
 					break;
 				case CollectionType.Building:
-					drawable = InitBuildingDrawable(rulesSection, artSection);
+					drawable = new BuildingDrawable(rulesSection, artSection);
 					break;
 				case CollectionType.Infantry:
 				case CollectionType.Overlay:
 				case CollectionType.Smudge:
 				case CollectionType.Terrain:
-					drawable = InitSimpleDrawable(rulesSection, artSection);
+					drawable = new ShpDrawable(rulesSection, artSection);
 					break;
 				case CollectionType.Animation:
-					drawable = InitAnimDrawable(rulesSection, artSection);
+					drawable = new AnimDrawable(rulesSection, artSection);
+					break;
+				default:
+					throw new InvalidEnumArgumentException();
+			}
+			return drawable;
+		}
+
+		protected override void LoadDrawable(Drawable drawable) {
+			switch (Type) {
+				case CollectionType.Aircraft:
+				case CollectionType.Vehicle:
+					LoadUnitDrawable((UnitDrawable)drawable);
+					break;
+				case CollectionType.Building:
+					LoadBuildingDrawable((BuildingDrawable)drawable);
+					break;
+				case CollectionType.Infantry:
+				case CollectionType.Overlay:
+				case CollectionType.Smudge:
+				case CollectionType.Terrain:
+					LoadSimpleDrawable((ShpDrawable)drawable);
+					break;
+				case CollectionType.Animation:
+					LoadAnimDrawable((AnimDrawable)drawable);
 					break;
 				default:
 					throw new InvalidEnumArgumentException();
@@ -72,11 +97,11 @@ namespace CNCMaps.Engine.Game {
 				// matches collection
 				(ovr.TheaterTypes & Theater) == Theater &&
 				// matches object regex
-				Regex.IsMatch(objName, ovr.ObjRegex, RegexOptions.IgnoreCase))
+				Regex.IsMatch(drawable.Name, ovr.ObjRegex, RegexOptions.IgnoreCase))
 				.OrderByDescending(o => o.Priority);
 
 			foreach (var cfgOverride in cfgOverrides) {
-				Logger.Debug("Object {0} receives overrides from regex {1}", objName, cfgOverride.ObjRegex);
+				Logger.Debug("Object {0} receives overrides from regex {1}", drawable.Name, cfgOverride.ObjRegex);
 
 				if (cfgOverride.Lighting != LightingType.Default)
 					drawable.Props.LightingType = cfgOverride.Lighting;
@@ -98,21 +123,17 @@ namespace CNCMaps.Engine.Game {
 					}
 				}
 			}
-
-			return drawable;
 		}
 
-		private static bool _cannotCompile = false;
+		private static bool _cannotCompile;
 
-		private Drawable InitAnimDrawable(IniFile.IniSection rules, IniFile.IniSection art) {
-			var anim = new AnimDrawable(rules, art);
-			InitDrawableDefaults(anim, art);
+		private void LoadAnimDrawable(AnimDrawable anim) {
+			InitDrawableDefaults(anim);
 			anim.LoadFromRules();
 			anim.Shp = VFS.Open<ShpFile>(anim.Image + ".shp");
-			return anim;
 		}
 
-		private void InitDrawableDefaults(Drawable drawable, IniFile.IniSection artSection) {
+		private void InitDrawableDefaults(Drawable drawable) {
 			drawable.OwnerCollection = this;
 			drawable.Props.PaletteType = Defaults.GetDefaultPalette(Type, Engine);
 			drawable.Props.LightingType = Defaults.GetDefaultLighting(Type);
@@ -136,41 +157,32 @@ namespace CNCMaps.Engine.Game {
 			}
 		}
 
-		private Drawable InitSimpleDrawable(IniFile.IniSection rulesSection, IniFile.IniSection artSection) {
-			var drawable = new ShpDrawable(rulesSection, artSection);
-			InitDrawableDefaults(drawable, artSection);
+		private void LoadSimpleDrawable(ShpDrawable drawable) {
+			InitDrawableDefaults(drawable);
 			drawable.LoadFromRules();
 
 			string shpFile = drawable.GetFilename();
 			drawable.Shp = VFS.Open<ShpFile>(shpFile);
 
 			if (Type == CollectionType.Smudge)
-				drawable.Foundation = new Size(rulesSection.ReadInt("Width", 1), rulesSection.ReadInt("Height", 1));
+				drawable.Foundation = new Size(drawable.Rules.ReadInt("Width", 1), drawable.Rules.ReadInt("Height", 1));
 
 			if (Type == CollectionType.Overlay)
 				LoadOverlayDrawable(drawable);
-
-			return drawable;
 		}
 
-		private Drawable InitBuildingDrawable(IniFile.IniSection rulesSection, IniFile.IniSection artSection) {
-			var drawable = new BuildingDrawable(rulesSection, artSection);
-			InitDrawableDefaults(drawable, artSection);
+		private void LoadBuildingDrawable(BuildingDrawable drawable) {
+			InitDrawableDefaults(drawable);
 			drawable.LoadFromRules();
-			return drawable;
 		}
 
-		private Drawable InitUnitDrawable(IniFile.IniSection rulesSection, IniFile.IniSection artSection) {
-			var drawable = new UnitDrawable(rulesSection, artSection);
-			InitDrawableDefaults(drawable, artSection);
-
+		private void LoadUnitDrawable(UnitDrawable drawable) {
+			InitDrawableDefaults(drawable);
 			drawable.LoadFromRules();
-			return drawable;
 		}
 
-		private void LoadOverlayDrawable(Drawable drawable) {
-			int objIdx = _drawables.Count - 1;
-			var ovl = new OverlayObject((byte)objIdx, 0);
+		private void LoadOverlayDrawable(ShpDrawable drawable) {
+			var ovl = new OverlayObject((byte)drawable.Index, 0);
 			var tibType = SpecialOverlays.GetOverlayTibType(ovl, Engine);
 			DrawProperties props = drawable.Props;
 
