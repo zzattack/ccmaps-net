@@ -96,7 +96,8 @@ namespace CNCMaps.Engine.Game {
 			if (Rules.ReadBool("Turret") && Rules.HasKey("TurretAnim")) {
 				string turretName = Rules.ReadString("TurretAnim");
                 // Starkku: NewTheater/generic image fallback support for turrets.
-                string turretNameShp = NewTheater ? OwnerCollection.ApplyNewTheaterIfNeeded(turretName, turretName + ".shp") : turretName;
+                string turretNameShp = NewTheater ? OwnerCollection.ApplyNewTheaterIfNeeded(turretName, turretName) : turretName;
+				turretNameShp += ".shp";
 				Drawable turret = Rules.ReadBool("TurretAnimIsVoxel")
 					? (Drawable)new VoxelDrawable(VFS.Open<VxlFile>(turretName + ".vxl"), VFS.Open<HvaFile>(turretName + ".hva"))
 					: new ShpDrawable(VFS.Open<ShpFile>(turretNameShp));
