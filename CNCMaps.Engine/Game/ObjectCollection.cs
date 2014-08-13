@@ -114,9 +114,6 @@ namespace CNCMaps.Engine.Game {
 
 		private void InitDrawableDefaults(Drawable drawable, IniFile.IniSection artSection) {
 			drawable.OwnerCollection = this;
-			_drawables.Add(drawable);
-			_drawablesDict[drawable.Name] = drawable;
-
 			drawable.Props.PaletteType = Defaults.GetDefaultPalette(Type, Engine);
 			drawable.Props.LightingType = Defaults.GetDefaultLighting(Type);
 			drawable.IsRemapable = Defaults.GetDefaultRemappability(Type, Engine);

@@ -13,7 +13,7 @@ namespace CNCMaps.Engine.Game {
 		public readonly IniFile Art;
 		protected readonly List<Drawable> _drawables = new List<Drawable>();
 		protected readonly Dictionary<int, string> _drawableIndexNameMap = new Dictionary<int, string>();
-		protected readonly Dictionary<string, Drawable> _drawablesDict = new Dictionary<string, Drawable>();
+		private readonly Dictionary<string, Drawable> _drawablesDict = new Dictionary<string, Drawable>();
 
 		public GameCollection() { }
 		public GameCollection(CollectionType type, TheaterType theater, EngineType engine, IniFile rules, IniFile art) {
