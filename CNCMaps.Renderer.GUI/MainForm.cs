@@ -32,7 +32,6 @@ namespace CNCMaps.GUI {
 				cfgPath = GuiConfig;
 			else {
 				var localAppDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "CNCMaps");
-				Directory.CreateDirectory(localAppDir);
 				cfgPath = Path.Combine(localAppDir, GuiConfig);
 			}
 			Settings.Default.SettingsKey = cfgPath;
