@@ -27,9 +27,15 @@ namespace CNCMaps.GUI {
 
 		public MainForm() {
 			const string GuiConfig = "gui_settings.xml";
-			Settings.Default.SettingsKey = File.Exists(GuiConfig) 
-				? GuiConfig 
-				: Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "CNCMaps", GuiConfig);
+			string cfgPath;
+			if (File.Exists(GuiConfig))
+				cfgPath = GuiConfig;
+			else {
+				var localAppDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "CNCMaps");
+				Directory.CreateDirectory(localAppDir);
+				cfgPath = Path.Combine(localAppDir, GuiConfig);
+			}
+			Settings.Default.SettingsKey = cfgPath;
 			InitializeComponent();
 		}
 		public MainForm(bool skipUpdateCheck) : this() {
