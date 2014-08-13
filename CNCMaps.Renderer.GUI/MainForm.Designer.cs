@@ -433,7 +433,7 @@ namespace CNCMaps.GUI {
 			this.gbInputOutput.Controls.Add(this.nudCompression);
 			this.gbInputOutput.Location = new System.Drawing.Point(6, 6);
 			this.gbInputOutput.Name = "gbInputOutput";
-			this.gbInputOutput.Size = new System.Drawing.Size(581, 239);
+			this.gbInputOutput.Size = new System.Drawing.Size(581, 221);
 			this.gbInputOutput.TabIndex = 0;
 			this.gbInputOutput.TabStop = false;
 			this.gbInputOutput.Text = "Input && output";

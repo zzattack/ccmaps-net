@@ -761,12 +761,13 @@ namespace CNCMaps.Engine.Game {
 			}
 		}
 		public void Draw() {
+			_drawingSurface = new DrawingSurface(FullSize.Width * TileWidth, FullSize.Height * TileHeight, PixelFormat.Format24bppRgb);
+			
 #if SORT
 			Logger.Info("Sorting objects map");
 			var sorter = new ObjectSorter(_theater, _tiles);
 			var orderedObjs = sorter.GetOrderedObjects().ToList();
 
-			_drawingSurface = new DrawingSurface(FullSize.Width * TileWidth, FullSize.Height * TileHeight, PixelFormat.Format24bppRgb);
 			double lastReported = 0.0;
 			Logger.Info("Drawing map... 0%");
 			for (int i = 0; i < orderedObjs.Count; i++) {

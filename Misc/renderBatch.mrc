@@ -1,6 +1,6 @@
-alias mapsDir return X:\ra2maps_zfs\Tiberian Sun\Funky\
-;alias mapsDir return X:\ra2maps_zfs\Red Alert 2\
-alias renderProg return C:\Users\Frank\Desktop\workspace\ccmaps-net\CNCMaps.Renderer\bin\Release\CNCMaps.Renderer.exe
+alias mapsDir return X:\ra2maps\Firestorm\Official Multiplayer\
+;alias mapsDir return X:\ra2maps\Red Alert 2\
+alias renderProg return C:\Users\Frank\Desktop\workspace\ccmaps-net\CNCMaps.Renderer\bin\Debug\CNCMaps.Renderer.exe
 
 alias create_map_images {
   if ($window(@renderQueue)) { clear $v1 }
@@ -59,7 +59,7 @@ alias stop { %stop = $true }
 
 alias getOptions {
   if (\Twisted Insurrection\ isin $1-) return -M $qt(C:\Westwood\Twisted Insurrection\modconfig.xml)
-  else if (\DTA\ isin $1-) return -M $qt(C:\Westwood\DTA\dtaconfig.xml)
+  else if (\DTA\ isin $1-) return -M $qt(C:\Westwood\DTA\modconfig.xml)
   else if (\Yuri's Revenge\ isin $1-) return -Y
   else if (\Red Alert 2\ isin $1-) return -y
   else if (\Firestorm\ isin $1-) return -T

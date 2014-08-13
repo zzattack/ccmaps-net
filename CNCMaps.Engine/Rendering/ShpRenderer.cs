@@ -266,9 +266,11 @@ namespace CNCMaps.Engine.Rendering {
 		static ShpFile BuildingZ;
 		private static short GetBuildingZ(int x, int y, ShpFile shp, ShpFile.ShpImage img, GameObject obj) {
 			if (BuildingZ == null) {
-				BuildingZ = VFS.Open<ShpFile>("buildngz.shp");
-                // Starkku: Yuri's Revenge uses .sha as a file extension for this file for whatever reason.
-                if (BuildingZ == null) BuildingZ = VFS.Open<ShpFile>("buildngz.sha");
+				
+				if (ModConfig.ActiveConfig.Engine < EngineType.YurisRevenge)
+					BuildingZ = VFS.Open<ShpFile>("buildngz.shp");
+				else // Yuri's Revenge uses .sha as a file extension for this
+					BuildingZ = VFS.Open<ShpFile>("buildngz.sha");
 				BuildingZ.Initialize();
 			}
 
