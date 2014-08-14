@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Drawing;
 using System.Drawing.Drawing2D;
+using CNCMaps.Engine.Game;
 using CNCMaps.Engine.Map;
 using CNCMaps.FileFormats;
 using NLog;
@@ -131,42 +132,63 @@ namespace CNCMaps.Engine.Rendering {
 
 			var world = Matrix4.CreateRotationX(MathHelper.DegreesToRadians(60));
 			world = Matrix4.CreateRotationY(MathHelper.DegreesToRadians(180)) * world; // this is how the game places voxels flat on the world
-			world = Matrix4.CreateRotationZ(MathHelper.DegreesToRadians(objectRotation)) * world; // object facing
-			world = Matrix4.Scale(0.028f, 0.028f, 0.028f) * world;
-
-			// art.ini TurretOffset value positions some voxel parts over our x-axis
-			world = Matrix4.CreateTranslation(0.18f * props.TurretVoxelOffset, 0, 0) * world;
 			GL.MultMatrix(ref world);
 
-			// draw x,y,z axis
-			/*
-			GL.PushMatrix();
-			GL.LineWidth(5);
-			GL.Color3(Color.Red);
-			GL.Begin(BeginMode.Lines);
-			GL.Vertex3(-100, 0, 0);
-			GL.Vertex3(100, 0, 0);
-			GL.End();
-			GL.Color3(Color.Green);
-			GL.Begin(BeginMode.Lines);
-			GL.Vertex3(0, -100, 0);
-			GL.Vertex3(0, 100, 0);
-			GL.End();
-			GL.Color3(Color.White);
-			GL.Begin(BeginMode.Lines);
-			GL.Vertex3(0, 0, -100);
-			GL.Vertex3(0, 0, 100);
-			GL.End();
-			GL.PopMatrix();
-			*/
+			Matrix4 @object = Matrix4.CreateRotationZ(MathHelper.DegreesToRadians(objectRotation)); // object facing
+			@object = Matrix4.Scale(0.028f, 0.028f, 0.028f) * @object;
 
-			// direction of light vector given by pitch & yaw
+			// art.ini TurretOffset value positions some voxel parts over our x-axis
+			@object = Matrix4.CreateTranslation(0.18f * props.TurretVoxelOffset, 0, 0) * @object;
+			GL.MultMatrix(ref @object);
+
+			//DrawAxes();
+			
+			// tilt if needed
+			if (true) { 
+				int tiltPitch, tiltYaw;
+				int ramp = (obj.Tile.Drawable as TileDrawable).GetTileImage(obj.Tile).RampType;
+				if (ramp == 0 || ramp >= 17) {
+					tiltPitch = tiltYaw = 0;
+				}
+				else if (ramp < 4) {
+					tiltPitch = 25;
+					tiltYaw = 270 - 90 * ramp;
+				}
+				else { 
+					tiltPitch = 25;
+					tiltYaw = 225 - 90 * ((ramp - 1) % 4);
+				}
+				Matrix4 tilt = Matrix4.CreateRotationY(MathHelper.DegreesToRadians(-tiltPitch));
+				//tilt = Matrix4.CreateRotationZ(tiltYaw) * tilt;
+				//GL.MultMatrix(ref tilt);
+			}
+
+			
+			DrawAxes();
+
+
+			/* // draw slope normals
+			GL.LineWidth(2);
+			var colors = new[] { Color.Red, Color.Green, Color.Blue, Color.Yellow, Color.Orange, Color.Black, Color.Purple, Color.SlateBlue, Color.DimGray, Color.White, Color.Teal, Color.Tan };
+			for (int i = 0; i < 8; i++) {
+				GL.Color3(colors[i]);
+
+				const float roll = 30f;
+				float syaw = 45f * i;
+				var slopeNormal = Vector3.UnitZ;
+				slopeNormal = Vector3.Transform(slopeNormal, Matrix4.CreateRotationX(MathHelper.DegreesToRadians(roll)));
+				slopeNormal = Vector3.Transform(slopeNormal, Matrix4.CreateRotationZ(MathHelper.DegreesToRadians(syaw)));
+				GL.Begin(BeginMode.Lines);
+				GL.Vertex3(0, 0, 0);
+				GL.Vertex3(Vector3.Multiply(slopeNormal, 1000f));
+				GL.End();
+			}*/
+
+
 			float pitch = MathHelper.DegreesToRadians(210);
 			float yaw = MathHelper.DegreesToRadians(120);
-
-			// helps to find good pitch/yaw
-			/*
-			var colors = new[] { Color.Red, Color.Green, Color.Blue, Color.Yellow, Color.Orange, Color.Black, Color.Purple, Color.SlateBlue, Color.DimGray, Color.White, Color.Teal, Color.Tan };
+			/*// helps to find good pitch/yaw
+			// direction of light vector given by pitch & yaw
 			for (int i = 0; i < 360; i += 30) {
 				for (int j = 0; j < 360; j += 30) {
 					GL.Color3(colors[i / 30]);
@@ -197,10 +219,10 @@ namespace CNCMaps.Engine.Rendering {
 				GL.MultMatrix(ref frame);
 
 				var shadowScale = Matrix4.Scale(0.5f);
-				var shadowToScreen = frameTransl * shadowScale * frameRot * world * trans * lookat;
+				var shadowToScreen = frameTransl * shadowScale * frameRot * @object * world * trans * lookat;
 
 				// undo world transformations on light direction
-				var lightDirection = ExtractRotationVector(ToOpenGL(Matrix4.Invert(world * frame * shadowTransform)));
+				var lightDirection = ExtractRotationVector(ToOpenGL(Matrix4.Invert(world * @object * frame * shadowTransform)));
 
 				// draw line in direction light comes from
 				/*GL.Color3(Color.Red);
@@ -259,6 +281,27 @@ namespace CNCMaps.Engine.Rendering {
 			// read pixels back to surface
 			GL.ReadPixels(0, 0, _surface.BitmapData.Width, _surface.BitmapData.Height, OpenTK.Graphics.OpenGL.PixelFormat.Bgra, PixelType.UnsignedByte, _surface.BitmapData.Scan0);
 			return _surface;
+		}
+		private static void DrawAxes() { // draw x,y,z axis
+			GL.PushMatrix();
+			GL.Scale(1000f, 1000f, 1000f);
+			GL.LineWidth(5);
+			GL.Color3(Color.Red);
+			GL.Begin(BeginMode.Lines);
+			GL.Vertex3(-100, 0, 0);
+			GL.Vertex3(100, 0, 0);
+			GL.End();
+			GL.Color3(Color.Green);
+			GL.Begin(BeginMode.Lines);
+			GL.Vertex3(0, -100, 0);
+			GL.Vertex3(0, 100, 0);
+			GL.End();
+			GL.Color3(Color.White);
+			GL.Begin(BeginMode.Lines);
+			GL.Vertex3(0, 0, -100);
+			GL.Vertex3(0, 0, 100);
+			GL.End();
+			GL.PopMatrix();
 		}
 
 		public static Rectangle GetBounds(GameObject obj, VxlFile vxl, HvaFile hva, DrawProperties props) {
