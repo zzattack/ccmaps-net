@@ -215,7 +215,9 @@ namespace CNCMaps.Engine.Rendering {
 			}*/
 
 			var shadowTransform = Matrix4.CreateRotationZ(pitch) * Matrix4.CreateRotationY(yaw);
+			// clear shadowbuf
 			var shadBuf = _surface.GetShadows();
+			Array.Clear(shadBuf, 0, shadBuf.Length);
 			
 			foreach (var section in vxl.Sections) {
 				GL.PushMatrix();
