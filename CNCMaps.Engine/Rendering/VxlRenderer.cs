@@ -120,60 +120,61 @@ namespace CNCMaps.Engine.Rendering {
 
 			GL.MatrixMode(MatrixMode.Modelview);
 			GL.LoadIdentity();
-			
+
 			var lookat = Matrix4.LookAt(0, 0, -10, 0, 0, 0, 0, 1, 0);
 			GL.MultMatrix(ref lookat);
-
+			
 			var trans = Matrix4.CreateTranslation(0, 0, 10);
 			GL.MultMatrix(ref trans);
 
-			float direction = (obj is OwnableObject) ? (obj as OwnableObject).Direction : 0;
-			float objectRotation = 45f - direction / 256f * 360f; // convert game rotation to world degrees
-
+			// align and zoom
 			var world = Matrix4.CreateRotationX(MathHelper.DegreesToRadians(60));
-			world = Matrix4.CreateRotationY(MathHelper.DegreesToRadians(180)) * world; // this is how the game places voxels flat on the world
+			world = Matrix4.CreateRotationY(MathHelper.DegreesToRadians(180)) * world;
+			world = Matrix4.CreateRotationZ(MathHelper.DegreesToRadians(-45)) * world; 
+			world = Matrix4.Scale(0.028f, 0.028f, 0.028f) * world;
 			GL.MultMatrix(ref world);
 
-			Matrix4 @object = Matrix4.CreateRotationZ(MathHelper.DegreesToRadians(objectRotation)); // object facing
-			@object = Matrix4.Scale(0.028f, 0.028f, 0.028f) * @object;
-
-			// art.ini TurretOffset value positions some voxel parts over our x-axis
-			@object = Matrix4.CreateTranslation(0.18f * props.TurretVoxelOffset, 0, 0) * @object;
-			GL.MultMatrix(ref @object);
-
-			//DrawAxes();
+			// DrawAxes();
 			
-			// tilt if needed
-			if (true) { 
-				int tiltPitch, tiltYaw;
+			// determine tilt vectors
+			Matrix4 tilt;
+			int tiltPitch, tiltYaw;
+			if (true) {
 				int ramp = (obj.Tile.Drawable as TileDrawable).GetTileImage(obj.Tile).RampType;
 				if (ramp == 0 || ramp >= 17) {
 					tiltPitch = tiltYaw = 0;
 				}
-				else if (ramp < 4) {
+				else if (ramp <= 4) {
+					// screen-diagonal facings (perpendicular to axes)
 					tiltPitch = 25;
-					tiltYaw = 270 - 90 * ramp;
+					tiltYaw = -90 * ramp;
 				}
-				else { 
+				else {
+					// world-diagonal facings (perpendicular to screen)
 					tiltPitch = 25;
 					tiltYaw = 225 - 90 * ((ramp - 1) % 4);
 				}
-				Matrix4 tilt = Matrix4.CreateRotationY(MathHelper.DegreesToRadians(-tiltPitch));
-				//tilt = Matrix4.CreateRotationZ(tiltYaw) * tilt;
-				//GL.MultMatrix(ref tilt);
+				tilt = Matrix4.CreateRotationX(MathHelper.DegreesToRadians(tiltPitch));
+				tilt *= Matrix4.CreateRotationZ(MathHelper.DegreesToRadians(tiltYaw));
+
+				/*// show tilt direction
+				GL.Color3(Color.Black);
+				GL.Begin(BeginMode.Lines);
+				GL.Vertex3(Vector3.Zero);
+				var tiltVec = Vector3.UnitZ;
+				tiltVec = Vector3.Transform(tiltVec, tilt);
+				tiltVec = Vector3.Multiply(tiltVec, 1000f);
+				GL.Vertex3(tiltVec);
+				GL.End();*/
 			}
 
-			
-			DrawAxes();
-
-
-			/* // draw slope normals
+			/*// draw slope normals
 			GL.LineWidth(2);
 			var colors = new[] { Color.Red, Color.Green, Color.Blue, Color.Yellow, Color.Orange, Color.Black, Color.Purple, Color.SlateBlue, Color.DimGray, Color.White, Color.Teal, Color.Tan };
 			for (int i = 0; i < 8; i++) {
 				GL.Color3(colors[i]);
 
-				const float roll = 30f;
+				const float roll = 25f;
 				float syaw = 45f * i;
 				var slopeNormal = Vector3.UnitZ;
 				slopeNormal = Vector3.Transform(slopeNormal, Matrix4.CreateRotationX(MathHelper.DegreesToRadians(roll)));
@@ -185,6 +186,16 @@ namespace CNCMaps.Engine.Rendering {
 			}*/
 
 
+			// object rotation around Z
+			float direction = (obj is OwnableObject) ? (obj as OwnableObject).Direction : 0;
+			float objectRotation = 90 - direction / 256f * 360f - tiltYaw; // convert game rotation to world degrees
+			Matrix4 @object = Matrix4.CreateRotationZ(MathHelper.DegreesToRadians(objectRotation)) * tilt; // object facing
+			// art.ini TurretOffset value positions some voxel parts over our x-axis
+			@object = Matrix4.CreateTranslation(0.18f * props.TurretVoxelOffset, 0, 0) * @object;
+			GL.MultMatrix(ref @object);
+
+			// DrawAxes();
+			
 			float pitch = MathHelper.DegreesToRadians(210);
 			float yaw = MathHelper.DegreesToRadians(120);
 			/*// helps to find good pitch/yaw
@@ -219,10 +230,11 @@ namespace CNCMaps.Engine.Rendering {
 				GL.MultMatrix(ref frame);
 
 				var shadowScale = Matrix4.Scale(0.5f);
-				var shadowToScreen = frameTransl * shadowScale * frameRot * @object * world * trans * lookat;
+				//var shadowTilt = null;
+				var shadowToScreen = frameTransl * shadowScale * frameRot * (@object * world) * trans * lookat;
 
 				// undo world transformations on light direction
-				var lightDirection = ExtractRotationVector(ToOpenGL(Matrix4.Invert(world * @object * frame * shadowTransform)));
+				var lightDirection = ExtractRotationVector(ToOpenGL(Matrix4.Invert((@object * world) * frame * shadowTransform)));
 
 				// draw line in direction light comes from
 				/*GL.Color3(Color.Red);
@@ -249,7 +261,7 @@ namespace CNCMaps.Engine.Rendering {
 							Vector3 vxlPos = Vector3.Multiply(new Vector3(x, y, vx.Z), section.Scale);
 							RenderVoxel(vxlPos);
 
-							Vector3 shadpos = new Vector3(x, y, -100);
+							var shadpos = new Vector3(x, y, 0);
 							var screenPos = Vector3.Transform(shadpos, shadowToScreen);
 							screenPos = Vector3.Transform(screenPos, persp);
 							screenPos.X /= screenPos.Z;
