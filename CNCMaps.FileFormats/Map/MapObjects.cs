@@ -22,7 +22,6 @@ namespace CNCMaps.FileFormats.Map {
 		public ushort SubTile;
 
 		public IsoTile(ushort p1, ushort p2, ushort rx, ushort ry, short z, short tilenum, ushort subtile) {
-			// TODO: Complete member initialization
 			Dx = p1;
 			Dy = p2;
 			Rx = rx;

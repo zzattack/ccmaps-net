@@ -22,7 +22,7 @@ namespace CNCMaps.Engine.Game {
 			if (tmpFile != null)
 				TmpRenderer.Draw((MapTile)obj, tmpFile, ds);
 
-			// todo: tile shadows
+			// todo: tile shadows (TS)
 		}
 
 		public override Rectangle GetBounds(GameObject obj) {
