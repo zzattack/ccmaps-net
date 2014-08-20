@@ -152,7 +152,7 @@ namespace CNCMaps {
 					map.DrawSquaredStartPositions();
 
 				if (Settings.OutputFile == "")
-					Settings.OutputFile = DetermineMapName(mapFile, Settings.Engine).Replace("/", "");
+					Settings.OutputFile = DetermineMapName(mapFile, Settings.Engine);
 
 				if (Settings.OutputDir == "")
 					Settings.OutputDir = Path.GetDirectoryName(Settings.InputFile);
@@ -374,7 +374,8 @@ namespace CNCMaps {
 
 			IniFile.IniSection basic = map.GetSection("Basic");
 			if (basic.ReadBool("Official") == false)
-				return StripPlayersFromName(basic.ReadString("Name", fileNameWithoutExtension));
+				//return StripPlayersFromName(basic.ReadString("Name", fileNameWithoutExtension));
+                return StripPlayersFromName(MakeValidFileName(basic.ReadString("Name", fileNameWithoutExtension))).Replace("  ", " ");
 
 			string mapExt = Path.GetExtension(Settings.InputFile);
 			string missionName = "";
