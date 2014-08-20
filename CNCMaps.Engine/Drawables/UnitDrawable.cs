@@ -30,6 +30,8 @@ namespace CNCMaps.Engine.Game {
 				shp.LoadFromRules();
 				shp.Shp = VFS.Open<ShpFile>(shp.GetFilename());
                 shp.Props.FrameDecider = FrameDeciders.SHPVehicleFrameDecider(shp.StartStandFrame, shp.StandingFrames, shp.Facings);
+                if (Ready_Start != -1 && Ready_Count != -1 && Ready_CountNext != -1) 
+                    shp.Props.FrameDecider = FrameDeciders.InfantryFrameDecider(Ready_Start, Ready_Count, Ready_CountNext);
 				SubDrawables.Add(shp);
 			}
 

@@ -48,12 +48,13 @@ namespace CNCMaps.Engine.Game {
 			switch (Type) {
 				case CollectionType.Aircraft:
 				case CollectionType.Vehicle:
+                // Starkku: Well infantry are units, and they use similar frame decider to SHP vehicles.
+                case CollectionType.Infantry:
 					drawable = InitUnitDrawable(rulesSection, artSection);
 					break;
 				case CollectionType.Building:
 					drawable = InitBuildingDrawable(rulesSection, artSection);
 					break;
-				case CollectionType.Infantry:
 				case CollectionType.Overlay:
 				case CollectionType.Smudge:
 				case CollectionType.Terrain:
@@ -166,7 +167,30 @@ namespace CNCMaps.Engine.Game {
 			var drawable = new UnitDrawable(rulesSection, artSection);
 			InitDrawableDefaults(drawable, artSection);
 
+            // Starkku: Proper infantry facings fix + failsafe change.
+            if (Type == CollectionType.Infantry)
+            {
+                try
+                {
+                    IniFile.IniSection seq = Art.GetSection(artSection.ReadString("Sequence"));
+                    string readyseq = seq.ReadString("Ready", null);
+                    if (readyseq == null || readyseq == "") throw new Exception();
+                    string[] t = readyseq.Split(',');
+                    if (t.Length < 3) throw new Exception();
+                    drawable.Ready_Start = Convert.ToInt32(t[0]);
+                    drawable.Ready_Count = Convert.ToInt32(t[1]);
+                    drawable.Ready_CountNext = Convert.ToInt32(t[2]);
+                }
+                catch (Exception)
+                {
+                    drawable.Ready_Start = 0;
+                    drawable.Ready_Count = 1;
+                    drawable.Ready_CountNext = 1;
+                }
+            }
+
 			drawable.LoadFromRules();
+
 			return drawable;
 		}
 
