@@ -205,6 +205,7 @@ namespace CNCMaps.Engine.Rendering {
 				for (uint x = 0; x != section.SizeX; x++) {
 					for (uint y = 0; y != section.SizeY; y++) {
 						foreach (VxlFile.Voxel vx in section.Spans[x, y].Voxels) {
+						    if (vx.ColorIndex == 0) continue; // Starkku: Game does not render voxels using color index 0.
 							Color color = obj.Palette.Colors[vx.ColorIndex];
 							Vector3 normal = section.GetNormal(vx.NormalIndex);
 							// shader function taken from https://github.com/OpenRA/OpenRA/blob/bleed/cg/vxl.fx
