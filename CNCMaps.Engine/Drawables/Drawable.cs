@@ -203,9 +203,6 @@ namespace CNCMaps.Engine.Game {
 				gfx.DrawRectangle(BoundsRectPenVoxel, obj.GetBounds());
 			else
 				gfx.DrawRectangle(BoundsRectPenSHP, obj.GetBounds());
-            string derp;
-            if (obj.Drawable.Name.Contains("GAPOWR"))
-                derp = "";
 			var top = obj.TopTile;
 			var left = obj.Tile.Layer.GetTileR(obj.TopTile.Rx, obj.TopTile.Ry + obj.Drawable.Foundation.Height);
 			var bottom = obj.Tile.Layer.GetTileR(obj.TopTile.Rx + obj.Drawable.Foundation.Width, obj.TopTile.Ry + obj.Drawable.Foundation.Height);
