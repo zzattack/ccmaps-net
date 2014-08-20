@@ -152,7 +152,7 @@ namespace CNCMaps {
 					map.DrawSquaredStartPositions();
 
 				if (Settings.OutputFile == "")
-					Settings.OutputFile = DetermineMapName(mapFile, Settings.Engine);
+					Settings.OutputFile = DetermineMapName(mapFile, Settings.Engine).Replace("/", "");
 
 				if (Settings.OutputDir == "")
 					Settings.OutputDir = Path.GetDirectoryName(Settings.InputFile);
