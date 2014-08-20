@@ -139,7 +139,8 @@ namespace CNCMaps.Engine.Rendering {
 				for (x = 0; x < img.ExtraWidth; x++) {
 					// Checking per line is required because v needs to be checked every time
 					byte paletteValue = img.ExtraData[rIdx];
-					short zBufVal = (short)((tile.Rx + tile.Ry) * tmp.BlockHeight / 2 + (img.ExtraZData != null ? img.ExtraZData[rIdx] : 0));
+                    // Starkku: Reducing the zBufVal by tmp.BlockHeight seems to get rid of various tile glitches but no idea if it could cause problems of it's own.
+                    short zBufVal = (short)((tile.Rx + tile.Ry) * tmp.BlockHeight / 2 + (img.ExtraZData != null ? img.ExtraZData[rIdx] : 0) - tmp.BlockHeight);
 
 					if (paletteValue != 0 && w_low <= w && w < w_high && zBufVal >= zBuffer[zIdx]) {
 						*w++ = p.Colors[paletteValue].B;
