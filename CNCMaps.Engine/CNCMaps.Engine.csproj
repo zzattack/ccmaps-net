@@ -99,6 +99,29 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
+    <Compile Include="Types\AbstractType.cs" />
+    <Compile Include="Types\AircraftType.cs" />
+    <Compile Include="Types\Animation.cs" />
+    <Compile Include="Types\BuildingType.cs" />
+    <Compile Include="Types\Enums.cs" />
+    <Compile Include="Types\House.cs" />
+    <Compile Include="Types\InfantryType.cs" />
+    <Compile Include="Types\ObjectType.cs" />
+    <Compile Include="Types\OverlayType.cs" />
+    <Compile Include="Types\ParticleSystem.cs" />
+    <Compile Include="Types\ParticleType.cs" />
+    <Compile Include="Types\Prerequisite.cs" />
+    <Compile Include="Types\SmudgeType.cs" />
+    <Compile Include="Types\Sound.cs" />
+    <Compile Include="Types\SuperWeaponType.cs" />
+    <Compile Include="Types\TechnoType.cs" />
+    <Compile Include="Types\TerrainType.cs" />
+    <Compile Include="Types\TypesRepository.cs" />
+    <Compile Include="Types\VehicleType.cs" />
+    <Compile Include="Types\VoxelAnimation.cs" />
+    <Compile Include="Types\WarHead.cs" />
+    <Compile Include="Types\WeaponType.cs" />
+    <Compile Include="Types\XYZ.cs" />
     <Compile Include="Utility\FrameDeciderCompiler.cs" />
     <Compile Include="Utility\Hexagon.cs" />
     <Compile Include="Utility\HsvColor.cs" />

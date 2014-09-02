@@ -254,6 +254,11 @@ namespace CNCMaps.FileFormats {
 					return defaultValue;
 			}
 
+			public Tuple<int, int> ReadXY(string key) {
+				string[] val = ReadString(key).Split(',');
+				return Tuple.Create(int.Parse(val[0]), int.Parse(val[1]));
+			}
+
 			public short ReadShort(string key, short defaultValue = 0) {
 				short ret;
 				if (short.TryParse(ReadString(key), out ret))
