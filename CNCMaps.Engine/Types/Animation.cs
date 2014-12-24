@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Drawing;
 
 namespace CNCMaps.Engine.Types {
 	public class Animation : ObjectType {
@@ -29,7 +30,7 @@ namespace CNCMaps.Engine.Types {
 		public Animation Next;
 		public int DetailLevel;
 		public int TranslucencyDetailLevel;
-		public Tuple<int, int> RandomLoopDelay;
+		public Point RandomLoopDelay;
 		public int Translucency;
 		public bool IsTiberium;
 		public bool HideIfNoOre;
@@ -65,7 +66,7 @@ namespace CNCMaps.Engine.Types {
 		public bool UseNormalLight;
 		public ParticleType SpawnsParticle;
 		public int NumParticles;
-		public Tuple<int, int> RandomRate;
+		public Point RandomRate;
 		
 		public Animation(string ID) : base(ID) {}
 
