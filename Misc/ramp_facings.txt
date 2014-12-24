@@ -1,0 +1,22 @@
+ramptype  normal facing
+ 0  F
+ 1  NW
+ 2  NE
+ 3  SE
+ 4  SW
+ 5  N
+ 6  E
+ 7  S
+ 8  W
+ 9  N
+10  E
+11  S
+12  W
+13  N
+14  E
+15  S
+16  W
+17  F
+18  F
+19  F
+20  F
