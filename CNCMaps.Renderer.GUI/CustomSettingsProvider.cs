@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Configuration;
 using System.IO;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Xml.Linq;
 
 namespace CNCMaps.GUI {
@@ -138,18 +139,26 @@ namespace CNCMaps.GUI {
 		/// Creates an empty user.config file...looks like the one MS creates.  
 		/// This could be overkill a simple key/value pairing would probably do.
 		/// </summary>
-		private void CreateEmptyConfig() {
+		private void CreateEmptyConfig()
+		{
 			var doc = new XDocument();
 			var declaration = new XDeclaration("1.0", "utf-8", "true");
 			var config = new XElement(CONFIG);
 			var userSettings = new XElement(USER_SETTINGS);
-			var group = new XElement(typeof(Properties.Settings).FullName);
+			var group = new XElement(typeof (Properties.Settings).FullName);
 			userSettings.Add(group);
 			config.Add(userSettings);
 			doc.Add(config);
 			doc.Declaration = declaration;
-			doc.Save(UserConfigPath);
+			var dir = Path.GetDirectoryName(UserConfigPath);
+			try {
+				if (!Directory.Exists(dir)) 
+					Directory.CreateDirectory(dir);
+				doc.Save(UserConfigPath);
+			}
+			catch (IOException) { }
 		}
+	
 
 		/// <summary>
 		/// Saves the in memory dictionary to the user config file
