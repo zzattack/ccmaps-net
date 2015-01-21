@@ -58,7 +58,6 @@ Section "Maps Renderer" Section1
 	File "Lib\OSMesa.dll"
 	File "Lib\OpenTK.dll"
 	
-	CreateShortCut "$DESKTOP\CNCMaps Renderer.lnk" "$INSTDIR\CNCMaps.Renderer.GUI.exe"
 	CreateDirectory "$SMPROGRAMS\CNCMaps"
 	CreateShortCut "$SMPROGRAMS\CNCMaps\CNC Maps renderer.lnk" "$INSTDIR\CNCMaps.Renderer.GUI.exe"
 	CreateShortCut "$SMPROGRAMS\CNCMaps\Uninstall.lnk" "$INSTDIR\uninstall.exe"
