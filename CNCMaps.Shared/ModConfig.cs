@@ -18,6 +18,10 @@ namespace CNCMaps.Shared {
 		public static ModConfig ActiveConfig { get; set; }
 		public static TheaterSettings ActiveTheater { get; private set; }
 
+		static ModConfig() { 
+			DefaultsFS.Engine = EngineType.Firestorm;
+		}
+
 		public static void LoadDefaultConfig(EngineType engine) {
 			if (engine == EngineType.TiberianSun)
 				ActiveConfig = DefaultsTS;
@@ -148,6 +152,7 @@ namespace CNCMaps.Shared {
 		public static readonly ModConfig DefaultsTS = new ModConfig {
 			Name = "TS Defaults",
 			ExtraMixes = new List<string>(),
+			Engine = EngineType.TiberianSun,
 			Theaters = new BindingList<TheaterSettings> {
 				new TheaterSettings {
 					Type = TheaterType.Temperate,
@@ -185,6 +190,7 @@ namespace CNCMaps.Shared {
 		public static readonly ModConfig DefaultsRA2 = new ModConfig {
 			Name = "RA2 Defaults",
 			ExtraMixes = new List<string>(),
+			Engine = EngineType.RedAlert2,
 			Theaters = new BindingList<TheaterSettings> {
 				new TheaterSettings {
 					Type = TheaterType.Temperate,
@@ -235,6 +241,7 @@ namespace CNCMaps.Shared {
 		public static readonly ModConfig DefaultsYR = new ModConfig {
 			Name = "YR Defaults",
 			ExtraMixes = new List<string>(),
+			Engine = EngineType.YurisRevenge,
 			Theaters = new BindingList<TheaterSettings> {
 				new TheaterSettings {
 					Type = TheaterType.Temperate,
