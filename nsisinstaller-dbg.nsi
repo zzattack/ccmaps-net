@@ -62,9 +62,7 @@ Section "Maps Renderer" sec_program
 SectionEnd
 
 Section /o "Start menu shortcuts" sec_shortcut_startmenu
-	CreateDirectory "$SMPROGRAMS\CNCMaps"
-	CreateShortCut "$SMPROGRAMS\CNCMaps\CNC Maps renderer.lnk" "$INSTDIR\CNCMaps.Renderer.GUI.exe"
-	CreateShortCut "$SMPROGRAMS\CNCMaps\Uninstall.lnk" "$INSTDIR\uninstall.exe"
+	CreateShortCut "$SMPROGRAMS\CNC Maps renderer.lnk" "$INSTDIR\CNCMaps.Renderer.GUI.exe"
 SectionEnd
 
 Section /o "Desktop shortcut" sec_shortcut_desktop
@@ -95,8 +93,9 @@ Section Uninstall
 	Delete "$INSTDIR\uninstall.exe"
 
 	; Delete Shortcuts
-	Delete "$DESKTOP\CNCMaps Renderer.lnk"
-	Delete "$SMPROGRAMS\CNCMaps\CNC Maps renderer.lnk"
+	Delete "$DESKTOP\CNCMaps Renderer.lnk" 
+	Delete "$SMPROGRAMS\CNC Maps renderer.lnk"
+	Delete "$SMPROGRAMS\CNCMaps\CNC Maps renderer.lnk" # old locations
 	Delete "$SMPROGRAMS\CNCMaps\Uninstall.lnk"
 
 	; Clean up Maps Renderer
@@ -111,7 +110,7 @@ Section Uninstall
 	Delete "$INSTDIR\osmesa.dll"
 
 	; Remove remaining directories
-	RMDir "$SMPROGRAMS\CNCMaps"
+	RMDir "$SMPROGRAMS\CNCMaps" # old
 	RMDir "$INSTDIR\"
 SectionEnd
 
