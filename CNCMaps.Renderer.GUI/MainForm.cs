@@ -11,6 +11,7 @@ using System.Security;
 using System.Threading;
 using System.Windows.Forms;
 using CNCMaps.Engine;
+using CNCMaps.FileFormats.VirtualFileSystem;
 using CNCMaps.GUI.Properties;
 using CNCMaps.Shared;
 using Microsoft.Win32;
@@ -471,12 +472,13 @@ namespace CNCMaps.GUI {
 			tabControl.SelectTab(tpLog);
 			ExecuteRenderer();
 		}
-		
+
 		private void ExecuteRenderer() {
+			var engineCfg = GetRenderSettings();
 			ThreadPool.QueueUserWorkItem(delegate {
 				try {
+					VFS.Reset();
 					var engine = new EngineSettings();
-					var engineCfg = GetRenderSettings();
 					engine.ConfigureFromSettings(engineCfg);
 					engine.Execute();
 

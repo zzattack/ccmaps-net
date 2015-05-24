@@ -236,7 +236,10 @@ namespace CNCMaps.FileFormats.VirtualFileSystem {
 
 			return true;
 		}
-
+		
+		public static void Reset() {
+			Instance.Clear();
+		}
 		public void Clear() {
 			foreach (var arch in AllArchives)
 				arch.Close();
