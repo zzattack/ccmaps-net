@@ -50,6 +50,7 @@ namespace CNCMaps.Engine.Game {
 		}
 
 		public Drawable GetDrawable(string name) {
+			if (!_drawablesDict.ContainsKey(name)) return null;
 			Drawable ret = _drawablesDict[name];
 			if (!_drawableLoaded[ret]) {
 				_drawableLoaded[ret] = true;
