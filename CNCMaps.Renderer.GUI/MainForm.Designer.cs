@@ -320,12 +320,12 @@ namespace CNCMaps.GUI {
 			// 
 			// pnlEngine
 			// 
-			this.pnlEngine.Controls.Add(this.lbEngine);
 			this.pnlEngine.Controls.Add(this.rbEngineFS);
 			this.pnlEngine.Controls.Add(this.rbEngineTS);
 			this.pnlEngine.Controls.Add(this.rbEngineAuto);
 			this.pnlEngine.Controls.Add(this.rbEngineRA2);
 			this.pnlEngine.Controls.Add(this.rbEngineYR);
+			this.pnlEngine.Controls.Add(this.lbEngine);
 			this.pnlEngine.Location = new System.Drawing.Point(6, 142);
 			this.pnlEngine.Name = "pnlEngine";
 			this.pnlEngine.Size = new System.Drawing.Size(507, 42);
@@ -333,9 +333,9 @@ namespace CNCMaps.GUI {
 			// 
 			// lbEngine
 			// 
-			this.lbEngine.Location = new System.Drawing.Point(12, 3);
+			this.lbEngine.Location = new System.Drawing.Point(12, 2);
 			this.lbEngine.Name = "lbEngine";
-			this.lbEngine.Size = new System.Drawing.Size(487, 18);
+			this.lbEngine.Size = new System.Drawing.Size(487, 16);
 			this.lbEngine.TabIndex = 15;
 			this.lbEngine.Text = "This setting tells the program which engine to mimic. Picking an incompatible one" +
     "  will cause crashes.";
@@ -344,7 +344,7 @@ namespace CNCMaps.GUI {
 			// 
 			this.rbEngineFS.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
 			this.rbEngineFS.AutoSize = true;
-			this.rbEngineFS.Location = new System.Drawing.Point(383, 18);
+			this.rbEngineFS.Location = new System.Drawing.Point(383, 20);
 			this.rbEngineFS.Name = "rbEngineFS";
 			this.rbEngineFS.Size = new System.Drawing.Size(68, 17);
 			this.rbEngineFS.TabIndex = 14;
@@ -356,7 +356,7 @@ namespace CNCMaps.GUI {
 			// 
 			this.rbEngineTS.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
 			this.rbEngineTS.AutoSize = true;
-			this.rbEngineTS.Location = new System.Drawing.Point(308, 18);
+			this.rbEngineTS.Location = new System.Drawing.Point(308, 20);
 			this.rbEngineTS.Name = "rbEngineTS";
 			this.rbEngineTS.Size = new System.Drawing.Size(69, 17);
 			this.rbEngineTS.TabIndex = 13;
@@ -369,7 +369,7 @@ namespace CNCMaps.GUI {
 			this.rbEngineAuto.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
 			this.rbEngineAuto.AutoSize = true;
 			this.rbEngineAuto.Checked = true;
-			this.rbEngineAuto.Location = new System.Drawing.Point(12, 18);
+			this.rbEngineAuto.Location = new System.Drawing.Point(12, 20);
 			this.rbEngineAuto.Name = "rbEngineAuto";
 			this.rbEngineAuto.Size = new System.Drawing.Size(132, 17);
 			this.rbEngineAuto.TabIndex = 10;
@@ -383,7 +383,7 @@ namespace CNCMaps.GUI {
 			// 
 			this.rbEngineRA2.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
 			this.rbEngineRA2.AutoSize = true;
-			this.rbEngineRA2.Location = new System.Drawing.Point(226, 18);
+			this.rbEngineRA2.Location = new System.Drawing.Point(226, 20);
 			this.rbEngineRA2.Name = "rbEngineRA2";
 			this.rbEngineRA2.Size = new System.Drawing.Size(76, 17);
 			this.rbEngineRA2.TabIndex = 12;
@@ -395,7 +395,7 @@ namespace CNCMaps.GUI {
 			// 
 			this.rbEngineYR.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
 			this.rbEngineYR.AutoSize = true;
-			this.rbEngineYR.Location = new System.Drawing.Point(146, 18);
+			this.rbEngineYR.Location = new System.Drawing.Point(146, 20);
 			this.rbEngineYR.Name = "rbEngineYR";
 			this.rbEngineYR.Size = new System.Drawing.Size(70, 17);
 			this.rbEngineYR.TabIndex = 11;
@@ -407,6 +407,9 @@ namespace CNCMaps.GUI {
 			// 
 			this.gbInputOutput.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
+			this.gbInputOutput.Controls.Add(this.tbCustomOutput);
+			this.gbInputOutput.Controls.Add(this.rbCustomFilename);
+			this.gbInputOutput.Controls.Add(this.rbAutoFilename);
 			this.gbInputOutput.Controls.Add(this.lblMarkersType);
 			this.gbInputOutput.Controls.Add(this.cbMarkersType);
 			this.gbInputOutput.Controls.Add(this.cbPreserveThumbAspect);
@@ -416,9 +419,6 @@ namespace CNCMaps.GUI {
 			this.gbInputOutput.Controls.Add(this.pnlEngine);
 			this.gbInputOutput.Controls.Add(this.tbModConfig);
 			this.gbInputOutput.Controls.Add(this.cbModConfig);
-			this.gbInputOutput.Controls.Add(this.tbCustomOutput);
-			this.gbInputOutput.Controls.Add(this.rbCustomFilename);
-			this.gbInputOutput.Controls.Add(this.rbAutoFilename);
 			this.gbInputOutput.Controls.Add(this.tbMixDir);
 			this.gbInputOutput.Controls.Add(this.lblMixFiles);
 			this.gbInputOutput.Controls.Add(this.btnBrowseMixDir);

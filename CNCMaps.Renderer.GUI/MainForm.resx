@@ -133,6 +133,12 @@ DANGEROUS: comments and ini formatting is lost. The original map is overwritten!
 since this information is not actually stored in the map.
 This will never render the map as if it is a TS/FS map, if it is you need to manually select this!</value>
   </data>
+  <data name="rbAutoFilename.ToolTip" xml:space="preserve">
+    <value>Automatic filename resolution uses a  CSF, missions.ini or [Basic]/Name if possible. 
+This scheme works well for determining the name of TS/RA2 multiplayer maps as well
+ as campaign missions. When deduced from missions.pkt or missions.ini they are localized
+in the the language of the installed game.</value>
+  </data>
   <data name="cbPreserveThumbAspect.ToolTip" xml:space="preserve">
     <value>Generate a thumbnail of specified size. Format is in 
 "width,height". If you specify 0 either for width or height,
@@ -144,12 +150,6 @@ for the non-zero component.</value>
 (width,height). If you specify 0 either for width or height,
 aspect ratio is preserved while the width/height is maximized
 for the non-zero component.</value>
-  </data>
-  <data name="rbAutoFilename.ToolTip" xml:space="preserve">
-    <value>Automatic filename resolution uses a  CSF, missions.ini or [Basic]/Name if possible. 
-This scheme works well for determining the name of TS/RA2 multiplayer maps as well
- as campaign missions. When deduced from missions.pkt or missions.ini they are localized
-in the the language of the installed game.</value>
   </data>
   <metadata name="ofd.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>186, 17</value>
