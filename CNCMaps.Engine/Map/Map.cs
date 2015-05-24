@@ -490,10 +490,7 @@ namespace CNCMaps.Engine.Game {
 		}
 
 		public void UndrawTiledStartPositions() {
-			Palette red = Palette.MakePalette(Color.Red);
-
-			foreach (var w in _wayPoints) {
-
+			foreach (var w in _wayPoints.Where(w => w.Tile != null)) {
 				// Redraw the 4x4 cell around start pos with original palette;
 				// first the tiles, then the objects
 				for (int x = w.Tile.Rx - 2; x < w.Tile.Rx + 2; x++) {
