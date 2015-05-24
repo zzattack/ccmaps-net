@@ -177,7 +177,7 @@ namespace CNCMaps.Engine {
 				if (Settings.SavePNG)
 					ds.SavePNG(Path.Combine(Settings.OutputDir, Settings.OutputFile + ".png"), Settings.PNGQuality, saveRect);
 
-				Regex reThumb = new Regex(@"(\+)?\((\d+),(\d+)\)");
+				Regex reThumb = new Regex(@"(\+|)?\((\d+),(\d+)\)");
 				var match = reThumb.Match(Settings.ThumbnailConfig);
 				if (match.Success) {
 					Size dimensions = new Size(
@@ -340,7 +340,7 @@ namespace CNCMaps.Engine {
 
 			IniFile.IniSection basic = map.GetSection("Basic");
 			if (basic.ReadBool("Official") == false)
-				return StripPlayersFromName(basic.ReadString("Name", fileNameWithoutExtension));
+				return StripPlayersFromName(MakeValidFileName(basic.ReadString("Name", fileNameWithoutExtension)));
 
 			string mapExt = Path.GetExtension(Settings.InputFile);
 			string missionName = "";
