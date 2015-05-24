@@ -196,7 +196,7 @@ namespace CNCMaps.GUI {
 
 			wc.DownloadDataCompleted += (sender, args) => {
 				UpdateStatus("download complete, running installer", 100);
-				string appPath = Path.GetDirectoryName(Application.ExecutablePath);
+				string appPath = Path.GetTempPath();
 				string dest = Path.Combine(appPath, "CNCMaps_update");
 
 				int suffixNr = 0;

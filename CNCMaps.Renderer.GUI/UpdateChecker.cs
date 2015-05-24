@@ -28,7 +28,7 @@ namespace CNCMaps.GUI {
 						xd.LoadXml(args.Result);
 						var versionNode = xd["version"];
 						var version = Version.Parse(versionNode["version_string"].InnerText);
-						var releaseDate = DateTime.ParseExact(versionNode["release_date"].InnerText.Trim(), "yyyy'-'MM'-'dd", null);
+						var releaseDate = DateTime.ParseExact(versionNode["release_date"].InnerText.Trim(), "yyyy'-'M'-'d", null);
 						string releaseNotes = versionNode["release_notes"].InnerText;
 						string url = versionNode["url"].InnerText;
 
