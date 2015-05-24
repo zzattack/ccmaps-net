@@ -9,7 +9,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
 [assembly: AssemblyProduct("CNCMaps_GUI")]
-[assembly: AssemblyCopyright("Copyright © 2005-2013")]
+[assembly: AssemblyCopyright("Copyright © 2005-2015")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
