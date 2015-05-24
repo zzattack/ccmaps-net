@@ -475,33 +475,33 @@ namespace CNCMaps.GUI {
 
 		private void ExecuteRenderer() {
 			var engineCfg = GetRenderSettings();
-			ThreadPool.QueueUserWorkItem(delegate {
-				try {
-					VFS.Reset();
-					var engine = new EngineSettings();
-					engine.ConfigureFromSettings(engineCfg);
-					engine.Execute();
+			try {
+				VFS.Reset();
+				var engine = new EngineSettings();
+				engine.ConfigureFromSettings(engineCfg);
+				engine.Execute();
 
-					// indicates EOF
-					Log("\r\nYour map has been rendered. If your image did not appear, something went wrong." +
-						" Please sent an email to frank@zzattack.org with your map as an attachment.");
-				}
-				catch (Exception exc) {
-					BeginInvoke((MethodInvoker)AskBugReport);
-				}
-			});
+				// indicates EOF
+				Log("\r\nYour map has been rendered. If your image did not appear, something went wrong." +
+					" Please send an email to frank@zzattack.org with your map as an attachment.");
+			}
+			catch (Exception exc) {
+				AskBugReport();
+			}
 		}
 		private void AskBugReport() {
 			// seems like rendering failed!
 			Log("\r\nIt appears an error ocurred during image rendering.");
-			var dr = MessageBox.Show(
-				"Rendering appears to have failed. Would you like to transmit a bug report containing the error log and map to frank@zzattack.org?",
-				"Failed, submit report", MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2);
-			if (dr == DialogResult.Yes)
-				SubmitBugReport();
+			var form = new SubmitBug();
+			form.Email = Settings.Default.email;
+			if (form.ShowDialog() == DialogResult.OK) {
+				if (!string.IsNullOrWhiteSpace(form.Email))
+					Settings.Default.email = form.Email;
+				SubmitBugReport(form.Email);
+			}
 		}
 
-		private void SubmitBugReport() {
+		private void SubmitBugReport(string email) {
 			try {
 				const string url = UpdateChecker.UpdateCheckHost + "tool/report_bug";
 				WebClient wc = new WebClient();
@@ -512,6 +512,7 @@ namespace CNCMaps.GUI {
 				data.Set("input_name", Path.GetFileName(tbInput.Text));
 				data.Set("commandline", GetCommandLine());
 				data.Set("log_text", rtbLog.Text);
+				data.Set("email", email);
 
 				wc.OpenWriteCompleted += (o, args) => UpdateStatus("sending bug report.. connected", 15);
 				wc.UploadProgressChanged += (o, args) => {

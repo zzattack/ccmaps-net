@@ -118,49 +118,6 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
-  <data name="toolTip.TrayLocation" type="System.Drawing.Point, System.Drawing">
-    <value>365, 17</value>
-  </data>
-  <data name="cbReplacePreview.ToolTip" xml:space="preserve">
-    <value>FinalAlert2 previews generally look quite poor. Replacing them with a downscaled
-version of the resulting image often looks much better, which is what this option does.
-DANGEROUS: comments and ini formatting is lost. The original map is overwritten!</value>
-  </data>
-  <data name="lblOreEmphasisDescription.Text" xml:space="preserve">
-    <value>Setting this will result in a yellow glow to be placed behind ore, and a purple glow behind gems. When scaling images down, for example to use them as small preview image of a map, this looks pretty good.</value>
-  </data>
-  <data name="rbEngineAuto.ToolTip" xml:space="preserve">
-    <value>Tries to automatically deduce whether your map is made for RA2/YR, but is often unsuccessful,
-since this information is not actually stored in the map.
-This will never render the map as if it is a TS/FS map, if it is you need to manually select this!</value>
-  </data>
-  <data name="rbAutoFilename.ToolTip" xml:space="preserve">
-    <value>Automatic filename resolution uses a  CSF, missions.ini or [Basic]/Name if possible. 
-This scheme works well for determining the name of TS/RA2 multiplayer maps as well
- as campaign missions. When deduced from missions.pkt or missions.ini they are localized
-in the the language of the installed game.</value>
-  </data>
-  <data name="cbPreserveThumbAspect.ToolTip" xml:space="preserve">
-    <value>Generate a thumbnail of specified size. Format is in 
-"width,height". If you specify 0 either for width or height,
-aspect ratio is preserved while the width/height is maximized
-for the non-zero component.</value>
-  </data>
-  <data name="cbOutputThumbnail.ToolTip" xml:space="preserve">
-    <value>Generate a thumbnail of specified size. Format is in 
-(width,height). If you specify 0 either for width or height,
-aspect ratio is preserved while the width/height is maximized
-for the non-zero component.</value>
-  </data>
-  <data name="ofd.TrayLocation" type="System.Drawing.Point, System.Drawing">
-    <value>186, 17</value>
-  </data>
-  <data name="folderBrowserDialog1.TrayLocation" type="System.Drawing.Point, System.Drawing">
-    <value>17, 17</value>
-  </data>
-  <data name="statusStrip.TrayLocation" type="System.Drawing.Point, System.Drawing">
-    <value>256, 17</value>
-  </data>
   <data name="$this.Icon" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
         AAABAAEAgIAAAAEAGAAoyAAAFgAAACgAAACAAAAAAAEAAAEAGAAAAAAAAAAAAGAAAABgAAAAAAAAAAAA
