@@ -2,6 +2,7 @@
 !define CONFIG "debug"
 !endif
 !include LogicLib.nsh
+!include Sections.nsh
 
 ; Define your application name
 !define APPNAME "CNCMaps"
@@ -25,6 +26,7 @@ SetCompressor LZMA
 
 !insertmacro MUI_PAGE_WELCOME
 !insertmacro MUI_PAGE_DIRECTORY
+!insertmacro MUI_PAGE_COMPONENTS
 !insertmacro MUI_PAGE_INSTFILES
 !insertmacro MUI_PAGE_FINISH
 
@@ -35,7 +37,7 @@ SetCompressor LZMA
 !insertmacro MUI_LANGUAGE "English"
 !insertmacro MUI_RESERVEFILE_LANGDLL
 
-Section "Maps Renderer" Section1
+Section "Maps Renderer" sec_program
 
 	; Set Section properties
 	SetOverwrite on
@@ -57,12 +59,14 @@ Section "Maps Renderer" Section1
 	File "Lib\NLog.dll"
 	File "Lib\OSMesa.dll"
 	File "Lib\OpenTK.dll"
-	
-	CreateShortCut "$DESKTOP\CNCMaps Renderer.lnk" "$INSTDIR\CNCMaps.Renderer.GUI.exe"
-	CreateDirectory "$SMPROGRAMS\CNCMaps"
-	CreateShortCut "$SMPROGRAMS\CNCMaps\CNC Maps renderer.lnk" "$INSTDIR\CNCMaps.Renderer.GUI.exe"
-	CreateShortCut "$SMPROGRAMS\CNCMaps\Uninstall.lnk" "$INSTDIR\uninstall.exe"
+SectionEnd
 
+Section /o "Start menu shortcuts" sec_shortcut_startmenu
+	CreateShortCut "$SMPROGRAMS\CNC Maps renderer.lnk" "$INSTDIR\CNCMaps.Renderer.GUI.exe"
+SectionEnd
+
+Section /o "Desktop shortcut" sec_shortcut_desktop
+	CreateShortCut "$DESKTOP\CNCMaps Renderer.lnk" "$INSTDIR\CNCMaps.Renderer.GUI.exe"
 SectionEnd
 
 Section -FinishSection
@@ -75,7 +79,7 @@ SectionEnd
 
 ; Modern install component descriptions
 !insertmacro MUI_FUNCTION_DESCRIPTION_BEGIN
-	!insertmacro MUI_DESCRIPTION_TEXT ${Section1} ""
+	!insertmacro MUI_DESCRIPTION_TEXT ${sec_program} ""
 !insertmacro MUI_FUNCTION_DESCRIPTION_END
 
 ;Uninstall section
@@ -89,8 +93,9 @@ Section Uninstall
 	Delete "$INSTDIR\uninstall.exe"
 
 	; Delete Shortcuts
-	Delete "$DESKTOP\CNCMaps Renderer.lnk"
-	Delete "$SMPROGRAMS\CNCMaps\CNC Maps renderer.lnk"
+	Delete "$DESKTOP\CNCMaps Renderer.lnk" 
+	Delete "$SMPROGRAMS\CNC Maps renderer.lnk"
+	Delete "$SMPROGRAMS\CNCMaps\CNC Maps renderer.lnk" # old locations
 	Delete "$SMPROGRAMS\CNCMaps\Uninstall.lnk"
 
 	; Clean up Maps Renderer
@@ -105,7 +110,7 @@ Section Uninstall
 	Delete "$INSTDIR\osmesa.dll"
 
 	; Remove remaining directories
-	RMDir "$SMPROGRAMS\CNCMaps"
+	RMDir "$SMPROGRAMS\CNCMaps" # old
 	RMDir "$INSTDIR\"
 SectionEnd
 

@@ -203,7 +203,7 @@ namespace CNCMaps.Engine {
 					if (mapFile.BaseStream is MixFile)
 						_logger.Error("Cannot inject thumbnail into an archive (.mmx/.yro/.mix)!");
 					else {
-						map.GeneratePreviewPack(Settings.PreviewMarkers, Settings.SizeMode, mapFile);
+						map.GeneratePreviewPack(Settings.PreviewMarkers, Settings.SizeMode, mapFile, Settings.FixPreviewDimensions);
 						_logger.Info("Saving map");
 						mapFile.Save(Settings.InputFile);
 					}

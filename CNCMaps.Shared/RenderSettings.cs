@@ -21,6 +21,7 @@ namespace CNCMaps.Shared {
 		public string ThumbnailConfig { get; set; }
 		public bool GeneratePreviewPack { get; set; }
 		public PreviewMarkersType PreviewMarkers { get; set; }
+		public bool FixPreviewDimensions { get; set; }
 		public bool Debug { get; set; }
 
 		public RenderSettings() {
@@ -39,6 +40,7 @@ namespace CNCMaps.Shared {
 			ModConfig = "";
 			ThumbnailConfig = "";
 			SizeMode = SizeMode.Auto;
+			FixPreviewDimensions = true;
 			Debug = false;
 		}
 
@@ -97,6 +99,7 @@ namespace CNCMaps.Shared {
 				// {"G|graphics-winmgr", "Attempt rendering voxels using window manager context first (default)",v => Settings.PreferOSMesa = false},
 				{"g|graphics-osmesa", "Attempt rendering voxels using OSMesa context first", v => PreferOSMesa = true},
 				{"z|create-thumbnail=", "Also save a thumbnail along with the fullmap in dimensions (x,y), prefix with + to keep aspect ratio	", v => ThumbnailConfig = v},
+				{"x|no-preview-fixup=", "Also save a thumbnail along with the fullmap in dimensions (x,y), prefix with + to keep aspect ratio	", v => ThumbnailConfig = v},
 			};
 
 			return _options;

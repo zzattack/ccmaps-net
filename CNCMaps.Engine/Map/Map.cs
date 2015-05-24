@@ -829,7 +829,7 @@ namespace CNCMaps.Engine.Game {
 			Logger.Info("Map drawing completed");
 		}
 
-		public void GeneratePreviewPack(PreviewMarkersType previewMarkers, SizeMode sizeMode, IniFile map) {
+		public void GeneratePreviewPack(PreviewMarkersType previewMarkers, SizeMode sizeMode, IniFile map, bool fixDimensions) {
 			Logger.Info("Generating PreviewPack data");
 
 			// we will have to re-lock the BitmapData
@@ -861,20 +861,20 @@ namespace CNCMaps.Engine.Game {
 			int pw, ph;
 			switch (Engine) {
 			case EngineType.TiberianSun:
-				pw = (int)Math.Ceiling(1.975 * FullSize.Width);
-				ph = (int)Math.Ceiling(0.995 * FullSize.Height);
+				pw = (int)Math.Ceiling((fixDimensions ? 1.975 : 2.000) * FullSize.Width);
+				ph = (int)Math.Ceiling((fixDimensions ? 0.995 : 1.000) * FullSize.Height);
 				break;
 			case EngineType.Firestorm:
-				pw = (int)Math.Ceiling(1.975 * FullSize.Width);
-				ph = (int)Math.Ceiling(0.995 * FullSize.Height);
+				pw = (int)Math.Ceiling((fixDimensions ? 1.975 : 2.000) * FullSize.Width);
+				ph = (int)Math.Ceiling((fixDimensions ? 0.995 : 1.000) * FullSize.Height);
 				break;
 			case EngineType.RedAlert2:
-				pw = (int)Math.Ceiling(1.975 * FullSize.Width);
-				ph = (int)Math.Ceiling(0.995 * FullSize.Height);
+				pw = (int)Math.Ceiling((fixDimensions ? 1.975 : 2.000) * FullSize.Width);
+				ph = (int)Math.Ceiling((fixDimensions ? 0.995 : 1.000) * FullSize.Height);
 				break;
 			case EngineType.YurisRevenge:
-				pw = (int)Math.Ceiling(1.975 * LocalSize.Width);
-				ph = (int)Math.Ceiling(1.00 * LocalSize.Height);
+				pw = (int)Math.Ceiling((fixDimensions ? 1.975 : 2.000) * LocalSize.Width);
+				ph = (int)Math.Ceiling((fixDimensions ? 1.000 : 1.000) * LocalSize.Height);
 				break;
 			default:
 				throw new ArgumentOutOfRangeException();
