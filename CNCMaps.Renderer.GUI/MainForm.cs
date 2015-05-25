@@ -11,6 +11,7 @@ using System.Security;
 using System.Threading;
 using System.Windows.Forms;
 using CNCMaps.Engine;
+using CNCMaps.Engine.Map;
 using CNCMaps.FileFormats.VirtualFileSystem;
 using CNCMaps.GUI.Properties;
 using CNCMaps.Shared;
@@ -505,7 +506,7 @@ namespace CNCMaps.GUI {
 				WebClient wc = new WebClient();
 				wc.Proxy = null;
 				var data = new NameValueCollection();
-				data.Set("renderer_version", typeof(CNCMaps.Engine.Game.Map).Assembly.GetName().Version.ToString());
+				data.Set("renderer_version", typeof(Map).Assembly.GetName().Version.ToString());
 				data.Set("input_map", File.ReadAllText(tbInput.Text));
 				data.Set("input_name", Path.GetFileName(tbInput.Text));
 				data.Set("commandline", GetCommandLine());

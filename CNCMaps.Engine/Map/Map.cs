@@ -5,7 +5,7 @@ using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 using System.Linq;
 using CNCMaps.Engine.Drawables;
-using CNCMaps.Engine.Map;
+using CNCMaps.Engine.Game;
 using CNCMaps.Engine.Rendering;
 using CNCMaps.Engine.Utility;
 using CNCMaps.FileFormats;
@@ -13,9 +13,8 @@ using CNCMaps.FileFormats.Map;
 using CNCMaps.FileFormats.VirtualFileSystem;
 using CNCMaps.Shared;
 using NLog;
-using TileLayer = CNCMaps.Engine.Map.TileLayer;
 
-namespace CNCMaps.Engine.Game {
+namespace CNCMaps.Engine.Map {
 	public class Map {
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 		public EngineType Engine { get; private set; }

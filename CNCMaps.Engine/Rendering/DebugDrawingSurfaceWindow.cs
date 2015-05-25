@@ -9,13 +9,13 @@ namespace CNCMaps.Engine.Rendering {
 		private DrawingSurface _drawingSurface;
 		private TileLayer _tiles;
 		private Theater _theater;
-		private Game.Map _map;
+		private Map.Map _map;
 
 		public DebugDrawingSurfaceWindow() {
 			InitializeComponent();
 		}
 
-		public DebugDrawingSurfaceWindow(DrawingSurface ds, TileLayer tiles, Theater t, Game.Map map)
+		public DebugDrawingSurfaceWindow(DrawingSurface ds, TileLayer tiles, Theater t, Map.Map map)
 			: this() {
 			_drawingSurface = ds;
 			_tiles = tiles;

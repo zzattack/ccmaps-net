@@ -120,7 +120,7 @@ namespace CNCMaps.Engine {
 
 				VFS.Instance.LoadMixes(Settings.Engine);
 
-				var map = new Game.Map {
+				var map = new Map.Map {
 					IgnoreLighting = Settings.IgnoreLighting,
 					StartPosMarking = Settings.StartPositionMarking,
 					MarkOreFields = Settings.MarkOreFields
