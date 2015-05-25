@@ -110,6 +110,17 @@ namespace CNCMaps.Shared {
 		}
 		private BindingList<ObjectOverride> _objectOverrides;
 
+		[Id(9, 1)]
+		[Description("Disable ore/tib randomization")]
+		[PropertyStateFlags(PropertyFlags.Default)]
+		public bool DisableOreRandomization {
+			get { return _disableOreRandomization; }
+			set {
+				_disableOreRandomization = value;
+			}
+		}
+		private bool _disableOreRandomization;
+
 		public ModConfig() {
 			Name = "Custom mod config";
 			Theaters = new BindingList<TheaterSettings>();

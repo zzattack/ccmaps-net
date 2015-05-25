@@ -203,7 +203,8 @@ namespace CNCMaps.Engine.Map {
 				return false;
 
 			// needs to be done before drawables are set
-			Operations.RecalculateOreSpread(_overlayObjects, Engine);
+			if (!ModConfig.ActiveConfig.DisableOreRandomization)
+				Operations.RecalculateOreSpread(_overlayObjects, Engine);
 
 			RemoveUnknownObjects();
 			SetDrawables();
