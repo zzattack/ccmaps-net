@@ -59,8 +59,6 @@ namespace CNCMaps.GUI {
 		}
 
 		private void MainFormLoad(object sender, EventArgs args) {
-			Settings.Default.Upgrade();
-			
 			Text += " - v" + Assembly.GetEntryAssembly().GetName().Version;
 
 			if (string.IsNullOrEmpty(tbMixDir.Text))
