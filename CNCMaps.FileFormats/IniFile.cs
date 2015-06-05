@@ -185,20 +185,23 @@ namespace CNCMaps.FileFormats {
 					string value = line.Substring(pos + 1);
 					FixLine(ref key);
 					FixLine(ref value);
-					SetValue(key, value);
+					SetValue(key, value, false);
 					return 1;
 				}
 				return 0;
 			}
 
-			public void SetValue(string key, string value) {
+			public void SetValue(string key, string value, bool @override = true) {
 				if (!SortedEntries.ContainsKey(key)) {
 					IniValue val = value;
 					OrderedEntries.Add(new KeyValuePair<string, IniValue>(key, val));
 					SortedEntries[key] = val;
 				}
-				else
+				else if (@override) {
 					SortedEntries[key].Set(value);
+					OrderedEntries.RemoveAll(e => e.Key == key);
+					OrderedEntries.Add(new KeyValuePair<string, IniValue>(key, value));
+				}
 			}
 
 			public static void FixLine(ref string line) {
