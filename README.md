@@ -5,7 +5,7 @@ Project page:
 * http://github.com/zzattack/ccmaps-net
 
 Download:
-* http://cnc-maps.com/tool/get_latest
+* http://cnc-maps.net/tool/get_latest
 
 This project provides a tool to render battle maps of the most popular Westwood RTS games Red Alert 2 and Tiberian Sun, including their expansions Yuri's Revenge and Firestorm.
 
