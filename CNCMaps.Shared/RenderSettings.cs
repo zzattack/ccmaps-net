@@ -1,6 +1,10 @@
+using NLog;
+
 namespace CNCMaps.Shared {
+
 	public class RenderSettings {
 		OptionSet _options;
+		private static readonly Logger _logger = LogManager.GetCurrentClassLogger();
 
 		public string InputFile { get; set; }
 		public string OutputFile { get; set; }
@@ -45,7 +49,10 @@ namespace CNCMaps.Shared {
 		}
 
 		public void ConfigureFromArgs(string[] args) {
-			GetOptions().Parse(args);
+			var unprocessed = GetOptions().Parse(args);
+			foreach (var opt in unprocessed) { 
+				_logger.Warn("Unknown option '{0}' passed", opt);
+			}
 		}
 
 		public OptionSet GetOptions() {

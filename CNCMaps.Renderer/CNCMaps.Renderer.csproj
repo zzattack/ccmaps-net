@@ -67,11 +67,15 @@
       <Project>{b687c2a7-6fd6-495a-927d-ffc29ffd9d1d}</Project>
       <Name>CNCMaps.Engine</Name>
     </ProjectReference>
+    <ProjectReference Include="..\CNCMaps.Shared\CNCMaps.Shared.csproj">
+      <Project>{54D90137-E2CC-4D21-BBCB-9E3C626D875F}</Project>
+      <Name>CNCMaps.Shared</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <ProjectExtensions>
     <VisualStudio>
-      <UserProperties BuildVersion_UpdateFileVersion="True" BuildVersion_UpdateAssemblyVersion="True" BuildVersion_UseGlobalSettings="True" BuildVersion_AssemblyInfoFilename="CNCMaps\Properties\AssemblyInfoGlobal.cs" />
+      <UserProperties BuildVersion_AssemblyInfoFilename="CNCMaps\Properties\AssemblyInfoGlobal.cs" BuildVersion_UseGlobalSettings="True" BuildVersion_UpdateAssemblyVersion="True" BuildVersion_UpdateFileVersion="True" />
     </VisualStudio>
   </ProjectExtensions>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
