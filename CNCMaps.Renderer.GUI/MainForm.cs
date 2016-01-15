@@ -478,17 +478,35 @@ namespace CNCMaps.GUI {
 				VFS.Reset();
 				var engine = new EngineSettings();
 				engine.ConfigureFromSettings(engineCfg);
-				engine.Execute();
+				var result = engine.Execute();
 
-				// indicates EOF
-				Log("\r\nYour map has been rendered. If your image did not appear, something went wrong." +
-					" Please send an email to frank@zzattack.org with your map as an attachment.");
+				switch (result) {
+				case EngineResult.Exception:
+					Log("\r\nUnknown exception.");
+					AskBugReport(null);
+					break;
+				case EngineResult.RenderedOk:
+					// indicates EOF
+					Log("\r\nYour map has been rendered. If your image did not appear, something went wrong." +
+						" Please send an email to frank@zzattack.org with your map as an attachment.");
+					AskBugReport(null);
+					break;
+				case EngineResult.LoadTheaterFailed:
+						Log("\r\nTheater loading failed. Please make sure the mix directory is correct and that the required expansion packs are installed "
+							+ "if they are required for the map you want to render.");
+					break;
+				case EngineResult.LoadRulesFailed:
+					Log("\r\nRules loading failed. Please make sure the mix directory is correct and that the required expansion packs are installed "
+						+ "if they are required for the map you want to render.");
+					AskBugReport(null);
+					break;
+				}
 			}
 			catch (Exception exc) {
-				AskBugReport();
+				AskBugReport(exc);
 			}
 		}
-		private void AskBugReport() {
+		private void AskBugReport(Exception exc) {
 			// seems like rendering failed!
 			Log("\r\nIt appears an error ocurred during image rendering.");
 			var form = new SubmitBug();
@@ -496,17 +514,18 @@ namespace CNCMaps.GUI {
 			if (form.ShowDialog() == DialogResult.OK) {
 				if (!string.IsNullOrWhiteSpace(form.Email))
 					Settings.Default.email = form.Email;
-				SubmitBugReport(form.Email);
+				SubmitBugReport(form.Email, exc);
 			}
 		}
 
-		private void SubmitBugReport(string email) {
+		private void SubmitBugReport(string email, Exception exc) {
 			try {
 				const string url = UpdateChecker.UpdateCheckHost + "tool/report_bug";
 				WebClient wc = new WebClient();
 				wc.Proxy = null;
 				var data = new NameValueCollection();
 				data.Set("renderer_version", typeof(Map).Assembly.GetName().Version.ToString());
+				data.Set("exception", exc == null ? "" : exc.ToString());
 				data.Set("input_map", File.ReadAllText(tbInput.Text));
 				data.Set("input_name", Path.GetFileName(tbInput.Text));
 				data.Set("commandline", GetCommandLine());
