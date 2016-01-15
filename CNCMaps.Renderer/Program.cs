@@ -6,9 +6,9 @@ namespace CNCMaps {
 		public static int Main(string[] args) { 
 			var engineSettings = new EngineSettings();
 			engineSettings.ConfigureFromArgs(args);
-			int retVal = engineSettings.Execute();
+			var result = engineSettings.Execute();
 			LogManager.Configuration = null; // required for mono release to flush possible targets
-			return retVal;
+			return (int)result;
 		}
 	}
 }

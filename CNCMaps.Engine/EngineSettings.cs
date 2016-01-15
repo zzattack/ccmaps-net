@@ -37,8 +37,8 @@ namespace CNCMaps.Engine {
 			Settings = settings;
 			return ValidateSettings();
 		}
-		
-		public int Execute() { 
+
+		public EngineResult Execute() { 
 			try {
 				_logger.Info("Initializing virtual filesystem");
 
@@ -128,12 +128,12 @@ namespace CNCMaps.Engine {
 
 				if (!map.Initialize(mapFile, Settings.Engine, ModConfig.ActiveConfig.CustomRulesIniFiles, ModConfig.ActiveConfig.CustomArtIniFiles)) {
 					_logger.Error("Could not successfully load this map. Try specifying the engine type manually.");
-					return 1;
+					return EngineResult.LoadRulesFailed;
 				}
 
 				if (!map.LoadTheater()) {
 					_logger.Error("Could not successfully load all required components for this map. Aborting.");
-					return 1;
+					return EngineResult.LoadTheaterFailed;
 				}
 
 				if (Settings.StartPositionMarking == StartPositionMarking.Tiled)
@@ -211,9 +211,12 @@ namespace CNCMaps.Engine {
 			}
 			catch (Exception exc) {
 				_logger.Error(string.Format("An unknown fatal exception occured: {0}", exc), exc);
+#if DEBUG
 				throw;
+#endif
+				return EngineResult.Exception;
 			}
-			return 0;
+			return EngineResult.RenderedOk;
 		}
 
 		/*private static void DumpTileProperties() {
@@ -240,16 +243,6 @@ namespace CNCMaps.Engine {
 
 
 		private static void InitLoggerConfig() {
-			// for release, logmanager automatically picks the correct NLog.config file
-#if DEBUG
-			try {
-				if (File.Exists("NLog.Debug.config")) {
-					LogManager.Configuration = new XmlLoggingConfiguration("NLog.Debug.config");
-				}
-			}
-			catch (XmlException) { }
-			catch (NLogConfigurationException) { }
-#endif
 			if (LogManager.Configuration == null) {
 				// init default config
 				var target = new ColoredConsoleTarget();
