@@ -164,8 +164,9 @@ namespace CNCMaps.Engine {
 				// free up as much memory as possible before saving the large images
 				Rectangle saveRect = map.GetSizePixels(Settings.SizeMode);
 				DrawingSurface ds = map.GetDrawingSurface();
-				// if we don't need this data anymore, we can try to save some memory
-				if (!Settings.GeneratePreviewPack) {
+                saveRect.Intersect(new Rectangle(0, 0, ds.Width, ds.Height));
+                // if we don't need this data anymore, we can try to save some memory
+                if (!Settings.GeneratePreviewPack) {
 					ds.FreeNonBitmap();
 					map.FreeUseless();
 					GC.Collect();
