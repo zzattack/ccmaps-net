@@ -49,13 +49,13 @@ Section "Maps Renderer" sec_program
 	File "CNCMaps.Shared\bin\${CONFIG}\CNCMaps.Shared.dll"
 	File "CNCMaps.FileFormats\bin\${CONFIG}\CNCMaps.FileFormats.dll"
 	File "CNCMaps.Engine\bin\${CONFIG}\CNCMaps.Engine.dll"
-		
+	
+	; these are no longer used	
+	Delete "$INSTDIR\NLog.config"
+	Delete "$INSTDIR\NLog.Debug.config"
+	
 	SetOverwrite ifnewer
-	${If} ${CONFIG} == "Debug"
-		File "CNCMaps.Renderer\NLog.Debug.config"
-	${Else}
-		File "CNCMaps.Renderer\NLog.config"
-	${EndIf}	
+	
 	File "Lib\NLog.dll"
 	File "Lib\OSMesa.dll"
 	File "Lib\OpenTK.dll"
@@ -105,6 +105,7 @@ Section Uninstall
 	Delete "$INSTDIR\CNCMaps.FileFormats.dll"
 	Delete "$INSTDIR\CNCMaps.Engine.dll"
 	Delete "$INSTDIR\NLog.dll"
+	Delete "$INSTDIR\NLog.config"
 	Delete "$INSTDIR\NLog.Debug.config"
 	Delete "$INSTDIR\opengl32.dll"
 	Delete "$INSTDIR\osmesa.dll"

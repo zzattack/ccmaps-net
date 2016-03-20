@@ -32,6 +32,9 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="NLog">
+      <HintPath>..\Lib\NLog.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Drawing" />
@@ -49,6 +52,7 @@
     <Compile Include="DynamicTypeDescription\StandardValueEditorUI.Designer.cs">
       <DependentUpon>StandardValueEditorUI.cs</DependentUpon>
     </Compile>
+    <Compile Include="EngineResult.cs" />
     <Compile Include="Properties\AssemblyInfoGlobal.cs" />
     <Compile Include="Enums.cs" />
     <Compile Include="ModConfig.cs" />
