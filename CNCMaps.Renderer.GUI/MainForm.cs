@@ -38,7 +38,7 @@ namespace CNCMaps.GUI {
 				cfgPath = Path.Combine(localAppDir, GuiConfig);
 			}
 			Settings.Default.SettingsKey = cfgPath;
-			InitializeComponent();
+            InitializeComponent();
 
 
 			ConfigurationItemFactory.Default.Targets.RegisterDefinition("GuiTarget", typeof(GuiTarget));
@@ -86,6 +86,7 @@ namespace CNCMaps.GUI {
 			cbEmphasizeOre.Checked = Settings.Default.emphore;
 			cbModConfig.Checked = Settings.Default.modconfig;
 			cbOmitSquareMarkers.Checked = Settings.Default.omitsquarespreview;
+            cbMarkersType.Text = Settings.Default.markers;
 			cbSquaredStartPositions.Checked = Settings.Default.squaredpos;
 			cbTiledStartPositions.Checked = Settings.Default.tiledpos;
 			cbOutputJPG.Checked = Settings.Default.outputjpg;
@@ -98,7 +99,9 @@ namespace CNCMaps.GUI {
 		}
 
 		private void MainFormClosing(object sender, FormClosingEventArgs e) {
-			Settings.Default.outputauto = rbAutoFilename.Checked;
+            Settings.Default.input = tbInput.Text;
+            Settings.Default.mixdir = tbMixDir.Text;
+            Settings.Default.outputauto = rbAutoFilename.Checked;
 			Settings.Default.outputcustom = rbCustomFilename.Checked;
 			Settings.Default.engineauto = rbEngineAuto.Checked;
 			Settings.Default.enginefs = rbEngineFS.Checked;
@@ -110,7 +113,7 @@ namespace CNCMaps.GUI {
 			Settings.Default.fullsize = rbSizeFullmap.Checked; ;
 			Settings.Default.localsize = rbSizeLocal.Checked;
 			Settings.Default.autosize = rbSizeAuto.Checked;
-
+            Settings.Default.markers = cbMarkersType.Text;
 			Settings.Default.emphore = cbEmphasizeOre.Checked;
 			Settings.Default.modconfig = cbModConfig.Checked;
 			Settings.Default.omitsquarespreview = cbOmitSquareMarkers.Checked;
@@ -489,12 +492,12 @@ namespace CNCMaps.GUI {
 					// indicates EOF
 					Log("\r\nYour map has been rendered. If your image did not appear, something went wrong." +
 						" Please send an email to frank@zzattack.org with your map as an attachment.");
-					AskBugReport(null);
 					break;
 				case EngineResult.LoadTheaterFailed:
 						Log("\r\nTheater loading failed. Please make sure the mix directory is correct and that the required expansion packs are installed "
 							+ "if they are required for the map you want to render.");
-					break;
+                        AskBugReport(null);
+                    break;
 				case EngineResult.LoadRulesFailed:
 					Log("\r\nRules loading failed. Please make sure the mix directory is correct and that the required expansion packs are installed "
 						+ "if they are required for the map you want to render.");

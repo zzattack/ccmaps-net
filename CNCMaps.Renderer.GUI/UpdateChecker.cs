@@ -42,7 +42,7 @@ namespace CNCMaps.GUI {
 						else
 							AlreadyLatest(this, Empty);
 					}
-					catch (Exception) {
+					catch {
 						UpdateCheckFailed(this, Empty);
 					}
 				}
