@@ -252,25 +252,33 @@ namespace CNCMaps.FileFormats.VirtualFileSystem {
 				return ReadRegistryString(key, "SOFTWARE\\Westwood\\Red Alert 2", "InstallPath");
 			}
 		}
-
 		public static string TSInstallPath {
 			get {
 				var key = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry32);
 				return ReadRegistryString(key, "SOFTWARE\\Westwood\\Tiberian Sun", "InstallPath");
 			}
 		}
-
+		
+		private static string ra2DirCached ;
 		public static string RA2InstallDir {
 			get {
-				try { return Path.GetDirectoryName(RA2InstallPath); }
-				catch { return null; }
+				if (ra2DirCached == null) {
+					try { ra2DirCached = Path.GetDirectoryName(RA2InstallPath); }
+					catch {}
+				}
+				return ra2DirCached;
 			}
 		}
+		
 
+		private static string tsDirCached = null;
 		public static string TSInstallDir {
 			get {
-				try { return Path.GetDirectoryName(TSInstallPath); }
-				catch { return null; }
+				if (tsDirCached == null) {
+					try { tsDirCached = Path.GetDirectoryName(TSInstallPath); }
+					catch { }
+				}
+				return tsDirCached;
 			}
 		}
 
