@@ -154,7 +154,9 @@ namespace CNCMaps.GUI {
 			catch (NullReferenceException) { } // no registry entry
 			catch (ArgumentException) { } // invalid path
 
-			return Environment.CurrentDirectory;
+			// if current directory contains any mix files, try that
+			if (Directory.GetFiles(Environment.CurrentDirectory, "*.mix").Any()) return Environment.CurrentDirectory;
+			else return string.Empty;
 		}
 
 		public static bool IsLinux {
