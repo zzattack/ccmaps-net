@@ -777,6 +777,7 @@ namespace CNCMaps.GUI {
 			// 
 			// tabControl
 			// 
+			this.tabControl.AllowDrop = true;
 			this.tabControl.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
@@ -789,6 +790,8 @@ namespace CNCMaps.GUI {
 			this.tabControl.SelectedIndex = 0;
 			this.tabControl.Size = new System.Drawing.Size(603, 310);
 			this.tabControl.TabIndex = 8;
+			this.tabControl.DragDrop += new System.Windows.Forms.DragEventHandler(this.InputDragDrop);
+			this.tabControl.DragEnter += new System.Windows.Forms.DragEventHandler(this.InputDragEnter);
 			// 
 			// tpMain
 			// 
@@ -863,6 +866,7 @@ namespace CNCMaps.GUI {
 			// 
 			// tpAbout
 			// 
+			this.tpAbout.AllowDrop = true;
 			this.tpAbout.Controls.Add(this.label1);
 			this.tpAbout.Location = new System.Drawing.Point(4, 22);
 			this.tpAbout.Name = "tpAbout";
