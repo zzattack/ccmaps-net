@@ -7,7 +7,8 @@ del CNCMaps/obj/*.*
 del CNCMaps GUI/obj/*.*
 del CNCMaps GUI/obj/*.*
 
-set MSBUILD=%WINDIR%\Microsoft.NET\Framework\v4.0.30319\msbuild.exe
+REM MSBUILD=%WINDIR%\Microsoft.NET\Framework\v4.0.30319\msbuild.exe
+set MSBUILD="%PROGRAMFILES(X86)%\MSBuild\14.0\Bin\msbuild.exe"
 set MAKENSIS="%PROGRAMFILES(X86)%\nsis\makensis.exe"
 
 %MSBUILD% CNCMaps.sln /p:Configuration=Release
