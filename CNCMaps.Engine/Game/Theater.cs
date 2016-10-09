@@ -195,7 +195,7 @@ namespace CNCMaps.Engine.Game {
 
 		internal void Draw(GameObject obj, DrawingSurface ds) {
 			Logger.Trace("Drawing object {0} @ {1}", obj, obj.Tile);
-			obj.Drawable.Draw(obj, ds);
+			obj.Drawable?.Draw(obj, ds);
 		}
 
 

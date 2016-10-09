@@ -275,7 +275,7 @@ namespace CNCMaps.FileFormats.VirtualFileSystem {
 		public static string TSInstallDir {
 			get {
 				if (tsDirCached == null) {
-					try { tsDirCached = Path.GetDirectoryName(TSInstallPath); }
+					try { tsDirCached = !string.IsNullOrEmpty(TSInstallPath) ? Path.GetDirectoryName(TSInstallPath) : ""; }
 					catch { }
 				}
 				return tsDirCached;
@@ -285,7 +285,8 @@ namespace CNCMaps.FileFormats.VirtualFileSystem {
 		public static string ReadRegistryString(RegistryKey rkey, string regpath, string keyname) {
 			string ret = string.Empty;
 			try {
-				ret = rkey.OpenSubKey(regpath).GetValue(keyname, "").ToString();
+				var key = rkey.OpenSubKey(regpath);
+				if (key != null) ret = key.GetValue(keyname, "").ToString();
 			}
 			catch {
 				Logger.Error("Could not read registry key {0} at {1}", keyname, regpath);

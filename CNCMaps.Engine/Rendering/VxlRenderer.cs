@@ -235,7 +235,9 @@ namespace CNCMaps.Engine.Rendering {
 				var shadowToScreen = frameTransl * shadowScale * frameRot * (@object * world) * trans * lookat;
 
 				// undo world transformations on light direction
-				var lightDirection = ExtractRotationVector(ToOpenGL(Matrix4.Invert((@object * world) * frame * shadowTransform)));
+				var v = @object*world*frame*shadowTransform;
+				
+				var lightDirection = (v.Determinant != 0.0) ? ExtractRotationVector(ToOpenGL(Matrix4.Invert(v))) : Vector3.Zero;
 
 				// draw line in direction light comes from
 				/*GL.Color3(Color.Red);

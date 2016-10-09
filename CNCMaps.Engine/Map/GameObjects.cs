@@ -35,7 +35,7 @@ namespace CNCMaps.Engine.Map {
 
 		public Drawable Drawable {
 			get {
-				if (_drawable == null) _drawable = Collection.GetDrawable(this);
+				if (_drawable == null) _drawable = Collection?.GetDrawable(this);
 				return _drawable; 
 			}
 			set { _drawable = value; }
