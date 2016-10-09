@@ -148,8 +148,10 @@ namespace CNCMaps.GUI {
 				return Environment.CurrentDirectory;
 
 			try {
-				using (var key = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry32))
-					return Path.GetDirectoryName((string)key.OpenSubKey("SOFTWARE\\Westwood\\" + (RA2 ? "Red Alert 2" : "Tiberian Sun")).GetValue("InstallPath", string.Empty));
+				using (var key = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry32)) {
+					var subkey = key.OpenSubKey("SOFTWARE\\Westwood\\" + (RA2 ? "Red Alert 2" : "Tiberian Sun"));
+					if (subkey != null) return Path.GetDirectoryName((string)subkey.GetValue("InstallPath", string.Empty));
+				}
 			}
 			catch (NullReferenceException) { } // no registry entry
 			catch (ArgumentException) { } // invalid path
