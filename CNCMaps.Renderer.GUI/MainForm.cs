@@ -94,6 +94,7 @@ namespace CNCMaps.GUI {
 			cbOutputThumbnail.Checked = Settings.Default.outputthumb;
 			cbReplacePreview.Checked = Settings.Default.injectthumb;
 			cbPreserveThumbAspect.Checked = Settings.Default.thumbpreserveaspect;
+			tbCustomOutput.Text = Settings.Default.customfilename;
 
 			UpdateCommandline();
 		}
@@ -124,7 +125,7 @@ namespace CNCMaps.GUI {
 			Settings.Default.outputthumb = cbOutputThumbnail.Checked;
 			Settings.Default.thumbpreserveaspect = cbPreserveThumbAspect.Checked;
 			Settings.Default.injectthumb = cbReplacePreview.Checked;
-
+			Settings.Default.customfilename = tbCustomOutput.Text;
 			Settings.Default.Save();
 		}
 
