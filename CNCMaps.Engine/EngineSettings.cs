@@ -142,7 +142,7 @@ namespace CNCMaps.Engine {
 				if (Settings.MarkOreFields)
 					map.MarkOreAndGems();
 
-				if (Settings.FixupTileLayer) map.FixupTileLayer();
+				if (Settings.FixupTiles) map.FixupTileLayer();
 				map.Draw();
 				
 				if (Settings.StartPositionMarking == StartPositionMarking.Squared)
@@ -201,7 +201,7 @@ namespace CNCMaps.Engine {
 					ds.SaveThumb(dimensions, cutRect, Path.Combine(Settings.OutputDir, "thumb_" + Settings.OutputFile + ".jpg"));
 				}
 
-				if (Settings.GeneratePreviewPack || Settings.FixupTileLayer) {
+				if (Settings.GeneratePreviewPack || Settings.FixupTiles) {
 					if (mapFile.BaseStream is MixFile)
 						_logger.Error("Cannot fix tile layer or inject thumbnail into an archive (.mmx/.yro/.mix)!");
 					else {
@@ -297,7 +297,7 @@ namespace CNCMaps.Engine {
 				_logger.Error("Specified input file does not exist");
 				return false;
 			}
-			else if (!Settings.SaveJPEG && !Settings.SavePNG && !Settings.GeneratePreviewPack && !Settings.FixupTileLayer) {
+			else if (!Settings.SaveJPEG && !Settings.SavePNG && !Settings.GeneratePreviewPack && !Settings.FixupTiles) {
 				_logger.Error("No output format selected. Either specify -j, -p, -k, --fixup-tiles or a combination");
 				return false;
 			}

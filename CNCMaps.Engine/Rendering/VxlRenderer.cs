@@ -136,9 +136,9 @@ namespace CNCMaps.Engine.Rendering {
 			// DrawAxes();
 			
 			// determine tilt vectors
-			Matrix4 tilt;
-			int tiltPitch, tiltYaw;
-			if (true) {
+			Matrix4 tilt = Matrix4.Identity;
+			int tiltPitch =0 , tiltYaw = 0;
+			if (obj.Tile.Drawable != null) {
 				int ramp = (obj.Tile.Drawable as TileDrawable).GetTileImage(obj.Tile).RampType;
 				if (ramp == 0 || ramp >= 17) {
 					tiltPitch = tiltYaw = 0;
@@ -153,7 +153,7 @@ namespace CNCMaps.Engine.Rendering {
 					tiltPitch = 25;
 					tiltYaw = 225 - 90 * ((ramp - 1) % 4);
 				}
-				tilt = Matrix4.CreateRotationX(MathHelper.DegreesToRadians(tiltPitch));
+				tilt *= Matrix4.CreateRotationX(MathHelper.DegreesToRadians(tiltPitch));
 				tilt *= Matrix4.CreateRotationZ(MathHelper.DegreesToRadians(tiltYaw));
 
 				/*// show tilt direction

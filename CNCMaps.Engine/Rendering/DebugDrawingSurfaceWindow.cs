@@ -32,7 +32,7 @@ namespace CNCMaps.Engine.Rendering {
 
 			sb.AppendFormat("Mouse: ({0},{1})", e.Location.X, e.Location.Y);
 			var tile = _tiles.GetTileScreen(e.Location);
-			if (tile == null) {
+			if (tile == null || !(tile.Drawable is TileDrawable)) {
 				sb.Append("No valid tile under mouse");
 			}
 			else {
