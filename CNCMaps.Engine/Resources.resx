@@ -118,6 +118,30 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="aro_marker_1" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>Resources\aro_marker_1.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="aro_marker_2" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>Resources\aro_marker_2.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="aro_marker_3" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>Resources\aro_marker_3.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="aro_marker_4" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>Resources\aro_marker_4.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="aro_marker_5" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>Resources\aro_marker_5.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="aro_marker_6" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>Resources\aro_marker_6.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="aro_marker_7" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>Resources\aro_marker_7.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="aro_marker_8" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>Resources\aro_marker_8.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
   <data name="bittah_marker_1" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>Resources\bittah_marker_1.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
