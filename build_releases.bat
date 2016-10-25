@@ -1,4 +1,4 @@
-set VER=2.2
+set VER=2.3.0
 
 del CNCMaps_*.zip
 del CNCMaps_setup_*.exe
