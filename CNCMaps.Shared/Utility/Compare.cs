@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace CNCMaps.Engine.Utility {
+namespace CNCMaps.Shared.Utility {
 	public static class Compare {
 		public static IEnumerable<T> DistinctBy<T, TIdentity>(this IEnumerable<T> source, Func<T, TIdentity> identitySelector) {
 			return source.Distinct(By(identitySelector));
