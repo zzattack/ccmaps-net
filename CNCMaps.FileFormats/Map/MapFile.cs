@@ -96,8 +96,8 @@ namespace CNCMaps.FileFormats.Map {
 				ushort ry = mf.ReadUInt16();
 				short tilenum = mf.ReadInt16();
 				short zero1 = mf.ReadInt16();
-				ushort subtile = mf.ReadByte();
-				short z = mf.ReadByte();
+				byte subtile = mf.ReadByte();
+				byte z = mf.ReadByte();
 				byte zero2 = mf.ReadByte();
 
 				int dx = rx - ry + FullSize.Width - 1;

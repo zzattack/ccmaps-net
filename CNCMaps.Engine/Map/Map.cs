@@ -48,12 +48,14 @@ namespace CNCMaps.Engine.Map {
 		private readonly HashSet<Palette> _palettesToBeRecalculated = new HashSet<Palette>();
 
 		private DrawingSurface _drawingSurface;
+		private MapFile _mapFile;
 
 		public bool Initialize(MapFile mf, EngineType et, List<string> customRulesININames, List<string> customArtININames) {
 			if (et == EngineType.AutoDetect) {
 				Logger.Fatal("Engine type needs to be known by now!");
 				return false;
 			}
+			this._mapFile = mf;
 			Engine = et;
 			TheaterType = Theater.TheaterTypeFromString(mf.ReadString("Map", "Theater"));
 			FullSize = mf.FullSize;
@@ -1005,26 +1007,52 @@ namespace CNCMaps.Engine.Map {
 		}
 
 
-		public void ReportMissingTiles() {
+		public void FixupTileLayer() {
 			Logger.Info("Locating undefined tiles on map");
 			var coll = _theater.GetTileCollection();
+			int brokenTiles = 0;
 			foreach (var tile in _tiles.Where(t => t != null)) {
 				if (tile.TileNum >= coll.NumTiles) {
 					Logger.Warn("Removing tile at ({0},{1}) with tilenum {2} because it is not valid in this theather's tileset", tile.Rx, tile.Ry, tile.TileNum);
+					ChangeTileToClear(coll, tile);
+					brokenTiles++;
+					continue;
 				}
 				var drawable = coll.GetDrawable(tile) as TileDrawable;
 				if (drawable == null) {
 					Logger.Warn("Removing tile at ({0},{1}) with tilenum {2} because no definition for it was found", tile.Rx, tile.Ry, tile.TileNum);
+					ChangeTileToClear(coll, tile);
+					brokenTiles++;
+					continue;
 				}
 
 				var tmp = drawable.GetTileFile(tile);
 				if (tmp == null) {
 					Logger.Warn(string.Format("Removing tile #{2}@({0},{1}) because no tmp file for it was found; set {3} ({4}), expected filename {5}xx{6}",
 						tile.Rx, tile.Ry, tile.TileNum, drawable.Name, drawable.TsEntry?.MemberOfSet?.SetName ?? "", drawable.TsEntry?.MemberOfSet?.FileName ?? "", ModConfig.ActiveTheater.Extension));
+					brokenTiles++;
+					ChangeTileToClear(coll, tile);
 				}
 
 			}
+			if (brokenTiles == 0) {
+				Logger.Info("No undefined/broken tiles found, not altering IsoMapPack5 section");
+			}
+			else {
+				Logger.Info($"Fixing IsoMapPack5 section with {brokenTiles} broken tiles");
+				_mapFile.Tiles.SerializeIsoMapPack5(_mapFile.GetSection("IsoMapPack5"));
+			}
 
+		}
+
+		private void ChangeTileToClear(TileCollection coll, MapTile tile) {
+			tile.TileNum = 0;
+			tile.SubTile = 0;
+			tile.Drawable = coll.GetDrawable(0);
+
+			var t = _mapFile.Tiles.GetTileR(tile.Rx, tile.Ry);
+			t.TileNum = 0;
+			t.SubTile = 0;
 		}
 	}
 }

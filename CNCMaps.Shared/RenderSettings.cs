@@ -23,6 +23,7 @@ namespace CNCMaps.Shared {
 		public StartPositionMarking StartPositionMarking;
 		public bool PreferOSMesa { get; set; }
 		public string ThumbnailConfig { get; set; }
+		public bool FixupTiles { get; set; }
 		public bool GeneratePreviewPack { get; set; }
 		public PreviewMarkersType PreviewMarkers { get; set; }
 		public bool FixPreviewDimensions { get; set; }
@@ -107,6 +108,7 @@ namespace CNCMaps.Shared {
 				{"g|graphics-osmesa", "Attempt rendering voxels using OSMesa context first", v => PreferOSMesa = true},
 				{"z|create-thumbnail=", "Also save a thumbnail along with the fullmap in dimensions (x,y), prefix with + to keep aspect ratio	", v => ThumbnailConfig = v},
 				{"x|no-preview-fixup=", "Also save a thumbnail along with the fullmap in dimensions (x,y), prefix with + to keep aspect ratio	", v => ThumbnailConfig = v},
+				{"fixup-tiles", "Remove undefined tiles and overwrite IsoMapPack5 section in map", v => FixupTiles = true },
 			};
 
 			return _options;
