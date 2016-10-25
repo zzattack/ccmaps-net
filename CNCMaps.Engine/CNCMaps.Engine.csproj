@@ -130,6 +130,14 @@
     <Content Include="OpenTK.dll.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <None Include="Resources\aro_marker_8.png" />
+    <None Include="Resources\aro_marker_7.png" />
+    <None Include="Resources\aro_marker_6.png" />
+    <None Include="Resources\aro_marker_5.png" />
+    <None Include="Resources\aro_marker_4.png" />
+    <None Include="Resources\aro_marker_3.png" />
+    <None Include="Resources\aro_marker_2.png" />
+    <None Include="Resources\aro_marker_1.png" />
     <None Include="Resources\bittah_marker_3.png" />
     <None Include="Resources\bittah_marker_2.png" />
     <None Include="Resources\bittah_marker_1.png" />
