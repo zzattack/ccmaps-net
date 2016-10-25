@@ -601,6 +601,38 @@ namespace CNCMaps.Engine.Map {
 
 		public unsafe void DrawSquaredStartPositions() {
 			Logger.Info("Marking squared start positions");
+			foreach (var entry in _wayPoints) {
+				try {
+					if (entry.Number >= 8)
+						continue;
+
+					MapTile t = _tiles.GetTile(entry.Tile);
+					if (t == null) continue;
+					int destX = t.Dx * TileWidth / 2;
+					int destY = (t.Dy - t.Z) * TileHeight / 2;
+
+					bool vert = FullSize.Height * 2 > FullSize.Width;
+					int radius;
+					if (vert)
+						radius = 10 * FullSize.Height * TileHeight / 2 / 144;
+					else
+						radius = 10 * FullSize.Width * TileWidth / 2 / 133;
+
+					int h = radius, w = radius;
+					for (int drawY = destY - h / 2; drawY < destY + h; drawY++) {
+						for (int drawX = destX - w / 2; drawX < destX + w; drawX++) {
+							byte* p = (byte*)_drawingSurface.BitmapData.Scan0 + drawY * _drawingSurface.BitmapData.Stride + 3 * drawX;
+							*p++ = 0x00;
+							*p++ = 0x00;
+							*p++ = 0xFF;
+						}
+					}
+				}
+				catch (FormatException) {
+				}
+				catch (IndexOutOfRangeException) {
+				}
+			}
 		}
 
 		public int FindCutoffHeight() {

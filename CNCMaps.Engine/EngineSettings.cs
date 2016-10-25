@@ -144,6 +144,9 @@ namespace CNCMaps.Engine {
 
 				// map.ReportMissingTiles();
 				map.Draw();
+				
+				if (Settings.StartPositionMarking == StartPositionMarking.Squared)
+					map.DrawSquaredStartPositions();
 
 #if DEBUG
 				// ====================================================================================
@@ -152,9 +155,6 @@ namespace CNCMaps.Engine {
 				}
 				// ====================================================================================
 #endif
-
-				if (Settings.StartPositionMarking == StartPositionMarking.Squared)
-					map.DrawSquaredStartPositions();
 
 				if (Settings.OutputFile == "")
 					Settings.OutputFile = DetermineMapName(mapFile, Settings.Engine);
