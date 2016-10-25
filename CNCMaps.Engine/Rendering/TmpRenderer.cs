@@ -10,6 +10,7 @@ namespace CNCMaps.Engine.Rendering {
 		static Logger Logger = LogManager.GetCurrentClassLogger();
 
 		public static Rectangle GetBounds(MapTile tile, TmpFile tmp) {
+			if (tmp == null) return Rectangle.Empty;
 			tmp.Initialize();
 
 			if (tile.SubTile >= tmp.Images.Count) return Rectangle.Empty;

@@ -142,6 +142,7 @@ namespace CNCMaps.Engine {
 				if (Settings.MarkOreFields)
 					map.MarkOreAndGems();
 
+				// map.ReportMissingTiles();
 				map.Draw();
 
 #if DEBUG

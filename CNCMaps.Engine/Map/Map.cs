@@ -351,7 +351,7 @@ namespace CNCMaps.Engine.Map {
 					_animationObjects.Add(anim);
 				}*/
 
-				foreach (var obj in tile.AllObjects.Union(new[] {tile}).ToList()) {
+				foreach (var obj in tile.AllObjects.Union(new[] { tile }).ToList()) {
 					if (obj == null) continue;
 
 					Palette p;
@@ -408,7 +408,7 @@ namespace CNCMaps.Engine.Map {
 			if (Engine <= EngineType.Firestorm) {
 				var tiberiums = _rules.GetSection("Tiberiums").OrderedEntries.Select(tib => tib.Value.ToString());
 				var remaps = tiberiums.Select(tib => _rules.GetOrCreateSection(tib).ReadString("Color"));
-				var tibRemaps = tiberiums.Zip(remaps, (k, v) => new {k, v}).ToDictionary(x => x.k, x => x.v);
+				var tibRemaps = tiberiums.Zip(remaps, (k, v) => new { k, v }).ToDictionary(x => x.k, x => x.v);
 
 				foreach (var ovl in _overlayObjects) {
 					if (ovl == null) continue;
@@ -728,7 +728,7 @@ namespace CNCMaps.Engine.Map {
 
 		public void RedrawOreAndGems() {
 			var tileCollection = _theater.GetTileCollection();
-			var checkFunc = new Func<OverlayObject, bool>(delegate(OverlayObject ovl) { return SpecialOverlays.GetOverlayTibType(ovl, Engine) != OverlayTibType.NotSpecial; });
+			var checkFunc = new Func<OverlayObject, bool>(delegate (OverlayObject ovl) { return SpecialOverlays.GetOverlayTibType(ovl, Engine) != OverlayTibType.NotSpecial; });
 
 			// first redraw all required tiles (zigzag method)
 			for (int y = 0; y < FullSize.Height; y++) {
@@ -760,7 +760,7 @@ namespace CNCMaps.Engine.Map {
 		}
 		public void Draw() {
 			_drawingSurface = new DrawingSurface(FullSize.Width * TileWidth, FullSize.Height * TileHeight, PixelFormat.Format24bppRgb);
-			
+
 #if SORT
 			Logger.Info("Sorting objects map");
 			var sorter = new ObjectSorter(_theater, _tiles);
@@ -973,5 +973,26 @@ namespace CNCMaps.Engine.Map {
 		}
 
 
+		public void ReportMissingTiles() {
+			Logger.Info("Locating undefined tiles on map");
+			var coll = _theater.GetTileCollection();
+			foreach (var tile in _tiles.Where(t => t != null)) {
+				if (tile.TileNum >= coll.NumTiles) {
+					Logger.Warn("Removing tile at ({0},{1}) with tilenum {2} because it is not valid in this theather's tileset", tile.Rx, tile.Ry, tile.TileNum);
+				}
+				var drawable = coll.GetDrawable(tile) as TileDrawable;
+				if (drawable == null) {
+					Logger.Warn("Removing tile at ({0},{1}) with tilenum {2} because no definition for it was found", tile.Rx, tile.Ry, tile.TileNum);
+				}
+
+				var tmp = drawable.GetTileFile(tile);
+				if (tmp == null) {
+					Logger.Warn(string.Format("Removing tile #{2}@({0},{1}) because no tmp file for it was found; set {3} ({4}), expected filename {5}xx{6}",
+						tile.Rx, tile.Ry, tile.TileNum, drawable.Name, drawable.TsEntry?.MemberOfSet?.SetName ?? "", drawable.TsEntry?.MemberOfSet?.FileName ?? "", ModConfig.ActiveTheater.Extension));
+				}
+
+			}
+
+		}
 	}
 }
