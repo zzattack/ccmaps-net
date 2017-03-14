@@ -37,12 +37,13 @@ namespace CNCMaps.Engine.Rendering {
 			}
 			else {
 				var tileFile = (tile.Drawable as TileDrawable).GetTileFile(tile);
-				sb.AppendFormat("   Tile {4}: d({0},{1}) r({2},{3})", tile.Dx, tile.Dy, tile.Rx, tile.Ry, tileFile.FileName.ToUpper());
-				if (tileFile.Images[tile.SubTile].RampType != 0)
-					sb.AppendFormat(" ramp {0}", tileFile.Images[tile.SubTile].RampType);
-				if (tileFile.Images[tile.SubTile].TerrainType != 0)
-					sb.AppendFormat(" terrain {0}", tileFile.Images[tile.SubTile].TerrainType);
-
+				sb.AppendFormat("   Tile {4}: d({0},{1}) r({2},{3})", tile.Dx, tile.Dy, tile.Rx, tile.Ry, (tileFile?.FileName??"").ToUpper());
+				if (tileFile != null) {
+					if (tileFile.Images[tile.SubTile].RampType != 0)
+						sb.AppendFormat(" ramp {0}", tileFile.Images[tile.SubTile].RampType);
+					if (tileFile.Images[tile.SubTile].TerrainType != 0)
+						sb.AppendFormat(" terrain {0}", tileFile.Images[tile.SubTile].TerrainType);
+				}
 				var gridTilenoZ = _tiles.GetTileScreen(e.Location, true, true);
 				sb.AppendFormat("   Touched: {0}", _tiles.GridTouched[gridTilenoZ.Dx, gridTilenoZ.Dy / 2]);
 
