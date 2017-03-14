@@ -267,6 +267,9 @@ namespace CNCMaps.Engine.Game {
 						if (r >= 'a') filename += r;
 						filename += _theaterSettings.Extension;
 						var tmpFile = VFS.Open<TmpFile>(filename);
+						if (tmpFile == null && _theaterSettings.Type == TheaterType.NewUrban) {
+							tmpFile = VFS.Open<TmpFile>(filename.Replace(".ubn", ".tem"));
+						}
 						if (tmpFile != null) rs.AddTile(tmpFile);
 						else break;
 					}
