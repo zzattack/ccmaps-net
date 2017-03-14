@@ -874,7 +874,6 @@ namespace CNCMaps.Engine.Map {
 			// undo tiled, if needed
 			if (StartPosMarking == StartPositionMarking.Tiled)
 				UndrawTiledStartPositions();
-			_drawingSurface.Unlock();
 
 			switch (previewMarkers) {
 			case PreviewMarkersType.None:
@@ -887,6 +886,7 @@ namespace CNCMaps.Engine.Map {
 				// to be injected later
 				break;
 			}
+			_drawingSurface.Unlock();
 
 			// Number magic explained: http://modenc.renegadeprojects.com/Maps/PreviewPack
 			int pw, ph;
@@ -912,7 +912,6 @@ namespace CNCMaps.Engine.Map {
 			}
 
 			using (var preview = new Bitmap(pw, ph, PixelFormat.Format24bppRgb)) {
-
 				using (Graphics gfx = Graphics.FromImage(preview)) {
 					// use high-quality scaling
 					gfx.InterpolationMode = InterpolationMode.HighQualityBicubic;
