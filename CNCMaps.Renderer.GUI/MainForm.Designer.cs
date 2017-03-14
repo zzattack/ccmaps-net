@@ -736,10 +736,13 @@ namespace CNCMaps.GUI {
 			// 
 			this.tbCommandPreview.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
+			this.tbCommandPreview.BackColor = System.Drawing.SystemColors.ControlLight;
 			this.tbCommandPreview.Location = new System.Drawing.Point(77, 260);
 			this.tbCommandPreview.Name = "tbCommandPreview";
+			this.tbCommandPreview.ReadOnly = true;
 			this.tbCommandPreview.Size = new System.Drawing.Size(423, 20);
 			this.tbCommandPreview.TabIndex = 4;
+			this.toolTip.SetToolTip(this.tbCommandPreview, "For more fine-grained control you can invoke CNCMaps.Renderer.exe manually!");
 			// 
 			// ofd
 			// 

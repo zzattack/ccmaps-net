@@ -84,7 +84,6 @@ namespace CNCMaps.GUI {
 			rbSizeAuto.Checked = Settings.Default.autosize;
 
 			cbEmphasizeOre.Checked = Settings.Default.emphore;
-			cbModConfig.Checked = Settings.Default.modconfig;
 			cbOmitSquareMarkers.Checked = Settings.Default.omitsquarespreview;
             cbMarkersType.Text = Settings.Default.markers;
 			cbSquaredStartPositions.Checked = Settings.Default.squaredpos;
@@ -95,6 +94,8 @@ namespace CNCMaps.GUI {
 			cbReplacePreview.Checked = Settings.Default.injectthumb;
 			cbPreserveThumbAspect.Checked = Settings.Default.thumbpreserveaspect;
 			tbCustomOutput.Text = Settings.Default.customfilename;
+			cbModConfig.Checked = Settings.Default.modconfig;
+			tbModConfig.Text = Settings.Default.modconfigfile;
 
 			UpdateCommandline();
 		}
@@ -116,7 +117,6 @@ namespace CNCMaps.GUI {
 			Settings.Default.autosize = rbSizeAuto.Checked;
             Settings.Default.markers = cbMarkersType.Text;
 			Settings.Default.emphore = cbEmphasizeOre.Checked;
-			Settings.Default.modconfig = cbModConfig.Checked;
 			Settings.Default.omitsquarespreview = cbOmitSquareMarkers.Checked;
 			Settings.Default.squaredpos = cbSquaredStartPositions.Checked;
 			Settings.Default.tiledpos = cbTiledStartPositions.Checked;
@@ -126,6 +126,8 @@ namespace CNCMaps.GUI {
 			Settings.Default.thumbpreserveaspect = cbPreserveThumbAspect.Checked;
 			Settings.Default.injectthumb = cbReplacePreview.Checked;
 			Settings.Default.customfilename = tbCustomOutput.Text;
+			Settings.Default.modconfig = cbModConfig.Checked;
+			Settings.Default.modconfigfile = tbModConfig.Text;
 			Settings.Default.Save();
 		}
 
