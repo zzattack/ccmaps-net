@@ -396,15 +396,15 @@ namespace CNCMaps.Engine.Rendering {
 		}
 
 		bool SetupFramebuffer() {
-			int fbo;
 			try {
+				int fbo;
 				GL.Ext.GenFramebuffers(1, out fbo);
 				GL.Ext.BindFramebuffer(FramebufferTarget.FramebufferExt, fbo);
 				GL.DrawBuffer(DrawBufferMode.ColorAttachment0);
 				GL.ReadBuffer(ReadBufferMode.ColorAttachment0);
 			}
-			catch {
-				Logger.Error("Failed to initialize framebuffers. Voxels will not be rendered.");
+			catch (Exception exc) {
+				Logger.Error("Failed to initialize framebuffers. Voxels will not be rendered. Exception: " + exc);
 				return false;
 			}
 			int depthbuffer;
