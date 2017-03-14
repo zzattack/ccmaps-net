@@ -1011,7 +1011,7 @@ namespace CNCMaps.Engine.Map {
 			Logger.Info("Locating undefined tiles on map");
 			var coll = _theater.GetTileCollection();
 			int brokenTiles = 0;
-			foreach (var tile in _tiles.Where(t => t != null)) {
+			foreach (var tile in _tiles.Where(t => t != null).ToList()) {
 				if (tile.TileNum >= coll.NumTiles) {
 					Logger.Warn("Removing tile at ({0},{1}) with tilenum {2} because it is not valid in this theather's tileset", tile.Rx, tile.Ry, tile.TileNum);
 					ChangeTileToClear(coll, tile);

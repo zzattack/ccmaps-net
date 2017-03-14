@@ -139,7 +139,8 @@ namespace CNCMaps.Engine.Rendering {
 			Matrix4 tilt = Matrix4.Identity;
 			int tiltPitch =0 , tiltYaw = 0;
 			if (obj.Tile.Drawable != null) {
-				int ramp = (obj.Tile.Drawable as TileDrawable).GetTileImage(obj.Tile).RampType;
+				var img = (obj.Tile.Drawable as TileDrawable).GetTileImage(obj.Tile);
+				int ramp = img?.RampType ?? 0;
 				if (ramp == 0 || ramp >= 17) {
 					tiltPitch = tiltYaw = 0;
 				}

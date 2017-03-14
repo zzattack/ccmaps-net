@@ -43,9 +43,10 @@ namespace CNCMaps.Engine.Game {
 		}
 
 		public TmpFile.TmpImage GetTileImage(MapTile t) {
-			var tmp = TsEntry.GetTmpFile(t);
+			var tmp = TsEntry?.GetTmpFile(t);
+			if (tmp == null || tmp.Images.Count == 0) return null;
 			if (tmp.Images.Count > t.SubTile) return tmp.Images[t.SubTile];
-			return tmp.Images.Count > 0 ? tmp.Images[0] : null;
+			else return tmp.Images[0];
 		}
 
 	}
