@@ -127,7 +127,7 @@ namespace CNCMaps.Engine.Rendering {
 		}
 
 
-		unsafe public static void DrawShadow(GameObject obj, ShpFile shp, DrawProperties props, DrawingSurface ds) {
+		public static unsafe void DrawShadow(GameObject obj, ShpFile shp, DrawProperties props, DrawingSurface ds) {
 			int frameIndex = props.FrameDecider(obj);
 			frameIndex = DecideFrameIndex(frameIndex, shp.NumImages);
 			frameIndex += shp.Images.Count / 2; // latter half are shadow Images
@@ -177,7 +177,8 @@ namespace CNCMaps.Engine.Rendering {
 					zBufVal += img.Height;
 
 				for (int x = 0; x < img.Width; x++) {
-					if (w_low <= w && w < w_high && imgData[rIdx] != 0 && !shadows[zIdx] 
+					if (0 <= offset.X + x && offset.X + x < ds.Width && 0 <= y + offset.Y && y + offset.Y < ds.Height
+						&& imgData[rIdx] != 0 && !shadows[zIdx] 
 						//&& zBufVal >= zBuffer[zIdx] 
 						&& castHeight >= heightBuffer[zIdx]
 						) {
