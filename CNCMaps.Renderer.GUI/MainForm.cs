@@ -38,13 +38,13 @@ namespace CNCMaps.GUI {
 				cfgPath = Path.Combine(localAppDir, GuiConfig);
 			}
 			Settings.Default.SettingsKey = cfgPath;
-            InitializeComponent();
+			InitializeComponent();
 
 
 			ConfigurationItemFactory.Default.Targets.RegisterDefinition("GuiTarget", typeof(GuiTarget));
 			if (LogManager.Configuration == null) {
 				// init default config
-				var target =  new GuiTarget();
+				var target = new GuiTarget();
 				target.TargetControl = this.rtbLog;
 				target.Name = "rtbLogger";
 				target.Layout = "${processtime:format=s\\.ffff} [${level}] ${message}";
@@ -69,65 +69,93 @@ namespace CNCMaps.GUI {
 				PerformUpdateCheck();
 			else
 				UpdateStatus("not checking for newer version", 100);
+			tbInput.Text = Settings.Default.input;
+			tbMixDir.Text = Settings.Default.mixdir;
+			cbOutputJPG.Checked = Settings.Default.outputjpg;
+			nudEncodingQuality.Value = Settings.Default.outputjpgq;
+
+			cbOutputPNG.Checked = Settings.Default.outputpng;
+			nudCompression.Value = Settings.Default.outputpngq;
+
+			cbOutputThumbnail.Checked = Settings.Default.outputthumb;
+			tbThumbDimensions.Text = Settings.Default.thumbdimensions;
+			cbPreserveThumbAspect.Checked = Settings.Default.thumbpreserveaspect;
+			cbMarkersType.Text = Settings.Default.markers;
 
 			rbAutoFilename.Checked = Settings.Default.outputauto;
 			rbCustomFilename.Checked = Settings.Default.outputcustom;
+			tbCustomOutput.Text = Settings.Default.customfilename;
+
 			rbEngineAuto.Checked = Settings.Default.engineauto;
 			rbEngineFS.Checked = Settings.Default.enginefs;
 			rbEngineRA2.Checked = Settings.Default.enginera2;
 			rbEngineTS.Checked = Settings.Default.enginets;
 			rbEngineYR.Checked = Settings.Default.engineyr;
-			rbPreferHardwareRendering.Checked = Settings.Default.hwvoxels;
-			rbPreferSoftwareRendering.Checked = Settings.Default.swvoxels;
-			rbSizeFullmap.Checked = Settings.Default.fullsize;
-			rbSizeLocal.Checked = Settings.Default.localsize;
-			rbSizeAuto.Checked = Settings.Default.autosize;
 
-			cbEmphasizeOre.Checked = Settings.Default.emphore;
-			cbOmitSquareMarkers.Checked = Settings.Default.omitsquarespreview;
-            cbMarkersType.Text = Settings.Default.markers;
-			cbSquaredStartPositions.Checked = Settings.Default.squaredpos;
-			cbTiledStartPositions.Checked = Settings.Default.tiledpos;
-			cbOutputJPG.Checked = Settings.Default.outputjpg;
-			cbOutputPNG.Checked = Settings.Default.outputpng;
-			cbOutputThumbnail.Checked = Settings.Default.outputthumb;
-			cbReplacePreview.Checked = Settings.Default.injectthumb;
-			cbPreserveThumbAspect.Checked = Settings.Default.thumbpreserveaspect;
-			tbCustomOutput.Text = Settings.Default.customfilename;
 			cbModConfig.Checked = Settings.Default.modconfig;
 			tbModConfig.Text = Settings.Default.modconfigfile;
 
+			cbEmphasizeOre.Checked = Settings.Default.emphore;
+			cbSquaredStartPositions.Checked = Settings.Default.squaredpos;
+			cbTiledStartPositions.Checked = Settings.Default.tiledpos;
+
+			cbReplacePreview.Checked = Settings.Default.injectthumb;
+			cbOmitSquareMarkers.Checked = Settings.Default.omitsquarespreview;
+
+			rbSizeAuto.Checked = Settings.Default.autosize;
+			rbSizeLocal.Checked = Settings.Default.localsize;
+			rbSizeFullmap.Checked = Settings.Default.fullsize;
+
+			rbPreferHardwareRendering.Checked = Settings.Default.hwvoxels;
+			rbPreferSoftwareRendering.Checked = Settings.Default.swvoxels;
+
+			ckbFixupTiles.Checked = Settings.Default.fixuptiles;
 			UpdateCommandline();
 		}
 
 		private void MainFormClosing(object sender, FormClosingEventArgs e) {
-            Settings.Default.input = tbInput.Text;
-            Settings.Default.mixdir = tbMixDir.Text;
-            Settings.Default.outputauto = rbAutoFilename.Checked;
+			Settings.Default.input = tbInput.Text;
+			Settings.Default.mixdir = tbMixDir.Text;
+			Settings.Default.outputjpg = cbOutputJPG.Checked;
+			Settings.Default.outputjpgq = nudEncodingQuality.Value;
+
+			Settings.Default.outputpng = cbOutputPNG.Checked;
+			Settings.Default.outputpngq = nudCompression.Value;
+
+			Settings.Default.outputthumb = cbOutputThumbnail.Checked;
+			Settings.Default.thumbdimensions = tbThumbDimensions.Text;
+			Settings.Default.thumbpreserveaspect = cbPreserveThumbAspect.Checked;
+			Settings.Default.markers = cbMarkersType.Text;
+
+			Settings.Default.outputauto = rbAutoFilename.Checked;
 			Settings.Default.outputcustom = rbCustomFilename.Checked;
+			Settings.Default.customfilename = tbCustomOutput.Text;
+
 			Settings.Default.engineauto = rbEngineAuto.Checked;
 			Settings.Default.enginefs = rbEngineFS.Checked;
 			Settings.Default.enginera2 = rbEngineRA2.Checked;
 			Settings.Default.enginets = rbEngineTS.Checked;
 			Settings.Default.engineyr = rbEngineYR.Checked;
-			Settings.Default.hwvoxels = rbPreferHardwareRendering.Checked; ;
-			Settings.Default.swvoxels = rbPreferSoftwareRendering.Checked; ;
-			Settings.Default.fullsize = rbSizeFullmap.Checked; ;
-			Settings.Default.localsize = rbSizeLocal.Checked;
-			Settings.Default.autosize = rbSizeAuto.Checked;
-            Settings.Default.markers = cbMarkersType.Text;
-			Settings.Default.emphore = cbEmphasizeOre.Checked;
-			Settings.Default.omitsquarespreview = cbOmitSquareMarkers.Checked;
-			Settings.Default.squaredpos = cbSquaredStartPositions.Checked;
-			Settings.Default.tiledpos = cbTiledStartPositions.Checked;
-			Settings.Default.outputjpg = cbOutputJPG.Checked;
-			Settings.Default.outputpng = cbOutputPNG.Checked;
-			Settings.Default.outputthumb = cbOutputThumbnail.Checked;
-			Settings.Default.thumbpreserveaspect = cbPreserveThumbAspect.Checked;
-			Settings.Default.injectthumb = cbReplacePreview.Checked;
-			Settings.Default.customfilename = tbCustomOutput.Text;
+
 			Settings.Default.modconfig = cbModConfig.Checked;
 			Settings.Default.modconfigfile = tbModConfig.Text;
+
+			Settings.Default.emphore = cbEmphasizeOre.Checked;
+			Settings.Default.squaredpos = cbSquaredStartPositions.Checked;
+			Settings.Default.tiledpos = cbTiledStartPositions.Checked;
+
+			Settings.Default.injectthumb = cbReplacePreview.Checked;
+			Settings.Default.omitsquarespreview = cbOmitSquareMarkers.Checked;
+
+			Settings.Default.autosize = rbSizeAuto.Checked;
+			Settings.Default.localsize = rbSizeLocal.Checked;
+			Settings.Default.fullsize = rbSizeFullmap.Checked;
+
+			Settings.Default.hwvoxels = rbPreferHardwareRendering.Checked;
+			Settings.Default.swvoxels = rbPreferSoftwareRendering.Checked;
+
+			Settings.Default.fixuptiles = ckbFixupTiles.Checked;
+
 			Settings.Default.Save();
 		}
 
@@ -401,21 +429,25 @@ namespace CNCMaps.GUI {
 					cmd += "--preview-markers-bittah ";
 			}
 
+			if (ckbFixupTiles.Checked) {
+				cmd += "--fixup-tiles ";
+			}
+
 			return cmd;
 		}
-		
+
 		private RenderSettings GetRenderSettings() {
 			var rs = new RenderSettings();
 			rs.InputFile = tbInput.Text;
 			if (cbOutputPNG.Checked) {
-				rs.SavePNG=true;
+				rs.SavePNG = true;
 				rs.PNGQuality = (int)nudCompression.Value;
 			}
 
 			if (rbCustomFilename.Checked) rs.OutputFile = tbCustomOutput.Text;
 			if (cbOutputJPG.Checked) {
-				rs.SaveJPEG=true;
-				rs.JPEGCompression= (int)nudEncodingQuality.Value;
+				rs.SaveJPEG = true;
+				rs.JPEGCompression = (int)nudEncodingQuality.Value;
 			}
 
 			if (cbModConfig.Checked)
@@ -460,6 +492,8 @@ namespace CNCMaps.GUI {
 				}
 			}
 
+			rs.FixupTiles = ckbFixupTiles.Checked;
+
 			return rs;
 		}
 		#endregion
@@ -471,7 +505,7 @@ namespace CNCMaps.GUI {
 				MessageBox.Show("Input file doesn't exist. Aborting.");
 				return;
 			}
-			
+
 			if (!cbOutputPNG.Checked && !cbOutputJPG.Checked && !cbReplacePreview.Checked) {
 				UpdateStatus("aborted, no output format picked", 100);
 				MessageBox.Show("Either PNG, JPEG or Replace Preview must be checked.", "Nothing to do..", MessageBoxButtons.OK,
@@ -501,10 +535,10 @@ namespace CNCMaps.GUI {
 						" Please send an email to frank@zzattack.org with your map as an attachment.");
 					break;
 				case EngineResult.LoadTheaterFailed:
-						Log("\r\nTheater loading failed. Please make sure the mix directory is correct and that the required expansion packs are installed "
-							+ "if they are required for the map you want to render.");
-                        AskBugReport(null);
-                    break;
+					Log("\r\nTheater loading failed. Please make sure the mix directory is correct and that the required expansion packs are installed "
+						+ "if they are required for the map you want to render.");
+					AskBugReport(null);
+					break;
 				case EngineResult.LoadRulesFailed:
 					Log("\r\nRules loading failed. Please make sure the mix directory is correct and that the required expansion packs are installed "
 						+ "if they are required for the map you want to render.");
@@ -626,7 +660,7 @@ namespace CNCMaps.GUI {
 			{22, "Calculating palette-values for all objects"},
 			{90, "Map drawing completed"},
 			{92, "Saving"},
-			 
+
 		};
 		private void rtbLog_LinkClicked(object sender, LinkClickedEventArgs e) {
 			Process.Start(e.LinkText);

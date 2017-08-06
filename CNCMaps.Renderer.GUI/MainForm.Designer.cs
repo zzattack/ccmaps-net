@@ -28,16 +28,18 @@ namespace CNCMaps.GUI {
 			this.components = new System.ComponentModel.Container();
 			System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
 			this.gbMiscOptions = new System.Windows.Forms.GroupBox();
+			this.lblFixupTilesDesc = new System.Windows.Forms.Label();
+			this.ckbFixupTiles = new System.Windows.Forms.CheckBox();
+			this.gbSizeMode = new System.Windows.Forms.GroupBox();
+			this.rbSizeAuto = new System.Windows.Forms.RadioButton();
+			this.rbSizeFullmap = new System.Windows.Forms.RadioButton();
+			this.rbSizeLocal = new System.Windows.Forms.RadioButton();
 			this.gbThumbs = new System.Windows.Forms.GroupBox();
 			this.cbOmitSquareMarkers = new System.Windows.Forms.CheckBox();
 			this.cbReplacePreview = new System.Windows.Forms.CheckBox();
 			this.gbVoxelsMode = new System.Windows.Forms.GroupBox();
 			this.rbPreferSoftwareRendering = new System.Windows.Forms.RadioButton();
 			this.rbPreferHardwareRendering = new System.Windows.Forms.RadioButton();
-			this.gbSizeMode = new System.Windows.Forms.GroupBox();
-			this.rbSizeAuto = new System.Windows.Forms.RadioButton();
-			this.rbSizeFullmap = new System.Windows.Forms.RadioButton();
-			this.rbSizeLocal = new System.Windows.Forms.RadioButton();
 			this.lblTiledSquaredPosDescription = new System.Windows.Forms.Label();
 			this.lblSquaredStartPosDescription = new System.Windows.Forms.Label();
 			this.lblOreEmphasisDescription = new System.Windows.Forms.Label();
@@ -94,9 +96,9 @@ namespace CNCMaps.GUI {
 			this.tpAbout = new System.Windows.Forms.TabPage();
 			this.label1 = new System.Windows.Forms.Label();
 			this.gbMiscOptions.SuspendLayout();
+			this.gbSizeMode.SuspendLayout();
 			this.gbThumbs.SuspendLayout();
 			this.gbVoxelsMode.SuspendLayout();
-			this.gbSizeMode.SuspendLayout();
 			this.pnlEngine.SuspendLayout();
 			this.gbInputOutput.SuspendLayout();
 			((System.ComponentModel.ISupportInitialize)(this.nudEncodingQuality)).BeginInit();
@@ -115,9 +117,11 @@ namespace CNCMaps.GUI {
 			this.gbMiscOptions.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
+			this.gbMiscOptions.Controls.Add(this.lblFixupTilesDesc);
+			this.gbMiscOptions.Controls.Add(this.ckbFixupTiles);
+			this.gbMiscOptions.Controls.Add(this.gbSizeMode);
 			this.gbMiscOptions.Controls.Add(this.gbThumbs);
 			this.gbMiscOptions.Controls.Add(this.gbVoxelsMode);
-			this.gbMiscOptions.Controls.Add(this.gbSizeMode);
 			this.gbMiscOptions.Controls.Add(this.lblTiledSquaredPosDescription);
 			this.gbMiscOptions.Controls.Add(this.lblSquaredStartPosDescription);
 			this.gbMiscOptions.Controls.Add(this.lblOreEmphasisDescription);
@@ -133,13 +137,82 @@ namespace CNCMaps.GUI {
 			this.gbMiscOptions.DragDrop += new System.Windows.Forms.DragEventHandler(this.InputDragDrop);
 			this.gbMiscOptions.DragEnter += new System.Windows.Forms.DragEventHandler(this.InputDragEnter);
 			// 
+			// lblFixupTilesDesc
+			// 
+			this.lblFixupTilesDesc.Location = new System.Drawing.Point(12, 250);
+			this.lblFixupTilesDesc.Name = "lblFixupTilesDesc";
+			this.lblFixupTilesDesc.Size = new System.Drawing.Size(515, 17);
+			this.lblFixupTilesDesc.TabIndex = 22;
+			this.lblFixupTilesDesc.Text = "Remove undefined tiles and overwrite IsoMapPack5 section in map";
+			// 
+			// ckbFixupTiles
+			// 
+			this.ckbFixupTiles.AutoSize = true;
+			this.ckbFixupTiles.Location = new System.Drawing.Point(29, 234);
+			this.ckbFixupTiles.Name = "ckbFixupTiles";
+			this.ckbFixupTiles.Size = new System.Drawing.Size(72, 17);
+			this.ckbFixupTiles.TabIndex = 21;
+			this.ckbFixupTiles.Text = "Fixup tiles";
+			this.ckbFixupTiles.UseVisualStyleBackColor = true;
+			this.ckbFixupTiles.CheckedChanged += new System.EventHandler(this.UIChanged);
+			// 
+			// gbSizeMode
+			// 
+			this.gbSizeMode.Controls.Add(this.rbSizeAuto);
+			this.gbSizeMode.Controls.Add(this.rbSizeFullmap);
+			this.gbSizeMode.Controls.Add(this.rbSizeLocal);
+			this.gbSizeMode.Location = new System.Drawing.Point(13, 183);
+			this.gbSizeMode.Name = "gbSizeMode";
+			this.gbSizeMode.Size = new System.Drawing.Size(496, 26);
+			this.gbSizeMode.TabIndex = 18;
+			this.gbSizeMode.TabStop = false;
+			// 
+			// rbSizeAuto
+			// 
+			this.rbSizeAuto.AutoSize = true;
+			this.rbSizeAuto.Checked = true;
+			this.rbSizeAuto.Location = new System.Drawing.Point(13, 7);
+			this.rbSizeAuto.Name = "rbSizeAuto";
+			this.rbSizeAuto.Size = new System.Drawing.Size(68, 17);
+			this.rbSizeAuto.TabIndex = 12;
+			this.rbSizeAuto.TabStop = true;
+			this.rbSizeAuto.Text = "Auto size";
+			this.toolTip.SetToolTip(this.rbSizeAuto, "Saves the portion of the map that is visible in game.");
+			this.rbSizeAuto.UseVisualStyleBackColor = true;
+			// 
+			// rbSizeFullmap
+			// 
+			this.rbSizeFullmap.AutoSize = true;
+			this.rbSizeFullmap.Location = new System.Drawing.Point(230, 7);
+			this.rbSizeFullmap.Name = "rbSizeFullmap";
+			this.rbSizeFullmap.Size = new System.Drawing.Size(175, 17);
+			this.rbSizeFullmap.TabIndex = 11;
+			this.rbSizeFullmap.Text = "Use full size (useful for missions)";
+			this.toolTip.SetToolTip(this.rbSizeFullmap, "Saves the entire map without cutting off the parts outside the LocalSize entry.\r\n" +
+        "This is especially useful for campaign maps where the map expands after\r\nachievi" +
+        "ng some objective.");
+			this.rbSizeFullmap.UseVisualStyleBackColor = true;
+			this.rbSizeFullmap.CheckedChanged += new System.EventHandler(this.UIChanged);
+			// 
+			// rbSizeLocal
+			// 
+			this.rbSizeLocal.AutoSize = true;
+			this.rbSizeLocal.Location = new System.Drawing.Point(114, 7);
+			this.rbSizeLocal.Name = "rbSizeLocal";
+			this.rbSizeLocal.Size = new System.Drawing.Size(110, 17);
+			this.rbSizeLocal.TabIndex = 10;
+			this.rbSizeLocal.Text = "Use map localsize";
+			this.toolTip.SetToolTip(this.rbSizeLocal, "Saves the portion of the map that is visible in game.");
+			this.rbSizeLocal.UseVisualStyleBackColor = true;
+			this.rbSizeLocal.CheckedChanged += new System.EventHandler(this.UIChanged);
+			// 
 			// gbThumbs
 			// 
 			this.gbThumbs.Controls.Add(this.cbOmitSquareMarkers);
 			this.gbThumbs.Controls.Add(this.cbReplacePreview);
 			this.gbThumbs.Location = new System.Drawing.Point(13, 140);
 			this.gbThumbs.Name = "gbThumbs";
-			this.gbThumbs.Size = new System.Drawing.Size(454, 39);
+			this.gbThumbs.Size = new System.Drawing.Size(497, 39);
 			this.gbThumbs.TabIndex = 20;
 			this.gbThumbs.TabStop = false;
 			this.gbThumbs.Text = "Thumbnail injection";
@@ -173,17 +246,16 @@ namespace CNCMaps.GUI {
             | System.Windows.Forms.AnchorStyles.Right)));
 			this.gbVoxelsMode.Controls.Add(this.rbPreferSoftwareRendering);
 			this.gbVoxelsMode.Controls.Add(this.rbPreferHardwareRendering);
-			this.gbVoxelsMode.Location = new System.Drawing.Point(13, 228);
+			this.gbVoxelsMode.Location = new System.Drawing.Point(13, 204);
 			this.gbVoxelsMode.Name = "gbVoxelsMode";
-			this.gbVoxelsMode.Size = new System.Drawing.Size(530, 40);
+			this.gbVoxelsMode.Size = new System.Drawing.Size(496, 26);
 			this.gbVoxelsMode.TabIndex = 19;
 			this.gbVoxelsMode.TabStop = false;
-			this.gbVoxelsMode.Text = "Voxels rendering mode";
 			// 
 			// rbPreferSoftwareRendering
 			// 
 			this.rbPreferSoftwareRendering.AutoSize = true;
-			this.rbPreferSoftwareRendering.Location = new System.Drawing.Point(230, 17);
+			this.rbPreferSoftwareRendering.Location = new System.Drawing.Point(230, 7);
 			this.rbPreferSoftwareRendering.Name = "rbPreferSoftwareRendering";
 			this.rbPreferSoftwareRendering.Size = new System.Drawing.Size(209, 17);
 			this.rbPreferSoftwareRendering.TabIndex = 11;
@@ -198,7 +270,7 @@ namespace CNCMaps.GUI {
 			// 
 			this.rbPreferHardwareRendering.AutoSize = true;
 			this.rbPreferHardwareRendering.Checked = true;
-			this.rbPreferHardwareRendering.Location = new System.Drawing.Point(13, 17);
+			this.rbPreferHardwareRendering.Location = new System.Drawing.Point(13, 7);
 			this.rbPreferHardwareRendering.Name = "rbPreferHardwareRendering";
 			this.rbPreferHardwareRendering.Size = new System.Drawing.Size(175, 17);
 			this.rbPreferHardwareRendering.TabIndex = 10;
@@ -209,57 +281,6 @@ namespace CNCMaps.GUI {
         " is incurred over software rendering. ");
 			this.rbPreferHardwareRendering.UseVisualStyleBackColor = true;
 			this.rbPreferHardwareRendering.CheckedChanged += new System.EventHandler(this.UIChanged);
-			// 
-			// gbSizeMode
-			// 
-			this.gbSizeMode.Controls.Add(this.rbSizeAuto);
-			this.gbSizeMode.Controls.Add(this.rbSizeFullmap);
-			this.gbSizeMode.Controls.Add(this.rbSizeLocal);
-			this.gbSizeMode.Location = new System.Drawing.Point(13, 183);
-			this.gbSizeMode.Name = "gbSizeMode";
-			this.gbSizeMode.Size = new System.Drawing.Size(496, 37);
-			this.gbSizeMode.TabIndex = 18;
-			this.gbSizeMode.TabStop = false;
-			this.gbSizeMode.Text = "Size mode";
-			// 
-			// rbSizeAuto
-			// 
-			this.rbSizeAuto.AutoSize = true;
-			this.rbSizeAuto.Checked = true;
-			this.rbSizeAuto.Location = new System.Drawing.Point(13, 14);
-			this.rbSizeAuto.Name = "rbSizeAuto";
-			this.rbSizeAuto.Size = new System.Drawing.Size(68, 17);
-			this.rbSizeAuto.TabIndex = 12;
-			this.rbSizeAuto.TabStop = true;
-			this.rbSizeAuto.Text = "Auto size";
-			this.toolTip.SetToolTip(this.rbSizeAuto, "Saves the portion of the map that is visible in game.");
-			this.rbSizeAuto.UseVisualStyleBackColor = true;
-			// 
-			// rbSizeFullmap
-			// 
-			this.rbSizeFullmap.AutoSize = true;
-			this.rbSizeFullmap.Location = new System.Drawing.Point(230, 14);
-			this.rbSizeFullmap.Name = "rbSizeFullmap";
-			this.rbSizeFullmap.Size = new System.Drawing.Size(175, 17);
-			this.rbSizeFullmap.TabIndex = 11;
-			this.rbSizeFullmap.Text = "Use full size (useful for missions)";
-			this.toolTip.SetToolTip(this.rbSizeFullmap, "Saves the entire map without cutting off the parts outside the LocalSize entry.\r\n" +
-        "This is especially useful for campaign maps where the map expands after\r\nachievi" +
-        "ng some objective.");
-			this.rbSizeFullmap.UseVisualStyleBackColor = true;
-			this.rbSizeFullmap.CheckedChanged += new System.EventHandler(this.UIChanged);
-			// 
-			// rbSizeLocal
-			// 
-			this.rbSizeLocal.AutoSize = true;
-			this.rbSizeLocal.Location = new System.Drawing.Point(114, 14);
-			this.rbSizeLocal.Name = "rbSizeLocal";
-			this.rbSizeLocal.Size = new System.Drawing.Size(110, 17);
-			this.rbSizeLocal.TabIndex = 10;
-			this.rbSizeLocal.Text = "Use map localsize";
-			this.toolTip.SetToolTip(this.rbSizeLocal, "Saves the portion of the map that is visible in game.");
-			this.rbSizeLocal.UseVisualStyleBackColor = true;
-			this.rbSizeLocal.CheckedChanged += new System.EventHandler(this.UIChanged);
 			// 
 			// lblTiledSquaredPosDescription
 			// 
@@ -450,7 +471,6 @@ namespace CNCMaps.GUI {
 			this.tbCustomOutput.Name = "tbCustomOutput";
 			this.tbCustomOutput.Size = new System.Drawing.Size(221, 20);
 			this.tbCustomOutput.TabIndex = 10;
-			this.tbCustomOutput.Text = global::CNCMaps.GUI.Properties.Settings.Default.customfilename;
 			this.tbCustomOutput.Visible = false;
 			this.tbCustomOutput.TextChanged += new System.EventHandler(this.UIChanged);
 			// 
@@ -489,6 +509,7 @@ namespace CNCMaps.GUI {
 			this.lblMarkersType.Size = new System.Drawing.Size(68, 13);
 			this.lblMarkersType.TabIndex = 19;
 			this.lblMarkersType.Text = "Markers type";
+			this.lblMarkersType.Visible = false;
 			// 
 			// cbMarkersType
 			// 
@@ -503,12 +524,13 @@ namespace CNCMaps.GUI {
 			this.cbMarkersType.Size = new System.Drawing.Size(121, 21);
 			this.cbMarkersType.TabIndex = 18;
 			this.cbMarkersType.Text = "None";
+			this.cbMarkersType.Visible = false;
 			this.cbMarkersType.SelectedIndexChanged += new System.EventHandler(this.UIChanged);
 			// 
 			// cbPreserveThumbAspect
 			// 
 			this.cbPreserveThumbAspect.AutoSize = true;
-			this.cbPreserveThumbAspect.Checked = global::CNCMaps.GUI.Properties.Settings.Default.thumbpreserveaspect;
+			this.cbPreserveThumbAspect.Checked = true;
 			this.cbPreserveThumbAspect.CheckState = System.Windows.Forms.CheckState.Checked;
 			this.cbPreserveThumbAspect.Location = new System.Drawing.Point(449, 76);
 			this.cbPreserveThumbAspect.Name = "cbPreserveThumbAspect";
@@ -528,7 +550,7 @@ namespace CNCMaps.GUI {
 			this.tbThumbDimensions.Name = "tbThumbDimensions";
 			this.tbThumbDimensions.Size = new System.Drawing.Size(51, 20);
 			this.tbThumbDimensions.TabIndex = 16;
-			this.tbThumbDimensions.Text = global::CNCMaps.GUI.Properties.Settings.Default.thumbdimensions;
+			this.tbThumbDimensions.Text = "800,0";
 			this.tbThumbDimensions.Visible = false;
 			// 
 			// cbOutputThumbnail
@@ -563,7 +585,6 @@ namespace CNCMaps.GUI {
 			this.tbModConfig.Name = "tbModConfig";
 			this.tbModConfig.Size = new System.Drawing.Size(329, 20);
 			this.tbModConfig.TabIndex = 13;
-			this.tbModConfig.Text = global::CNCMaps.GUI.Properties.Settings.Default.modconfigfile;
 			this.tbModConfig.Visible = false;
 			this.tbModConfig.TextChanged += new System.EventHandler(this.UIChanged);
 			// 
@@ -588,7 +609,6 @@ namespace CNCMaps.GUI {
 			this.tbMixDir.Name = "tbMixDir";
 			this.tbMixDir.Size = new System.Drawing.Size(370, 20);
 			this.tbMixDir.TabIndex = 4;
-			this.tbMixDir.Text = global::CNCMaps.GUI.Properties.Settings.Default.mixdir;
 			this.tbMixDir.TextChanged += new System.EventHandler(this.UIChanged);
 			// 
 			// lblMixFiles
@@ -633,7 +653,6 @@ namespace CNCMaps.GUI {
 			this.tbInput.Name = "tbInput";
 			this.tbInput.Size = new System.Drawing.Size(370, 20);
 			this.tbInput.TabIndex = 1;
-			this.tbInput.Text = global::CNCMaps.GUI.Properties.Settings.Default.input;
 			this.tbInput.TextChanged += new System.EventHandler(this.UIChanged);
 			// 
 			// lblCompressionLevel
@@ -665,7 +684,11 @@ namespace CNCMaps.GUI {
 			this.nudEncodingQuality.Name = "nudEncodingQuality";
 			this.nudEncodingQuality.Size = new System.Drawing.Size(43, 20);
 			this.nudEncodingQuality.TabIndex = 6;
-			this.nudEncodingQuality.Value = global::CNCMaps.GUI.Properties.Settings.Default.outputjpgq;
+			this.nudEncodingQuality.Value = new decimal(new int[] {
+            90,
+            0,
+            0,
+            0});
 			this.nudEncodingQuality.ValueChanged += new System.EventHandler(this.UIChanged);
 			// 
 			// btnBrowseInput
@@ -717,7 +740,11 @@ namespace CNCMaps.GUI {
 			this.nudCompression.Name = "nudCompression";
 			this.nudCompression.Size = new System.Drawing.Size(43, 20);
 			this.nudCompression.TabIndex = 2;
-			this.nudCompression.Value = global::CNCMaps.GUI.Properties.Settings.Default.outputpngq;
+			this.nudCompression.Value = new decimal(new int[] {
+            6,
+            0,
+            0,
+            0});
 			this.nudCompression.Visible = false;
 			this.nudCompression.ValueChanged += new System.EventHandler(this.UIChanged);
 			// 
@@ -907,12 +934,12 @@ namespace CNCMaps.GUI {
 			this.DragEnter += new System.Windows.Forms.DragEventHandler(this.InputDragEnter);
 			this.gbMiscOptions.ResumeLayout(false);
 			this.gbMiscOptions.PerformLayout();
+			this.gbSizeMode.ResumeLayout(false);
+			this.gbSizeMode.PerformLayout();
 			this.gbThumbs.ResumeLayout(false);
 			this.gbThumbs.PerformLayout();
 			this.gbVoxelsMode.ResumeLayout(false);
 			this.gbVoxelsMode.PerformLayout();
-			this.gbSizeMode.ResumeLayout(false);
-			this.gbSizeMode.PerformLayout();
 			this.pnlEngine.ResumeLayout(false);
 			this.pnlEngine.PerformLayout();
 			this.gbInputOutput.ResumeLayout(false);
@@ -991,7 +1018,6 @@ namespace CNCMaps.GUI {
 		private System.Windows.Forms.Label lblCommand;
 		private System.Windows.Forms.GroupBox gbThumbs;
 		private System.Windows.Forms.GroupBox gbVoxelsMode;
-		private System.Windows.Forms.GroupBox gbSizeMode;
 		private CheckBox cbOutputThumbnail;
 		private TextBox tbThumbDimensions;
 		private CheckBox cbPreserveThumbAspect;
@@ -1002,6 +1028,9 @@ namespace CNCMaps.GUI {
 		private ComboBox cbMarkersType;
 		private Label lblMarkersType;
 		private Label label1;
+		private Label lblFixupTilesDesc;
+		private CheckBox ckbFixupTiles;
+		private GroupBox gbSizeMode;
 	}
 }
 
