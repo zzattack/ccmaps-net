@@ -25,7 +25,6 @@ namespace CNCMaps {
 		public bool GeneratePreviewPack { get; set; }
 		public bool OmitPreviewPackMarkers { get; set; }
 
-
 		internal static RenderSettings CreateDefaults() {
 			return new RenderSettings {
 				PNGQuality = 6,
@@ -45,6 +44,7 @@ namespace CNCMaps {
 				SizeMode = SizeMode.Auto,
 			};
 		}
-	}
+
+    }
 
 }

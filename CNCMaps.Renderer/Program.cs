@@ -167,11 +167,11 @@ namespace CNCMaps {
 					GC.Collect();
 				}
 
-				if (Settings.SaveJPEG)
-					ds.SaveJPEG(Path.Combine(Settings.OutputDir, Settings.OutputFile + ".jpg"), Settings.JPEGCompression, saveRect);
+                    if (Settings.SaveJPEG)
+                        ds.SaveJPEG(Path.Combine(Settings.OutputDir, Settings.OutputFile + ".jpg"), Settings.JPEGCompression, saveRect);
 
-				if (Settings.SavePNG)
-					ds.SavePNG(Path.Combine(Settings.OutputDir, Settings.OutputFile + ".png"), Settings.PNGQuality, saveRect);
+                    if (Settings.SavePNG)
+                        ds.SavePNG(Path.Combine(Settings.OutputDir, Settings.OutputFile + ".png"), Settings.PNGQuality, saveRect);
 
 				Regex reThumb = new Regex(@"(\+)?\((\d+),(\d+)\)");
 				var match = reThumb.Match(Settings.ThumbnailSettings);
@@ -324,7 +324,7 @@ namespace CNCMaps {
 				}, 
 				// {"G|graphics-winmgr", "Attempt rendering voxels using window manager context first (default)",v => Settings.PreferOSMesa = false},
 				{"g|graphics-osmesa", "Attempt rendering voxels using OSMesa context first", v => Settings.PreferOSMesa = true},
-				{"z|create-thumbnail=", "Also save a thumbnail along with the fullmap in dimensions (x,y), prefix with + to keep aspect ratio	", v => Settings.ThumbnailSettings = v},
+				{"z|create-thumbnail=", "Also save a thumbnail along with the fullmap in dimensions (x,y), prefix with + to keep aspect ratio	", v => Settings.ThumbnailSettings = v}
 			};
 
 			_options.Parse(args);

@@ -384,7 +384,7 @@ namespace CNCMaps.Engine.Game {
 					if (lt == LightingType.Full && pt == PaletteType.Iso) {
 						// bridges are attached to a low tile, but their height-offset should be taken into account 
 						int z = obj.Tile.Z + (obj.Drawable != null ? obj.Drawable.TileElevation : 0);
-						p = _palettePerLevel[z];
+                        p = _palettePerLevel[Math.Min(z, _palettePerLevel.Count-1)];
 					}
 					else if (lt >= LightingType.Level) {
 						// when applying lighting to its palette
@@ -862,7 +862,8 @@ namespace CNCMaps.Engine.Game {
 
 					var srcRect = GetSizePixels(sizeMode);
 					var dstRect = new Rectangle(0, 0, preview.Width, preview.Height);
-					gfx.DrawImage(_drawingSurface.Bitmap, dstRect, srcRect, GraphicsUnit.Pixel);
+
+                    gfx.DrawImage(_drawingSurface.Bitmap, dstRect, srcRect, GraphicsUnit.Pixel);
 				}
 
 				Logger.Info("Injecting thumbnail into map");

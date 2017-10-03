@@ -146,6 +146,8 @@ namespace CNCMaps.FileFormats.VirtualFileSystem {
 				if (FileExists(file))
 					AddFile(file);
 				if (engine == EngineType.YurisRevenge) {
+                    if (i == 0) 
+                        file = "";
 					file = "expandmd" + i.ToString("00") + ".mix";
 					if (FileExists(file))
 						AddFile(file);
