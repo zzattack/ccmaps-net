@@ -98,4 +98,11 @@ namespace CNCMaps.Shared {
 		Tiled,
 		Squared
 	}
+
+	public enum PreviewMarkersType {
+		None,
+		Squared,
+		Bittah,
+		Aro,
+	}
 }

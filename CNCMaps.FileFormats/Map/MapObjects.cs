@@ -1,3 +1,6 @@
+using System;
+using System.Collections.Generic;
+
 namespace CNCMaps.FileFormats.Map {
 
 	public class MapObject {
@@ -17,12 +20,11 @@ namespace CNCMaps.FileFormats.Map {
 		public ushort Dy;
 		public ushort Rx;
 		public ushort Ry;
-		public short Z;
+		public byte Z;
 		public short TileNum;
-		public ushort SubTile;
+		public byte SubTile;
 
-		public IsoTile(ushort p1, ushort p2, ushort rx, ushort ry, short z, short tilenum, ushort subtile) {
-			// TODO: Complete member initialization
+		public IsoTile(ushort p1, ushort p2, ushort rx, ushort ry, byte z, short tilenum, byte subtile) {
 			Dx = p1;
 			Dy = p2;
 			Rx = rx;
@@ -30,6 +32,18 @@ namespace CNCMaps.FileFormats.Map {
 			Z = z;
 			TileNum = tilenum;
 			SubTile = subtile;
+		}
+
+		public List<byte> ToMapPack5Entry() {
+			var ret = new List<byte>();
+			ret.AddRange(BitConverter.GetBytes(Rx));
+			ret.AddRange(BitConverter.GetBytes(Ry));
+			ret.AddRange(BitConverter.GetBytes(TileNum));
+			ret.Add(0); ret.Add(0);
+			ret.Add(SubTile);
+			ret.Add(Z);
+			ret.Add(0);
+			return ret;
 		}
 	}
 
@@ -64,7 +78,6 @@ namespace CNCMaps.FileFormats.Map {
 	public class Overlay : NumberedMapObject {
 		public byte OverlayID { get; set; }
 		public byte OverlayValue { get; set; }
-		public IsoTile Tile { get; set; }
 		public Overlay(byte overlayID, byte overlayValue) {
 			OverlayID = overlayID;
 			OverlayValue = overlayValue;

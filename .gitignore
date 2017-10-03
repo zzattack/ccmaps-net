@@ -6,3 +6,4 @@ obj
 *.exe
 CNCMaps_*.zip
 *.cache
+/desktop dump

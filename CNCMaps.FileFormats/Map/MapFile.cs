@@ -96,8 +96,8 @@ namespace CNCMaps.FileFormats.Map {
 				ushort ry = mf.ReadUInt16();
 				short tilenum = mf.ReadInt16();
 				short zero1 = mf.ReadInt16();
-				ushort subtile = mf.ReadByte();
-				short z = mf.ReadByte();
+				byte subtile = mf.ReadByte();
+				byte z = mf.ReadByte();
 				byte zero2 = mf.ReadByte();
 
 				int dx = rx - ry + FullSize.Width - 1;
@@ -344,7 +344,7 @@ namespace CNCMaps.FileFormats.Map {
 		private void ReadWaypoints() {
 			IniSection basic = GetSection("Basic");
 			if (basic == null || !basic.ReadBool("MultiplayerOnly")) return;
-			IniSection waypoints = GetSection("Waypoints");
+			IniSection waypoints = GetOrCreateSection("Waypoints");
 
 			foreach (var entry in waypoints.OrderedEntries) {
 				try {

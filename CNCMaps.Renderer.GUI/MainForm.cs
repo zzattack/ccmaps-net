@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
-using System.ComponentModel;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
@@ -10,11 +9,15 @@ using System.Net;
 using System.Reflection;
 using System.Security;
 using System.Threading;
-using System.Web;
 using System.Windows.Forms;
-using CNCMaps.Engine.Game;
+using CNCMaps.Engine;
+using CNCMaps.Engine.Map;
+using CNCMaps.FileFormats.VirtualFileSystem;
 using CNCMaps.GUI.Properties;
+using CNCMaps.Shared;
 using Microsoft.Win32;
+using NLog;
+using NLog.Config;
 
 namespace CNCMaps.GUI {
 
@@ -26,20 +29,38 @@ namespace CNCMaps.GUI {
 
 
 		public MainForm() {
+			const string GuiConfig = "gui_settings.xml";
+			string cfgPath;
+			if (File.Exists(GuiConfig))
+				cfgPath = GuiConfig;
+			else {
+				var localAppDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "CNCMaps");
+				cfgPath = Path.Combine(localAppDir, GuiConfig);
+			}
+			Settings.Default.SettingsKey = cfgPath;
 			InitializeComponent();
+
+
+			ConfigurationItemFactory.Default.Targets.RegisterDefinition("GuiTarget", typeof(GuiTarget));
+			if (LogManager.Configuration == null) {
+				// init default config
+				var target = new GuiTarget();
+				target.TargetControl = this.rtbLog;
+				target.Name = "rtbLogger";
+				target.Layout = "${processtime:format=s\\.ffff} [${level}] ${message}";
+				LogManager.Configuration = new LoggingConfiguration();
+				LogManager.Configuration.AddTarget("gui", target);
+				LogManager.Configuration.LoggingRules.Add(new LoggingRule("*", LogLevel.Debug, target));
+				LogManager.ReconfigExistingLoggers();
+			}
 		}
-		public MainForm(bool skipUpdateCheck)
-			: this() {
+
+		public MainForm(bool skipUpdateCheck) : this() {
 			_skipUpdateCheck = skipUpdateCheck;
 		}
 
 		private void MainFormLoad(object sender, EventArgs args) {
-			Settings.Default.Upgrade();
-
 			Text += " - v" + Assembly.GetEntryAssembly().GetName().Version;
-
-			if (string.IsNullOrEmpty(tbRenderProg.Text))
-				tbRenderProg.Text = FindRenderProg();
 
 			if (string.IsNullOrEmpty(tbMixDir.Text))
 				tbMixDir.Text = FindMixDir(true);
@@ -48,58 +69,92 @@ namespace CNCMaps.GUI {
 				PerformUpdateCheck();
 			else
 				UpdateStatus("not checking for newer version", 100);
+			tbInput.Text = Settings.Default.input;
+			tbMixDir.Text = Settings.Default.mixdir;
+			cbOutputJPG.Checked = Settings.Default.outputjpg;
+			nudEncodingQuality.Value = Settings.Default.outputjpgq;
+
+			cbOutputPNG.Checked = Settings.Default.outputpng;
+			nudCompression.Value = Settings.Default.outputpngq;
+
+			cbOutputThumbnail.Checked = Settings.Default.outputthumb;
+			tbThumbDimensions.Text = Settings.Default.thumbdimensions;
+			cbPreserveThumbAspect.Checked = Settings.Default.thumbpreserveaspect;
+			cbMarkersType.Text = Settings.Default.markers;
 
 			rbAutoFilename.Checked = Settings.Default.outputauto;
 			rbCustomFilename.Checked = Settings.Default.outputcustom;
+			tbCustomOutput.Text = Settings.Default.customfilename;
+
 			rbEngineAuto.Checked = Settings.Default.engineauto;
 			rbEngineFS.Checked = Settings.Default.enginefs;
 			rbEngineRA2.Checked = Settings.Default.enginera2;
 			rbEngineTS.Checked = Settings.Default.enginets;
 			rbEngineYR.Checked = Settings.Default.engineyr;
-			rbPreferHardwareRendering.Checked = Settings.Default.hwvoxels;
-			rbPreferSoftwareRendering.Checked = Settings.Default.swvoxels;
-			rbSizeFullmap.Checked = Settings.Default.fullsize;
-			rbSizeLocal.Checked = Settings.Default.localsize;
-			rbSizeAuto.Checked = Settings.Default.autosize;
+
+			cbModConfig.Checked = Settings.Default.modconfig;
+			tbModConfig.Text = Settings.Default.modconfigfile;
 
 			cbEmphasizeOre.Checked = Settings.Default.emphore;
-			cbModConfig.Checked = Settings.Default.modconfig;
-			cbOmitSquareMarkers.Checked = Settings.Default.omitsquarespreview;
 			cbSquaredStartPositions.Checked = Settings.Default.squaredpos;
 			cbTiledStartPositions.Checked = Settings.Default.tiledpos;
-			cbOutputJPG.Checked = Settings.Default.outputjpg;
-			cbOutputPNG.Checked = Settings.Default.outputpng;
-			cbOutputThumbnail.Checked = Settings.Default.outputthumb;
-			cbReplacePreview.Checked = Settings.Default.injectthumb;
-			cbPreserveThumbAspect.Checked = Settings.Default.thumbpreserveaspect;
 
+			cbReplacePreview.Checked = Settings.Default.injectthumb;
+			cbOmitSquareMarkers.Checked = Settings.Default.omitsquarespreview;
+
+			rbSizeAuto.Checked = Settings.Default.autosize;
+			rbSizeLocal.Checked = Settings.Default.localsize;
+			rbSizeFullmap.Checked = Settings.Default.fullsize;
+
+			rbPreferHardwareRendering.Checked = Settings.Default.hwvoxels;
+			rbPreferSoftwareRendering.Checked = Settings.Default.swvoxels;
+
+			ckbFixupTiles.Checked = Settings.Default.fixuptiles;
 			UpdateCommandline();
 		}
 
 		private void MainFormClosing(object sender, FormClosingEventArgs e) {
+			Settings.Default.input = tbInput.Text;
+			Settings.Default.mixdir = tbMixDir.Text;
+			Settings.Default.outputjpg = cbOutputJPG.Checked;
+			Settings.Default.outputjpgq = nudEncodingQuality.Value;
+
+			Settings.Default.outputpng = cbOutputPNG.Checked;
+			Settings.Default.outputpngq = nudCompression.Value;
+
+			Settings.Default.outputthumb = cbOutputThumbnail.Checked;
+			Settings.Default.thumbdimensions = tbThumbDimensions.Text;
+			Settings.Default.thumbpreserveaspect = cbPreserveThumbAspect.Checked;
+			Settings.Default.markers = cbMarkersType.Text;
+
 			Settings.Default.outputauto = rbAutoFilename.Checked;
 			Settings.Default.outputcustom = rbCustomFilename.Checked;
+			Settings.Default.customfilename = tbCustomOutput.Text;
+
 			Settings.Default.engineauto = rbEngineAuto.Checked;
 			Settings.Default.enginefs = rbEngineFS.Checked;
 			Settings.Default.enginera2 = rbEngineRA2.Checked;
 			Settings.Default.enginets = rbEngineTS.Checked;
 			Settings.Default.engineyr = rbEngineYR.Checked;
-			Settings.Default.hwvoxels = rbPreferHardwareRendering.Checked; ;
-			Settings.Default.swvoxels = rbPreferSoftwareRendering.Checked; ;
-			Settings.Default.fullsize = rbSizeFullmap.Checked; ;
-			Settings.Default.localsize = rbSizeLocal.Checked;
-			Settings.Default.autosize = rbSizeAuto.Checked;
+
+			Settings.Default.modconfig = cbModConfig.Checked;
+			Settings.Default.modconfigfile = tbModConfig.Text;
 
 			Settings.Default.emphore = cbEmphasizeOre.Checked;
-			Settings.Default.modconfig = cbModConfig.Checked;
-			Settings.Default.omitsquarespreview = cbOmitSquareMarkers.Checked;
 			Settings.Default.squaredpos = cbSquaredStartPositions.Checked;
 			Settings.Default.tiledpos = cbTiledStartPositions.Checked;
-			Settings.Default.outputjpg = cbOutputJPG.Checked;
-			Settings.Default.outputpng = cbOutputPNG.Checked;
-			Settings.Default.outputthumb = cbOutputThumbnail.Checked;
-			Settings.Default.thumbpreserveaspect = cbPreserveThumbAspect.Checked;
+
 			Settings.Default.injectthumb = cbReplacePreview.Checked;
+			Settings.Default.omitsquarespreview = cbOmitSquareMarkers.Checked;
+
+			Settings.Default.autosize = rbSizeAuto.Checked;
+			Settings.Default.localsize = rbSizeLocal.Checked;
+			Settings.Default.fullsize = rbSizeFullmap.Checked;
+
+			Settings.Default.hwvoxels = rbPreferHardwareRendering.Checked;
+			Settings.Default.swvoxels = rbPreferSoftwareRendering.Checked;
+
+			Settings.Default.fixuptiles = ckbFixupTiles.Checked;
 
 			Settings.Default.Save();
 		}
@@ -124,13 +179,17 @@ namespace CNCMaps.GUI {
 				return Environment.CurrentDirectory;
 
 			try {
-				using (var key = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry32))
-					return Path.GetDirectoryName((string)key.OpenSubKey("SOFTWARE\\Westwood\\" + (RA2 ? "Red Alert 2" : "Tiberian Sun")).GetValue("InstallPath", string.Empty));
+				using (var key = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry32)) {
+					var subkey = key.OpenSubKey("SOFTWARE\\Westwood\\" + (RA2 ? "Red Alert 2" : "Tiberian Sun"));
+					if (subkey != null) return Path.GetDirectoryName((string)subkey.GetValue("InstallPath", string.Empty));
+				}
 			}
 			catch (NullReferenceException) { } // no registry entry
 			catch (ArgumentException) { } // invalid path
 
-			return Environment.CurrentDirectory;
+			// if current directory contains any mix files, try that
+			if (Directory.GetFiles(Environment.CurrentDirectory, "*.mix").Any()) return Environment.CurrentDirectory;
+			else return string.Empty;
 		}
 
 		public static bool IsLinux {
@@ -174,7 +233,7 @@ namespace CNCMaps.GUI {
 
 			wc.DownloadDataCompleted += (sender, args) => {
 				UpdateStatus("download complete, running installer", 100);
-				string appPath = Path.GetDirectoryName(Application.ExecutablePath);
+				string appPath = Path.GetTempPath();
 				string dest = Path.Combine(appPath, "CNCMaps_update");
 
 				int suffixNr = 0;
@@ -203,6 +262,11 @@ namespace CNCMaps.GUI {
 		}
 		private void UpdateStatus(string text, int progressBarValue) {
 			var invokable = new Action(delegate {
+				if (progressBarValue < pbProgress.Value && pbProgress.Value != 100) {
+					// probably re-initializing filesystem after map autodetect
+					return;
+				}
+
 				lblStatus.Text = "Status: " + text;
 				if (progressBarValue < 100)
 					// forces 'instant update'
@@ -245,18 +309,6 @@ namespace CNCMaps.GUI {
 			folderBrowserDialog1.ShowNewFolderButton = false;
 			if (folderBrowserDialog1.ShowDialog() == DialogResult.OK)
 				tbMixDir.Text = folderBrowserDialog1.SelectedPath;
-		}
-		private void BrowseRenderer(object sender, EventArgs e) {
-			ofd.CheckFileExists = true;
-			ofd.Multiselect = false;
-			ofd.Filter = "Executable (*.exe)|*.exe";
-			ofd.InitialDirectory = Directory.GetCurrentDirectory();
-			ofd.FileName = RendererExe;
-			if (ofd.ShowDialog() == DialogResult.OK) {
-				tbRenderProg.Text = ofd.FileName.StartsWith(Directory.GetCurrentDirectory())
-					? ofd.FileName.Substring(Directory.GetCurrentDirectory().Length + 1)
-					: ofd.FileName;
-			}
 		}
 		private void InputDragEnter(object sender, DragEventArgs e) {
 			if (e.Data.GetDataPresent(DataFormats.FileDrop))
@@ -308,18 +360,16 @@ namespace CNCMaps.GUI {
 			}
 		}
 		private void CbOutputThumbnailCheckedChanged(object sender, EventArgs e) {
-			tbThumbDimensions.Visible = cbPreserveThumbAspect.Visible = cbOutputThumbnail.Checked;
+			tbThumbDimensions.Visible = cbPreserveThumbAspect.Visible =
+				lblMarkersType.Visible = cbMarkersType.Visible = cbOutputThumbnail.Checked;
 			UpdateCommandline();
 		}
 
 		private void UpdateCommandline() {
-			string cmd = GetCommandline();
-			string file = tbRenderProg.Text;
-			if (file.Contains("\\"))
-				file = file.Substring(file.LastIndexOf('\\') + 1);
-			tbCommandPreview.Text = file + " " + cmd;
+			string cmd = GetCommandLine();
+			tbCommandPreview.Text = cmd;
 		}
-		private string GetCommandline() {
+		private string GetCommandLine() {
 			string cmd = string.Empty;
 
 			cmd += "-i \"" + tbInput.Text + "\" ";
@@ -368,9 +418,83 @@ namespace CNCMaps.GUI {
 						cmd += "+";
 					cmd += string.Format("({0},{1})", w, h);
 				}
+				if (!cmd.EndsWith(" ")) cmd += " ";
+				if (cbMarkersType.Text == "None")
+					cmd += "--preview-markers-none ";
+				else if (cbMarkersType.Text == "Squared")
+					cmd += "--preview-markers-squared ";
+				else if (cbMarkersType.Text == "Aro")
+					cmd += "--preview-markers-aro ";
+				else if (cbMarkersType.Text == "Bittah")
+					cmd += "--preview-markers-bittah ";
+			}
+
+			if (ckbFixupTiles.Checked) {
+				cmd += "--fixup-tiles ";
 			}
 
 			return cmd;
+		}
+
+		private RenderSettings GetRenderSettings() {
+			var rs = new RenderSettings();
+			rs.InputFile = tbInput.Text;
+			if (cbOutputPNG.Checked) {
+				rs.SavePNG = true;
+				rs.PNGQuality = (int)nudCompression.Value;
+			}
+
+			if (rbCustomFilename.Checked) rs.OutputFile = tbCustomOutput.Text;
+			if (cbOutputJPG.Checked) {
+				rs.SaveJPEG = true;
+				rs.JPEGCompression = (int)nudEncodingQuality.Value;
+			}
+
+			if (cbModConfig.Checked)
+				rs.ModConfig = tbModConfig.Text;
+			else if (!string.IsNullOrWhiteSpace(tbMixDir.Text) && tbMixDir.Text != FindMixDir(rbEngineAuto.Checked || rbEngineRA2.Checked || rbEngineYR.Checked))
+				rs.MixFilesDirectory = tbMixDir.Text;
+
+			if (cbEmphasizeOre.Checked) rs.MarkOreFields = true;
+			if (cbTiledStartPositions.Checked) rs.StartPositionMarking = StartPositionMarking.Tiled;
+			if (cbSquaredStartPositions.Checked) rs.StartPositionMarking = StartPositionMarking.Squared;
+
+			if (rbEngineRA2.Checked) rs.Engine = EngineType.RedAlert2;
+			else if (rbEngineYR.Checked) rs.Engine = EngineType.YurisRevenge;
+			else if (rbEngineTS.Checked) rs.Engine = EngineType.TiberianSun;
+			else if (rbEngineFS.Checked) rs.Engine = EngineType.Firestorm;
+
+			if (rbSizeLocal.Checked) rs.SizeMode = SizeMode.Local;
+			else if (rbSizeFullmap.Checked) rs.SizeMode = SizeMode.Full;
+
+			if (rbPreferSoftwareRendering.Checked) rs.PreferOSMesa = true;
+
+			if (cbReplacePreview.Checked) {
+				rs.GeneratePreviewPack = true;
+				if (cbMarkersType.Text == "None")
+					rs.PreviewMarkers = PreviewMarkersType.None;
+				else if (cbMarkersType.Text == "Squared")
+					rs.PreviewMarkers = PreviewMarkersType.Squared;
+				else if (cbMarkersType.Text == "Aro")
+					rs.PreviewMarkers = PreviewMarkersType.Aro;
+				else if (cbMarkersType.Text == "Bittah")
+					rs.PreviewMarkers = PreviewMarkersType.Bittah;
+			}
+
+			if (cbOutputThumbnail.Checked) {
+				var wh = tbThumbDimensions.Text.Split(new[] { "," }, StringSplitOptions.RemoveEmptyEntries).Select(x => x.Trim()).ToList();
+				int w, h;
+				if (wh.Count == 2 && int.TryParse(wh[0], out w) && int.TryParse(wh[1], out h)) {
+					rs.ThumbnailConfig = "";
+					if (cbPreserveThumbAspect.Checked)
+						rs.ThumbnailConfig += "+";
+					rs.ThumbnailConfig += string.Format("({0},{1})", w, h);
+				}
+			}
+
+			rs.FixupTiles = ckbFixupTiles.Checked;
+
+			return rs;
 		}
 		#endregion
 
@@ -382,13 +506,6 @@ namespace CNCMaps.GUI {
 				return;
 			}
 
-			string exePath = GetRendererExePath();
-			if (!File.Exists(exePath)) {
-				UpdateStatus("aborted, no renderer exe", 100);
-				MessageBox.Show("File " + RendererExe + " not found. Aborting.");
-				return;
-			}
-
 			if (!cbOutputPNG.Checked && !cbOutputJPG.Checked && !cbReplacePreview.Checked) {
 				UpdateStatus("aborted, no output format picked", 100);
 				MessageBox.Show("Either PNG, JPEG or Replace Preview must be checked.", "Nothing to do..", MessageBoxButtons.OK,
@@ -396,68 +513,68 @@ namespace CNCMaps.GUI {
 				return;
 			}
 			tabControl.SelectTab(tpLog);
-			ProcessCmd(exePath);
+			ExecuteRenderer();
 		}
 
-		public string GetRendererExePath() {
-			string exepath = tbRenderProg.Text;
-			if (!File.Exists(exepath)) {
-				exepath = Application.ExecutablePath;
-				if (exepath.Contains("\\"))
-					exepath = exepath.Substring(0, exepath.LastIndexOf('\\') + 1);
-				exepath += RendererExe;
+		private void ExecuteRenderer() {
+			var engineCfg = GetRenderSettings();
+			try {
+				VFS.Reset();
+				var engine = new EngineSettings();
+				engine.ConfigureFromSettings(engineCfg);
+				var result = engine.Execute();
+
+				switch (result) {
+				case EngineResult.Exception:
+					Log("\r\nUnknown exception.");
+					AskBugReport(null);
+					break;
+				case EngineResult.RenderedOk:
+					// indicates EOF
+					Log("\r\nYour map has been rendered. If your image did not appear, something went wrong." +
+						" Please send an email to frank@zzattack.org with your map as an attachment.");
+					break;
+				case EngineResult.LoadTheaterFailed:
+					Log("\r\nTheater loading failed. Please make sure the mix directory is correct and that the required expansion packs are installed "
+						+ "if they are required for the map you want to render.");
+					AskBugReport(null);
+					break;
+				case EngineResult.LoadRulesFailed:
+					Log("\r\nRules loading failed. Please make sure the mix directory is correct and that the required expansion packs are installed "
+						+ "if they are required for the map you want to render.");
+					AskBugReport(null);
+					break;
+				}
 			}
-			return exepath;
+			catch (Exception exc) {
+				AskBugReport(exc);
+			}
 		}
-
-		private void ProcessCmd(string exepath) {
-			ThreadPool.QueueUserWorkItem(delegate(object state) {
-				try {
-					var p = new Process { StartInfo = { FileName = exepath, Arguments = GetCommandline() } };
-
-					p.OutputDataReceived += ConsoleDataReceived;
-					p.StartInfo.CreateNoWindow = true;
-					p.StartInfo.RedirectStandardOutput = true;
-					p.StartInfo.UseShellExecute = false;
-					p.Start();
-					p.BeginOutputReadLine();
-
-					p.WaitForExit();
-
-					if (p.ExitCode == 0)
-						// indicates EOF
-						Log("\r\nYour map has been rendered. If your image did not appear, something went wrong." +
-							" Please sent an email to frank@zzattack.org with your map as an attachment.");
-					else
-						BeginInvoke((MethodInvoker)AskBugReport);
-				}
-				catch (InvalidOperationException) {
-				}
-				catch (Win32Exception) {
-				}
-			});
-		}
-		private void AskBugReport() {
+		private void AskBugReport(Exception exc) {
 			// seems like rendering failed!
 			Log("\r\nIt appears an error ocurred during image rendering.");
-			var dr = MessageBox.Show(
-				"Rendering appears to have failed. Would you like to transmit a bug report containing the error log and map to frank@zzattack.org?",
-				"Failed, submit report", MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2);
-			if (dr == DialogResult.Yes)
-				SubmitBugReport();
+			var form = new SubmitBug();
+			form.Email = Settings.Default.email;
+			if (form.ShowDialog() == DialogResult.OK) {
+				if (!string.IsNullOrWhiteSpace(form.Email))
+					Settings.Default.email = form.Email;
+				SubmitBugReport(form.Email, exc);
+			}
 		}
 
-		private void SubmitBugReport() {
+		private void SubmitBugReport(string email, Exception exc) {
 			try {
 				const string url = UpdateChecker.UpdateCheckHost + "tool/report_bug";
 				WebClient wc = new WebClient();
 				wc.Proxy = null;
 				var data = new NameValueCollection();
-				data.Set("renderer_version", Assembly.LoadFile(GetRendererExePath()).GetName().Version.ToString());
+				data.Set("renderer_version", typeof(Map).Assembly.GetName().Version.ToString());
+				data.Set("exception", exc == null ? "" : exc.ToString());
 				data.Set("input_map", File.ReadAllText(tbInput.Text));
 				data.Set("input_name", Path.GetFileName(tbInput.Text));
-				data.Set("commandline", GetCommandline());
+				data.Set("commandline", GetCommandLine());
 				data.Set("log_text", rtbLog.Text);
+				data.Set("email", email);
 
 				wc.OpenWriteCompleted += (o, args) => UpdateStatus("sending bug report.. connected", 15);
 				wc.UploadProgressChanged += (o, args) => {
@@ -487,13 +604,6 @@ namespace CNCMaps.GUI {
 		#endregion
 
 		#region Logging
-		private void ConsoleDataReceived(object sender, DataReceivedEventArgs e) {
-			if (e.Data == null) // finished
-				UpdateStatus("rendering complete", 100);
-			else
-				Log(e.Data);
-		}
-
 		private delegate void LogDelegate(string s);
 
 		private string outputName; // filename of saved jpg
@@ -507,11 +617,11 @@ namespace CNCMaps.GUI {
 				outputName = s;
 				int sIdx = s.IndexOf(" to ") + 4;
 				int endIdx = s.IndexOf(", quality");
-                // Starkku: A small and quick change to fix a crash when saving PNG image.
-                if (endIdx < 1) endIdx = s.IndexOf(", compression level");
+				if (endIdx == -1) endIdx = s.IndexOf(", compression");
+				if (endIdx == -1) return;
 				string file = s.Substring(sIdx, endIdx - sIdx);
 				rtbLog.AppendText(s.Substring(0, sIdx));
-				rtbLog.AppendText("file:///"  + Uri.EscapeUriString(file));
+				rtbLog.AppendText("file:///" + Uri.EscapeUriString(file));
 				rtbLog.AppendText(s.Substring(endIdx));
 			}
 			else {
@@ -523,12 +633,19 @@ namespace CNCMaps.GUI {
 
 			var progressEntry = _progressIndicators.FirstOrDefault(kvp => s.Contains(kvp.Value));
 			if (!progressEntry.Equals(default(KeyValuePair<int, string>))) {
-				UpdateStatus("rendering: " + progressEntry.Key + "%", progressEntry.Key);
+				if (s.Contains("Saving")) {
+					UpdateStatus("saving: " + progressEntry.Key + "%", progressEntry.Key);
+				}
+				else {
+					UpdateStatus("preparing: " + progressEntry.Key + "%", progressEntry.Key);
+				}
 			}
-			if (s.Contains("Drawing map...")) {
+			// tiles and objects is progress 27%-90%, program automatically
+			// determines ratios for tiles/objects
+			if (s.Contains("Drawing tiles") || s.Contains("Drawing objects")) {
 				int idx = s.LastIndexOf(" ") + 1;
 				double pct = Math.Round(27 + (90.0 - 27.0) * int.Parse(s.Substring(idx, s.Length - idx - 1)) / 100.0, 0);
-				UpdateStatus("drawing, " + pct + "%", (int)pct);
+				UpdateStatus("rendering, " + pct + "%", (int)pct);
 			}
 		}
 		private readonly Dictionary<int, string> _progressIndicators = new Dictionary<int, string>() {
@@ -542,12 +659,13 @@ namespace CNCMaps.GUI {
 			{20, "Loading light sources"},
 			{22, "Calculating palette-values for all objects"},
 			{90, "Map drawing completed"},
+			{92, "Saving"},
+
 		};
 		private void rtbLog_LinkClicked(object sender, LinkClickedEventArgs e) {
 			Process.Start(e.LinkText);
 		}
 		#endregion
-
 
 
 	}

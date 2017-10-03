@@ -1,15 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Drawing;
-using System.Linq;
-using System.Text;
+﻿using System.Drawing;
 
 namespace CNCMaps.Engine.Types {
 	public class OverlayType : ObjectType {
 		public OverlayType(string ID) : base(ID) { }
 
 		public LandType Land;
-		public int Strength;
 		public bool Wall;
 		public bool Tiberium;
 		public bool Crate;

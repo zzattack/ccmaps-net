@@ -3,21 +3,19 @@ using System.Text;
 using System.Windows.Forms;
 using CNCMaps.Engine.Game;
 using CNCMaps.Engine.Map;
-using CNCMaps.Engine.Rendering;
-using TileLayer = CNCMaps.Engine.Map.TileLayer;
 
-namespace CNCMaps {
+namespace CNCMaps.Engine.Rendering {
 	internal partial class DebugDrawingSurfaceWindow : Form {
 		private DrawingSurface _drawingSurface;
 		private TileLayer _tiles;
 		private Theater _theater;
-		private Map _map;
+		private Map.Map _map;
 
 		public DebugDrawingSurfaceWindow() {
 			InitializeComponent();
 		}
 
-		public DebugDrawingSurfaceWindow(DrawingSurface ds, TileLayer tiles, Theater t, Map map)
+		public DebugDrawingSurfaceWindow(DrawingSurface ds, TileLayer tiles, Theater t, Map.Map map)
 			: this() {
 			_drawingSurface = ds;
 			_tiles = tiles;
@@ -34,17 +32,18 @@ namespace CNCMaps {
 
 			sb.AppendFormat("Mouse: ({0},{1})", e.Location.X, e.Location.Y);
 			var tile = _tiles.GetTileScreen(e.Location);
-			if (tile == null) {
+			if (tile == null || !(tile.Drawable is TileDrawable)) {
 				sb.Append("No valid tile under mouse");
 			}
 			else {
 				var tileFile = (tile.Drawable as TileDrawable).GetTileFile(tile);
-				sb.AppendFormat("   Tile {4}: d({0},{1}) r({2},{3})", tile.Dx, tile.Dy, tile.Rx, tile.Ry, tileFile.FileName.ToUpper());
-				if (tileFile.Images[tile.SubTile].RampType != 0)
-					sb.AppendFormat(" ramp {0}", tileFile.Images[tile.SubTile].RampType);
-				if (tileFile.Images[tile.SubTile].TerrainType != 0)
-					sb.AppendFormat(" terrain {0}", tileFile.Images[tile.SubTile].TerrainType);
-
+				sb.AppendFormat("   Tile {4}: d({0},{1}) r({2},{3})", tile.Dx, tile.Dy, tile.Rx, tile.Ry, (tileFile?.FileName??"").ToUpper());
+				if (tileFile != null) {
+					if (tileFile.Images[tile.SubTile].RampType != 0)
+						sb.AppendFormat(" ramp {0}", tileFile.Images[tile.SubTile].RampType);
+					if (tileFile.Images[tile.SubTile].TerrainType != 0)
+						sb.AppendFormat(" terrain {0}", tileFile.Images[tile.SubTile].TerrainType);
+				}
 				var gridTilenoZ = _tiles.GetTileScreen(e.Location, true, true);
 				sb.AppendFormat("   Touched: {0}", _tiles.GridTouched[gridTilenoZ.Dx, gridTilenoZ.Dy / 2]);
 

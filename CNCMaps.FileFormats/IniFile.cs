@@ -1,13 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.Drawing.Imaging;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
 using CNCMaps.FileFormats.VirtualFileSystem;
 using NLog;
+using OpenTK;
 
 namespace CNCMaps.FileFormats {
 
@@ -185,20 +185,23 @@ namespace CNCMaps.FileFormats {
 					string value = line.Substring(pos + 1);
 					FixLine(ref key);
 					FixLine(ref value);
-					SetValue(key, value);
+					SetValue(key, value, false);
 					return 1;
 				}
 				return 0;
 			}
 
-			public void SetValue(string key, string value) {
+			public void SetValue(string key, string value, bool @override = true) {
 				if (!SortedEntries.ContainsKey(key)) {
 					IniValue val = value;
 					OrderedEntries.Add(new KeyValuePair<string, IniValue>(key, val));
 					SortedEntries[key] = val;
 				}
-				else
+				else if (@override) {
 					SortedEntries[key].Set(value);
+					OrderedEntries.RemoveAll(e => e.Key == key);
+					OrderedEntries.Add(new KeyValuePair<string, IniValue>(key, value));
+				}
 			}
 
 			public static void FixLine(ref string line) {
@@ -252,6 +255,11 @@ namespace CNCMaps.FileFormats {
 					return ret;
 				else
 					return defaultValue;
+			}
+
+			public Point ReadXY(string key) {
+				string[] val = ReadString(key).Split(',');
+				return new Point(int.Parse(val[0]), int.Parse(val[1]));
 			}
 
 			public short ReadShort(string key, short defaultValue = 0) {
@@ -332,23 +340,49 @@ namespace CNCMaps.FileFormats {
 					sw.WriteLine(kvp.Value);
 				}
 			}
-			
-			public OpenTK.Vector3 ReadXYZ(string key) {
-				throw new NotImplementedException();
+
+			public Vector3 ReadXYZ(string key) {
+				return ReadXYZ(key, new Vector3(0, 0, 0));
+			}
+			public Vector3 ReadXYZ(string key, Vector3 @default) {
+				string size = ReadString(key);
+				string[] parts = size.Split(',');
+				int x, y, z;
+				if (int.TryParse(parts[0], out x) && int.TryParse(parts[1], out y) && int.TryParse(parts[2], out z))
+					return new Vector3(x, y, z);
+				return @default;
 			}
 
-			public Size ReadSize(string key, Size size) {
-				throw new NotImplementedException();
+			public Size ReadSize(string key) {
+				return ReadSize(key, new Size(0, 0));
+			}
+			public Size ReadSize(string key, Size @default) {
+				string size = ReadString(key);
+				string[] parts = size.Split(',');
+				int x, y;
+				if (int.TryParse(parts[0], out x) && int.TryParse(parts[1], out y))
+					return new Size(x, y);
+				return @default;
 			}
 
-			public Tuple<int, int> ReadXY(string p) {
-				throw new NotImplementedException();
+			public Point ReadPoint(string key) {
+				return ReadPoint(key, Point.Empty);
+			}
+			public Point ReadPoint(string key, Point @default) {
+				string point = ReadString(key);
+				string[] parts = point.Split(',');
+				int x, y;
+				if (int.TryParse(parts[0], out x) && int.TryParse(parts[1], out y))
+					return new Point(x, y);
+				return @default;
 			}
 		}
 
 		public void Save(string filename) {
 			var sw = new StreamWriter(filename, false, Encoding.Default, 64 * 1024);
 			foreach (var section in Sections) {
+				if (section.Name == "#include" && section.OrderedEntries.Count == 0)
+					continue;
 				section.WriteTo(sw);
 				if (section != Sections.Last())
 					sw.WriteLine();
@@ -368,9 +402,15 @@ namespace CNCMaps.FileFormats {
 				var ownSection = GetOrCreateSection(v.Name);
 				// numbered arrays are 'appended' instead of overwritten
 				if (IsObjectArray(v.Name)) {
-					int number = 1 + int.Parse(ownSection.OrderedEntries.Last().Key);
-					foreach (var kvp in v.OrderedEntries)
-						ownSection.SetValue(number++.ToString(), kvp.Value);
+					try {
+						int number = 1 + int.Parse(ownSection.OrderedEntries.Last().Key);
+						foreach (var kvp in v.OrderedEntries)
+							ownSection.SetValue(number++.ToString(), kvp.Value);
+					}
+					catch (FormatException) {
+						foreach (var kvp in v.OrderedEntries)
+							ownSection.SetValue(kvp.Key, kvp.Value);
+					}
 				}
 				else
 					foreach (var kvp in v.OrderedEntries)

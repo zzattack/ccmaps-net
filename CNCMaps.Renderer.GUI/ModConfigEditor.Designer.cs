@@ -79,21 +79,21 @@
 			// toolStripMenuItem1
 			// 
 			this.toolStripMenuItem1.Name = "toolStripMenuItem1";
-			this.toolStripMenuItem1.Size = new System.Drawing.Size(152, 22);
+			this.toolStripMenuItem1.Size = new System.Drawing.Size(103, 22);
 			this.toolStripMenuItem1.Text = "&New";
 			this.toolStripMenuItem1.Click += new System.EventHandler(this.newToolStripMenuItem1_Click);
 			// 
 			// openToolStripMenuItem
 			// 
 			this.openToolStripMenuItem.Name = "openToolStripMenuItem";
-			this.openToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+			this.openToolStripMenuItem.Size = new System.Drawing.Size(103, 22);
 			this.openToolStripMenuItem.Text = "&Open";
 			this.openToolStripMenuItem.Click += new System.EventHandler(this.openToolStripMenuItem_Click);
 			// 
 			// saveToolStripMenuItem
 			// 
 			this.saveToolStripMenuItem.Name = "saveToolStripMenuItem";
-			this.saveToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+			this.saveToolStripMenuItem.Size = new System.Drawing.Size(103, 22);
 			this.saveToolStripMenuItem.Text = "&Save";
 			this.saveToolStripMenuItem.Click += new System.EventHandler(this.saveToolStripMenuItem_Click);
 			// 
@@ -160,6 +160,7 @@
 			this.btnLoadRA2Theaters.TabIndex = 4;
 			this.btnLoadRA2Theaters.Text = "Load RA2 Theaters";
 			this.btnLoadRA2Theaters.UseVisualStyleBackColor = true;
+			this.btnLoadRA2Theaters.Click += new System.EventHandler(this.btnLoadRA2Theaters_Click);
 			// 
 			// btnLoadYRTheaters
 			// 
@@ -170,6 +171,7 @@
 			this.btnLoadYRTheaters.TabIndex = 5;
 			this.btnLoadYRTheaters.Text = "Load YR theaters";
 			this.btnLoadYRTheaters.UseVisualStyleBackColor = true;
+			this.btnLoadYRTheaters.Click += new System.EventHandler(this.btnLoadYRTheaters_Click);
 			// 
 			// btnCancel
 			// 
@@ -191,6 +193,7 @@
 			this.btnLoadTSTheaters.TabIndex = 7;
 			this.btnLoadTSTheaters.Text = "Load TS Theaters";
 			this.btnLoadTSTheaters.UseVisualStyleBackColor = true;
+			this.btnLoadTSTheaters.Click += new System.EventHandler(this.btnLoadTSTheaters_Click);
 			// 
 			// ModConfigEditor
 			// 

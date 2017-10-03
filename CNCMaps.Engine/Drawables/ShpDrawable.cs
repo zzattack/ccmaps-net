@@ -1,4 +1,5 @@
 ﻿using System.Drawing;
+using CNCMaps.Engine.Drawables;
 using CNCMaps.Engine.Map;
 using CNCMaps.Engine.Rendering;
 using CNCMaps.FileFormats;

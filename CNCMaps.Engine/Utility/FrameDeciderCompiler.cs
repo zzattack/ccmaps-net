@@ -1,16 +1,8 @@
 ﻿using System;
 using System.CodeDom;
 using System.CodeDom.Compiler;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Reflection;
-using System.Reflection.Emit;
-using System.Text;
-using System.Threading.Tasks;
 using CNCMaps.Engine.Map;
-using Microsoft.CSharp;
-using NLog;
 
 namespace CNCMaps.Engine.Utility {
 	public static class FrameDeciderCompiler {
@@ -54,9 +46,10 @@ namespace CNCMaps.Engine.Utility {
 			// compile DOM
 			CodeDomProvider cp = CodeDomProvider.CreateProvider("CS");
 			var options = new CompilerParameters();
+			
 			options.GenerateInMemory = true;
-			options.ReferencedAssemblies.Add("CNCMaps.Engine.dll");
-			options.ReferencedAssemblies.Add("CNCMaps.Shared.dll");
+			options.ReferencedAssemblies.Add(typeof(Map.Map).Assembly.Location);
+			options.ReferencedAssemblies.Add(typeof(CNCMaps.Shared.ModConfig).Assembly.Location);
 			var cpRes = cp.CompileAssemblyFromDom(options, unit);
 			AppDomain localDom = AppDomain.CreateDomain("x");
 

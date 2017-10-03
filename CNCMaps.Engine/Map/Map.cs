@@ -4,7 +4,8 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 using System.Linq;
-using CNCMaps.Engine.Map;
+using CNCMaps.Engine.Drawables;
+using CNCMaps.Engine.Game;
 using CNCMaps.Engine.Rendering;
 using CNCMaps.Engine.Utility;
 using CNCMaps.FileFormats;
@@ -12,9 +13,8 @@ using CNCMaps.FileFormats.Map;
 using CNCMaps.FileFormats.VirtualFileSystem;
 using CNCMaps.Shared;
 using NLog;
-using TileLayer = CNCMaps.Engine.Map.TileLayer;
 
-namespace CNCMaps.Engine.Game {
+namespace CNCMaps.Engine.Map {
 	public class Map {
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 		public EngineType Engine { get; private set; }
@@ -48,12 +48,14 @@ namespace CNCMaps.Engine.Game {
 		private readonly HashSet<Palette> _palettesToBeRecalculated = new HashSet<Palette>();
 
 		private DrawingSurface _drawingSurface;
+		private MapFile _mapFile;
 
 		public bool Initialize(MapFile mf, EngineType et, List<string> customRulesININames, List<string> customArtININames) {
 			if (et == EngineType.AutoDetect) {
 				Logger.Fatal("Engine type needs to be known by now!");
 				return false;
 			}
+			this._mapFile = mf;
 			Engine = et;
 			TheaterType = Theater.TheaterTypeFromString(mf.ReadString("Map", "Theater"));
 			FullSize = mf.FullSize;
@@ -70,8 +72,7 @@ namespace CNCMaps.Engine.Game {
 
 			_wayPoints.AddRange(mf.Waypoints);
 
-            if (!LoadInis(customRulesININames, customArtININames))
-            {
+			if (!LoadInis(customRulesININames, customArtININames)) {
 				Logger.Fatal("Ini files couldn't be loaded");
 				return false;
 			}
@@ -87,7 +88,7 @@ namespace CNCMaps.Engine.Game {
 
 			// import tiles
 			foreach (var iso in mf.Tiles)
-				_tiles[iso.Dx, iso.Dy/2] = new MapTile(iso.Dx, iso.Dy, iso.Rx, iso.Ry, iso.Z, iso.TileNum, iso.SubTile, _tiles);
+				_tiles[iso.Dx, iso.Dy / 2] = new MapTile(iso.Dx, iso.Dy, iso.Rx, iso.Ry, iso.Z, iso.TileNum, iso.SubTile, _tiles);
 
 			// import terrain
 			foreach (var terr in mf.Terrains) {
@@ -139,72 +140,60 @@ namespace CNCMaps.Engine.Game {
 			}
 		}
 
-        // Starkku: Added support for custom ini filenames declared in mod config.
+		// Starkku: Added support for custom ini filenames declared in mod config.
 		public bool LoadInis(List<string> customRulesIniFiles, List<string> customArtIniFiles) {
 
-            if (customRulesIniFiles.Count < 1)
-            {
-                if (Engine == EngineType.YurisRevenge)
-                {
-                    _rules = VFS.Open<IniFile>("rulesmd.ini");
-                }
-                else if (Engine == EngineType.Firestorm)
-                {
-                    _rules = VFS.Open<IniFile>("rules.ini");
-                    Logger.Info("Merging Firestorm rules with TS rules");
-                    _rules.MergeWith(VFS.Open<IniFile>("firestrm.ini"));
-                }
-                else
-                {
-                    _rules = VFS.Open<IniFile>("rules.ini");
-                } 
-            }
-            else
-            {
-                _rules = LoadCustomInis(customRulesIniFiles);
+			if (customRulesIniFiles.Count < 1) {
+				if (Engine == EngineType.YurisRevenge) {
+					_rules = VFS.Open<IniFile>("rulesmd.ini");
+				}
+				else if (Engine == EngineType.Firestorm) {
+					_rules = VFS.Open<IniFile>("rules.ini");
+					Logger.Info("Merging Firestorm rules with TS rules");
+					_rules.MergeWith(VFS.Open<IniFile>("firestrm.ini"));
+				}
+				else {
+					_rules = VFS.Open<IniFile>("rules.ini");
+				}
+			}
+			else {
+				_rules = LoadCustomInis(customRulesIniFiles);
 
-            }
+			}
 
-            if (customArtIniFiles.Count < 1)
-            {
-                if (Engine == EngineType.YurisRevenge)
-                {
-                    _art = VFS.Open<IniFile>("artmd.ini");
-                }
-                else if (Engine == EngineType.Firestorm)
-                {
-                    _art = VFS.Open<IniFile>("art.ini");
-                    Logger.Info("Merging Firestorm art with TS art");
-                    _art.MergeWith(VFS.Open<IniFile>("artfs.ini"));
-                }
-                else
-                {
-                    _art = VFS.Open<IniFile>("art.ini");
-                }
-            }
-            else
-            {
-                _art = LoadCustomInis(customArtIniFiles);
-            }
+			if (customArtIniFiles.Count < 1) {
+				if (Engine == EngineType.YurisRevenge) {
+					_art = VFS.Open<IniFile>("artmd.ini");
+				}
+				else if (Engine == EngineType.Firestorm) {
+					_art = VFS.Open<IniFile>("art.ini");
+					Logger.Info("Merging Firestorm art with TS art");
+					_art.MergeWith(VFS.Open<IniFile>("artfs.ini"));
+				}
+				else {
+					_art = VFS.Open<IniFile>("art.ini");
+				}
+			}
+			else {
+				_art = LoadCustomInis(customArtIniFiles);
+			}
 
 			if (_rules == null || _art == null) {
 				Logger.Fatal("Rules or art config file could not be loaded! You cannot render a YR/FS map" +
-							 " without the expansion installed");
+							" without the expansion installed");
 				return false;
 			}
 			return true;
 		}
 
-        private IniFile LoadCustomInis(List<string> fileNames)
-        {
-            IniFile ini = VFS.Open<IniFile>(fileNames[0]);
-            for (int i = 1; i < fileNames.Count; i++)
-            {
-                Logger.Info("Merging " + fileNames[i] + " with " + fileNames[0]);
-                ini.MergeWith(VFS.Open<IniFile>(fileNames[i]));
-            }
-            return ini;
-        }
+		private IniFile LoadCustomInis(List<string> fileNames) {
+			IniFile ini = VFS.Open<IniFile>(fileNames[0]);
+			for (int i = 1; i < fileNames.Count; i++) {
+				Logger.Info("Merging " + fileNames[i] + " with " + fileNames[0]);
+				ini.MergeWith(VFS.Open<IniFile>(fileNames[i]));
+			}
+			return ini;
+		}
 
 		// between LoadMap and LoadTheater, the VFS should be initialized
 		public bool LoadTheater() {
@@ -216,7 +205,8 @@ namespace CNCMaps.Engine.Game {
 				return false;
 
 			// needs to be done before drawables are set
-			Operations.RecalculateOreSpread(_overlayObjects, Engine);
+			if (!ModConfig.ActiveConfig.DisableOreRandomization)
+				Operations.RecalculateOreSpread(_overlayObjects, Engine);
 
 			RemoveUnknownObjects();
 			SetDrawables();
@@ -225,7 +215,7 @@ namespace CNCMaps.Engine.Game {
 			if (Engine >= EngineType.RedAlert2)
 				LoadCountries();
 			LoadHouses();
-			
+
 			Operations.FixTiles(_tiles, _theater.GetTileCollection());
 			if (Engine <= EngineType.Firestorm)
 				Operations.RecalculateVeinsSpread(_overlayObjects, _tiles);
@@ -384,7 +374,7 @@ namespace CNCMaps.Engine.Game {
 					if (lt == LightingType.Full && pt == PaletteType.Iso) {
 						// bridges are attached to a low tile, but their height-offset should be taken into account 
 						int z = obj.Tile.Z + (obj.Drawable != null ? obj.Drawable.TileElevation : 0);
-                        p = _palettePerLevel[Math.Min(z, _palettePerLevel.Count-1)];
+						p = _palettePerLevel[z];
 					}
 					else if (lt >= LightingType.Level) {
 						// when applying lighting to its palette
@@ -435,7 +425,7 @@ namespace CNCMaps.Engine.Game {
 				}
 			}
 			Logger.Debug("Determined palettes to be recalculated due to remappables ({0})",
-						 _palettesToBeRecalculated.Count - before);
+						_palettesToBeRecalculated.Count - before);
 		}
 
 		private void LoadLightSources() {
@@ -474,7 +464,7 @@ namespace CNCMaps.Engine.Game {
 				}
 			}
 			Logger.Debug("Determined palettes to be recalculated due to lightsources ({0})",
-						 _palettesToBeRecalculated.Count - before);
+						_palettesToBeRecalculated.Count - before);
 		}
 
 		private void RecalculatePalettes() {
@@ -502,10 +492,7 @@ namespace CNCMaps.Engine.Game {
 		}
 
 		public void UndrawTiledStartPositions() {
-			Palette red = Palette.MakePalette(Color.Red);
-
-			foreach (var w in _wayPoints) {
-
+			foreach (var w in _wayPoints.Where(w => w.Tile != null)) {
 				// Redraw the 4x4 cell around start pos with original palette;
 				// first the tiles, then the objects
 				for (int x = w.Tile.Rx - 2; x < w.Tile.Rx + 2; x++) {
@@ -530,14 +517,48 @@ namespace CNCMaps.Engine.Game {
 			}
 		}
 
+		private void DrawStartMarkersBittah(Graphics gfx, Rectangle fullImage, Rectangle previewImage) {
+			foreach (var w in _wayPoints.Where(w => w.Number < 8)) {
+				var t = _tiles.GetTile(w.Tile);
+				var center = new Point(t.Dx * Drawable.TileWidth / 2, (t.Dy - t.Z) * Drawable.TileHeight / 2);
+				// project to preview dimensions
+				double pctFullX = (center.X - fullImage.Left) / (double)fullImage.Width;
+				double pctFullY = (center.Y - fullImage.Top) / (double)fullImage.Height;
+				Point dest = new Point((int)(pctFullX * previewImage.Width), (int)(pctFullY * previewImage.Height));
+				var img = Resources.ResourceManager.GetObject("bittah_marker_" + (w.Number + 1)) as Image;
+				if (img != null) {
+					// center marker img
+					dest.Offset(-img.Width / 2, -img.Height / 2);
+					// draw it
+					gfx.DrawImage(img, dest);
+				}
+			}
+		}
+
+		private void DrawStartMarkersAro(Graphics gfx, Rectangle fullImage, Rectangle previewImage) {
+			foreach (var w in _wayPoints.Where(w => w.Number < 8)) {
+				var center = TileLayer.GetTilePixelCenter(w.Tile);
+				// project to preview dimensions
+				double pctFullX = (center.X - fullImage.Left) / (double)previewImage.Width;
+				double pctFullY = (center.Y - fullImage.Top) / (double)previewImage.Height;
+				Point dest = new Point((int)(pctFullX * previewImage.Width), (int)(pctFullY * previewImage.Height));
+				var img = Resources.ResourceManager.GetObject("aro_marker_" + w) as Image;
+				// center marker img
+				dest.Offset(-img.Width / 2, -img.Height / 2);
+				// draw it
+				gfx.DrawImage(img, dest);
+			}
+		}
+
+
 		/// <summary>Loads the colors. </summary>
 		private void LoadColors() {
 			var colorsSection = _rules.GetSection("Colors");
 			foreach (var entry in colorsSection.OrderedEntries) {
 				string[] colorComponents = ((string)entry.Value).Split(',');
 				var h = new HsvColor(int.Parse(colorComponents[0]),
-									 int.Parse(colorComponents[1]),
-									 int.Parse(colorComponents[2]));
+									int.Parse(colorComponents[1]),
+									int.Parse(colorComponents[2]));
 				_namedColors[entry.Key] = h.ToRGB();
 			}
 		}
@@ -555,8 +576,13 @@ namespace CNCMaps.Engine.Game {
 					color = "LightGrey"; // this is hardcoded in the game
 				else
 					color = houseSection.ReadString("Color");
-				if (!string.IsNullOrEmpty(color) && !string.IsNullOrEmpty(v.Value))
-					_countryColors[v.Value] = _namedColors[color];
+				if (!string.IsNullOrEmpty(color) && !string.IsNullOrEmpty(v.Value)) {
+					if (_namedColors.ContainsKey(color))
+						_countryColors[v.Value] = _namedColors[color];
+					else
+						_countryColors[v.Value] = _namedColors["LightGrey"];
+
+				}
 			}
 		}
 
@@ -577,14 +603,46 @@ namespace CNCMaps.Engine.Game {
 
 		public unsafe void DrawSquaredStartPositions() {
 			Logger.Info("Marking squared start positions");
+			foreach (var entry in _wayPoints) {
+				try {
+					if (entry.Number >= 8)
+						continue;
+
+					MapTile t = _tiles.GetTile(entry.Tile);
+					if (t == null) continue;
+					int destX = t.Dx * TileWidth / 2;
+					int destY = (t.Dy - t.Z) * TileHeight / 2;
+
+					bool vert = FullSize.Height * 2 > FullSize.Width;
+					int radius;
+					if (vert)
+						radius = 10 * FullSize.Height * TileHeight / 2 / 144;
+					else
+						radius = 10 * FullSize.Width * TileWidth / 2 / 133;
+
+					int h = radius, w = radius;
+					for (int drawY = destY - h / 2; drawY < destY + h; drawY++) {
+						for (int drawX = destX - w / 2; drawX < destX + w; drawX++) {
+							byte* p = (byte*)_drawingSurface.BitmapData.Scan0 + drawY * _drawingSurface.BitmapData.Stride + 3 * drawX;
+							*p++ = 0x00;
+							*p++ = 0x00;
+							*p++ = 0xFF;
+						}
+					}
+				}
+				catch (FormatException) {
+				}
+				catch (IndexOutOfRangeException) {
+				}
+			}
 		}
 
 		public int FindCutoffHeight() {
 			// searches in 10 rows, starting from the bottom up, for the first fully tiled row
 			int y;
 
-#if DEBUG
-			// print map:
+#if DEBUG && FALSE
+	// print map:
 			var tileTouchGrid = _tiles.GridTouched;
 			var sb = new System.Text.StringBuilder();
 			for (y = 0; y < tileTouchGrid.GetLength(1); y++) {
@@ -618,9 +676,12 @@ namespace CNCMaps.Engine.Game {
 
 		public Rectangle GetSizePixels(SizeMode sizeMode) {
 			switch (sizeMode) {
-				case SizeMode.Local: return GetLocalSizePixels();
-				case SizeMode.Full: return GetFullMapSizePixels();
-				case SizeMode.Auto: return GetAutoSizePixels();
+			case SizeMode.Local:
+				return GetLocalSizePixels();
+			case SizeMode.Full:
+				return GetFullMapSizePixels();
+			case SizeMode.Auto:
+				return GetAutoSizePixels();
 			}
 			return Rectangle.Empty;
 		}
@@ -674,7 +735,7 @@ namespace CNCMaps.Engine.Game {
 			// but made available for the renderer's preview functionality through a key "MapRendererColor"
 			var tiberiums = _rules.GetOrCreateSection("Tiberiums").OrderedEntries.Select(kvp => kvp.Value).ToList();
 			var remaps = tiberiums.Select(tib => _rules.GetOrCreateSection(tib)
-				.ReadString(Engine >= EngineType.RedAlert2 ? "MapRendererColor" : "Color")).ToList();
+													.ReadString(Engine >= EngineType.RedAlert2 ? "MapRendererColor" : "Color")).ToList();
 
 			// override defaults if specified in rules
 			for (int i = 0; i < tiberiums.Count; i++) {
@@ -701,9 +762,7 @@ namespace CNCMaps.Engine.Game {
 
 		public void RedrawOreAndGems() {
 			var tileCollection = _theater.GetTileCollection();
-			var checkFunc = new Func<OverlayObject, bool>(delegate(OverlayObject ovl) {
-				return SpecialOverlays.GetOverlayTibType(ovl, Engine) != OverlayTibType.NotSpecial;
-			});
+			var checkFunc = new Func<OverlayObject, bool>(delegate (OverlayObject ovl) { return SpecialOverlays.GetOverlayTibType(ovl, Engine) != OverlayTibType.NotSpecial; });
 
 			// first redraw all required tiles (zigzag method)
 			for (int y = 0; y < FullSize.Height; y++) {
@@ -733,15 +792,14 @@ namespace CNCMaps.Engine.Game {
 				}
 			}
 		}
-
 		public void Draw() {
-			/*Logger.Info("Sorting objects map");
-			var sorter = new ObjectSorter(_theater, _tiles);
-			var orderedObjs = sorter.GetOrderedObjects().ToList();*/
-
 			_drawingSurface = new DrawingSurface(FullSize.Width * TileWidth, FullSize.Height * TileHeight, PixelFormat.Format24bppRgb);
 
-			/*
+#if SORT
+			Logger.Info("Sorting objects map");
+			var sorter = new ObjectSorter(_theater, _tiles);
+			var orderedObjs = sorter.GetOrderedObjects().ToList();
+
 			double lastReported = 0.0;
 			Logger.Info("Drawing map... 0%");
 			for (int i = 0; i < orderedObjs.Count; i++) {
@@ -752,12 +810,8 @@ namespace CNCMaps.Engine.Game {
 					Logger.Info("Drawing map... {0}%", Math.Round(pct, 0));
 					lastReported = pct;
 				}
-			}*/
-			
-			// var obj = _overlayObjects[_overlayObjects.Count / 2];
-			// ShpRenderer.Draw(obj, VFS.Open<ShpFile>("buildngz.shp"), obj.Drawable.Props, _drawingSurface);
-			// return;
-
+			}
+#else
 			double lastReported = 0.0;
 			for (int y = 0; y < FullSize.Height; y++) {
 				Logger.Trace("Drawing tiles row {0}", y);
@@ -790,10 +844,10 @@ namespace CNCMaps.Engine.Game {
 					lastReported = pct;
 				}
 			}
+#endif
 
 
-#if DEBUG
-
+#if DEBUG && FALSE
 			// test that my bounds make some kind of sense
 			_drawingSurface.Unlock();
 			using (Graphics gfx = Graphics.FromImage(_drawingSurface.Bitmap)) {
@@ -806,10 +860,10 @@ namespace CNCMaps.Engine.Game {
 			Logger.Info("Map drawing completed");
 		}
 
-		public void GeneratePreviewPack(bool omitPreviewMarkers, SizeMode sizeMode, IniFile map) {
+		public void GeneratePreviewPack(PreviewMarkersType previewMarkers, SizeMode sizeMode, IniFile map, bool fixDimensions) {
 			Logger.Info("Generating PreviewPack data");
-			// we will have to re-lock the BitmapData
 
+			// we will have to re-lock the BitmapData
 			_drawingSurface.Lock(_drawingSurface.Bitmap.PixelFormat);
 			if (MarkOreFields == false) {
 				Logger.Trace("Marking ore and gems areas");
@@ -817,42 +871,47 @@ namespace CNCMaps.Engine.Game {
 				Logger.Debug("Redrawing ore and gems areas");
 				RedrawOreAndGems();
 			}
-			if (StartPosMarking != StartPositionMarking.Squared) {
-				// undo tiled, if needed
-				if (StartPosMarking == StartPositionMarking.Tiled)
-					UndrawTiledStartPositions();
+			// undo tiled, if needed
+			if (StartPosMarking == StartPositionMarking.Tiled)
+				UndrawTiledStartPositions();
 
-				if (!omitPreviewMarkers)
-					DrawSquaredStartPositions();
+			switch (previewMarkers) {
+			case PreviewMarkersType.None:
+				break;
+			case PreviewMarkersType.Squared:
+				DrawSquaredStartPositions();
+				break;
+			case PreviewMarkersType.Bittah:
+			case PreviewMarkersType.Aro:
+				// to be injected later
+				break;
 			}
-
 			_drawingSurface.Unlock();
 
 			// Number magic explained: http://modenc.renegadeprojects.com/Maps/PreviewPack
 			int pw, ph;
 			switch (Engine) {
-				case EngineType.TiberianSun:
-					pw = (int)Math.Ceiling(1.975 * FullSize.Width);
-					ph = (int)Math.Ceiling(0.995 * FullSize.Height);
-					break;
-				case EngineType.Firestorm:
-					pw = (int)Math.Ceiling(1.975 * FullSize.Width);
-					ph = (int)Math.Ceiling(0.995 * FullSize.Height);
-					break;
-				case EngineType.RedAlert2:
-					pw = (int)Math.Ceiling(1.975 * FullSize.Width);
-					ph = (int)Math.Ceiling(0.995 * FullSize.Height);
-					break;
-				case EngineType.YurisRevenge:
-					pw = (int)Math.Ceiling(1.975 * LocalSize.Width);
-					ph = (int)Math.Ceiling(1.00 * LocalSize.Height);
-					break;
-				default:
-					throw new ArgumentOutOfRangeException();
+			case EngineType.TiberianSun:
+				pw = (int)Math.Ceiling((fixDimensions ? 1.975 : 2.000) * FullSize.Width);
+				ph = (int)Math.Ceiling((fixDimensions ? 0.995 : 1.000) * FullSize.Height);
+				break;
+			case EngineType.Firestorm:
+				pw = (int)Math.Ceiling((fixDimensions ? 1.975 : 2.000) * FullSize.Width);
+				ph = (int)Math.Ceiling((fixDimensions ? 0.995 : 1.000) * FullSize.Height);
+				break;
+			case EngineType.RedAlert2:
+				pw = (int)Math.Ceiling((fixDimensions ? 1.975 : 2.000) * FullSize.Width);
+				ph = (int)Math.Ceiling((fixDimensions ? 0.995 : 1.000) * FullSize.Height);
+				break;
+			case EngineType.YurisRevenge:
+				pw = (int)Math.Ceiling((fixDimensions ? 1.975 : 2.000) * LocalSize.Width);
+				ph = (int)Math.Ceiling((fixDimensions ? 1.000 : 1.000) * LocalSize.Height);
+				break;
+			default:
+				throw new ArgumentOutOfRangeException();
 			}
 
 			using (var preview = new Bitmap(pw, ph, PixelFormat.Format24bppRgb)) {
-
 				using (Graphics gfx = Graphics.FromImage(preview)) {
 					// use high-quality scaling
 					gfx.InterpolationMode = InterpolationMode.HighQualityBicubic;
@@ -862,9 +921,21 @@ namespace CNCMaps.Engine.Game {
 
 					var srcRect = GetSizePixels(sizeMode);
 					var dstRect = new Rectangle(0, 0, preview.Width, preview.Height);
+					gfx.DrawImage(_drawingSurface.Bitmap, dstRect, srcRect, GraphicsUnit.Pixel);
 
-                    gfx.DrawImage(_drawingSurface.Bitmap, dstRect, srcRect, GraphicsUnit.Pixel);
+					switch (previewMarkers) {
+					case PreviewMarkersType.None:
+					case PreviewMarkersType.Squared:
+						break;
+					case PreviewMarkersType.Bittah:
+						DrawStartMarkersBittah(gfx, srcRect, dstRect);
+						break;
+					case PreviewMarkersType.Aro:
+						DrawStartMarkersAro(gfx, srcRect, dstRect);
+						break;
+					}
 				}
+
 
 				Logger.Info("Injecting thumbnail into map");
 				ThumbInjector.InjectThumb(preview, map);
@@ -872,7 +943,6 @@ namespace CNCMaps.Engine.Game {
 				// debug thing to dump original previewpack dimensions
 				// preview.Save("C:\\thumbs\\" + Program.Settings.OutputFile + ".png");
 				// var originalPreview = ThumbInjector.ExtractThumb(this);
-				// originalPreview.Save("C:\\soms.png");
 				/*var prev = GetSection("Preview");
 				if (prev != null) {
 					var name = DetermineMapName(this.EngineType);
@@ -936,5 +1006,52 @@ namespace CNCMaps.Engine.Game {
 		}
 
 
+		public void FixupTileLayer() {
+			Logger.Info("Locating undefined tiles on map");
+			var coll = _theater.GetTileCollection();
+			int brokenTiles = 0;
+			foreach (var tile in _tiles.Where(t => t != null).ToList()) {
+				if (tile.TileNum >= coll.NumTiles) {
+					Logger.Warn("Removing tile at ({0},{1}) with tilenum {2} because it is not valid in this theather's tileset", tile.Rx, tile.Ry, tile.TileNum);
+					ChangeTileToClear(coll, tile);
+					brokenTiles++;
+					continue;
+				}
+				var drawable = coll.GetDrawable(tile) as TileDrawable;
+				if (drawable == null) {
+					Logger.Warn("Removing tile at ({0},{1}) with tilenum {2} because no definition for it was found", tile.Rx, tile.Ry, tile.TileNum);
+					ChangeTileToClear(coll, tile);
+					brokenTiles++;
+					continue;
+				}
+
+				var tmp = drawable.GetTileFile(tile);
+				if (tmp == null) {
+					Logger.Warn(string.Format("Removing tile #{2}@({0},{1}) because no tmp file for it was found; set {3} ({4}), expected filename {5}xx{6}",
+						tile.Rx, tile.Ry, tile.TileNum, drawable.Name, drawable.TsEntry?.MemberOfSet?.SetName ?? "", drawable.TsEntry?.MemberOfSet?.FileName ?? "", ModConfig.ActiveTheater.Extension));
+					brokenTiles++;
+					ChangeTileToClear(coll, tile);
+				}
+
+			}
+			if (brokenTiles == 0) {
+				Logger.Info("No undefined/broken tiles found, not altering IsoMapPack5 section");
+			}
+			else {
+				Logger.Info($"Fixing IsoMapPack5 section with {brokenTiles} broken tiles");
+				_mapFile.Tiles.SerializeIsoMapPack5(_mapFile.GetSection("IsoMapPack5"));
+			}
+
+		}
+
+		private void ChangeTileToClear(TileCollection coll, MapTile tile) {
+			tile.TileNum = 0;
+			tile.SubTile = 0;
+			tile.Drawable = coll.GetDrawable(0);
+
+			var t = _mapFile.Tiles.GetTileR(tile.Rx, tile.Ry);
+			t.TileNum = 0;
+			t.SubTile = 0;
+		}
 	}
 }

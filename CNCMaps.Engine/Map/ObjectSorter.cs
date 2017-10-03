@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.Linq;
 using CNCMaps.Engine.Game;
 using CNCMaps.Engine.Utility;

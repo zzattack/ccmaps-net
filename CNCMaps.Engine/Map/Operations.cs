@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using CNCMaps.Engine.Game;
 using CNCMaps.Shared;
+using CNCMaps.Shared.Utility;
 using NLog;
 
 namespace CNCMaps.Engine.Map {
@@ -94,7 +95,6 @@ namespace CNCMaps.Engine.Map {
 		}
 
 		public static void RecalculateVeinsSpread(IEnumerable<OverlayObject> ovls, TileLayer tiles) {
-			Random r = new Random();
 			OverlayObject anyVeins = null;
 
 			foreach (var o in ovls) {
@@ -162,7 +162,7 @@ namespace CNCMaps.Engine.Map {
 				if (veins != 0 || amIVeins) {
 					if (o == null) {
 						// on the fly veins creation..
-						o = new OverlayObject(anyVeins.OverlayID, (byte)r.Next(3));
+						o = new OverlayObject(anyVeins.OverlayID, (byte)Rand.Next(3));
 						o.IsGeneratedVeins = true;
 						o.Drawable = anyVeins.Drawable;
 						o.Palette = anyVeins.Palette;
@@ -170,7 +170,7 @@ namespace CNCMaps.Engine.Map {
 						t.AddObject(o);
 					}
 					else {
-						o.OverlayValue = (byte)(veins * mul + r.Next(rnd));
+						o.OverlayValue = (byte)(veins * mul + Rand.Next(rnd));
 						Debug.WriteLine("Replacing veins with value {0} ({1})", o.OverlayValue, veins);
 					}
 				}

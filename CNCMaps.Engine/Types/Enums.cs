@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace CNCMaps.Engine.Types {
 
@@ -99,6 +96,22 @@ namespace CNCMaps.Engine.Types {
 		None = -1,
 	}
 
+	public enum BuildCategory {
+		Combat, // The structure is used specifically for a combat or defensive purpose
+		Infrastructure, // Not known, appears to have no significant effect
+		Resource, // The structure provides the player with the ability to store or use money
+		Power, // The structure supplies power to the player
+		Tech, // The structure provides new construction options
+		DontCare, // Strange one, the objects Cameo= displays as if it is partly built
+	}
+
+	public enum FactoryType {
+		AircraftType,
+		BuildingType,
+		InfantryType,
+		UnitType,
+	}
+
 	public enum Layer {
 		Ground, // ??
 	}
@@ -109,5 +122,26 @@ namespace CNCMaps.Engine.Types {
 		Gas,
 		Smoke,
 		Fire,
+	}
+
+	public enum Action {
+		MultiMissile,
+		EMPulse,
+		Firestorm,
+		IonCannon,
+		HunterSeeker,
+		ChemMissile,
+		DropPod,
+		IronCurtain,
+		LightningStorm,
+		ChronoSphere,
+		ChronoWarp,
+		ParaDrop,
+		AmerParaDrop,
+		PsychicDominator,
+		SpyPlane,
+		GeneticConverter,
+		ForceShield,
+		PsychicReveal,
 	}
 }

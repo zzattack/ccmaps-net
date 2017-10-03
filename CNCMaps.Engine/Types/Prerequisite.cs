@@ -1,6 +1,6 @@
 ﻿namespace CNCMaps.Engine.Types {
 	public class Prerequisite : AbstractType {
-		enum PrequisiteValues {
+		public enum PrequisiteValues {
 			POWER, // (corresponds to PrerequisitePower)
 			PROC, // (corresponds to PrerequisiteProc and PrerequisiteProcAlternateYro.png)
 			BARRACKS, // (corresponds to PrerequisiteBarracks)

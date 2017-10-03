@@ -1,4 +1,4 @@
-﻿namespace CNCMaps {
+﻿namespace CNCMaps.Engine.Rendering {
 	partial class DebugDrawingSurfaceWindow {
 		/// <summary>
 		/// Required designer variable.

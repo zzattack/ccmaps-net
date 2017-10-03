@@ -1,6 +1,6 @@
 ﻿using System;
-using System.Collections.ObjectModel;
 using System.Drawing;
+using CNCMaps.Engine.Drawables;
 using CNCMaps.Engine.Map;
 using CNCMaps.Engine.Rendering;
 using CNCMaps.FileFormats;
@@ -39,7 +39,7 @@ namespace CNCMaps.Engine.Game {
 			_theaterType = theaterType;
 			_engine = engine;
 			if (engine == EngineType.RedAlert2 || engine == EngineType.TiberianSun) {
-				_rules = VFS.Open<IniFile>("rules.ini") ;
+				_rules = VFS.Open<IniFile>("rules.ini");
 				_art = VFS.Open<IniFile>("art.ini");
 			}
 			else if (engine == EngineType.YurisRevenge) {
@@ -60,6 +60,7 @@ namespace CNCMaps.Engine.Game {
 
 			if (!ModConfig.SetActiveTheater(_theaterType))
 				return false;
+			Active = this;
 
 			// load palettes and additional mix files for this theater
 			_palettes = new PaletteCollection();
@@ -71,7 +72,7 @@ namespace CNCMaps.Engine.Game {
 				VFS.Add(mix, CacheMethod.Cache); // we wish for these to be cached as they're gonna be hit often
 
 			_palettes.AnimPalette = new Palette(VFS.Open<PalFile>("anim.pal"));
-			
+
 			_animations = new ObjectCollection(CollectionType.Animation, _theaterType, _engine, _rules, _art,
 				_rules.GetSection("Animations"), _palettes);
 
@@ -83,16 +84,16 @@ namespace CNCMaps.Engine.Game {
 			_aircraftTypes = new ObjectCollection(CollectionType.Aircraft, _theaterType, _engine, _rules, _art,
 				_rules.GetSection("AircraftTypes"), _palettes);
 
-			_infantryTypes = new ObjectCollection(CollectionType.Infantry, _theaterType, _engine, _rules, _art, 
+			_infantryTypes = new ObjectCollection(CollectionType.Infantry, _theaterType, _engine, _rules, _art,
 				_rules.GetSection("InfantryTypes"), _palettes);
 
-			_overlayTypes = new ObjectCollection(CollectionType.Overlay, _theaterType, _engine, _rules, _art, 
+			_overlayTypes = new ObjectCollection(CollectionType.Overlay, _theaterType, _engine, _rules, _art,
 				_rules.GetSection("OverlayTypes"), _palettes);
 
-			_terrainTypes = new ObjectCollection(CollectionType.Terrain, _theaterType, _engine, _rules, _art, 
+			_terrainTypes = new ObjectCollection(CollectionType.Terrain, _theaterType, _engine, _rules, _art,
 				_rules.GetSection("TerrainTypes"), _palettes);
 
-			_smudgeTypes = new ObjectCollection(CollectionType.Smudge, _theaterType, _engine, _rules, _art, 
+			_smudgeTypes = new ObjectCollection(CollectionType.Smudge, _theaterType, _engine, _rules, _art,
 				_rules.GetSection("SmudgeTypes"), _palettes);
 
 			_vehicleTypes = new ObjectCollection(CollectionType.Vehicle, _theaterType, _engine, _rules, _art,
@@ -194,8 +195,10 @@ namespace CNCMaps.Engine.Game {
 
 		internal void Draw(GameObject obj, DrawingSurface ds) {
 			Logger.Trace("Drawing object {0} @ {1}", obj, obj.Tile);
-			obj.Drawable.Draw(obj, ds);
+			obj.Drawable?.Draw(obj, ds);
 		}
 
+
+		public static Theater Active { get; set; }
 	}
 }

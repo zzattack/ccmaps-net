@@ -20,11 +20,12 @@
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;SORT</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <Prefer32Bit>false</Prefer32Bit>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -68,11 +69,14 @@
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\CNCMaps.Shared\Properties\AssemblyInfoGlobal.cs">
       <Link>Properties\AssemblyInfoGlobal.cs</Link>
     </Compile>
+    <Compile Include="EngineSettings.cs" />
     <Compile Include="Game\Defaults.cs" />
     <Compile Include="Game\FrameDeciders.cs" />
     <Compile Include="Game\GameCollection.cs" />
@@ -93,6 +97,12 @@
     <Compile Include="Drawables\AnimDrawable.cs" />
     <Compile Include="Drawables\BuildingDrawable.cs" />
     <Compile Include="Drawables\Drawable.cs" />
+    <Compile Include="Rendering\DebugDrawingSurfaceWindow.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Rendering\DebugDrawingSurfaceWindow.Designer.cs">
+      <DependentUpon>DebugDrawingSurfaceWindow.cs</DependentUpon>
+    </Compile>
     <Compile Include="Rendering\DrawingSurface.cs" />
     <Compile Include="Game\DrawProperties.cs" />
     <Compile Include="Rendering\Palette.cs" />
@@ -104,6 +114,11 @@
     <Compile Include="Drawables\UnitDrawable.cs" />
     <Compile Include="Drawables\VoxelDrawable.cs" />
     <Compile Include="Rendering\VxlRenderer.cs" />
+    <Compile Include="Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
     <Compile Include="Types\AbstractType.cs" />
     <Compile Include="Types\AircraftType.cs" />
     <Compile Include="Types\Animation.cs" />
@@ -118,6 +133,7 @@
     <Compile Include="Types\Prerequisite.cs" />
     <Compile Include="Types\SmudgeType.cs" />
     <Compile Include="Types\Sound.cs" />
+    <Compile Include="Types\SuperWeaponType.cs" />
     <Compile Include="Types\TechnoType.cs" />
     <Compile Include="Types\TerrainType.cs" />
     <Compile Include="Types\TypesRepository.cs" />
@@ -125,6 +141,7 @@
     <Compile Include="Types\VoxelAnimation.cs" />
     <Compile Include="Types\WarHead.cs" />
     <Compile Include="Types\WeaponType.cs" />
+    <Compile Include="Types\XYZ.cs" />
     <Compile Include="Utility\FrameDeciderCompiler.cs" />
     <Compile Include="Utility\Hexagon.cs" />
     <Compile Include="Utility\HsvColor.cs" />
@@ -133,6 +150,22 @@
     <Content Include="OpenTK.dll.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <None Include="Resources\aro_marker_8.png" />
+    <None Include="Resources\aro_marker_7.png" />
+    <None Include="Resources\aro_marker_6.png" />
+    <None Include="Resources\aro_marker_5.png" />
+    <None Include="Resources\aro_marker_4.png" />
+    <None Include="Resources\aro_marker_3.png" />
+    <None Include="Resources\aro_marker_2.png" />
+    <None Include="Resources\aro_marker_1.png" />
+    <None Include="Resources\bittah_marker_3.png" />
+    <None Include="Resources\bittah_marker_2.png" />
+    <None Include="Resources\bittah_marker_1.png" />
+    <None Include="Resources\bittah_marker_8.png" />
+    <None Include="Resources\bittah_marker_7.png" />
+    <None Include="Resources\bittah_marker_6.png" />
+    <None Include="Resources\bittah_marker_5.png" />
+    <None Include="Resources\bittah_marker_4.png" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\CNCMaps.FileFormats\CNCMaps.FileFormats.csproj">
@@ -143,6 +176,15 @@
       <Project>{54d90137-e2cc-4d21-bbcb-9e3c626d875f}</Project>
       <Name>CNCMaps.Shared</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Rendering\DebugDrawingSurfaceWindow.resx">
+      <DependentUpon>DebugDrawingSurfaceWindow.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources.resx">
+      <Generator>PublicResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

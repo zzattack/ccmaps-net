@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
-namespace CNCMaps.Engine.Types {
+﻿namespace CNCMaps.Engine.Types {
 	public class InfantryType : TechnoType {
 		// ART
 		public bool Crawls;

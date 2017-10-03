@@ -645,8 +645,7 @@ namespace CNCMaps.Shared.DynamicTypeDescription {
 			if (propType.IsEnum) return true;
 			else if (sourceType == propType) return true;
 			else if (sourceType == typeof(StandardValueAttribute)) return true;
-			var x = base.CanConvertFrom(context, sourceType);
-			 return base.CanConvertFrom(context, sourceType);
+			return base.CanConvertFrom(context, sourceType);
 		}
 		public override bool CanConvertTo(ITypeDescriptorContext context, Type destinationType) {
 			if (destinationType == typeof(string)) return true;

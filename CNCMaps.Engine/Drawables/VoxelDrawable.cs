@@ -1,5 +1,6 @@
 ﻿using System.Drawing;
 using System.IO;
+using CNCMaps.Engine.Drawables;
 using CNCMaps.Engine.Map;
 using CNCMaps.Engine.Rendering;
 using CNCMaps.FileFormats;
@@ -10,13 +11,8 @@ namespace CNCMaps.Engine.Game {
 		public VxlFile Vxl;
 		public HvaFile Hva;
 
-		public VoxelDrawable() {
-		}
-
-		public VoxelDrawable(IniFile.IniSection rules, IniFile.IniSection art)
-			: base(rules, art) {
-		}
-
+		public VoxelDrawable() { }
+		public VoxelDrawable(IniFile.IniSection rules, IniFile.IniSection art) : base(rules, art) { }
 		public VoxelDrawable(VxlFile vxl, HvaFile hva) {
 			Vxl = vxl;
 			Hva = hva;
@@ -27,8 +23,6 @@ namespace CNCMaps.Engine.Game {
 			DrawingSurface vxl_ds = VoxelRenderer.Render(Vxl, Hva, obj, Props);
 			if (vxl_ds != null)
 				BlitVoxelToSurface(ds, vxl_ds, obj, Props);
-
-			// todo: voxel shadows
 		}
 
 		public override Rectangle GetBounds(GameObject obj) {
@@ -48,11 +42,12 @@ namespace CNCMaps.Engine.Game {
 			var w_low = (byte*)ds.BitmapData.Scan0;
 			byte* w_high = w_low + ds.BitmapData.Stride * ds.BitmapData.Height;
 			var zBuffer = ds.GetZBuffer();
+			var shadowBufVxl = vxl_ds.GetShadows();
+			var shadowBuf = ds.GetShadows();
 			// int rowsTouched = 0;
 
 			// short firstRowTouched = short.MaxValue;
 			for (int y = 0; y < vxl_ds.Height; y++) {
-
 				byte* src_row = (byte*)vxl_ds.BitmapData.Scan0 + vxl_ds.BitmapData.Stride * (vxl_ds.Height - y - 1);
 				byte* dst_row = ((byte*)ds.BitmapData.Scan0 + (d.Y + y) * ds.BitmapData.Stride + d.X * 3);
 				int zIdx = (d.Y + y) * ds.Width + d.X;
@@ -71,6 +66,16 @@ namespace CNCMaps.Engine.Game {
 						short zBufVal = (short)((obj.Tile.Rx + obj.Tile.Ry + obj.Tile.Z) * TileHeight / 2);
 						if (zBufVal >= zBuffer[zIdx])
 							zBuffer[zIdx] = zBufVal;
+					}
+					// or shadows
+					else if (shadowBufVxl[x + y * vxl_ds.Height]) {
+						int shadIdx = (d.Y + y) * ds.Width + d.X + x;
+						if (!shadowBuf[shadIdx]) {
+							*(dst_row + x * 3) /= 2;
+							*(dst_row + x * 3 + 1) /= 2;
+							*(dst_row + x * 3 + 2) /= 2;
+							shadowBuf[shadIdx] = true;
+						}
 					}
 					zIdx++;
 				}

@@ -1,38 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using CNCMaps.Engine.Game;
-using CNCMaps.FileFormats;
-using CNCMaps.Shared;
+﻿using CNCMaps.FileFormats;
 
 namespace CNCMaps.Engine.Types {
 	public class VoxelAnimation : Animation {
-		public bool Normalized;
-		public bool Translucent;
-		public bool IsTiberium;
-		public bool IsMeteor;
-		public float Elasticity;
 		public float MinAngularVelocity;
 		public float MaxAngularVelocity;
 		public int Duration;
-		public float MinZVel;
 		public float MaxZVel;
-		public float MaxXYVel;
-		public VoxelAnimation Spawns;
-		public int SpawnCount;
 		public bool ShareBodyData;
 		public bool ShareTurretData;
 		public bool ShareBarrelData;
 		public int VoxelIndex;
-		public Sound StartSound;
-		public Sound StopSound;
-		public Animation BounceAnim;
-		public Animation ExpireAnim;
-		public Animation TrailerAnim;
-		public int Damage;
-		public int DamageRadius;
-		public WarheadType Warhead;
 		public ParticleSystem AttachedSystem;
 		public TechnoType ShareSource;
 

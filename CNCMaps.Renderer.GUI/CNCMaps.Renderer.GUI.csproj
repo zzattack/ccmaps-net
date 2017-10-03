@@ -44,6 +44,7 @@
     <PlatformTarget>AnyCPU</PlatformTarget>
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
     <Prefer32Bit>false</Prefer32Bit>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -81,15 +82,21 @@
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="NLog, Version=2.0.1.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\Lib\NLog.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
+    <Reference Include="System.Configuration" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.XML" />
+    <Reference Include="System.Xml.Linq" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
     <None Include="Properties\Settings.settings">
-      <Generator>SettingsSingleFileGenerator</Generator>
+      <Generator>PublicSettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
   </ItemGroup>
@@ -113,6 +120,11 @@
   <ItemGroup>
     <Compile Include="..\CNCMaps.Shared\Properties\AssemblyInfoGlobal.cs">
       <Link>Properties\AssemblyInfoGlobal.cs</Link>
+    </Compile>
+    <Compile Include="CustomSettingsProvider.cs" />
+    <Compile Include="GuiTarget.cs" />
+    <Compile Include="SubmitBug.cs">
+      <SubType>Form</SubType>
     </Compile>
     <Compile Include="MainForm.cs">
       <SubType>Form</SubType>
@@ -139,6 +151,9 @@
     <Content Include="ra2mapicon.ico" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="SubmitBug.resx">
+      <DependentUpon>SubmitBug.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="MainForm.resx">
       <DependentUpon>MainForm.cs</DependentUpon>
       <SubType>Designer</SubType>
@@ -153,7 +168,7 @@
       <Name>CNCMaps.Engine</Name>
     </ProjectReference>
     <ProjectReference Include="..\CNCMaps.FileFormats\CNCMaps.FileFormats.csproj">
-      <Project>{761cec32-9254-4eee-ac76-07c8e4279835}</Project>
+      <Project>{761CEC32-9254-4EEE-AC76-07C8E4279835}</Project>
       <Name>CNCMaps.FileFormats</Name>
     </ProjectReference>
     <ProjectReference Include="..\CNCMaps.Shared\CNCMaps.Shared.csproj">

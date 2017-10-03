@@ -1,11 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using CNCMaps.Engine.Types;
-using CNCMaps.FileFormats;
+﻿using CNCMaps.FileFormats;
 
-namespace CNCMaps.Objects.Westwood.Types {
+namespace CNCMaps.Engine.Types {
 	public class SuperWeaponType : AbstractType {
 		
 		// rules
@@ -22,8 +17,8 @@ namespace CNCMaps.Objects.Westwood.Types {
 		public Sound StartSound;
 		public float Range;
 		public int LineMultiplier;
-		public Type Type;
-		public Type PreDependent;
+		public AbstractType Type;
+		public WeaponType PreDependent;
 		public BuildingType AuxBuilding;
 		public bool UseChargeDrain;
 		public bool ManualControl;
@@ -36,10 +31,8 @@ namespace CNCMaps.Objects.Westwood.Types {
 		public override void LoadRules(IniFile.IniSection rules) {
 			base.LoadRules(rules);
 
-            // Starkku: Commented things to make the program build.
-            // TODO Probably need to fix all of this later to make it actually work.
-			//WeaponType = rules.ReadEnum<WeaponType>("WeaponType");
-			//Action = rules.ReadEnum<Action>("Action", Action.);
+            WeaponType = rules.ReadEnum<WeaponType>("WeaponType", null);
+			Action = rules.ReadEnum<Action>("Action", Action.MultiMissile);
 			IsPowered = rules.ReadBool("IsPowered", true);
 			DisableableFromShell = rules.ReadBool("DisableableFromShell");
 			SidebarFlashTabFrames = rules.ReadInt("SidebarFlashTabFrames", -1);
@@ -51,15 +44,13 @@ namespace CNCMaps.Objects.Westwood.Types {
 			StartSound = Get<Sound>(rules.ReadString("StartSound"));
 			Range = rules.ReadFloat("Range", 0);
 			LineMultiplier = rules.ReadInt("LineMultiplier", 0);
-			//Type = rules.ReadType("Type", -1);
-			//PreDependent = rules.ReadType("PreDependent", -1);
+			Type = rules.ReadEnum<AbstractType>("Type", null);
+			PreDependent = rules.ReadEnum<WeaponType>("PreDependent", null);
 			AuxBuilding = Get<BuildingType>(rules.ReadString("AuxBuilding"));
 			UseChargeDrain = rules.ReadBool("UseChargeDrain");
 			ManualControl = rules.ReadBool("ManualControl");
 			RechargeTime = rules.ReadFloat("RechargeTime", 5.0f);
 			SidebarImage = rules.ReadString("SidebarImage", "");
-		
-		
 
 		}
 

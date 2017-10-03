@@ -1,6 +1,5 @@
 using System;
 using System.Drawing;
-using CNCMaps.Engine.Game;
 using CNCMaps.Engine.Map;
 using CNCMaps.Shared;
 
@@ -19,6 +18,7 @@ namespace CNCMaps.Engine.Rendering {
 		public LightingType LightingType { get; set; }
 		public string CustomPaletteName { get; set; }
 		public Palette PaletteOverride { get; set; } // if palettetype should be ignored
+		public Point ZShapePointMove { get; set; }
 
 		//private Func<GameObject, int> CachedFrameDecider;
 		public Func<GameObject, int> FrameDecider {

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using CNCMaps.FileFormats;
 
 namespace CNCMaps.Engine.Types {
@@ -11,7 +10,7 @@ namespace CNCMaps.Engine.Types {
 		public string UIName;
 
 		public AbstractType(string ID) {
-			this.ID=ID;
+			this.ID = ID;
 		}
 
 		public virtual void LoadRules(IniFile.IniSection rules) {
@@ -37,6 +36,6 @@ namespace CNCMaps.Engine.Types {
 		protected static T Get<T>(string obj) where T : AbstractType {
 			return TypesRepository.Get<T>(obj);
 		}
-		
+
 	}
 }

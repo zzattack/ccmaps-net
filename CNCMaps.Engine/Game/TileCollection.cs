@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Drawing;
+using CNCMaps.Engine.Drawables;
 using CNCMaps.Engine.Map;
 using CNCMaps.FileFormats;
 using CNCMaps.FileFormats.VirtualFileSystem;
 using CNCMaps.Shared;
+using CNCMaps.Shared.Utility;
 using NLog;
 
 namespace CNCMaps.Engine.Game {
@@ -38,7 +39,6 @@ namespace CNCMaps.Engine.Game {
 			}
 		}
 		public class TileSetEntry {
-			static readonly Random RandomTileChooser = new Random();
 			public readonly List<TmpFile> TmpFiles = new List<TmpFile>();
 			public Drawable AnimationDrawable;
 			public int AnimationSubtile = -1;
@@ -62,7 +62,7 @@ namespace CNCMaps.Engine.Game {
 			public TmpFile GetTmpFile(MapTile t, bool damaged = false) {
 				if (TmpFiles.Count == 0)
 					return null;
-				var randomChosen = TmpFiles[RandomTileChooser.Next(TmpFiles.Count)];
+				var randomChosen = TmpFiles[Rand.Next(TmpFiles.Count)];
 				// if this is not a randomizing tileset, but instead one with damaged data,
 				// then return the "undamaged" version
 				randomChosen.Initialize();
@@ -267,16 +267,26 @@ namespace CNCMaps.Engine.Game {
 						if (r >= 'a') filename += r;
 						filename += _theaterSettings.Extension;
 						var tmpFile = VFS.Open<TmpFile>(filename);
+						if (tmpFile == null && _theaterSettings.Type == TheaterType.NewUrban) {
+							tmpFile = VFS.Open<TmpFile>(filename.Replace(".ubn", ".tem"));
+						}
 						if (tmpFile != null) rs.AddTile(tmpFile);
 						else break;
 					}
 					ts.Entries.Add(rs);
-					_drawables.Add(new TileDrawable(null, null, rs));
+					_drawableIndexNameMap[_drawables.Count] = ts.SetName;
+
+					var td = AddObject(sectionName) as TileDrawable;
+					td.TsEntry = rs;
 				}
 				setNum++;
 			}
 
 			_animsSectionsStartIdx = sectionIdx + 1;
+		}
+
+		protected override Drawable MakeDrawable(string objName) {
+			return new TileDrawable(null, null, null) { Name = objName };
 		}
 
 		public void InitAnimations(ObjectCollection animations) {

@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using OpenTK;
+﻿using OpenTK;
 
 namespace CNCMaps.Engine.Types {
 	public class VehicleType : TechnoType {
@@ -61,6 +57,7 @@ namespace CNCMaps.Engine.Types {
 
 		public override void LoadRules(FileFormats.IniFile.IniSection rules) {
 			base.LoadRules(rules);
+
 			DeployToFire = rules.ReadBool("DeployToFire");
 			IsSimpleDeployer = rules.ReadBool("IsSimpleDeployer");
 			Harvester = rules.ReadBool("Harvester");

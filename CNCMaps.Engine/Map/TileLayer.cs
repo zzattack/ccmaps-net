@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
-using CNCMaps.Engine.Game;
+using CNCMaps.Engine.Drawables;
 using CNCMaps.FileFormats.Map;
 using CNCMaps.Shared.Utility;
 using NLog;
@@ -79,6 +79,12 @@ namespace CNCMaps.Engine.Map {
 			}
 			else
 				return GetTile(dx, dy / 2);
+		}
+
+		public static Point GetTilePixelCenter(IsoTile t) {
+			var ret = new Point(t.Dx * Drawable.TileWidth / 2, (t.Dy - t.Z) * Drawable.TileHeight);
+			ret.Offset(Drawable.TileWidth / 2, Drawable.TileHeight / 2);
+			return ret;
 		}
 
 		public MapTile GetTileScreen(Point p, bool fixOOB = true, bool omitHeight = false) {
@@ -210,6 +216,7 @@ namespace CNCMaps.Engine.Map {
 		public MapTile GetTile(IsoTile isoTile) {
 			return this[isoTile.Dx, isoTile.Dy / 2];
 		}
+
 	}
 
 }

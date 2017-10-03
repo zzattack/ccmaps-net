@@ -1,6 +1,8 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Drawing;
+using CNCMaps.FileFormats.Encodings;
 using CNCMaps.Shared.Utility;
 
 namespace CNCMaps.FileFormats.Map {
@@ -68,6 +70,32 @@ namespace CNCMaps.FileFormats.Map {
 			return new TwoDimensionalEnumerator<IsoTile>(isoTiles);
 		}
 		#endregion
+
+		public void SerializeIsoMapPack5(IniFile.IniSection isoMapPack5) {
+			int cells = (Width * 2 - 1) * Height;
+			int lzoPackSize = cells * 11 + 4; // last 4 bytes contains a lzo pack header saying no more data is left
+			
+			var isoMapPack = new byte[lzoPackSize];
+			var isoMapPack2 = new byte[lzoPackSize];
+			long di = 0;
+			foreach (var tile in this.isoTiles) {
+				var bs = tile.ToMapPack5Entry().ToArray();
+				Array.Copy(bs, 0, isoMapPack, di, 11);
+				di += 11;
+			}
+
+			var compressed = Format5.Encode(isoMapPack, 5);
+			string compressed64 = Convert.ToBase64String(compressed);
+			
+			int i = 1;
+			int idx = 0;
+			isoMapPack5.Clear();
+			while (idx < compressed64.Length) {
+				int adv = Math.Min(74, compressed64.Length - idx);
+				isoMapPack5.SetValue(i++.ToString(), compressed64.Substring(idx, adv));
+				idx += adv;
+			}
+		}
 
 	}
 

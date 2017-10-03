@@ -2,11 +2,13 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
+using CNCMaps.Engine.Drawables;
 using CNCMaps.Engine.Map;
 using CNCMaps.Engine.Rendering;
 using CNCMaps.FileFormats;
 using CNCMaps.FileFormats.VirtualFileSystem;
 using CNCMaps.Shared;
+using CNCMaps.Shared.Utility;
 
 namespace CNCMaps.Engine.Game {
 	class BuildingDrawable : Drawable {
@@ -19,8 +21,6 @@ namespace CNCMaps.Engine.Game {
 			"TEMNITLAMP", "SNOMORLAMP",
 			"SNODAYLAMP", "SNODUSLAMP", "SNONITLAMP"
 		};
-
-		private static readonly Random R = new Random();
 
 		private static readonly string[] AnimImages = {
 			// "ProductionAnim",  // you don't want ProductionAnims on map renders, but IdleAnim instead
@@ -53,7 +53,6 @@ namespace CNCMaps.Engine.Game {
 
 			IsBuildingPart = true;
 			InvisibleInGame = Rules.ReadBool("InvisibleInGame") || LampNames.Contains(Name.ToUpper());
-
 			string foundation = Art.ReadString("Foundation", "1x1");
 			if (!foundation.Equals("custom", StringComparison.InvariantCultureIgnoreCase)) {
 				int fx = foundation[0] - '0';
@@ -66,6 +65,7 @@ namespace CNCMaps.Engine.Game {
 				Foundation = new Size(fx, fy);
 			}
 			Props.SortIndex = Art.ReadInt("NormalYSort") - Art.ReadInt("NormalZAdjust"); // "main" building image before anims
+			Props.ZShapePointMove = Art.ReadPoint("ZShapePointMove");
 
 			_baseShp = new ShpDrawable(Rules, Art);
 			_baseShp.OwnerCollection = OwnerCollection;
@@ -97,7 +97,8 @@ namespace CNCMaps.Engine.Game {
 			if (Rules.ReadBool("Turret") && Rules.HasKey("TurretAnim")) {
 				string turretName = Rules.ReadString("TurretAnim");
                 // Starkku: NewTheater/generic image fallback support for turrets.
-                string turretNameShp = NewTheater ? OwnerCollection.ApplyNewTheaterIfNeeded(turretName, turretName + ".shp") : turretName;
+                string turretNameShp = NewTheater ? OwnerCollection.ApplyNewTheaterIfNeeded(turretName, turretName) : turretName;
+				turretNameShp += ".shp";
 				Drawable turret = Rules.ReadBool("TurretAnimIsVoxel")
 					? (Drawable)new VoxelDrawable(VFS.Open<VxlFile>(turretName + ".vxl"), VFS.Open<HvaFile>(turretName + ".hva"))
 					: new ShpDrawable(VFS.Open<ShpFile>(turretNameShp));
@@ -182,7 +183,7 @@ namespace CNCMaps.Engine.Game {
 					break;
 
 				string[] coords = dfo.Split(new[] { ',', '.' }, StringSplitOptions.RemoveEmptyEntries);
-				string fireAnim = OwnerCollection.FireNames[R.Next(OwnerCollection.FireNames.Length)];
+				string fireAnim = OwnerCollection.FireNames[Rand.Next(OwnerCollection.FireNames.Length)];
 				IniFile.IniSection fireArt = OwnerCollection.Art.GetOrCreateSection(fireAnim);
 
 				var fire = new AnimDrawable(Rules, Art, VFS.Open<ShpFile>(fireAnim + ".shp"));
@@ -286,7 +287,6 @@ namespace CNCMaps.Engine.Game {
 		public override void DrawBoundingBox(GameObject obj, Graphics gfx) {
 			base.DrawBoundingBox(obj, gfx);
 
-			return;
 			var parts = new List<Drawable>();
 			parts.Add(_baseShp);
 			parts.AddRange(_anims);
