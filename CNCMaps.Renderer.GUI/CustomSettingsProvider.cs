@@ -7,9 +7,9 @@ using System.Linq.Expressions;
 using System.Xml.Linq;
 
 namespace CNCMaps.GUI {
-	// taken from http://stackoverflow.com/questions/2265271/custom-path-of-the-user-config
+    // taken from http://stackoverflow.com/questions/2265271/custom-path-of-the-user-config
 
-	class CustomSettingsProvider : SettingsProvider {
+    class CustomSettingsProvider : SettingsProvider {
 		const string NAME = "name";
 		const string SERIALIZE_AS = "serializeAs";
 		const string CONFIG = "configuration";

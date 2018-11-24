@@ -23,8 +23,8 @@ namespace CNCMaps.Engine {
 		public static RenderSettings Settings;
 
 		public bool ConfigureFromArgs(string[] args) {
-			InitLoggerConfig();
-			Settings = new RenderSettings();
+            InitLoggerConfig();
+            Settings = new RenderSettings();
 			Settings.ConfigureFromArgs(args);
 
 			if (Settings.Debug && !Debugger.IsAttached) 
@@ -188,18 +188,32 @@ namespace CNCMaps.Engine {
 					var cutRect = map.GetSizePixels(Settings.SizeMode);
 
 					if (match.Groups[1].Captures[0].Value == "+") {
-						// + means maintain aspect ratio
-						double aspectRatio = cutRect.Width / (double)cutRect.Height;
-						if (dimensions.Width / (double)dimensions.Height > aspectRatio) {
-							dimensions.Height = (int)(dimensions.Width / aspectRatio);
-						}
-						else {
-							dimensions.Width = (int)(dimensions.Height / aspectRatio);
-						}
-					}
-					_logger.Info("Saving thumbnail with dimensions {0}x{1}", dimensions.Width, dimensions.Height);
-					ds.SaveThumb(dimensions, cutRect, Path.Combine(Settings.OutputDir, "thumb_" + Settings.OutputFile + ".jpg"));
-				}
+                        // + means maintain aspect ratio
+
+                        if (dimensions.Width > 0 && dimensions.Height > 0)
+                        {
+
+                            float scaleHeight = (float)dimensions.Height / (float)cutRect.Height;
+                            float scaleWidth = (float)dimensions.Width / (float)cutRect.Width;
+                            float scale = Math.Min(scaleHeight, scaleWidth);
+                            dimensions.Width = Math.Max((int)(cutRect.Width * scale), 1);
+                            dimensions.Height = Math.Max((int)(cutRect.Height * scale), 1);
+                        }
+                        else
+                        {
+                            double aspectRatio = cutRect.Width / (double)cutRect.Height;
+                            if (dimensions.Width / (double)dimensions.Height > aspectRatio) {
+                                dimensions.Height = (int)(dimensions.Width / aspectRatio);
+                            }
+                            else {
+                                dimensions.Width = (int)(dimensions.Height / aspectRatio);
+                            }
+                        }
+                    }
+                    _logger.Info("Saving thumbnail with dimensions {0}x{1}", dimensions.Width, dimensions.Height);
+                    //ds.SaveThumb(dimensions, cutRect, Path.Combine(Settings.OutputDir, "thumb_" + Settings.OutputFile + ".jpg"));
+                    ds.SaveThumb(dimensions, cutRect, Path.Combine(Settings.OutputDir, "thumb_" + Settings.OutputFile + ".png"));
+                }
 
 				if (Settings.GeneratePreviewPack || Settings.FixupTiles) {
 					if (mapFile.BaseStream is MixFile)
@@ -223,7 +237,7 @@ namespace CNCMaps.Engine {
 			return EngineResult.RenderedOk;
 		}
 
-		/*private static void DumpTileProperties() {
+        /*private static void DumpTileProperties() {
 			ModConfig.LoadDefaultConfig(EngineType.YurisRevenge);
 			VFS.Instance.ScanMixDir("", EngineType.YurisRevenge);
 
@@ -245,8 +259,7 @@ namespace CNCMaps.Engine {
 			}
 		}*/
 
-
-		private static void InitLoggerConfig() {
+        private static void InitLoggerConfig() {
 			if (LogManager.Configuration == null) {
 				// init default config
 				var target = new ColoredConsoleTarget();
