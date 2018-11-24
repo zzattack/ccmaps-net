@@ -107,7 +107,7 @@ Section Uninstall
 	Delete "$INSTDIR\NLog.dll"
 	Delete "$INSTDIR\NLog.config"
 	Delete "$INSTDIR\NLog.Debug.config"
-	Delete "$INSTDIR\opengl32.dll"
+	Delete "$INSTDIR\opentk.dll"
 	Delete "$INSTDIR\osmesa.dll"
 
 	; Remove remaining directories
