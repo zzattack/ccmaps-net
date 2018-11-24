@@ -56,6 +56,7 @@ namespace CNCMaps.GUI {
             this.rbEngineYR = new System.Windows.Forms.RadioButton();
             this.lbEngine = new System.Windows.Forms.Label();
             this.gbInputOutput = new System.Windows.Forms.GroupBox();
+            this.cbThumbPNG = new System.Windows.Forms.CheckBox();
             this.tbCustomOutput = new System.Windows.Forms.TextBox();
             this.rbCustomFilename = new System.Windows.Forms.RadioButton();
             this.rbAutoFilename = new System.Windows.Forms.RadioButton();
@@ -95,7 +96,6 @@ namespace CNCMaps.GUI {
             this.rtbLog = new System.Windows.Forms.RichTextBox();
             this.tpAbout = new System.Windows.Forms.TabPage();
             this.label1 = new System.Windows.Forms.Label();
-            this.cbThumbPNG = new System.Windows.Forms.CheckBox();
             this.gbMiscOptions.SuspendLayout();
             this.gbSizeMode.SuspendLayout();
             this.gbThumbs.SuspendLayout();
@@ -490,6 +490,19 @@ namespace CNCMaps.GUI {
             this.gbInputOutput.Text = "Input && output";
             this.gbInputOutput.DragDrop += new System.Windows.Forms.DragEventHandler(this.InputDragDrop);
             this.gbInputOutput.DragEnter += new System.Windows.Forms.DragEventHandler(this.InputDragEnter);
+            // 
+            // cbThumbPNG
+            // 
+            this.cbThumbPNG.AutoSize = true;
+            this.cbThumbPNG.Location = new System.Drawing.Point(449, 95);
+            this.cbThumbPNG.Name = "cbThumbPNG";
+            this.cbThumbPNG.Size = new System.Drawing.Size(84, 17);
+            this.cbThumbPNG.TabIndex = 18;
+            this.cbThumbPNG.Text = "Output PNG";
+            this.toolTip.SetToolTip(this.cbThumbPNG, "Save generated thumbnails as PNG images, instead of JPEG.");
+            this.cbThumbPNG.UseVisualStyleBackColor = true;
+            this.cbThumbPNG.Visible = false;
+            this.cbThumbPNG.CheckedChanged += new System.EventHandler(this.UIChanged);
             // 
             // tbCustomOutput
             // 
@@ -918,19 +931,6 @@ namespace CNCMaps.GUI {
             this.label1.Text = "Program by Frank Razenberg © 2005-2016\r\n\r\nSpecial thanks to Olaf van der Spek for" +
     " XCC.\r\nSpecial thanks to #renproj for modenc.";
             // 
-            // cbThumbPNG
-            // 
-            this.cbThumbPNG.AutoSize = true;
-            this.cbThumbPNG.Location = new System.Drawing.Point(449, 95);
-            this.cbThumbPNG.Name = "cbThumbPNG";
-            this.cbThumbPNG.Size = new System.Drawing.Size(84, 17);
-            this.cbThumbPNG.TabIndex = 18;
-            this.cbThumbPNG.Text = "Output PNG";
-            this.toolTip.SetToolTip(this.cbThumbPNG, "Save generated thumbnails as PNG images, instead of JPEG.");
-            this.cbThumbPNG.UseVisualStyleBackColor = true;
-            this.cbThumbPNG.Visible = false;
-            this.cbThumbPNG.CheckedChanged += new System.EventHandler(this.UIChanged);
-            // 
             // MainForm
             // 
             this.AllowDrop = true;
@@ -942,7 +942,7 @@ namespace CNCMaps.GUI {
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MinimumSize = new System.Drawing.Size(582, 372);
             this.Name = "MainForm";
-            this.Text = "Red Alert 2 and Tiberian Sun map renderer (modified)";
+            this.Text = "Red Alert 2 and Tiberian Sun map renderer";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.MainFormClosing);
             this.Load += new System.EventHandler(this.MainFormLoad);
             this.DragDrop += new System.Windows.Forms.DragEventHandler(this.InputDragDrop);
