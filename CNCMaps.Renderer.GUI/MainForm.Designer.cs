@@ -28,6 +28,7 @@ namespace CNCMaps.GUI {
             this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
             this.gbMiscOptions = new System.Windows.Forms.GroupBox();
+            this.cbOmitSquareMarkers = new System.Windows.Forms.CheckBox();
             this.lblFixupTilesDesc = new System.Windows.Forms.Label();
             this.ckbFixupTiles = new System.Windows.Forms.CheckBox();
             this.gbSizeMode = new System.Windows.Forms.GroupBox();
@@ -35,7 +36,8 @@ namespace CNCMaps.GUI {
             this.rbSizeFullmap = new System.Windows.Forms.RadioButton();
             this.rbSizeLocal = new System.Windows.Forms.RadioButton();
             this.gbThumbs = new System.Windows.Forms.GroupBox();
-            this.cbOmitSquareMarkers = new System.Windows.Forms.CheckBox();
+            this.lblMarkersType = new System.Windows.Forms.Label();
+            this.cbMarkersType = new System.Windows.Forms.ComboBox();
             this.cbReplacePreview = new System.Windows.Forms.CheckBox();
             this.gbVoxelsMode = new System.Windows.Forms.GroupBox();
             this.rbPreferSoftwareRendering = new System.Windows.Forms.RadioButton();
@@ -57,8 +59,6 @@ namespace CNCMaps.GUI {
             this.tbCustomOutput = new System.Windows.Forms.TextBox();
             this.rbCustomFilename = new System.Windows.Forms.RadioButton();
             this.rbAutoFilename = new System.Windows.Forms.RadioButton();
-            this.lblMarkersType = new System.Windows.Forms.Label();
-            this.cbMarkersType = new System.Windows.Forms.ComboBox();
             this.cbPreserveThumbAspect = new System.Windows.Forms.CheckBox();
             this.tbThumbDimensions = new System.Windows.Forms.TextBox();
             this.cbOutputThumbnail = new System.Windows.Forms.CheckBox();
@@ -95,6 +95,7 @@ namespace CNCMaps.GUI {
             this.rtbLog = new System.Windows.Forms.RichTextBox();
             this.tpAbout = new System.Windows.Forms.TabPage();
             this.label1 = new System.Windows.Forms.Label();
+            this.cbThumbPNG = new System.Windows.Forms.CheckBox();
             this.gbMiscOptions.SuspendLayout();
             this.gbSizeMode.SuspendLayout();
             this.gbThumbs.SuspendLayout();
@@ -137,6 +138,19 @@ namespace CNCMaps.GUI {
             this.gbMiscOptions.Text = "Misc. Options";
             this.gbMiscOptions.DragDrop += new System.Windows.Forms.DragEventHandler(this.InputDragDrop);
             this.gbMiscOptions.DragEnter += new System.Windows.Forms.DragEventHandler(this.InputDragEnter);
+            // 
+            // cbOmitSquareMarkers
+            // 
+            this.cbOmitSquareMarkers.AutoSize = true;
+            this.cbOmitSquareMarkers.Enabled = false;
+            this.cbOmitSquareMarkers.Location = new System.Drawing.Point(533, 250);
+            this.cbOmitSquareMarkers.Name = "cbOmitSquareMarkers";
+            this.cbOmitSquareMarkers.Size = new System.Drawing.Size(122, 17);
+            this.cbOmitSquareMarkers.TabIndex = 17;
+            this.cbOmitSquareMarkers.Text = "Omit square markers";
+            this.cbOmitSquareMarkers.UseVisualStyleBackColor = true;
+            this.cbOmitSquareMarkers.Visible = false;
+            this.cbOmitSquareMarkers.CheckedChanged += new System.EventHandler(this.UIChanged);
             // 
             // lblFixupTilesDesc
             // 
@@ -219,18 +233,29 @@ namespace CNCMaps.GUI {
             this.gbThumbs.TabStop = false;
             this.gbThumbs.Text = "Thumbnail injection";
             // 
-            // cbOmitSquareMarkers
+            // lblMarkersType
             // 
-            this.cbOmitSquareMarkers.AutoSize = true;
-            this.cbOmitSquareMarkers.Enabled = false;
-            this.cbOmitSquareMarkers.Location = new System.Drawing.Point(533, 250);
-            this.cbOmitSquareMarkers.Name = "cbOmitSquareMarkers";
-            this.cbOmitSquareMarkers.Size = new System.Drawing.Size(122, 17);
-            this.cbOmitSquareMarkers.TabIndex = 17;
-            this.cbOmitSquareMarkers.Text = "Omit square markers";
-            this.cbOmitSquareMarkers.UseVisualStyleBackColor = true;
-            this.cbOmitSquareMarkers.Visible = false;
-            this.cbOmitSquareMarkers.CheckedChanged += new System.EventHandler(this.UIChanged);
+            this.lblMarkersType.AutoSize = true;
+            this.lblMarkersType.Location = new System.Drawing.Point(316, 16);
+            this.lblMarkersType.Name = "lblMarkersType";
+            this.lblMarkersType.Size = new System.Drawing.Size(48, 13);
+            this.lblMarkersType.TabIndex = 19;
+            this.lblMarkersType.Text = "Markers:";
+            // 
+            // cbMarkersType
+            // 
+            this.cbMarkersType.FormattingEnabled = true;
+            this.cbMarkersType.Items.AddRange(new object[] {
+            "None",
+            "Squared",
+            "Aro",
+            "Bittah"});
+            this.cbMarkersType.Location = new System.Drawing.Point(370, 12);
+            this.cbMarkersType.Name = "cbMarkersType";
+            this.cbMarkersType.Size = new System.Drawing.Size(121, 21);
+            this.cbMarkersType.TabIndex = 18;
+            this.cbMarkersType.Text = "None";
+            this.cbMarkersType.SelectedIndexChanged += new System.EventHandler(this.UIChanged);
             // 
             // cbReplacePreview
             // 
@@ -434,6 +459,7 @@ namespace CNCMaps.GUI {
             // 
             this.gbInputOutput.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
+            this.gbInputOutput.Controls.Add(this.cbThumbPNG);
             this.gbInputOutput.Controls.Add(this.tbCustomOutput);
             this.gbInputOutput.Controls.Add(this.rbCustomFilename);
             this.gbInputOutput.Controls.Add(this.rbAutoFilename);
@@ -502,30 +528,6 @@ namespace CNCMaps.GUI {
             this.toolTip.SetToolTip(this.rbAutoFilename, resources.GetString("rbAutoFilename.ToolTip"));
             this.rbAutoFilename.UseVisualStyleBackColor = true;
             this.rbAutoFilename.CheckedChanged += new System.EventHandler(this.OutputNameCheckedChanged);
-            // 
-            // lblMarkersType
-            // 
-            this.lblMarkersType.AutoSize = true;
-            this.lblMarkersType.Location = new System.Drawing.Point(316, 16);
-            this.lblMarkersType.Name = "lblMarkersType";
-            this.lblMarkersType.Size = new System.Drawing.Size(48, 13);
-            this.lblMarkersType.TabIndex = 19;
-            this.lblMarkersType.Text = "Markers:";
-            // 
-            // cbMarkersType
-            // 
-            this.cbMarkersType.FormattingEnabled = true;
-            this.cbMarkersType.Items.AddRange(new object[] {
-            "None",
-            "Squared",
-            "Aro",
-            "Bittah"});
-            this.cbMarkersType.Location = new System.Drawing.Point(370, 12);
-            this.cbMarkersType.Name = "cbMarkersType";
-            this.cbMarkersType.Size = new System.Drawing.Size(121, 21);
-            this.cbMarkersType.TabIndex = 18;
-            this.cbMarkersType.Text = "None";
-            this.cbMarkersType.SelectedIndexChanged += new System.EventHandler(this.UIChanged);
             // 
             // cbPreserveThumbAspect
             // 
@@ -916,6 +918,19 @@ namespace CNCMaps.GUI {
             this.label1.Text = "Program by Frank Razenberg © 2005-2016\r\n\r\nSpecial thanks to Olaf van der Spek for" +
     " XCC.\r\nSpecial thanks to #renproj for modenc.";
             // 
+            // cbThumbPNG
+            // 
+            this.cbThumbPNG.AutoSize = true;
+            this.cbThumbPNG.Location = new System.Drawing.Point(449, 95);
+            this.cbThumbPNG.Name = "cbThumbPNG";
+            this.cbThumbPNG.Size = new System.Drawing.Size(84, 17);
+            this.cbThumbPNG.TabIndex = 18;
+            this.cbThumbPNG.Text = "Output PNG";
+            this.toolTip.SetToolTip(this.cbThumbPNG, "Save generated thumbnails as PNG images, instead of JPEG.");
+            this.cbThumbPNG.UseVisualStyleBackColor = true;
+            this.cbThumbPNG.Visible = false;
+            this.cbThumbPNG.CheckedChanged += new System.EventHandler(this.UIChanged);
+            // 
             // MainForm
             // 
             this.AllowDrop = true;
@@ -1031,6 +1046,7 @@ namespace CNCMaps.GUI {
 		private Label lblFixupTilesDesc;
 		private CheckBox ckbFixupTiles;
 		private GroupBox gbSizeMode;
-	}
+        private CheckBox cbThumbPNG;
+    }
 }
 

@@ -537,14 +537,15 @@ namespace CNCMaps.Engine.Map {
 
 		private void DrawStartMarkersAro(Graphics gfx, Rectangle fullImage, Rectangle previewImage) {
 			foreach (var w in _wayPoints.Where(w => w.Number < 8)) {
-				var center = TileLayer.GetTilePixelCenter(w.Tile);
+                var t = _tiles.GetTile(w.Tile);
+                var center = new Point(t.Dx * Drawable.TileWidth / 2, (t.Dy - t.Z) * Drawable.TileHeight / 2);// TileLayer.GetTilePixelCenter(w.Tile);
 				// project to preview dimensions
-				double pctFullX = (center.X - fullImage.Left) / (double)previewImage.Width;
-				double pctFullY = (center.Y - fullImage.Top) / (double)previewImage.Height;
+				double pctFullX = (center.X - fullImage.Left) / (double)fullImage.Width;
+				double pctFullY = (center.Y - fullImage.Top) / (double)fullImage.Height;
 				Point dest = new Point((int)(pctFullX * previewImage.Width), (int)(pctFullY * previewImage.Height));
-				var img = Resources.ResourceManager.GetObject("aro_marker_" + w) as Image;
-				// center marker img
-				dest.Offset(-img.Width / 2, -img.Height / 2);
+				var img = Resources.ResourceManager.GetObject("aro_marker_" + (w.Number + 1)) as Image;
+                // center marker img
+                dest.Offset(-img.Width / 2, -img.Height / 2);
 				// draw it
 				gfx.DrawImage(img, dest);
 			}

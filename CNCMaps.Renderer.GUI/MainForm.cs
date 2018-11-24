@@ -88,6 +88,7 @@ namespace CNCMaps.GUI
             tbThumbDimensions.Text = Settings.Default.thumbdimensions;
             cbPreserveThumbAspect.Checked = Settings.Default.thumbpreserveaspect;
             cbMarkersType.Text = Settings.Default.markers;
+            cbThumbPNG.Checked = Settings.Default.thumboutputpng;
 
             rbAutoFilename.Checked = Settings.Default.outputauto;
             rbCustomFilename.Checked = Settings.Default.outputcustom;
@@ -409,7 +410,7 @@ namespace CNCMaps.GUI
         private void CbOutputThumbnailCheckedChanged(object sender, EventArgs e)
         {
             tbThumbDimensions.Visible = cbPreserveThumbAspect.Visible =
-                /*lblMarkersType.Visible = cbMarkersType.Visible = */ cbOutputThumbnail.Checked;
+                /*lblMarkersType.Visible = cbMarkersType.Visible = */ cbThumbPNG.Visible = cbOutputThumbnail.Checked;
             UpdateCommandline();
         }
 
@@ -494,6 +495,10 @@ namespace CNCMaps.GUI
                 else if (cbMarkersType.Text == "Bittah")
                     cmd += "--preview-markers-bittah ";
                     */
+                if (cbThumbPNG.Checked)
+                {
+                    cmd += "--thumb-png";
+                }
             }
 
             if (ckbFixupTiles.Checked)
@@ -564,6 +569,7 @@ namespace CNCMaps.GUI
                         rs.ThumbnailConfig += "+";
                     rs.ThumbnailConfig += string.Format("({0},{1})", w, h);
                 }
+                rs.SavePNGThumbnails = cbThumbPNG.Checked;
             }
 
             rs.FixupTiles = ckbFixupTiles.Checked;

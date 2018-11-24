@@ -287,7 +287,22 @@ namespace CNCMaps.GUI.Properties {
                 this["injectthumb"] = value;
             }
         }
-        
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool thumboutputpng
+        {
+            get
+            {
+                return ((bool)(this["thumboutputpng"]));
+            }
+            set
+            {
+                this["thumboutputpng"] = value;
+            }
+        }
+
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("True")]

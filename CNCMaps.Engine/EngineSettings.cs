@@ -211,8 +211,15 @@ namespace CNCMaps.Engine {
                         }
                     }
                     _logger.Info("Saving thumbnail with dimensions {0}x{1}", dimensions.Width, dimensions.Height);
-                    //ds.SaveThumb(dimensions, cutRect, Path.Combine(Settings.OutputDir, "thumb_" + Settings.OutputFile + ".jpg"));
-                    ds.SaveThumb(dimensions, cutRect, Path.Combine(Settings.OutputDir, "thumb_" + Settings.OutputFile + ".png"));
+
+                    if (!Settings.SavePNGThumbnails)
+                    {
+                        ds.SaveThumb(dimensions, cutRect, Path.Combine(Settings.OutputDir, "thumb_" + Settings.OutputFile + ".jpg"));
+                    }
+                    else
+                    {
+                        ds.SaveThumb(dimensions, cutRect, Path.Combine(Settings.OutputDir, "thumb_" + Settings.OutputFile + ".png"), true);
+                    }
                 }
 
 				if (Settings.GeneratePreviewPack || Settings.FixupTiles) {

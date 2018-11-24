@@ -120,6 +120,9 @@
   <metadata name="toolTip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>365, 17</value>
   </metadata>
+  <metadata name="toolTip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>365, 17</value>
+  </metadata>
   <data name="cbReplacePreview.ToolTip" xml:space="preserve">
     <value>FinalAlert2 previews generally look quite poor. Replacing them with a downscaled
 version of the resulting image often looks much better, which is what this option does.
@@ -128,9 +131,6 @@ DANGEROUS: comments and ini formatting is lost. The original map is overwritten!
   <data name="lblOreEmphasisDescription.Text" xml:space="preserve">
     <value>Setting this will result in a yellow glow to be placed behind ore, and a purple glow behind gems. When scaling images down, for example to use them as small preview image of a map, this looks pretty good.</value>
   </data>
-  <metadata name="toolTip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>365, 17</value>
-  </metadata>
   <data name="rbEngineAuto.ToolTip" xml:space="preserve">
     <value>Tries to automatically deduce whether your map is made for RA2/YR, but is often unsuccessful,
 since this information is not actually stored in the map.

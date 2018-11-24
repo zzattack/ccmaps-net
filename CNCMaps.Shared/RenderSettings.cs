@@ -26,7 +26,8 @@ namespace CNCMaps.Shared {
 		public bool FixupTiles { get; set; }
 		public bool GeneratePreviewPack { get; set; }
 		public PreviewMarkersType PreviewMarkers { get; set; }
-		public bool FixPreviewDimensions { get; set; }
+        public bool SavePNGThumbnails { get; set; }
+        public bool FixPreviewDimensions { get; set; }
 		public bool Debug { get; set; }
 
 		public RenderSettings() {
@@ -44,6 +45,7 @@ namespace CNCMaps.Shared {
 			MixFilesDirectory = "";
 			ModConfig = "";
 			ThumbnailConfig = "";
+            SavePNGThumbnails = false;
 			SizeMode = SizeMode.Auto;
 			FixPreviewDimensions = true;
 			Debug = false;
@@ -108,7 +110,8 @@ namespace CNCMaps.Shared {
 				{"g|graphics-osmesa", "Attempt rendering voxels using OSMesa context first", v => PreferOSMesa = true},
 				{"z|create-thumbnail=", "Also save a thumbnail along with the fullmap in dimensions (x,y), prefix with + to keep aspect ratio	", v => ThumbnailConfig = v},
 				{"x|no-preview-fixup=", "Also save a thumbnail along with the fullmap in dimensions (x,y), prefix with + to keep aspect ratio	", v => ThumbnailConfig = v},
-				{"fixup-tiles", "Remove undefined tiles and overwrite IsoMapPack5 section in map", v => FixupTiles = true },
+                {"thumb-png", "Save thumbnails as PNG instead of JPEG.", v => SavePNGThumbnails = true },
+                {"fixup-tiles", "Remove undefined tiles and overwrite IsoMapPack5 section in map", v => FixupTiles = true },
 			};
 
 			return _options;

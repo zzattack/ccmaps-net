@@ -96,7 +96,7 @@ namespace CNCMaps.Engine.Rendering {
 					cutRect.Save(path, encoder, encoderParams);
 		}
 
-		public void SaveThumb(Size dimensions, Rectangle cutout, string path) {
+		public void SaveThumb(Size dimensions, Rectangle cutout, string path, bool saveAsPng = false) {
 			Unlock();
 
 			using (var thumb = new Bitmap(dimensions.Width, dimensions.Height, PixelFormat.Format24bppRgb)) {
@@ -111,10 +111,18 @@ namespace CNCMaps.Engine.Rendering {
 					var dstRect = new Rectangle(0, 0, thumb.Width, thumb.Height);
 					gfx.DrawImage(Bitmap, dstRect, srcRect, GraphicsUnit.Pixel);
 				}
-				ImageCodecInfo encoder = ImageCodecInfo.GetImageEncoders().First(e => e.FormatID == ImageFormat.Jpeg.Guid);
-				var encoderParams = new EncoderParameters(1);
-				encoderParams.Param[0] = new EncoderParameter(Encoder.Quality, 95L);
-				thumb.Save(path, encoder, encoderParams);
+
+                ImageCodecInfo encoder = ImageCodecInfo.GetImageEncoders().First(e => e.FormatID == ImageFormat.Jpeg.Guid);
+                var encoderParams = new EncoderParameters(1);
+                encoderParams.Param[0] = new EncoderParameter(Encoder.Quality, 95L);
+
+                if (saveAsPng)
+                {
+                    encoder = ImageCodecInfo.GetImageEncoders().First(e => e.FormatID == ImageFormat.Png.Guid);
+                    encoderParams.Param[0] = new EncoderParameter(Encoder.Quality, 6);
+                }
+
+                thumb.Save(path, encoder, encoderParams);
 			}
 		}
 
