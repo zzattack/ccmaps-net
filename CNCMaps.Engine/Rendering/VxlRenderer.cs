@@ -7,7 +7,7 @@ using NLog;
 using OpenTK;
 using OpenTK.Graphics;
 using OpenTK.Graphics.OpenGL;
-using OpenTK.Platform.Mesa;
+//using OpenTK.Platform.Mesa;
 using PixelFormat = System.Drawing.Imaging.PixelFormat;
 
 namespace CNCMaps.Engine.Rendering {
@@ -38,14 +38,17 @@ namespace CNCMaps.Engine.Rendering {
 
 			Logger.Debug("GL context created");
 			try {
-				Logger.Debug("GL functions loaded");
+
+                Logger.Debug("GL functions loaded");
 
 				GL.Enable(EnableCap.DepthTest);
 				GL.Enable(EnableCap.ColorMaterial);
 
-				//_vplFile = VFS.Open<VplFile>("voxels.vpl"); 
-				_canRender = SetupFramebuffer();
-			}
+                //_vplFile = VFS.Open<VplFile>("voxels.vpl"); 
+                _canRender = SetupFramebuffer();
+                //_canRender = true;
+
+            }
 
 			catch (Exception exc) {
 				Logger.Error("Voxel rendering will not be available because an exception occurred while initializing OpenGL: {0}", exc.ToString());
@@ -74,10 +77,12 @@ namespace CNCMaps.Engine.Rendering {
 
 		private bool CreateMesaContext() {
 			try {
-				_ctx = GraphicsContext.CreateMesaContext();
+                //_ctx = GraphicsContext.CreateMesaContext();
+                GameWindow win = new GameWindow(_surface.BitmapData.Width, _surface.BitmapData.Height);
+                _ctx = new GraphicsContext(GraphicsMode.Default, win.WindowInfo);
 				long ctxPtr = long.Parse(_ctx.ToString()); // cannot access private .Context
 				if (ctxPtr != 0) {
-					_ctx.MakeCurrent(new BitmapWindowInfo(_surface.BitmapData));
+					//_ctx.MakeCurrent(new BitmapWindowInfo(_surface.BitmapData));
 					if (!_ctx.IsCurrent) {
 						Logger.Warn("Could not make context current");
 						throw new InvalidOperationException("Mesa context could not be made current");
@@ -130,7 +135,7 @@ namespace CNCMaps.Engine.Rendering {
 			var world = Matrix4.CreateRotationX(MathHelper.DegreesToRadians(60));
 			world = Matrix4.CreateRotationY(MathHelper.DegreesToRadians(180)) * world;
 			world = Matrix4.CreateRotationZ(MathHelper.DegreesToRadians(-45)) * world; 
-			world = Matrix4.Scale(0.028f, 0.028f, 0.028f) * world;
+			world = Matrix4.CreateScale(0.028f, 0.028f, 0.028f) * world;
 			GL.MultMatrix(ref world);
 
 			// DrawAxes();
@@ -231,7 +236,7 @@ namespace CNCMaps.Engine.Rendering {
 				var frame = frameTransl * frameRot;
 				GL.MultMatrix(ref frame);
 
-				var shadowScale = Matrix4.Scale(0.5f);
+				var shadowScale = Matrix4.CreateScale(0.5f);
 				//var shadowTilt = null;
 				var shadowToScreen = frameTransl * shadowScale * frameRot * (@object * world) * trans * lookat;
 
@@ -248,10 +253,11 @@ namespace CNCMaps.Engine.Rendering {
 				GL.Vertex3(Vector3.Multiply(lightDirection, 100f));
 				GL.End();*/
 
-				GL.Begin(BeginMode.Quads);
+				GL.Begin(PrimitiveType.Quads);
 				for (uint x = 0; x != section.SizeX; x++) {
 					for (uint y = 0; y != section.SizeY; y++) {
 						foreach (VxlFile.Voxel vx in section.Spans[x, y].Voxels) {
+                            if (vx.ColorIndex == 0) continue;
 							Color color = obj.Palette.Colors[vx.ColorIndex];
 							Vector3 normal = section.GetNormal(vx.NormalIndex);
 							// shader function taken from https://github.com/OpenRA/OpenRA/blob/bleed/cg/vxl.fx
@@ -303,17 +309,17 @@ namespace CNCMaps.Engine.Rendering {
 			GL.Scale(1000f, 1000f, 1000f);
 			GL.LineWidth(5);
 			GL.Color3(Color.Red);
-			GL.Begin(BeginMode.Lines);
+			GL.Begin(PrimitiveType.Lines);
 			GL.Vertex3(-100, 0, 0);
 			GL.Vertex3(100, 0, 0);
 			GL.End();
 			GL.Color3(Color.Green);
-			GL.Begin(BeginMode.Lines);
+			GL.Begin(PrimitiveType.Lines);
 			GL.Vertex3(0, -100, 0);
 			GL.Vertex3(0, 100, 0);
 			GL.End();
 			GL.Color3(Color.White);
-			GL.Begin(BeginMode.Lines);
+			GL.Begin(PrimitiveType.Lines);
 			GL.Vertex3(0, 0, -100);
 			GL.Vertex3(0, 0, 100);
 			GL.End();
@@ -329,7 +335,7 @@ namespace CNCMaps.Engine.Rendering {
 
 			var world = Matrix4.CreateRotationX(MathHelper.DegreesToRadians(60));
 			world = Matrix4.CreateRotationZ(MathHelper.DegreesToRadians(objectRotation)) * world; // object facing
-			world = Matrix4.Scale(0.25f, 0.25f, 0.25f) * world;
+			world = Matrix4.CreateScale(0.25f, 0.25f, 0.25f) * world;
 
 			// art.ini TurretOffset value positions some voxel parts over our x-axis
 			world = Matrix4.CreateTranslation(0.18f * props.TurretVoxelOffset, 0, 0) * world;
