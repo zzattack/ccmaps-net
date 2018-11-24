@@ -7,3 +7,4 @@ obj
 CNCMaps_*.zip
 *.cache
 /desktop dump
+.vs
