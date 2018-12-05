@@ -57,7 +57,7 @@ Section "Maps Renderer" sec_program
 	SetOverwrite ifnewer
 	
 	File "Lib\NLog.dll"
-	File "Lib\OSMesa.dll"
+	;File "Lib\OSMesa.dll"
 	File "Lib\OpenTK.dll"
 SectionEnd
 
