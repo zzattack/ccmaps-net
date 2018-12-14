@@ -206,7 +206,7 @@ namespace CNCMaps.Engine {
                                 dimensions.Height = (int)(dimensions.Width / aspectRatio);
                             }
                             else {
-                                dimensions.Width = (int)(dimensions.Height / aspectRatio);
+                                dimensions.Width = (int)(dimensions.Height * aspectRatio);
                             }
                         }
                     }
