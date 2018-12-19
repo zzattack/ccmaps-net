@@ -72,7 +72,7 @@ namespace CNCMaps.GUI
             if (string.IsNullOrEmpty(tbMixDir.Text))
                 tbMixDir.Text = FindMixDir(true);
 
-            if (!_skipUpdateCheck)
+            if (!_skipUpdateCheck && !Settings.Default.skipupdatecheck)
                 PerformUpdateCheck();
             else
                 UpdateStatus("not checking for newer version", 100);

@@ -23,7 +23,22 @@ namespace CNCMaps.GUI.Properties {
                 return defaultInstance;
             }
         }
-        
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool skipupdatecheck
+        {
+            get
+            {
+                return ((bool)(this["skipupdatecheck"]));
+            }
+            set
+            {
+                this["skipupdatecheck"] = value;
+            }
+        }
+
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("")]
