@@ -107,7 +107,7 @@ namespace CNCMaps.Shared {
 
 				{"n|ignore-lighting", "Ignore all lighting and lamps on the map",v => IgnoreLighting = true}, 
 				// {"G|graphics-winmgr", "Attempt rendering voxels using window manager context first (default)",v => Settings.PreferOSMesa = false},
-				{"g|graphics-osmesa", "Attempt rendering voxels using OSMesa context first", v => PreferOSMesa = true},
+				//{"g|graphics-osmesa", "Attempt rendering voxels using OSMesa context first", v => PreferOSMesa = true},
 				{"z|create-thumbnail=", "Also save a thumbnail along with the fullmap in dimensions (x,y), prefix with + to keep aspect ratio	", v => ThumbnailConfig = v},
 				{"x|no-preview-fixup=", "Also save a thumbnail along with the fullmap in dimensions (x,y), prefix with + to keep aspect ratio	", v => ThumbnailConfig = v},
                 {"thumb-png", "Save thumbnails as PNG instead of JPEG.", v => SavePNGThumbnails = true },
