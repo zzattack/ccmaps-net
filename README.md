@@ -11,11 +11,11 @@ This project provides a tool to render battle maps of the most popular Westwood 
 
 Status
 ------
-The project has reached maturity and will know no big feature additions, but bugs might be fixed if reported. I am toying with the idea of building a webservice out of the tool, though, but that would probably appear under a different project.
+The project has reached maturity and will know no big feature additions, but bugs might be fixed if reported. I am toying with the idea of building a webservice out of the tool, but that would probably appear under a different project.
 
 Installation
 ------------
-Installation should be as simple as running the installer or extracting the latest zip release. The NSIS installer cannot be used on non-Windows OS but the files inside the zip-archive run fine under Mono.
+Run the installer or extract the latest zip release. The NSIS installer cannot be used on non-Windows OS but the files inside the zip-archive run fine under Mono.
 The program requires several .mix files from the original games. These include:
 
 * ra2.mix
