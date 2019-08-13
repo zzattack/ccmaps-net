@@ -21,10 +21,11 @@ namespace CNCMaps.FileFormats.Map {
 		public ushort Rx;
 		public ushort Ry;
 		public byte Z;
-		public short TileNum;
+		public int TileNum;
 		public byte SubTile;
+		public byte IceGrowth;
 
-		public IsoTile(ushort p1, ushort p2, ushort rx, ushort ry, byte z, short tilenum, byte subtile) {
+		public IsoTile(ushort p1, ushort p2, ushort rx, ushort ry, byte z, int tilenum, byte subtile, byte icegrowth) {
 			Dx = p1;
 			Dy = p2;
 			Rx = rx;
@@ -32,6 +33,7 @@ namespace CNCMaps.FileFormats.Map {
 			Z = z;
 			TileNum = tilenum;
 			SubTile = subtile;
+			IceGrowth = icegrowth;
 		}
 
 		public List<byte> ToMapPack5Entry() {
@@ -39,10 +41,9 @@ namespace CNCMaps.FileFormats.Map {
 			ret.AddRange(BitConverter.GetBytes(Rx));
 			ret.AddRange(BitConverter.GetBytes(Ry));
 			ret.AddRange(BitConverter.GetBytes(TileNum));
-			ret.Add(0); ret.Add(0);
 			ret.Add(SubTile);
 			ret.Add(Z);
-			ret.Add(0);
+			ret.Add(IceGrowth);
 			return ret;
 		}
 	}

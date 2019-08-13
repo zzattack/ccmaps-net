@@ -18,7 +18,7 @@
 			FireProne= art.ReadInt("FireProne");
 			SecondaryFire= art.ReadInt("SecondaryFire");
 			SecondaryProne= art.ReadInt("SecondaryProne");
-			SequenceName= art.ReadString("SequenceName");
+			SequenceName= art.ReadString("Sequence");
 		}
 	}
 }

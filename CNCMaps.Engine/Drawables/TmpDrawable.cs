@@ -49,5 +49,13 @@ namespace CNCMaps.Engine.Game {
 			else return tmp.Images[0];
 		}
 
+		public bool DoesSubTileExist(MapTile t) {
+			bool exist = true;
+			var tmp = TsEntry?.GetTmpFile(t);
+			if (tmp != null)
+				if (t.SubTile > 0 && t.SubTile > (tmp.Images.Count - 1))
+					exist = false;
+			return exist;
+		}
 	}
 }

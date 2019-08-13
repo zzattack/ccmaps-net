@@ -88,6 +88,7 @@
     <Compile Include="Map\MapFile.cs" />
     <Compile Include="Map\MapObjects.cs" />
     <Compile Include="Map\TileLayer.cs" />
+    <Compile Include="Map\TunnelLine.cs" />
     <Compile Include="MissionsFile.cs" />
     <Compile Include="MixFile.cs" />
     <Compile Include="PalFile.cs" />

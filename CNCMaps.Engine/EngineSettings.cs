@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
+using System.Globalization;
 using System.Linq;
 using System.Runtime.Serialization;
 using System.Text;
@@ -120,9 +121,14 @@ namespace CNCMaps.Engine {
 
 				VFS.Instance.LoadMixes(Settings.Engine);
 
+				double markerStartSize = 4.0;
+				if (double.TryParse(Settings.MarkStartSize, NumberStyles.Number, CultureInfo.CreateSpecificCulture("en-US"), out markerStartSize))
+					markerStartSize = Math.Abs(markerStartSize);
+
 				var map = new Map.Map {
 					IgnoreLighting = Settings.IgnoreLighting,
 					StartPosMarking = Settings.StartPositionMarking,
+					StartMarkerSize = markerStartSize,
 					MarkOreFields = Settings.MarkOreFields
 				};
 
@@ -136,25 +142,54 @@ namespace CNCMaps.Engine {
 					return EngineResult.LoadTheaterFailed;
 				}
 
-				if (Settings.StartPositionMarking == StartPositionMarking.Tiled)
+				if (Settings.MarkStartPos && Settings.StartPositionMarking == StartPositionMarking.Tiled)
 					map.MarkTiledStartPositions();
 
 				if (Settings.MarkOreFields)
 					map.MarkOreAndGems();
 
-				if (Settings.FixupTiles) map.FixupTileLayer();
-				map.Draw();
-				
-				if (Settings.StartPositionMarking == StartPositionMarking.Squared)
-					map.DrawSquaredStartPositions();
-
-#if DEBUG
-				// ====================================================================================
-				using (var form = new DebugDrawingSurfaceWindow(map.GetDrawingSurface(), map.GetTiles(), map.GetTheater(), map)) {
-					form.RequestTileEvaluate += map.DebugDrawTile; form.ShowDialog();
+				if ((Settings.GeneratePreviewPack || Settings.FixupTiles || Settings.FixOverlays || Settings.CompressTiles) && Settings.Backup) {
+					if (mapFile.BaseStream is MixFile)
+						_logger.Error("Cannot generate a map file backup into an archive (.mmx/.yro/.mix)!");
+					else {
+						try {
+							string timestamp = DateTime.Now.ToString("yyyyMMddHHmmss");
+							string fileInput = Path.Combine(Path.GetDirectoryName(Settings.InputFile), Path.GetFileName(Settings.InputFile));
+							fileInput = fileInput.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+							string fileInputNoExtn = Path.Combine(Path.GetDirectoryName(Settings.InputFile), Path.GetFileNameWithoutExtension(Settings.InputFile));
+							fileInputNoExtn = fileInputNoExtn.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+							string fileBackup = fileInputNoExtn + "_" + timestamp + ".bkp";
+							File.Copy(fileInput, fileBackup, true);
+							_logger.Info("Creating map backup: " + fileBackup);
+						}
+						catch (Exception ) {
+							_logger.Error("Unable to generate a map file backup!");
+						}
+					}
 				}
-				// ====================================================================================
-#endif
+
+				if (Settings.FixupTiles)
+					map.FixupTileLayer();
+
+				map.Draw();
+
+				if (Settings.MarkIceGrowth)
+					map.MarkIceGrowth();
+				
+				if (Settings.TunnelPaths)
+					map.PlotTunnels(Settings.TunnelPosition);
+
+				if (Settings.MarkStartPos && (Settings.StartPositionMarking == StartPositionMarking.Squared ||
+					Settings.StartPositionMarking == StartPositionMarking.Circled ||
+					Settings.StartPositionMarking == StartPositionMarking.Diamond ||
+					Settings.StartPositionMarking == StartPositionMarking.Ellipsed))
+					map.DrawStartPositions();
+
+				if (Settings.DiagnosticWindow) {
+					using (var form = new DebugDrawingSurfaceWindow(map.GetDrawingSurface(), map.GetTiles(), map.GetTheater(), map)) {
+					form.RequestTileEvaluate += map.DebugDrawTile; form.ShowDialog();
+					}
+				}
 
 				if (Settings.OutputFile == "")
 					Settings.OutputFile = DetermineMapName(mapFile, Settings.Engine);
@@ -192,7 +227,6 @@ namespace CNCMaps.Engine {
 
                         if (dimensions.Width > 0 && dimensions.Height > 0)
                         {
-
                             float scaleHeight = (float)dimensions.Height / (float)cutRect.Height;
                             float scaleWidth = (float)dimensions.Width / (float)cutRect.Width;
                             float scale = Math.Min(scaleHeight, scaleWidth);
@@ -222,12 +256,19 @@ namespace CNCMaps.Engine {
                     }
                 }
 
-				if (Settings.GeneratePreviewPack || Settings.FixupTiles) {
+				if (Settings.GeneratePreviewPack || Settings.FixupTiles || Settings.FixOverlays || Settings.CompressTiles) {
 					if (mapFile.BaseStream is MixFile)
 						_logger.Error("Cannot fix tile layer or inject thumbnail into an archive (.mmx/.yro/.mix)!");
 					else {
 						if (Settings.GeneratePreviewPack)
 							map.GeneratePreviewPack(Settings.PreviewMarkers, Settings.SizeMode, mapFile, Settings.FixPreviewDimensions);
+
+						if (Settings.FixOverlays)
+							map.FixupOverlays(); // fixing is done earlier, it now creates overlay and its data pack
+
+						// Keep this last in tiles manipulation
+						if (Settings.CompressTiles)
+							map.CompressIsoMapPack5();
 
 						_logger.Info("Saving map to " + Settings.InputFile);
 						mapFile.Save(Settings.InputFile);
@@ -317,8 +358,10 @@ namespace CNCMaps.Engine {
 				_logger.Error("Specified input file does not exist");
 				return false;
 			}
-			else if (!Settings.SaveJPEG && !Settings.SavePNG && !Settings.GeneratePreviewPack && !Settings.FixupTiles) {
-				_logger.Error("No output format selected. Either specify -j, -p, -k, --fixup-tiles or a combination");
+			else if (!Settings.SaveJPEG && !Settings.SavePNG && !Settings.SavePNGThumbnails 	&&
+				!Settings.GeneratePreviewPack && !Settings.FixupTiles && !Settings.FixOverlays && !Settings.CompressTiles &&
+				!Settings.DiagnosticWindow) {
+				_logger.Error("No action to perform. Either generate PNG/JPEG/Thumbnail or modify map or use preview window.");
 				return false;
 			}
 			else if (Settings.OutputDir != "" && !Directory.Exists(Settings.OutputDir)) {

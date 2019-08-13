@@ -111,17 +111,19 @@ namespace CNCMaps.Shared {
 		private BindingList<ObjectOverride> _objectOverrides;
 
 		[Id(9, 1)]
-		[Description("Disable ore/tib randomization")]
-		[PropertyStateFlags(PropertyFlags.Default)]
-		public bool DisableOreRandomization {
-			get { return _disableOreRandomization; }
+		[Description("Mod specific overrides")]
+		[PropertyStateFlags(PropertyFlags.ExpandIEnumerable)]
+		public BindingList<ModOption> ExtraOptions {
+			get { return _modOptions; }
 			set {
-				_disableOreRandomization = value;
+				_modOptions = value;
+				_modOptions.ListChanged += (sender, args) => OnPropertyChanged("ExtraOptions");
 			}
 		}
-		private bool _disableOreRandomization;
+		private BindingList<ModOption> _modOptions;
 
-		public ModConfig() {
+
+        public ModConfig() {
 			Name = "Custom mod config";
 			Theaters = new BindingList<TheaterSettings>();
 			ObjectOverrides = new BindingList<ObjectOverride>();
@@ -129,6 +131,7 @@ namespace CNCMaps.Shared {
 			ExtraMixes = new List<string>();
 			CustomRulesIniFiles = new List<string>();
 			CustomArtIniFiles = new List<string>();
+			ExtraOptions = new BindingList<ModOption>();
 			Engine = EngineType.YurisRevenge;
 			InstallTypeDescriptor();
 		}
@@ -152,6 +155,10 @@ namespace CNCMaps.Shared {
 			ret.ObjectOverrides = new BindingList<ObjectOverride>();
 			foreach (var t in ObjectOverrides)
 				ret.ObjectOverrides.Add(t.Clone());
+
+			ret.ExtraOptions = new BindingList<ModOption>();
+			foreach (var t in ExtraOptions)
+				ret.ExtraOptions.Add(t.Clone());
 
 			ret.InstallTypeDescriptor();
 			return ret;
@@ -479,6 +486,93 @@ namespace CNCMaps.Shared {
 
 		public override string ToString() {
 			return string.Format("Override for \"{0}\"", !string.IsNullOrEmpty(ObjRegex) ? ObjRegex : "<empty>");
+		}
+	}
+
+	[TypeConverter(typeof(ExpandableObjectConverter))]
+	[Serializable]
+	public class ModOption {
+		[NonSerialized]
+		private DynamicCustomTypeDescriptor _dctd = null;
+
+		[Id(1, 1)]
+		[Description("Disable ore/tib randomization")]
+		[PropertyStateFlags(PropertyFlags.Default)]
+		public bool DisableOreRandomization {
+			get { return _disableOreRandomization; }
+			set {
+				_disableOreRandomization = value;
+			}
+		}
+		private bool _disableOreRandomization;
+
+		[Id(2, 1)]
+		[Description("Disable tib remap")]
+		[PropertyStateFlags(PropertyFlags.Default)]
+		public bool DisableTibRemap {
+			get { return _disableTibRemap; }
+			set {
+				_disableTibRemap = value;
+			}
+		}
+		private bool _disableTibRemap;
+
+		[Id(3, 1)]
+		[Description("Enable random infantry facing")]
+		[PropertyStateFlags(PropertyFlags.Default)]
+		public bool EnableRandomInfantryFacing {
+			get { return _enableRandomInfantryFacing; }
+			set {
+				_enableRandomInfantryFacing = value;
+			}
+		}
+		private bool _enableRandomInfantryFacing;
+
+		[Id(4, 1)]
+		[Description("Value of 0 to 16 to crop from the bottom of the rendered images for map local size option")]
+		[PropertyStateFlags(PropertyFlags.Default)]
+		public string MapLocalSizeBottomCropValue {
+			get { return _mapLocalSizeBottomCropValue; }
+			set {
+				_mapLocalSizeBottomCropValue = value;
+			}
+		}
+		private string _mapLocalSizeBottomCropValue;
+
+		[Id(5, 1)]
+		[Description("Map lighting adjustment delta in decimals (-1 to 1) comma separated ambient,red,green,blue")]
+		[PropertyStateFlags(PropertyFlags.Default)]
+		public string LightingAmbientRGBDelta {
+			get { return _lightingAmbientRGBDelta; }
+			set {
+				_lightingAmbientRGBDelta = value;
+			}
+		}
+		private string _lightingAmbientRGBDelta;
+
+		public ModOption() {
+			InstallTypeDescriptor();
+			DisableOreRandomization = false;
+			DisableTibRemap = false;
+			EnableRandomInfantryFacing = false;
+			MapLocalSizeBottomCropValue = "0";
+			LightingAmbientRGBDelta = "0,0,0,0";
+		}
+
+		internal void InstallTypeDescriptor() {
+			_dctd = ProviderInstaller.Install(this);
+			_dctd.PropertySortOrder = CustomSortOrder.AscendingById;
+		}
+
+		internal ModOption Clone() {
+			var ret = (ModOption)MemberwiseClone();
+			ret.InstallTypeDescriptor();
+			return ret;
+		}
+
+		public override string ToString() {
+			return string.Format("ModOption for DisableOreRandomization: " + _disableOreRandomization + " DisableTibRemap: " + _disableTibRemap 
+				+ " EnableRandomInfantryFacing: " + _enableRandomInfantryFacing + " BottomCrop: " + MapLocalSizeBottomCropValue + " LightingDelta: " + LightingAmbientRGBDelta);
 		}
 	}
 }

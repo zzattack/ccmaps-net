@@ -95,13 +95,16 @@ namespace CNCMaps.Shared {
 
 	public enum StartPositionMarking {
 		None,
+		Squared,
+		Circled,
+		Diamond,
+		Ellipsed,
 		Tiled,
-		Squared
 	}
 
 	public enum PreviewMarkersType {
 		None,
-		Squared,
+		SelectedAsAbove,
 		Bittah,
 		Aro,
 	}

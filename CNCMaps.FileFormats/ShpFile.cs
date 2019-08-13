@@ -98,7 +98,6 @@ namespace CNCMaps.FileFormats {
 
 		public void Initialize() {
 			if (_isInitialized) return;
-			_isInitialized = true;
 
 			Logger.Trace("Initializing SHP data for file {0}", FileName);
 			Zero = ReadInt16();
@@ -112,6 +111,7 @@ namespace CNCMaps.FileFormats {
 				img.Read(this, i);
 				Images.Add(img);
 			}
+			_isInitialized = true;
 		}
 
 		public ShpImage GetImage(int imageIndex) {

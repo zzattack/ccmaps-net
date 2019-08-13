@@ -12,6 +12,9 @@ namespace CNCMaps.Engine.Game {
 	public static class FrameDeciders {
 		public static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
+		/// <summary>
+		/// Building turrets
+		/// </summary>
 		public static Func<GameObject, int> TurretFrameDecider = delegate(GameObject obj) {
 			int direction = (obj is OwnableObject) ? (obj as OwnableObject).Direction : 0;
 			switch (direction) {
@@ -79,20 +82,72 @@ namespace CNCMaps.Engine.Game {
 
         // Starkku: Necessary due to SHP vehicles not obeying the unwritten rule that infantry have with standing frames coming first.
         // Plus the frame order is different compared to infantry.
-        public static Func<GameObject, int> SHPVehicleFrameDecider(int StartStandFrame, int StandingFrames, int Facings)
+        public static Func<GameObject, int> SHPVehicleFrameDecider(int StartStandFrame, int StandingFrames, int StartWalkFrame, int WalkFrames, int Facings)
         {
             return delegate(GameObject obj)
             {
                 int direction = 0;
+				int frameoffset = 0;
+				int framenumber = 0;
+
 				if (obj is OwnableObject)
 					direction = (obj as OwnableObject).Direction;
-                if (StandingFrames > 0) return StartStandFrame + (((direction / 32)+1) * StandingFrames);
-                return StartStandFrame;
+
+				if (Facings == 8) {
+					frameoffset = (direction / 32) + 1;
+					if (frameoffset >= 8) frameoffset -= 8;
+				}
+
+				if (Facings == 32) {
+					if (ModConfig.ActiveConfig.Engine < EngineType.RedAlert2) {
+						frameoffset = (direction / 8) + 1;
+						if (frameoffset >= 32) frameoffset -= 32;
+					}
+					else {
+						frameoffset = direction / 8 + 5;
+						if (frameoffset >= 32) frameoffset -= 32;
+					}
+				}
+				if (StandingFrames == 0 && StartStandFrame == 0 && WalkFrames > 0)
+					framenumber = StartWalkFrame + (frameoffset * WalkFrames);
+				else if (StandingFrames == 0 && StartStandFrame == 0 && WalkFrames == 0)
+					framenumber = StartWalkFrame + frameoffset;
+				else if (StandingFrames == 0 && StartStandFrame > 0)
+					framenumber = StartStandFrame + frameoffset;
+				else
+					framenumber = StartStandFrame + (frameoffset * StandingFrames);
+
+				return framenumber;
+            };
+        }
+
+        public static Func<GameObject, int> SHPVehicleSHPTurretFrameDecider(int StartWalkFrame, int WalkFrames, int Facings)
+        {
+            return delegate(GameObject obj) {
+                int direction = 0;
+				int frameoffset = 0;
+				int framenumber = 0;
+
+				if (obj is OwnableObject)
+					direction = (obj as OwnableObject).Direction;
+				
+				frameoffset = (direction / 8) + 4;
+				if (frameoffset >= 32) frameoffset -= 32;
+
+				// 8 instead of facings, is hardcoded in the game
+				if (WalkFrames > 0) {
+					framenumber = (WalkFrames * 8) + frameoffset;
+				}
+				else {
+					framenumber = 8 + frameoffset;
+				}
+
+				return framenumber;
             };
         }
 
         // Starkku: DirectionBasedFrameDecider does not actually get infantry facings right (it displays them in same way as FA2 does, which is wrong).
-        public static Func<GameObject, int> InfantryFrameDecider(int Ready_Start = 0, int Ready_Count = 1, int Ready_CountNext = 1)
+        public static Func<GameObject, int> InfantryFrameDecider(int Ready_Start = 0, int Ready_Count = 1, int Ready_CountNext = 1, int randomFacing = -1)
         {
             return delegate(GameObject obj)
             {
@@ -100,6 +155,8 @@ namespace CNCMaps.Engine.Game {
                 int direction = 0;
                 if (obj is OwnableObject)
                     direction = (obj as OwnableObject).Direction;
+				if (randomFacing >= 0)
+					direction = randomFacing;
                 if (Ready_Count > 0) val = Ready_Start + Ready_CountNext * (7 - (direction / 32));
                 return val;
             };

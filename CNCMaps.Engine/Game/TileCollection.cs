@@ -26,12 +26,14 @@ namespace CNCMaps.Engine.Game {
 			public string SetName { get; private set; }
 			public int TilesInSet { get; private set; }
 			public List<TileSetEntry> Entries { get; private set; }
+			public short TileSetNum { get; private set; }
 
-			public TileSet(string fileName, string setName, int tilesInSet) {
+			public TileSet(string fileName, string setName, int tilesInSet, short tileSetNum) {
 				FileName = fileName;
 				SetName = setName;
 				TilesInSet = tilesInSet;
 				Entries = new List<TileSetEntry>();
+				TileSetNum = tileSetNum;
 			}
 
 			public override string ToString() {
@@ -247,12 +249,12 @@ namespace CNCMaps.Engine.Game {
 				var sect = _theaterIni.GetSection(sectionName);
 				if (sect == null)
 					break;
-				sectionIdx++;
 
 				Logger.Trace("Loading tileset {0}", sectionName);
-				var ts = new TileSet(sect.ReadString("FileName"), sect.ReadString("SetName"), sect.ReadInt("TilesInSet"));
+				var ts = new TileSet(sect.ReadString("FileName"), sect.ReadString("SetName"), sect.ReadInt("TilesInSet"), (short)sectionIdx);
 				_setNumToFirstTile.Add((short)_drawables.Count);
 				_tileSets.Add(ts);
+				sectionIdx++;
 
 				for (int j = 1; j <= ts.TilesInSet; j++) {
 					_tileNumToSet.Add((short)setNum);
@@ -260,7 +262,7 @@ namespace CNCMaps.Engine.Game {
 
 					// add as many tiles (with randomized name) as can be found
 					for (var r = (char)('a' - 1); r <= 'z'; r++) {
-						if ((r >= 'a') && ts.SetName == "Bridges") continue;
+						if ((r >= 'a') && (ts.TileSetNum == BridgeSet || ts.TileSetNum == TrainBridgeSet || ts.TileSetNum == WoodBridgeSet)) continue;
 
 						// filename = set filename + dd + .tmp/.urb/.des etc
 						string filename = ts.FileName + j.ToString("00");
@@ -314,6 +316,7 @@ namespace CNCMaps.Engine.Game {
 					int attachTo = extraSection.ReadInt(n + "AttachesTo");
 					var offset = new Point(extraSection.ReadInt(n + "XOffset"), extraSection.ReadInt(n + "YOffset"));
 					drawable.Props.Offset.Offset(offset.X, offset.Y);
+					drawable.Props.ZAdjust = extraSection.ReadInt(n + "ZAdjust");
 					tileSet.Entries[a - 1].AddAnimation(attachTo, drawable);
 				}
 			}
@@ -342,18 +345,18 @@ namespace CNCMaps.Engine.Game {
 			return true;
 		}
 
-		public bool IsLAT(short setNum) {
+		public bool IsLAT(int setNum) {
 			return
 				setNum == RoughTile ||
 				setNum == SandTile ||
 				setNum == GreenTile ||
 				setNum == PaveTile;
 		}
-		public bool IsSlope(short setNum) {
+		public bool IsSlope(int setNum) {
 			return setNum == SlopeSetPieces || setNum == SlopeSetPieces2;
 		}
 
-		public bool IsCLAT(short setNum) {
+		public bool IsCLAT(int setNum) {
 			return
 				setNum == ClearToRoughLat ||
 				setNum == ClearToSandLat ||
@@ -361,7 +364,7 @@ namespace CNCMaps.Engine.Game {
 				setNum == ClearToPaveLat;
 		}
 
-		public short GetLAT(short clatSetNum) {
+		public short GetLAT(int clatSetNum) {
 			if (clatSetNum == ClearToRoughLat)
 				return RoughTile;
 			else if (clatSetNum == ClearToSandLat)
@@ -374,7 +377,7 @@ namespace CNCMaps.Engine.Game {
 				return -1;
 		}
 
-		public short GetCLATSet(short setNum) {
+		public short GetCLATSet(int setNum) {
 			if (setNum == RoughTile)
 				return ClearToRoughLat;
 			else if (setNum == SandTile)
@@ -387,13 +390,13 @@ namespace CNCMaps.Engine.Game {
 				return -1;
 		}
 
-		public short GetSetNum(short tileNum) {
+		public int GetSetNum(int tileNum) {
 			if (tileNum < 0 || tileNum >= _tileNumToSet.Count) return 0;
 			return _tileNumToSet[tileNum];
 		}
 
-		public short GetTileNumFromSet(short setNum, byte tileNumWithinSet = 0) {
-			return (short)(_setNumToFirstTile[setNum] + tileNumWithinSet);
+		public int GetTileNumFromSet(int setNum, byte tileNumWithinSet = 0) {
+			return (int)(_setNumToFirstTile[setNum] + tileNumWithinSet);
 		}
 
 		public int NumTiles {

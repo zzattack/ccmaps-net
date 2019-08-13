@@ -15,7 +15,7 @@ namespace CNCMaps.Engine.Rendering
     public class VxlRenderer : IDisposable
     {
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
-        GraphicsContext _ctx;
+        // GraphicsContext _ctx;
         GameWindow _gw;
         bool _canRender;
         bool _isInit;
@@ -69,7 +69,7 @@ namespace CNCMaps.Engine.Rendering
             //	return CreateMesaContext() || CreateGameWindow();
             //else
 
-            return CreateGameWindow() || CreateMesaContext();
+            return CreateGameWindow();	// || CreateMesaContext();
         }
 
         private bool CreateGameWindow()
@@ -112,7 +112,7 @@ namespace CNCMaps.Engine.Rendering
         public void Dispose()
         {
             _surface.Dispose();
-            if (_ctx != null) _ctx.Dispose();
+            // if (_ctx != null) _ctx.Dispose();
             if (_gw != null) _gw.Dispose();
         }
 

@@ -25,6 +25,7 @@ namespace CNCMaps.FileFormats.Map {
 		public readonly List<Aircraft> Aircrafts = new List<Aircraft>();
 		public readonly List<Waypoint> Waypoints = new List<Waypoint>();
 		public readonly List<IniSection> MiscSections = new List<IniSection>();
+		public readonly List<TunnelLine> TunnelEntries = new List<TunnelLine>();
 		public Lighting Lighting;
 
 		/// <summary>Constructor.</summary>
@@ -76,6 +77,9 @@ namespace CNCMaps.FileFormats.Map {
 			Logger.Debug("Waypoints");
 			ReadWaypoints();
 
+			Logger.Debug("Reading tunnels");
+			ReadTubes();
+
 			Lighting = new Lighting(GetOrCreateSection("Lighting"));
 		}
 
@@ -87,46 +91,56 @@ namespace CNCMaps.FileFormats.Map {
 			int lzoPackSize = cells * 11 + 4; // last 4 bytes contains a lzo pack header saying no more data is left
 
 			var isoMapPack = new byte[lzoPackSize];
-			uint totalDecompressSize = Format5.DecodeInto(lzoData, isoMapPack);
 
+			// In case, IsoMapPack5 contains less entries than the number of cells, fill up any number greater 
+			// than 511 and filter later.
+			int j = 0;
+			for (int i = 0; i < cells; i++)
+			{
+				isoMapPack[j] = 0x88;
+				isoMapPack[j + 1] = 0x40;
+				isoMapPack[j + 2] = 0x88;
+				isoMapPack[j + 3] = 0x40;
+				j += 11;
+			}
+
+			Format5.DecodeInto(lzoData, isoMapPack);
+
+			// Fill level 0 clear tiles for all array values
+			for (ushort y = 0; y < FullSize.Height; y++) {
+				for (ushort x = 0; x <= FullSize.Width * 2 - 2; x++) {
+					ushort dx = (ushort)(x);
+					ushort dy = (ushort)(y * 2 + x % 2);
+					ushort rx = (ushort)((dx + dy) / 2 + 1);
+					ushort ry = (ushort)(dy - rx + FullSize.Width + 1);
+					Tiles[x, y] = new IsoTile(dx, dy, rx, ry, 0, 0, 0, 0);
+				}
+			}
+
+			// Overwrite with actual entries found in IsoMapPack5
 			var mf = new MemoryFile(isoMapPack);
 			int numtiles = 0;
 			for (int i = 0; i < cells; i++) {
 				ushort rx = mf.ReadUInt16();
 				ushort ry = mf.ReadUInt16();
-				short tilenum = mf.ReadInt16();
-				short zero1 = mf.ReadInt16();
+				int tilenum = mf.ReadInt32();
 				byte subtile = mf.ReadByte();
 				byte z = mf.ReadByte();
-				byte zero2 = mf.ReadByte();
+				byte icegrowth = mf.ReadByte();
 
-				int dx = rx - ry + FullSize.Width - 1;
-				int dy = rx + ry - FullSize.Width - 1;
-				numtiles++;
-				if (dx >= 0 && dx < 2 * Tiles.Width &&
-					dy >= 0 && dy < 2 * Tiles.Height) {
-					var tile = new IsoTile((ushort)dx, (ushort)dy, rx, ry, z, tilenum, subtile);
-					Tiles[(ushort)dx, (ushort)dy / 2] = tile;
-				}
-			}
+				if (tilenum >= 65535) tilenum = 0; // Tile 0xFFFF used as empty/clear
 
-			// fix missing tiles
-
-			// import tiles
-			for (ushort y = 0; y < FullSize.Height; y++) {
-				for (ushort x = 0; x <= FullSize.Width * 2 - 2; x++) {
-					var isoTile = Tiles[x, y];
-					if (isoTile == null) {
-						// fix null tiles to blank
-						ushort dx = (ushort)(x);
-						ushort dy = (ushort)(y * 2 + x % 2);
-						ushort rx = (ushort)((dx + dy) / 2 + 1);
-						ushort ry = (ushort)(dy - rx + FullSize.Width + 1);
-						Tiles[x, y] = new IsoTile(dx, dy, rx, ry, 0, 0, 0);
+				if (rx <= 511 && ry <= 511)
+				{
+					int dx = rx - ry + FullSize.Width - 1;
+					int dy = rx + ry - FullSize.Width - 1;
+					numtiles++;
+					if (dx >= 0 && dx < 2 * Tiles.Width && dy >= 0 && dy < 2 * Tiles.Height) {
+						var tile = new IsoTile((ushort)dx, (ushort)dy, rx, ry, z, tilenum, subtile, icegrowth);
+						Tiles[(ushort)dx, (ushort)dy / 2] = tile;
 					}
 				}
 			}
-
 
 			Logger.Debug("Read {0} tiles", numtiles);
 		}
@@ -364,6 +378,40 @@ namespace CNCMaps.FileFormats.Map {
 			}
 		}
 
+		private void ReadTubes() {
+			IniSection tubesSection = GetSection("Tubes");
+			if (tubesSection == null) {
+				Logger.Info("Tubes section unavailable in {0}", Path.GetFileName(FileName));
+				return;
+			}
+
+			foreach (var v in tubesSection.OrderedEntries) {
+				try {
+					string[] entries = ((string)v.Value).Split(',');
+					if (entries.Length <= 5) continue;
+					int startx = int.Parse(entries[0]);
+					int starty = int.Parse(entries[1]);
+					int facing = int.Parse(entries[2]);
+					int endx = int.Parse(entries[3]);
+					int endy = int.Parse(entries[4]);
+					List<int> directions = new List<int>();
+
+					// Game takes a maximum of 100 direction entries with atleast one last being -1.
+					for (int i = 5; i < 105 && i < entries.Length; i++) {
+						int direction = int.Parse(entries[i]);
+						if (direction < 0 || direction >= 8) break;
+						directions.Add(direction);
+					}
+					if (startx > 0 && startx < 512 && starty > 0 && starty < 512 && facing >= 0 && facing < 8 && endx > 0 && endx < 512 && endy > 0 && endy < 512)
+						TunnelEntries.Add(new TunnelLine(startx, starty, facing, endx, endy, directions));
+				}
+				catch (IndexOutOfRangeException) {
+				} // catch invalid entries
+				catch (FormatException) {
+				}
+			}
+			Logger.Trace("Read {0} tunnel entries", TunnelEntries.Count);
+		}
 
 	}
 }

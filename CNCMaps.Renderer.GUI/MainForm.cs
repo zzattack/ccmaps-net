@@ -67,6 +67,17 @@ namespace CNCMaps.GUI
 
         private void MainFormLoad(object sender, EventArgs args)
         {
+			if (Settings.Default.windowlocation != null)
+			{
+				int x = 40;
+				int y = 40;
+				string[] locXY = Settings.Default.windowlocation.Split(',');
+				if (locXY.Length > 1 && locXY[0] != null && locXY[1] != null)
+					if (!int.TryParse(locXY[0], out x) || !int.TryParse(locXY[1], out y))
+						x = y = 40;
+				this.Location = new System.Drawing.Point(x, y);
+			}
+
             Text += " - v" + Assembly.GetEntryAssembly().GetName().Version;
 
             if (string.IsNullOrEmpty(tbMixDir.Text))
@@ -87,9 +98,9 @@ namespace CNCMaps.GUI
             cbOutputThumbnail.Checked = Settings.Default.outputthumb;
             tbThumbDimensions.Text = Settings.Default.thumbdimensions;
             cbPreserveThumbAspect.Checked = Settings.Default.thumbpreserveaspect;
-            cbMarkersType.Text = Settings.Default.markers;
-            cbThumbPNG.Checked = Settings.Default.thumboutputpng;
+            cbThumbPNG.Checked = Settings.Default.thumbpng;
 
+            rbUseFilename.Checked = Settings.Default.usefilename;
             rbAutoFilename.Checked = Settings.Default.outputauto;
             rbCustomFilename.Checked = Settings.Default.outputcustom;
             tbCustomOutput.Text = Settings.Default.customfilename;
@@ -104,20 +115,29 @@ namespace CNCMaps.GUI
             tbModConfig.Text = Settings.Default.modconfigfile;
 
             cbEmphasizeOre.Checked = Settings.Default.emphore;
-            cbSquaredStartPositions.Checked = Settings.Default.squaredpos;
-            cbTiledStartPositions.Checked = Settings.Default.tiledpos;
 
+			cbStartMarkers.Checked = Settings.Default.startmarker;
+			cmbStartMarkers.Text = Settings.Default.startmarkertype;
+			cmbMarkerSize.Text = Settings.Default.startmarkersize;
             cbReplacePreview.Checked = Settings.Default.injectthumb;
-            cbOmitSquareMarkers.Checked = Settings.Default.omitsquarespreview;
+            cbMarkersType.Text = Settings.Default.markers;
 
             rbSizeAuto.Checked = Settings.Default.autosize;
             rbSizeLocal.Checked = Settings.Default.localsize;
             rbSizeFullmap.Checked = Settings.Default.fullsize;
 
-            rbPreferHardwareRendering.Checked = Settings.Default.hwvoxels;
-            rbPreferSoftwareRendering.Checked = Settings.Default.swvoxels;
-
+			cbMarkIceGrowth.Checked = Settings.Default.icegrowth;
+			cbDiagnosticWindow.Checked = Settings.Default.diagwindow;
             ckbFixupTiles.Checked = Settings.Default.fixuptiles;
+			cbBackup.Checked = Settings.Default.backup;
+			cbFixOverlay.Checked = Settings.Default.fixoverlays;
+			cbCompressTiles.Checked = Settings.Default.compresstiles;
+			cbTunnelPaths.Checked = Settings.Default.tunnelpaths;
+			cbTunnelPosition.Checked = Settings.Default.tunnelpos;
+
+			if (!cbTunnelPaths.Checked)
+				cbTunnelPosition.Enabled = false;
+
             UpdateCommandline();
         }
 
@@ -134,8 +154,9 @@ namespace CNCMaps.GUI
             Settings.Default.outputthumb = cbOutputThumbnail.Checked;
             Settings.Default.thumbdimensions = tbThumbDimensions.Text;
             Settings.Default.thumbpreserveaspect = cbPreserveThumbAspect.Checked;
-            Settings.Default.markers = cbMarkersType.Text;
+            Settings.Default.thumbpng = cbThumbPNG.Checked;
 
+            Settings.Default.usefilename = rbUseFilename.Checked;
             Settings.Default.outputauto = rbAutoFilename.Checked;
             Settings.Default.outputcustom = rbCustomFilename.Checked;
             Settings.Default.customfilename = tbCustomOutput.Text;
@@ -150,20 +171,27 @@ namespace CNCMaps.GUI
             Settings.Default.modconfigfile = tbModConfig.Text;
 
             Settings.Default.emphore = cbEmphasizeOre.Checked;
-            Settings.Default.squaredpos = cbSquaredStartPositions.Checked;
-            Settings.Default.tiledpos = cbTiledStartPositions.Checked;
 
+			Settings.Default.startmarker = cbStartMarkers.Checked;
+			Settings.Default.startmarkertype = cmbStartMarkers.Text;
+			Settings.Default.startmarkersize = cmbMarkerSize.Text;
             Settings.Default.injectthumb = cbReplacePreview.Checked;
-            Settings.Default.omitsquarespreview = cbOmitSquareMarkers.Checked;
+            Settings.Default.markers = cbMarkersType.Text;
 
             Settings.Default.autosize = rbSizeAuto.Checked;
             Settings.Default.localsize = rbSizeLocal.Checked;
             Settings.Default.fullsize = rbSizeFullmap.Checked;
-
-            Settings.Default.hwvoxels = rbPreferHardwareRendering.Checked;
-            Settings.Default.swvoxels = rbPreferSoftwareRendering.Checked;
+			Settings.Default.icegrowth = cbMarkIceGrowth.Checked;
+			Settings.Default.diagwindow = cbDiagnosticWindow.Checked;
 
             Settings.Default.fixuptiles = ckbFixupTiles.Checked;
+			Settings.Default.backup = cbBackup.Checked;
+			Settings.Default.fixoverlays = cbFixOverlay.Checked;
+			Settings.Default.compresstiles = cbCompressTiles.Checked;
+			Settings.Default.tunnelpaths = cbTunnelPaths.Checked;
+			Settings.Default.tunnelpos = cbTunnelPosition.Checked;
+
+			Settings.Default.windowlocation = this.Location.X + ", " +  this.Location.Y;
 
             Settings.Default.Save();
         }
@@ -328,8 +356,8 @@ namespace CNCMaps.GUI
             ofd.CheckFileExists = true;
             ofd.Multiselect = false;
             ofd.Filter = "RA2/TS map files (*.map, *.mpr, *.mmx, *.yrm, *.yro)|*.mpr;*.map;*.mmx;*.yrm;*.yro|All files (*.*)|*";
-            if (string.IsNullOrEmpty(ofd.InitialDirectory))
-                ofd.InitialDirectory = FindMixDir(rbEngineAuto.Checked || rbEngineRA2.Checked || rbEngineYR.Checked);
+            //if (string.IsNullOrEmpty(ofd.InitialDirectory))
+            //    ofd.InitialDirectory = FindMixDir(rbEngineAuto.Checked || rbEngineRA2.Checked || rbEngineYR.Checked);
 
             ofd.FileName = "";
             if (ofd.ShowDialog() == DialogResult.OK)
@@ -382,21 +410,20 @@ namespace CNCMaps.GUI
             lblQuality.Visible = nudEncodingQuality.Visible = cbOutputJPG.Checked;
             UpdateCommandline();
         }
-        private void SquaredStartPosCheckedChanged(object sender, EventArgs e)
+        private void cbStartMarkers_CheckedChanged(object sender, EventArgs e)
         {
-            if (cbSquaredStartPositions.Checked)
-                cbTiledStartPositions.Checked = false;
             UpdateCommandline();
         }
-        private void TiledStartPosCheckedChanged(object sender, EventArgs e)
+        private void cmbStartMarkers_SelectedIndexChanged(object sender, EventArgs e)
         {
-            if (cbTiledStartPositions.Checked)
-                cbSquaredStartPositions.Checked = false;
             UpdateCommandline();
         }
-        private void CbReplacePreviewCheckedChanged(object sender, EventArgs e)
+        private void cmbMarkerSize_SelectedIndexChanged(object sender, EventArgs e)
         {
-            //cbOmitSquareMarkers.Visible = cbReplacePreview.Checked;
+            UpdateCommandline();
+        }
+		private void CbReplacePreviewCheckedChanged(object sender, EventArgs e)
+        {
             UpdateCommandline();
         }
         private void BtnModEditorClick(object sender, EventArgs e)
@@ -410,8 +437,56 @@ namespace CNCMaps.GUI
         private void CbOutputThumbnailCheckedChanged(object sender, EventArgs e)
         {
             tbThumbDimensions.Visible = cbPreserveThumbAspect.Visible =
-                /*lblMarkersType.Visible = cbMarkersType.Visible = */ cbThumbPNG.Visible = cbOutputThumbnail.Checked;
+            cbThumbPNG.Visible = cbOutputThumbnail.Checked;
             UpdateCommandline();
+        }
+
+        private void rbUseFilename_CheckedChanged(object sender, EventArgs e)
+        {
+            UpdateCommandline();
+        }
+
+        private void cbMarkIceGrowth_CheckedChanged(object sender, EventArgs e)
+        {
+            UpdateCommandline();
+        }
+
+        private void cbDiagnosticWindow_CheckedChanged(object sender, EventArgs e)
+        {
+            UpdateCommandline();
+        }
+
+        private void cbBackup_CheckedChanged(object sender, EventArgs e)
+        {
+            UpdateCommandline();
+        }
+
+        private void cbFixOverlay_CheckedChanged(object sender, EventArgs e)
+        {
+            UpdateCommandline();
+        }
+
+        private void cbCompressTiles_CheckedChanged(object sender, EventArgs e)
+        {
+            UpdateCommandline();
+        }
+
+        private void cbTunnelPaths_CheckedChanged(object sender, EventArgs e)
+        {
+            UpdateCommandline();
+			cbTunnelPosition.Enabled = cbTunnelPaths.Checked;
+        }
+
+        private void cbTunnelPosition_CheckedChanged(object sender, EventArgs e)
+        {
+            UpdateCommandline();
+        }
+
+        private void btnClearLog_Click(object sender, EventArgs e)
+        {
+            rtbLog.Clear();
+            rtbLog.Text = "";
+            rtbLog.Update();
         }
 
         private void UpdateCommandline()
@@ -431,7 +506,6 @@ namespace CNCMaps.GUI
                     cmd += "-c " + nudCompression.Value.ToString(CultureInfo.InvariantCulture) + " ";
             }
 
-            if (rbCustomFilename.Checked) cmd += "-o \"" + tbCustomOutput.Text + "\" ";
             if (cbOutputJPG.Checked)
             {
                 cmd += "-j ";
@@ -439,14 +513,15 @@ namespace CNCMaps.GUI
                     cmd += "-q " + nudEncodingQuality.Value.ToString(CultureInfo.InvariantCulture) + " ";
             }
 
+			if (rbUseFilename.Checked) cmd += "-o \"" + Path.GetFileNameWithoutExtension(tbInput.Text) + "\" ";
+            else if (rbCustomFilename.Checked) cmd += "-o \"" + tbCustomOutput.Text + "\" ";
+
             if (cbModConfig.Checked)
                 cmd += "-M \"" + tbModConfig.Text + "\" ";
             else if (!string.IsNullOrWhiteSpace(tbMixDir.Text) && tbMixDir.Text != FindMixDir(rbEngineAuto.Checked || rbEngineRA2.Checked || rbEngineYR.Checked))
                 cmd += "-m " + "\"" + tbMixDir.Text + "\" ";
 
             if (cbEmphasizeOre.Checked) cmd += "-r ";
-            if (cbTiledStartPositions.Checked) cmd += "-s ";
-            if (cbSquaredStartPositions.Checked) cmd += "-S ";
 
             if (rbEngineRA2.Checked) cmd += "-y ";
             else if (rbEngineYR.Checked) cmd += "-Y ";
@@ -459,19 +534,42 @@ namespace CNCMaps.GUI
             //if (rbPreferSoftwareRendering.Checked) cmd += "-g ";
             //else if (rbPreferHardwareRendering.Checked) cmd += "-G ";
 
+			if (cbStartMarkers.Checked)
+				cmd += "--mark-start-pos ";
+			if (cbStartMarkers.Checked || (cbReplacePreview.Checked && cbMarkersType.Text == "SelectedAsAbove"))
+			{
+				switch (cmbStartMarkers.Text) {
+					case "Squared":
+						cmd += "-S ";
+						break;
+					case "Circled":
+						cmd += "--start-pos-circled ";
+						break;
+					case "Diamond":
+						cmd += "--start-pos-diamond ";
+						break;
+					case "Ellipsed":
+						cmd += "--start-pos-ellipsed ";
+						break;
+					case "Tiled":
+						cmd += "-s ";
+						break;
+				}
+				cmd += "--start-pos-size " + cmbMarkerSize.Text + " ";
+			}
+
             if (cbReplacePreview.Checked)
             {
                 if (!cmd.EndsWith(" ")) cmd += " ";
                 if (cbMarkersType.Text == "None")
                     cmd += "--preview-markers-none ";
-                else if (cbMarkersType.Text == "Squared")
-                    cmd += "--preview-markers-squared ";
+                else if (cbMarkersType.Text == "SelectedAsAbove")
+                    cmd += "--preview-markers-selected ";
                 else if (cbMarkersType.Text == "Aro")
                     cmd += "--preview-markers-aro ";
                 else if (cbMarkersType.Text == "Bittah")
                     cmd += "--preview-markers-bittah ";
             }
-                //cmd += cbOmitSquareMarkers.Checked ? "-K" : "-k ";
 
             if (cbOutputThumbnail.Checked)
             {
@@ -482,28 +580,51 @@ namespace CNCMaps.GUI
                     cmd += "-z ";
                     if (cbPreserveThumbAspect.Checked)
                         cmd += "+";
-                    cmd += string.Format("({0},{1})", w, h);
+                    cmd += string.Format("({0},{1}) ", w, h);
                 }
-                /*
-                if (!cmd.EndsWith(" ")) cmd += " ";
-                if (cbMarkersType.Text == "None")
-                    cmd += "--preview-markers-none ";
-                else if (cbMarkersType.Text == "Squared")
-                    cmd += "--preview-markers-squared ";
-                else if (cbMarkersType.Text == "Aro")
-                    cmd += "--preview-markers-aro ";
-                else if (cbMarkersType.Text == "Bittah")
-                    cmd += "--preview-markers-bittah ";
-                    */
                 if (cbThumbPNG.Checked)
                 {
-                    cmd += "--thumb-png";
+                    cmd += "--thumb-png ";
                 }
             }
 
             if (ckbFixupTiles.Checked)
             {
                 cmd += "--fixup-tiles ";
+            }
+
+            if (cbMarkIceGrowth.Checked)
+            {
+                cmd += "--icegrowth ";
+            }
+
+            if (cbDiagnosticWindow.Checked)
+            {
+                cmd += "--diagwindow ";
+            }
+
+            if (cbBackup.Checked)
+            {
+                cmd += "--bkp ";
+            }
+
+            if (cbFixOverlay.Checked)
+            {
+                cmd += "--fix-overlays ";
+            }
+
+            if (cbCompressTiles.Checked)
+            {
+                cmd += "--cmprs-tiles ";
+            }
+
+            if (cbTunnelPaths.Checked)
+            {
+                cmd += "--tunnels ";
+				if (cbTunnelPosition.Checked)
+				{
+					cmd += "--tunnelpos ";
+				}
             }
 
             return cmd;
@@ -513,27 +634,24 @@ namespace CNCMaps.GUI
         {
             var rs = new RenderSettings();
             rs.InputFile = tbInput.Text;
-            if (cbOutputPNG.Checked)
-            {
-                rs.SavePNG = true;
-                rs.PNGQuality = (int)nudCompression.Value;
-            }
 
-            if (rbCustomFilename.Checked) rs.OutputFile = tbCustomOutput.Text;
+            rs.SavePNG = cbOutputPNG.Checked;
+            if (cbOutputPNG.Checked)
+                rs.PNGQuality = (int)nudCompression.Value;
+
+            rs.SaveJPEG = cbOutputJPG.Checked;
             if (cbOutputJPG.Checked)
-            {
-                rs.SaveJPEG = true;
                 rs.JPEGCompression = (int)nudEncodingQuality.Value;
-            }
+
+			if (rbUseFilename.Checked) rs.OutputFile = Path.GetFileNameWithoutExtension(tbInput.Text);
+			else if (rbCustomFilename.Checked) rs.OutputFile = tbCustomOutput.Text;
 
             if (cbModConfig.Checked)
                 rs.ModConfig = tbModConfig.Text;
             else if (!string.IsNullOrWhiteSpace(tbMixDir.Text) && tbMixDir.Text != FindMixDir(rbEngineAuto.Checked || rbEngineRA2.Checked || rbEngineYR.Checked))
                 rs.MixFilesDirectory = tbMixDir.Text;
 
-            if (cbEmphasizeOre.Checked) rs.MarkOreFields = true;
-            if (cbTiledStartPositions.Checked) rs.StartPositionMarking = StartPositionMarking.Tiled;
-            if (cbSquaredStartPositions.Checked) rs.StartPositionMarking = StartPositionMarking.Squared;
+            rs.MarkOreFields = cbEmphasizeOre.Checked;
 
             if (rbEngineRA2.Checked) rs.Engine = EngineType.RedAlert2;
             else if (rbEngineYR.Checked) rs.Engine = EngineType.YurisRevenge;
@@ -543,15 +661,46 @@ namespace CNCMaps.GUI
             if (rbSizeLocal.Checked) rs.SizeMode = SizeMode.Local;
             else if (rbSizeFullmap.Checked) rs.SizeMode = SizeMode.Full;
 
-            if (rbPreferSoftwareRendering.Checked) rs.PreferOSMesa = true;
+			rs.MarkIceGrowth = cbMarkIceGrowth.Checked;
+			rs.DiagnosticWindow = cbDiagnosticWindow.Checked;
+
+			if (cbStartMarkers.Checked) rs.MarkStartPos = true;
+			if (cbStartMarkers.Checked || (cbReplacePreview.Checked && cbMarkersType.Text == "SelectedAsAbove"))
+			{
+				switch (cmbStartMarkers.Text) {
+					case "None":
+						rs.StartPositionMarking = StartPositionMarking.None;
+						break;
+					case "Squared":
+						rs.StartPositionMarking = StartPositionMarking.Squared;
+						break;
+					case "Circled":
+						rs.StartPositionMarking = StartPositionMarking.Circled;
+						break;
+					case "Diamond":
+						rs.StartPositionMarking = StartPositionMarking.Diamond;
+						break;
+					case "Ellipsed":
+						rs.StartPositionMarking = StartPositionMarking.Ellipsed;
+						break;
+					case "Tiled":
+						rs.StartPositionMarking = StartPositionMarking.Tiled;
+						break;
+				}
+				try
+				{
+					rs.MarkStartSize = cmbMarkerSize.Text;
+				}
+				catch (Exception) { }
+			}
 
             if (cbReplacePreview.Checked)
             {
                 rs.GeneratePreviewPack = true;
                 if (cbMarkersType.Text == "None")
                     rs.PreviewMarkers = PreviewMarkersType.None;
-                else if (cbMarkersType.Text == "Squared")
-                    rs.PreviewMarkers = PreviewMarkersType.Squared;
+                else if (cbMarkersType.Text == "SelectedAsAbove")
+                    rs.PreviewMarkers = PreviewMarkersType.SelectedAsAbove;
                 else if (cbMarkersType.Text == "Aro")
                     rs.PreviewMarkers = PreviewMarkersType.Aro;
                 else if (cbMarkersType.Text == "Bittah")
@@ -573,6 +722,11 @@ namespace CNCMaps.GUI
             }
 
             rs.FixupTiles = ckbFixupTiles.Checked;
+			rs.Backup = cbBackup.Checked;
+			rs.FixOverlays = cbFixOverlay.Checked;
+			rs.CompressTiles = cbCompressTiles.Checked;
+			rs.TunnelPaths = cbTunnelPaths.Checked;
+			rs.TunnelPosition = cbTunnelPosition.Checked;
 
             return rs;
         }
@@ -588,14 +742,17 @@ namespace CNCMaps.GUI
                 return;
             }
 
-            if (!cbOutputPNG.Checked && !cbOutputJPG.Checked && !cbReplacePreview.Checked)
+            if (!cbOutputPNG.Checked && !cbOutputJPG.Checked && !cbOutputThumbnail.Checked &&
+				!cbReplacePreview.Checked && !ckbFixupTiles.Checked && !cbFixOverlay.Checked && !cbCompressTiles.Checked && 
+				!cbDiagnosticWindow.Checked)
             {
-                UpdateStatus("aborted, no output format picked", 100);
-                MessageBox.Show("Either PNG, JPEG or Replace Preview must be checked.", "Nothing to do..", MessageBoxButtons.OK,
+                UpdateStatus("aborted, no processing", 100);
+                MessageBox.Show("Either generate PNG/JPEG/Thumbnail or modify map or use preview window.", "Nothing to do..", MessageBoxButtons.OK,
                     MessageBoxIcon.Information);
                 return;
             }
             tabControl.SelectTab(tpLog);
+            tpLog.Update();
             ExecuteRenderer();
         }
 
@@ -612,21 +769,21 @@ namespace CNCMaps.GUI
                 switch (result)
                 {
                     case EngineResult.Exception:
-                        Log("\r\nUnknown exception.");
+                        Log("\r\nUnknown exception.\r\n");
                         AskBugReport(null);
                         break;
                     case EngineResult.RenderedOk:
-                        // indicates EOF
-                        Log("\r\nYour map has been rendered. If your image did not appear, something went wrong."); // +" Please send an email to frank@zzattack.org with your map as an attachment.");
+                        Log("\r\nSpecified action(s) completed.\r\n------------------------------\r\n"); 
+						// +" Please send an email to frank@zzattack.org with your map as an attachment.");
                         break;
                     case EngineResult.LoadTheaterFailed:
                         Log("\r\nTheater loading failed. Please make sure the mix directory is correct and that the required expansion packs are installed "
-                            + "if they are required for the map you want to render.");
+                            + "if they are required for the map you want to render.\r\n");
                         AskBugReport(null);
                         break;
                     case EngineResult.LoadRulesFailed:
                         Log("\r\nRules loading failed. Please make sure the mix directory is correct and that the required expansion packs are installed "
-                            + "if they are required for the map you want to render.");
+                            + "if they are required for the map you want to render.\r\n");
                         AskBugReport(null);
                         break;
                 }
@@ -639,7 +796,7 @@ namespace CNCMaps.GUI
         private void AskBugReport(Exception exc)
         {
             return;
-            // seems like rendering failed!
+        /*   // seems like rendering failed!
             Log("\r\nIt appears an error ocurred during image rendering.");
             var form = new SubmitBug();
             form.Email = Settings.Default.email;
@@ -649,6 +806,7 @@ namespace CNCMaps.GUI
                     Settings.Default.email = form.Email;
                 SubmitBugReport(form.Email, exc);
             }
+		*/
         }
 
         private void SubmitBugReport(string email, Exception exc)
@@ -769,8 +927,7 @@ namespace CNCMaps.GUI
         {
             Process.Start(e.LinkText);
         }
+
         #endregion
-
-
     }
 }

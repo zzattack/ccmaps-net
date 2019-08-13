@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Linq;
 using CNCMaps.FileFormats.Encodings;
 using CNCMaps.Shared.Utility;
 
@@ -71,21 +72,38 @@ namespace CNCMaps.FileFormats.Map {
 		}
 		#endregion
 
-		public void SerializeIsoMapPack5(IniFile.IniSection isoMapPack5) {
-			int cells = (Width * 2 - 1) * Height;
-			int lzoPackSize = cells * 11 + 4; // last 4 bytes contains a lzo pack header saying no more data is left
+		public void SerializeIsoMapPack5(IniFile.IniSection isoMapPack5, bool compress = false) {
+		
+			List<IsoTile> tileSet = new List<IsoTile>();
+			foreach (var isoTile in this.isoTiles) {
+				tileSet.Add(isoTile);
+			}
 			
-			var isoMapPack = new byte[lzoPackSize];
-			var isoMapPack2 = new byte[lzoPackSize];
+			// Compressing involves removing level 0 clear tiles and then sort the tiles before encoding
+			if (compress) {
+				List<IsoTile> tileSetStage = new List<IsoTile>();
+				foreach (var t in tileSet) {
+                    if (t.TileNum > 0 || t.Z > 0 || t.SubTile > 0 || t.IceGrowth > 0)
+                        tileSetStage.Add(t);
+				}
+	            if (tileSetStage.Count == 0)
+	                tileSetStage.Add(tileSet.First());
+				tileSet.Clear();
+                tileSet = tileSetStage.OrderBy(x => x.Rx).ThenBy(x => x.Z).ThenBy(x => x.TileNum).ToList();
+			}
+			
+			// A tile is of 11 bytes. Last 4 bytes of padding is used for termination
+			byte[] isoMapPack = new byte[tileSet.Count * 11 + 4];
+
 			long di = 0;
-			foreach (var tile in this.isoTiles) {
+			foreach (var tile in tileSet) {
 				var bs = tile.ToMapPack5Entry().ToArray();
 				Array.Copy(bs, 0, isoMapPack, di, 11);
 				di += 11;
 			}
 
-			var compressed = Format5.Encode(isoMapPack, 5);
-			string compressed64 = Convert.ToBase64String(compressed);
+			byte[] encoded = Format5.Encode(isoMapPack, 5);
+			string compressed64 = Convert.ToBase64String(encoded, Base64FormattingOptions.None);
 			
 			int i = 1;
 			int idx = 0;
@@ -98,5 +116,4 @@ namespace CNCMaps.FileFormats.Map {
 		}
 
 	}
-
 }

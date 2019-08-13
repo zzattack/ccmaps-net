@@ -215,6 +215,8 @@ namespace CNCMaps.Engine.Map {
 		public string Upgrade1 { get; set; }
 		public string Upgrade2 { get; set; }
 		public string Upgrade3 { get; set; }
+
+		public int WallBuildingFrame { get; set; }
 	}
 	public class TerrainObject : NamedObject {
 		public TerrainObject(string name) {

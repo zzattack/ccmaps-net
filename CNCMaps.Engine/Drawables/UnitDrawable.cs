@@ -14,9 +14,15 @@ namespace CNCMaps.Engine.Game {
 
 		public override void LoadFromRules() {
 			base.LoadFromArtEssential();
+		}
+
+		public override void Draw(GameObject obj, DrawingSurface ds, bool shadows = true) {
+
+			ShpDrawable shp = null;
+			VoxelDrawable vxl = null;
 
 			if (IsVoxel) {
-				var vxl = new VoxelDrawable(Rules, Art);
+				vxl = new VoxelDrawable(Rules, Art);
 				vxl.OwnerCollection = OwnerCollection;
 				vxl.Props = Props;
 				vxl.LoadFromRules();
@@ -25,37 +31,59 @@ namespace CNCMaps.Engine.Game {
 				SubDrawables.Add(vxl);
 			}
 			else {
-				var shp = new ShpDrawable(Rules, Art);
+				shp = new ShpDrawable(Rules, Art);
 				shp.Props = Props;
 				shp.OwnerCollection = OwnerCollection;
 				shp.LoadFromRules();
 				shp.Shp = VFS.Open<ShpFile>(shp.GetFilename());
-                shp.Props.FrameDecider = FrameDeciders.SHPVehicleFrameDecider(shp.StartStandFrame, shp.StandingFrames, shp.Facings);
-                if (Ready_Start != -1 && Ready_Count != -1 && Ready_CountNext != -1) 
-                    shp.Props.FrameDecider = FrameDeciders.InfantryFrameDecider(Ready_Start, Ready_Count, Ready_CountNext);
+                shp.Props.FrameDecider = FrameDeciders.SHPVehicleFrameDecider(shp.StartStandFrame, shp.StandingFrames, shp.StartWalkFrame, shp.WalkFrames, shp.Facings);
 				SubDrawables.Add(shp);
 			}
 
-			if (Rules.ReadBool("Turret") && IsVoxel) {
-				var turretVxl = VFS.Open<VxlFile>(Image + "TUR.vxl");
-				var turretHva = VFS.Open<HvaFile>(Image + "TUR.hva");
-				var turret = new VoxelDrawable(turretVxl, turretHva);
-				turret.Props.Offset = Props.Offset;
-				turret.Props.Offset += new Size(Rules.ReadInt("TurretAnimX"), Rules.ReadInt("TurretAnimY"));
-				turret.Props.TurretVoxelOffset = Art.ReadFloat("TurretOffset");
-				SubDrawables.Add(turret);
+			if (shp != null || vxl != null) {
+				if (Rules.ReadBool("Turret")) {
 
-				var barrelVxl = VFS.Open<VxlFile>(Image + "BARL.vxl");
-				var barrelHva = VFS.Open<HvaFile>(Image + "BARL.hva");
-				if (barrelVxl != null && barrelHva != null) {
-					var barrel = new VoxelDrawable(barrelVxl, barrelHva);
-					barrel.Props = turret.Props;
-					SubDrawables.Add(barrel);
+					VoxelDrawable vxlturret = null;
+					ShpDrawable shpturret = null;
+					var turretVxl = VFS.Open<VxlFile>(Image + "TUR.vxl");
+					var turretHva = VFS.Open<HvaFile>(Image + "TUR.hva");
+
+					if (turretVxl != null && turretHva != null) {
+						vxlturret = new VoxelDrawable(turretVxl, turretHva);
+						vxlturret.Props.Offset = Props.Offset;
+						vxlturret.Props.Offset += new Size(Rules.ReadInt("TurretAnimX"), Rules.ReadInt("TurretAnimY"));
+						vxlturret.Props.TurretVoxelOffset = Art.ReadFloat("TurretOffset");
+						SubDrawables.Add(vxlturret);
+					}
+
+					if (vxlturret == null && shp != null)
+					{
+						shpturret = new ShpDrawable(Rules, Art);
+						shpturret.Props = (DrawProperties)shp.Props.Clone();
+						shpturret.OwnerCollection = OwnerCollection;
+						shpturret.LoadFromRules();
+						shpturret.Shp = VFS.Open<ShpFile>(shpturret.GetFilename());
+						shpturret.Props.FrameDecider = FrameDeciders.SHPVehicleSHPTurretFrameDecider(shpturret.StartWalkFrame, shpturret.WalkFrames, shpturret.Facings);
+						SubDrawables.Add(shpturret);
+					}
+
+					var barrelVxl = VFS.Open<VxlFile>(Image + "BARL.vxl");
+					var barrelHva = VFS.Open<HvaFile>(Image + "BARL.hva");
+					if (barrelVxl != null && barrelHva != null) {
+						var barrel = new VoxelDrawable(barrelVxl, barrelHva);
+						if (vxlturret != null)
+							barrel.Props = vxlturret.Props;
+						else if (shp != null)
+						{
+							barrel.Props.Offset = Props.Offset;
+							barrel.Props.Offset += new Size(Rules.ReadInt("TurretAnimX"), Rules.ReadInt("TurretAnimY"));
+							barrel.Props.TurretVoxelOffset = Art.ReadFloat("TurretOffset");
+						}
+						SubDrawables.Add(barrel);
+					}
 				}
 			}
-		}
 
-		public override void Draw(GameObject obj, DrawingSurface ds, bool shadows = true) {
 			Size onBridgeOffset = Size.Empty;
 			if (obj is OwnableObject && (obj as OwnableObject).OnBridge)
 				onBridgeOffset = new Size(0, -4 * TileHeight / 2);

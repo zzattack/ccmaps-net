@@ -27,9 +27,10 @@ namespace CNCMaps.Engine.Rendering {
 
 		unsafe public static void Draw(ShpFile shp, GameObject obj, Drawable dr, DrawProperties props, DrawingSurface ds, int transLucency = 0) {
 			shp.Initialize();
-			int frameIndex = props.FrameDecider(obj);
 			Palette p = props.PaletteOverride ?? obj.Palette;
-
+			int frameIndex = props.FrameDecider(obj);
+			if (obj.Drawable.IsActualWall)
+				frameIndex = ((StructureObject)obj).WallBuildingFrame;
 			frameIndex = DecideFrameIndex(frameIndex, shp.NumImages);
 			if (frameIndex >= shp.Images.Count)
 				return;
@@ -127,7 +128,10 @@ namespace CNCMaps.Engine.Rendering {
 
 
 		public static unsafe void DrawShadow(GameObject obj, ShpFile shp, DrawProperties props, DrawingSurface ds) {
+			shp.Initialize();
 			int frameIndex = props.FrameDecider(obj);
+			if (obj.Drawable.IsActualWall)
+				frameIndex = ((StructureObject)obj).WallBuildingFrame;
 			frameIndex = DecideFrameIndex(frameIndex, shp.NumImages);
 			frameIndex += shp.Images.Count / 2; // latter half are shadow Images
 			if (frameIndex >= shp.Images.Count)
