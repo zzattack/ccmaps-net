@@ -260,6 +260,21 @@ namespace CNCMaps.Engine.Game {
 			if (InvisibleInGame)
 				return;
 
+			// RA2/YR building rubble
+			if (obj is StructureObject && (obj as StructureObject).Health == 0 && OwnerCollection.Engine >= EngineType.RedAlert2 && _baseShp.Shp != null) {
+				ShpDrawable rubble = (ShpDrawable)_baseShp.Clone();
+				rubble.Props = _baseShp.Props.Clone();
+				rubble.Shp.Initialize();
+				if (rubble.Shp.NumImages >= 8) {
+					rubble.Props.PaletteOverride = OwnerCollection.Palettes.IsoPalette;
+					rubble.Props.FrameDecider = FrameDeciders.BuildingRubbleFrameDecider(rubble.Shp.NumImages);
+					if (shadows)
+						rubble.DrawShadow(obj, ds);
+					rubble.Draw(obj, ds, false);
+					return;
+				}
+			}
+
 			var drawList = new List<Drawable>();
 			drawList.Add(_baseShp);
 
