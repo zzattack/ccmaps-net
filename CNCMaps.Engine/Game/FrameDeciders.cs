@@ -39,6 +39,18 @@ namespace CNCMaps.Engine.Game {
 		};
 
 		/// <summary>
+		/// For RA2/YR buildings with rubble and health set to 0 in maps. Mostly 4th frame but selecting last normal frame
+		/// </summary>
+		public static Func<GameObject, int> BuildingRubbleFrameDecider(int totalFrames) {
+			return delegate(GameObject obj) {
+				int frameNum = 0;
+				if (totalFrames >= 8)
+					frameNum = (totalFrames / 2) - 1;
+				return frameNum;
+			};
+		}
+
+		/// <summary>
 		/// Use this for animations that have a loopstart and loopend
 		/// </summary>
 		/// <returns>A framedecider between loopend and loopstart</returns>
