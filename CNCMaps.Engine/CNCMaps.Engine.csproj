@@ -96,6 +96,7 @@
     <Compile Include="Drawables\AlphaDrawable.cs" />
     <Compile Include="Drawables\AnimDrawable.cs" />
     <Compile Include="Drawables\BuildingDrawable.cs" />
+    <Compile Include="Drawables\TerrainDrawable.cs" />
     <Compile Include="Drawables\Drawable.cs" />
     <Compile Include="Rendering\DebugDrawingSurfaceWindow.cs">
       <SubType>Form</SubType>

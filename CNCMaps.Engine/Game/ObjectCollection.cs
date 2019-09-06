@@ -64,10 +64,12 @@ namespace CNCMaps.Engine.Game
                 case CollectionType.Infantry:
                 case CollectionType.Overlay:
                 case CollectionType.Smudge:
-                case CollectionType.Terrain:
                     drawable = new ShpDrawable(rulesSection, artSection);
                     break;
-                case CollectionType.Animation:
+                case CollectionType.Terrain:
+                    drawable = new TerrainDrawable(rulesSection, artSection);
+                    break;
+				case CollectionType.Animation:
                     drawable = new AnimDrawable(rulesSection, artSection);
                     break;
                 default:
@@ -90,8 +92,10 @@ namespace CNCMaps.Engine.Game
                 case CollectionType.Infantry:
                 case CollectionType.Overlay:
                 case CollectionType.Smudge:
-                case CollectionType.Terrain:
                     LoadSimpleDrawable((ShpDrawable)drawable);
+                    break;
+                case CollectionType.Terrain:
+					LoadTerrainDrawable((TerrainDrawable)drawable);
                     break;
                 case CollectionType.Animation:
                     LoadAnimDrawable((AnimDrawable)drawable);
@@ -173,6 +177,12 @@ namespace CNCMaps.Engine.Game
                     drawable.Props.Offset.Offset(Drawable.TileWidth / 2, Drawable.TileHeight / 2);
                     break;
             }
+        }
+
+        private void LoadTerrainDrawable(TerrainDrawable drawable)
+        {
+            InitDrawableDefaults(drawable);
+            drawable.LoadFromRules();
         }
 
         private void LoadSimpleDrawable(ShpDrawable drawable)
