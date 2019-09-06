@@ -225,7 +225,7 @@ namespace CNCMaps.Engine.Game {
 
 				var fire = new AnimDrawable(Rules, Art, VFS.Open<ShpFile>(fireAnim + ".shp"));
 				fire.Props.PaletteOverride = GetFireAnimPalette(fireArt);
-				fire.Props.Offset = new Point(Int32.Parse(coords[0]), Int32.Parse(coords[1]));
+				fire.Props.Offset = new Point(Int32.Parse(coords[0]) + (TileWidth / 2), Int32.Parse(coords[1]));
 				fire.Props.FrameDecider = FrameDeciders.RandomFrameDecider;
 				_fires.Add(fire);
 			}
