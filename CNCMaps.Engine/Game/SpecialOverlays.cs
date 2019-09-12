@@ -6,13 +6,13 @@ namespace CNCMaps.Engine.Game {
 	public static class SpecialOverlays {
 		// Riparius = 1, Cruentus = 2, Vinifera = 3, Aboreus = 4
 		public const byte Ra2MinIdRiparius = 102; // Ore
-		public const byte Ra2MaxIdRiparius = 127; // Ore
+		public const byte Ra2MaxIdRiparius = 121; // Ore
 		public const byte Ra2MinIdCruentus = 27; // Gems
 		public const byte Ra2MaxIdCruentus = 38; // Gems
-		public const byte Ra2MinIdVinifera = 127;
-		public const byte Ra2MaxIdVinifera = 146;
-		public const byte Ra2MinIdAboreus = 147;
-		public const byte Ra2MaxIdAboreus = 166;
+		public const byte Ra2MinIdVinifera = 127; // Ore2 unused
+		public const byte Ra2MaxIdVinifera = 146; // Ore2 unused
+		public const byte Ra2MinIdAboreus = 147; // Ore3 unused
+		public const byte Ra2MaxIdAboreus = 166; // Ore3 unused
 
 		public const byte TsMinIdRiparius = 102;
 		public const byte TsMaxIdRiparius = 121;

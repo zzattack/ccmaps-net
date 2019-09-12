@@ -15,6 +15,8 @@ namespace CNCMaps.Shared {
 		Aboreus = 8,
 		Ore = 1, // ts: rip
 		Gems = 2, // ts: cru
+		Ore2 = 4, // ts: vini - unused
+		Ore3 = 8, // ts: abor - unused
 		All = 15,
 	};
 

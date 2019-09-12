@@ -957,6 +957,8 @@ namespace CNCMaps.Engine.Map {
 			// init sensible defaults
 			if (Engine >= EngineType.RedAlert2) {
 				markerPalettes[OverlayTibType.Ore] = Palette.MakePalette(Color.Yellow);
+				markerPalettes[OverlayTibType.Ore2] = Palette.MakePalette(Color.Yellow);
+				markerPalettes[OverlayTibType.Ore3] = Palette.MakePalette(Color.Yellow);
 				markerPalettes[OverlayTibType.Gems] = Palette.MakePalette(Color.Purple);
 			}
 
@@ -983,7 +985,7 @@ namespace CNCMaps.Engine.Map {
 				var ovlType = SpecialOverlays.GetOverlayTibType(o, Engine);
 				if (!markerPalettes.ContainsKey(ovlType)) continue;
 
-				double opacityBase = ovlType == OverlayTibType.Ore && Engine == EngineType.RedAlert2 ? 0.3 : 0.15;
+				double opacityBase = ((ovlType == OverlayTibType.Ore || ovlType == OverlayTibType.Ore2 || ovlType == OverlayTibType.Ore3) && Engine == EngineType.RedAlert2) ? 0.3 : 0.15;
 				double opacity = Math.Max(0, 12 - o.OverlayValue) / 11.0 * 0.5 + opacityBase;
 				o.Tile.Palette = Palette.Merge(o.Tile.Palette, markerPalettes[ovlType], opacity);
 				o.Palette = Palette.Merge(o.Palette, markerPalettes[ovlType], opacity);
