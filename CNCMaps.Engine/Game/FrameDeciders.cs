@@ -31,12 +31,23 @@ namespace CNCMaps.Engine.Game {
 
 		/// <summary>
 		/// Use this for non-animated building parts that show frame 0 for healthy and frame 1 for damaged buildings
+		/// Dummy used as default
 		/// </summary>
 		public static Func<GameObject, int> HealthBasedFrameDecider = delegate(GameObject obj) {
 			int health = (obj is OwnableObject) ? (obj as OwnableObject).Health : 255;
 			if (health >= 128) return 0;
 			else return 1;
 		};
+
+		/// <summary>
+		/// For non-animated building parts that show frame 0/1 for damaged buildings based on ConditionYellow/ConditionRed values
+		/// </summary>
+		public static Func<GameObject, int> BaseBuildingFrameDecider(bool isDamaged) {
+			return delegate(GameObject obj) {
+				if (isDamaged) return 1;
+				else 	return 0;
+			};
+		}
 
 		/// <summary>
 		/// For RA2/YR buildings with rubble and health set to 0 in maps. Mostly 4th frame but selecting last normal frame

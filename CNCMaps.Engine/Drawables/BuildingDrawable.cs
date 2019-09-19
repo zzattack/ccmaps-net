@@ -43,9 +43,15 @@ namespace CNCMaps.Engine.Game {
 		private readonly List<AnimDrawable> _anims = new List<AnimDrawable>();
 		private readonly List<AnimDrawable> _animsDamaged = new List<AnimDrawable>();
 		private readonly List<AnimDrawable> _fires = new List<AnimDrawable>();
+		private Random _random;
+		private bool _canBeOccupied;
+		private int _techLevel;
+		private int _conditionYellowHealth;
+		private int _conditionRedHealth;
 
 		public BuildingDrawable(IniFile.IniSection rules, IniFile.IniSection art)
 			: base(rules, art) {
+			_random = new Random();
 		}
 
 		public override void LoadFromRules() {
@@ -66,7 +72,22 @@ namespace CNCMaps.Engine.Game {
 			}
 			Props.SortIndex = Art.ReadInt("NormalYSort") - Art.ReadInt("NormalZAdjust"); // "main" building image before anims
 			Props.ZShapePointMove = Art.ReadPoint("ZShapePointMove");
-
+			
+			_canBeOccupied= Rules.ReadBool("CanBeOccupied");
+			_techLevel = Rules.ReadInt("TechLevel");
+			_conditionYellowHealth = 128;
+			_conditionRedHealth = 64;
+			IniFile.IniSection audioVisual = OwnerCollection.Rules.GetOrCreateSection("AudioVisual");
+			if (audioVisual != null) {
+				if (audioVisual.HasKey("ConditionYellow")) {
+					int conditionYellow = audioVisual.ReadPercent("ConditionYellow");
+					_conditionYellowHealth = (int)(256 * (double)conditionYellow / 100);
+				}
+				if (audioVisual.HasKey("ConditionRed")) {
+					int conditionRed = audioVisual.ReadPercent("ConditionRed");
+					_conditionRedHealth = (int)(256 * (double)conditionRed / 100);
+				}
+			}
 			_baseShp = new ShpDrawable(Rules, Art);
 			_baseShp.OwnerCollection = OwnerCollection;
 			_baseShp.LoadFromArtEssential();
@@ -220,7 +241,7 @@ namespace CNCMaps.Engine.Game {
 					break;
 
 				string[] coords = dfo.Split(new[] { ',', '.' }, StringSplitOptions.RemoveEmptyEntries);
-				string fireAnim = OwnerCollection.FireNames[Rand.Next(OwnerCollection.FireNames.Length)];
+				string fireAnim = OwnerCollection.FireNames[_random.Next(OwnerCollection.FireNames.Length)];
 				IniFile.IniSection fireArt = OwnerCollection.Art.GetOrCreateSection(fireAnim);
 
 				var fire = new AnimDrawable(Rules, Art, VFS.Open<ShpFile>(fireAnim + ".shp"));
@@ -275,12 +296,30 @@ namespace CNCMaps.Engine.Game {
 				}
 			}
 
+			bool isDamaged = false;
+			bool isOnFire = false;
+			if (obj is StructureObject) {
+				int health = (obj as StructureObject).Health;
+				if (health <= _conditionYellowHealth) {
+					isDamaged = true;
+					if (health > _conditionRedHealth && _canBeOccupied && _techLevel < 1)
+						isDamaged = false;
+				}
+				_baseShp.Props.FrameDecider = FrameDeciders.BaseBuildingFrameDecider(isDamaged);
+
+				if (OwnerCollection.Engine >= EngineType.RedAlert2) {
+					if (isDamaged) isOnFire = true;
+					if (health > _conditionRedHealth && _canBeOccupied) isOnFire = false;
+				}
+			}
+
 			var drawList = new List<Drawable>();
 			drawList.Add(_baseShp);
 
-			if (obj is StructureObject && (obj as StructureObject).Health < 128) {
+			if (obj is StructureObject && isDamaged) {
 				drawList.AddRange(_animsDamaged);
-				drawList.AddRange(_fires);
+				if (isOnFire)
+					drawList.AddRange(_fires);
 			}
 			else
 				drawList.AddRange(_anims);
