@@ -17,7 +17,8 @@ namespace CNCMaps.Engine.Game {
 		}
 
 		public override void Draw(GameObject obj, DrawingSurface ds, bool shadow = true) {
-			ShpRenderer.DrawAlpha(obj, Shp, Props, ds);
+            if (!obj.Drawable.Props.Cloakable)
+                ShpRenderer.DrawAlpha(obj, Shp, Props, ds);
 		}
 	}
 }

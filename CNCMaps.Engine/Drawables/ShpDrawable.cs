@@ -37,14 +37,14 @@ namespace CNCMaps.Engine.Game {
 					randomDir = random.Next(256);
 				Props.FrameDecider = FrameDeciders.InfantryFrameDecider(Ready_Start, Ready_Count, Ready_CountNext, randomDir);
 			}
-			if (Props.HasShadow && shadow)
+			if (Props.HasShadow && shadow && !Props.Cloakable)
 				ShpRenderer.DrawShadow(obj, Shp, Props, ds);
-			ShpRenderer.Draw(Shp, obj, this, Props, ds);
+			ShpRenderer.Draw(Shp, obj, this, Props, ds, Props.Cloakable ? 50 : 0);
 		}
 
 		public override void DrawShadow(GameObject obj, DrawingSurface ds) {
 			if (InvisibleInGame || Shp == null) return;
-			if (Props.HasShadow)
+			if (Props.HasShadow && !Props.Cloakable)
 				ShpRenderer.DrawShadow(obj, Shp, Props, ds);
 		}
 

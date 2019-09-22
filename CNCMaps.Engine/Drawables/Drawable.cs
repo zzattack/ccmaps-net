@@ -121,7 +121,7 @@ namespace CNCMaps.Engine.Drawables {
 
 			Props.HasShadow = Art.ReadBool("Shadow", Defaults.GetShadowAssumption(OwnerCollection.Type));
 			Props.HasShadow = !Rules.ReadBool("NoShadow");
-            Props.IsUnderWater = Rules.ReadBool("Underwater");
+            Props.Cloakable = Rules.ReadBool("Cloakable");
 			Flat = Rules.ReadBool("DrawFlat", Defaults.GetFlatnessAssumption(OwnerCollection.Type))
 				|| Rules.ReadBool("Flat");
 

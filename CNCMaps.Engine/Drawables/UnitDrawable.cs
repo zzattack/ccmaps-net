@@ -53,6 +53,7 @@ namespace CNCMaps.Engine.Game {
 						vxlturret.Props.Offset = Props.Offset;
 						vxlturret.Props.Offset += new Size(Rules.ReadInt("TurretAnimX"), Rules.ReadInt("TurretAnimY"));
 						vxlturret.Props.TurretVoxelOffset = Art.ReadFloat("TurretOffset");
+                        vxlturret.Props.Cloakable = Props.Cloakable;
 						SubDrawables.Add(vxlturret);
 					}
 
@@ -64,7 +65,8 @@ namespace CNCMaps.Engine.Game {
 						shpturret.LoadFromRules();
 						shpturret.Shp = VFS.Open<ShpFile>(shpturret.GetFilename());
 						shpturret.Props.FrameDecider = FrameDeciders.SHPVehicleSHPTurretFrameDecider(shpturret.StartWalkFrame, shpturret.WalkFrames, shpturret.Facings);
-						SubDrawables.Add(shpturret);
+                        shpturret.Props.Cloakable = Props.Cloakable;
+                        SubDrawables.Add(shpturret);
 					}
 
 					var barrelVxl = VFS.Open<VxlFile>(Image + "BARL.vxl");
@@ -79,6 +81,7 @@ namespace CNCMaps.Engine.Game {
 							barrel.Props.Offset += new Size(Rules.ReadInt("TurretAnimX"), Rules.ReadInt("TurretAnimY"));
 							barrel.Props.TurretVoxelOffset = Art.ReadFloat("TurretOffset");
 						}
+                        barrel.Props.Cloakable = Props.Cloakable;
 						SubDrawables.Add(barrel);
 					}
 				}

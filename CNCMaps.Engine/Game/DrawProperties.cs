@@ -3,8 +3,9 @@ using System.Drawing;
 using CNCMaps.Engine.Map;
 using CNCMaps.Shared;
 
-namespace CNCMaps.Engine.Rendering {
-	public enum DrawFrame : int {
+namespace CNCMaps.Engine.Rendering
+{
+    public enum DrawFrame : int {
 		DirectionBased = -1,
 		Random = -2,
 		//RandomHealthy = -3,
@@ -13,7 +14,7 @@ namespace CNCMaps.Engine.Rendering {
 
 	public class DrawProperties {
 		public bool HasShadow { get; set; }
-		public bool IsUnderWater { get; set; }
+		public bool Cloakable { get; set; }
 
 		public PaletteType PaletteType { get; set; }
 		public LightingType LightingType { get; set; }
