@@ -13,6 +13,7 @@ namespace CNCMaps.Engine.Rendering {
 
 	public class DrawProperties {
 		public bool HasShadow { get; set; }
+		public bool IsUnderWater { get; set; }
 
 		public PaletteType PaletteType { get; set; }
 		public LightingType LightingType { get; set; }

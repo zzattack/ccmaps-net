@@ -96,6 +96,11 @@ namespace CNCMaps.Engine.Rendering {
 								*(w + 1) = (byte)(a * *(w + 1) + b * p.Colors[paletteValue].G);
 								*(w + 2) = (byte)(a * *(w + 2) + b * p.Colors[paletteValue].R);
 							}
+							else if (props.IsUnderWater) {
+								*(w + 0) = (byte)(p.Colors[paletteValue].B * 0.64f);
+								*(w + 1) = (byte)(p.Colors[paletteValue].G * 0.64f);
+								*(w + 2) = (byte)(p.Colors[paletteValue].R * 0.64f);
+							}
 							else {
 								*(w + 0) = p.Colors[paletteValue].B;
 								*(w + 1) = p.Colors[paletteValue].G;
