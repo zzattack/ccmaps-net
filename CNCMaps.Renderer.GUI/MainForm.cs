@@ -135,7 +135,9 @@ namespace CNCMaps.GUI
 			cbTunnelPaths.Checked = Settings.Default.tunnelpaths;
 			cbTunnelPosition.Checked = Settings.Default.tunnelpos;
 
-			if (!cbTunnelPaths.Checked)
+            tbBatchInput.Lines = Settings.Default.batchinput.Split('\n');
+
+            if (!cbTunnelPaths.Checked)
 				cbTunnelPosition.Enabled = false;
 
             UpdateCommandline();
@@ -191,7 +193,9 @@ namespace CNCMaps.GUI
 			Settings.Default.tunnelpaths = cbTunnelPaths.Checked;
 			Settings.Default.tunnelpos = cbTunnelPosition.Checked;
 
-			Settings.Default.windowlocation = this.Location.X + ", " +  this.Location.Y;
+            Settings.Default.batchinput = String.Join("\n", tbBatchInput.Lines);
+
+            Settings.Default.windowlocation = this.Location.X + ", " +  this.Location.Y;
 
             Settings.Default.Save();
         }
@@ -929,5 +933,41 @@ namespace CNCMaps.GUI
         }
 
         #endregion
+
+        private void BtnAddMaps_Click(object sender, EventArgs e)
+        {
+            ofd.CheckFileExists = true;
+            ofd.Multiselect = true;
+            ofd.Filter = "RA2/TS map files (*.map, *.mpr, *.mmx, *.yrm, *.yro)|*.mpr;*.map;*.mmx;*.yrm;*.yro|All files (*.*)|*";
+            //if (string.IsNullOrEmpty(ofd.InitialDirectory))
+            //    ofd.InitialDirectory = FindMixDir(rbEngineAuto.Checked || rbEngineRA2.Checked || rbEngineYR.Checked);
+
+            ofd.FileName = "";
+            if (ofd.ShowDialog() == DialogResult.OK)
+            {
+                tbBatchInput.Lines = new List<string>().Concat(tbBatchInput.Lines).Concat(ofd.FileNames).ToArray();
+                ofd.InitialDirectory = Path.GetDirectoryName(ofd.FileName);
+            }
+        }
+
+        private void BtnClearList_Click(object sender, EventArgs e)
+        {
+            tbBatchInput.Clear();
+        }
+
+        private void Button1_Click(object sender, EventArgs e)
+        {
+            string oldInputMap = tbInput.Text;
+            foreach (string mapPath in tbBatchInput.Lines)
+            {
+                
+                if (!String.IsNullOrWhiteSpace(mapPath))
+                {
+                    tbInput.Text = mapPath;
+                    ExecuteCommand(this, EventArgs.Empty);
+                }
+            }
+            tbInput.Text = oldInputMap;
+        }
     }
 }

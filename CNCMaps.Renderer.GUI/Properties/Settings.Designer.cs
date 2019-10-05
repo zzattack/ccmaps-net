@@ -563,5 +563,20 @@ namespace CNCMaps.GUI.Properties {
                 this["startmarkersize"] = value;
             }
         }
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string batchinput
+        {
+            get
+            {
+                return ((string)(this["batchinput"]));
+            }
+            set
+            {
+                this["batchinput"] = value;
+            }
+        }
     }
 }
