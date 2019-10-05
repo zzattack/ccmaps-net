@@ -387,10 +387,16 @@ namespace CNCMaps.GUI
         private void InputDragDrop(object sender, DragEventArgs e)
         {
             var files = (string[])e.Data.GetData(DataFormats.FileDrop);
-            if (files.Length > 0)
+            if (files.Length == 1 && tabControl.SelectedTab != tpBatch)
             {
                 tbInput.Text = files[0];
                 UpdateCommandline();
+                tabControl.SelectTab(tpMain);
+            }
+            else if (files.Length > 0)
+            {
+                tbBatchInput.Lines = new List<string>().Concat(tbBatchInput.Lines).Concat(files).ToArray();
+                tabControl.SelectTab(tpBatch);
             }
         }
 
@@ -955,8 +961,14 @@ namespace CNCMaps.GUI
             tbBatchInput.Clear();
         }
 
-        private void Button1_Click(object sender, EventArgs e)
+        private void BtnBatchRender_Click(object sender, EventArgs e)
         {
+            if (String.IsNullOrWhiteSpace(tbBatchInput.Text))
+            {
+                UpdateStatus("no files provided in batch", 100);
+                MessageBox.Show("Add at least one map file to render!");
+                return;
+            }
             string oldInputMap = tbInput.Text;
             foreach (string mapPath in tbBatchInput.Lines)
             {

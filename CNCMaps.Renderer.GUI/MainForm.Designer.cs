@@ -104,19 +104,19 @@ namespace CNCMaps.GUI {
             this.tpMain = new System.Windows.Forms.TabPage();
             this.lblCommand = new System.Windows.Forms.Label();
             this.tpMisc = new System.Windows.Forms.TabPage();
+            this.tpBatch = new System.Windows.Forms.TabPage();
+            this.gbBatchRender = new System.Windows.Forms.GroupBox();
+            this.btnBatchRender = new System.Windows.Forms.Button();
+            this.btnClearList = new System.Windows.Forms.Button();
+            this.label2 = new System.Windows.Forms.Label();
+            this.tbBatchInput = new System.Windows.Forms.TextBox();
+            this.btnBrowseMaps = new System.Windows.Forms.Button();
             this.tpLog = new System.Windows.Forms.TabPage();
             this.btnClearLog = new System.Windows.Forms.Button();
             this.gbLog = new System.Windows.Forms.GroupBox();
             this.rtbLog = new System.Windows.Forms.RichTextBox();
             this.tpAbout = new System.Windows.Forms.TabPage();
             this.label1 = new System.Windows.Forms.Label();
-            this.tpBatch = new System.Windows.Forms.TabPage();
-            this.groupBox1 = new System.Windows.Forms.GroupBox();
-            this.btnClearList = new System.Windows.Forms.Button();
-            this.label2 = new System.Windows.Forms.Label();
-            this.tbBatchInput = new System.Windows.Forms.TextBox();
-            this.btnBrowseMaps = new System.Windows.Forms.Button();
-            this.button1 = new System.Windows.Forms.Button();
             this.gbMiscOptions.SuspendLayout();
             this.gbOreGems.SuspendLayout();
             this.gbStartMarkers.SuspendLayout();
@@ -135,11 +135,11 @@ namespace CNCMaps.GUI {
             this.tabControl.SuspendLayout();
             this.tpMain.SuspendLayout();
             this.tpMisc.SuspendLayout();
+            this.tpBatch.SuspendLayout();
+            this.gbBatchRender.SuspendLayout();
             this.tpLog.SuspendLayout();
             this.gbLog.SuspendLayout();
             this.tpAbout.SuspendLayout();
-            this.tpBatch.SuspendLayout();
-            this.groupBox1.SuspendLayout();
             this.SuspendLayout();
             // 
             // gbMiscOptions
@@ -1065,6 +1065,88 @@ namespace CNCMaps.GUI {
             this.tpMisc.Text = "Misc settings";
             this.tpMisc.UseVisualStyleBackColor = true;
             // 
+            // tpBatch
+            // 
+            this.tpBatch.Controls.Add(this.gbBatchRender);
+            this.tpBatch.Location = new System.Drawing.Point(4, 22);
+            this.tpBatch.Name = "tpBatch";
+            this.tpBatch.Padding = new System.Windows.Forms.Padding(3);
+            this.tpBatch.Size = new System.Drawing.Size(595, 339);
+            this.tpBatch.TabIndex = 4;
+            this.tpBatch.Text = "Batch render";
+            this.tpBatch.UseVisualStyleBackColor = true;
+            // 
+            // gbBatchRender
+            // 
+            this.gbBatchRender.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.gbBatchRender.Controls.Add(this.btnBatchRender);
+            this.gbBatchRender.Controls.Add(this.btnClearList);
+            this.gbBatchRender.Controls.Add(this.label2);
+            this.gbBatchRender.Controls.Add(this.tbBatchInput);
+            this.gbBatchRender.Controls.Add(this.label6);
+            this.gbBatchRender.Controls.Add(this.btnBrowseMaps);
+            this.gbBatchRender.Location = new System.Drawing.Point(6, 6);
+            this.gbBatchRender.Name = "gbBatchRender";
+            this.gbBatchRender.Size = new System.Drawing.Size(582, 327);
+            this.gbBatchRender.TabIndex = 1;
+            this.gbBatchRender.TabStop = false;
+            this.gbBatchRender.Text = "Batch map render";
+            this.gbBatchRender.DragDrop += new System.Windows.Forms.DragEventHandler(this.InputDragDrop);
+            this.gbBatchRender.DragEnter += new System.Windows.Forms.DragEventHandler(this.InputDragEnter);
+            // 
+            // btnBatchRender
+            // 
+            this.btnBatchRender.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnBatchRender.Location = new System.Drawing.Point(420, 298);
+            this.btnBatchRender.Name = "btnBatchRender";
+            this.btnBatchRender.Size = new System.Drawing.Size(156, 23);
+            this.btnBatchRender.TabIndex = 33;
+            this.btnBatchRender.Text = "Start batch rendering";
+            this.btnBatchRender.UseVisualStyleBackColor = true;
+            this.btnBatchRender.Click += new System.EventHandler(this.BtnBatchRender_Click);
+            // 
+            // btnClearList
+            // 
+            this.btnClearList.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnClearList.Location = new System.Drawing.Point(501, 71);
+            this.btnClearList.Name = "btnClearList";
+            this.btnClearList.Size = new System.Drawing.Size(75, 21);
+            this.btnClearList.TabIndex = 4;
+            this.btnClearList.Text = "Clear list";
+            this.btnClearList.UseVisualStyleBackColor = true;
+            this.btnClearList.Click += new System.EventHandler(this.BtnClearList_Click);
+            // 
+            // label2
+            // 
+            this.label2.Location = new System.Drawing.Point(10, 16);
+            this.label2.Name = "label2";
+            this.label2.Size = new System.Drawing.Size(566, 48);
+            this.label2.TabIndex = 3;
+            this.label2.Text = resources.GetString("label2.Text");
+            // 
+            // tbBatchInput
+            // 
+            this.tbBatchInput.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.tbBatchInput.Location = new System.Drawing.Point(13, 98);
+            this.tbBatchInput.Multiline = true;
+            this.tbBatchInput.Name = "tbBatchInput";
+            this.tbBatchInput.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
+            this.tbBatchInput.Size = new System.Drawing.Size(563, 194);
+            this.tbBatchInput.TabIndex = 1;
+            // 
+            // btnBrowseMaps
+            // 
+            this.btnBrowseMaps.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnBrowseMaps.Location = new System.Drawing.Point(420, 71);
+            this.btnBrowseMaps.Name = "btnBrowseMaps";
+            this.btnBrowseMaps.Size = new System.Drawing.Size(75, 21);
+            this.btnBrowseMaps.TabIndex = 2;
+            this.btnBrowseMaps.Text = "Add maps";
+            this.btnBrowseMaps.UseVisualStyleBackColor = true;
+            this.btnBrowseMaps.Click += new System.EventHandler(this.BtnAddMaps_Click);
+            // 
             // tpLog
             // 
             this.tpLog.Controls.Add(this.btnClearLog);
@@ -1136,86 +1218,6 @@ namespace CNCMaps.GUI {
             this.label1.Text = "Program by Frank Razenberg © 2005-2016\r\n\r\nSpecial thanks to Olaf van der Spek for" +
     " XCC.\r\nSpecial thanks to #renproj for modenc.";
             // 
-            // tpBatch
-            // 
-            this.tpBatch.Controls.Add(this.groupBox1);
-            this.tpBatch.Location = new System.Drawing.Point(4, 22);
-            this.tpBatch.Name = "tpBatch";
-            this.tpBatch.Padding = new System.Windows.Forms.Padding(3);
-            this.tpBatch.Size = new System.Drawing.Size(595, 339);
-            this.tpBatch.TabIndex = 4;
-            this.tpBatch.Text = "Batch render";
-            this.tpBatch.UseVisualStyleBackColor = true;
-            // 
-            // groupBox1
-            // 
-            this.groupBox1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.groupBox1.Controls.Add(this.button1);
-            this.groupBox1.Controls.Add(this.btnClearList);
-            this.groupBox1.Controls.Add(this.label2);
-            this.groupBox1.Controls.Add(this.tbBatchInput);
-            this.groupBox1.Controls.Add(this.label6);
-            this.groupBox1.Controls.Add(this.btnBrowseMaps);
-            this.groupBox1.Location = new System.Drawing.Point(6, 6);
-            this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(582, 327);
-            this.groupBox1.TabIndex = 1;
-            this.groupBox1.TabStop = false;
-            this.groupBox1.Text = "Batch map render";
-            // 
-            // btnClearList
-            // 
-            this.btnClearList.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnClearList.Location = new System.Drawing.Point(501, 71);
-            this.btnClearList.Name = "btnClearList";
-            this.btnClearList.Size = new System.Drawing.Size(75, 21);
-            this.btnClearList.TabIndex = 4;
-            this.btnClearList.Text = "Clear list";
-            this.btnClearList.UseVisualStyleBackColor = true;
-            this.btnClearList.Click += new System.EventHandler(this.BtnClearList_Click);
-            // 
-            // label2
-            // 
-            this.label2.Location = new System.Drawing.Point(10, 16);
-            this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(566, 48);
-            this.label2.TabIndex = 3;
-            this.label2.Text = resources.GetString("label2.Text");
-            // 
-            // tbBatchInput
-            // 
-            this.tbBatchInput.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.tbBatchInput.Location = new System.Drawing.Point(13, 98);
-            this.tbBatchInput.Multiline = true;
-            this.tbBatchInput.Name = "tbBatchInput";
-            this.tbBatchInput.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.tbBatchInput.Size = new System.Drawing.Size(563, 194);
-            this.tbBatchInput.TabIndex = 1;
-            // 
-            // btnBrowseMaps
-            // 
-            this.btnBrowseMaps.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnBrowseMaps.Location = new System.Drawing.Point(420, 71);
-            this.btnBrowseMaps.Name = "btnBrowseMaps";
-            this.btnBrowseMaps.Size = new System.Drawing.Size(75, 21);
-            this.btnBrowseMaps.TabIndex = 2;
-            this.btnBrowseMaps.Text = "Add maps";
-            this.btnBrowseMaps.UseVisualStyleBackColor = true;
-            this.btnBrowseMaps.Click += new System.EventHandler(this.BtnAddMaps_Click);
-            // 
-            // button1
-            // 
-            this.button1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.button1.Location = new System.Drawing.Point(420, 298);
-            this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(156, 23);
-            this.button1.TabIndex = 33;
-            this.button1.Text = "Start batch rendering";
-            this.button1.UseVisualStyleBackColor = true;
-            this.button1.Click += new System.EventHandler(this.Button1_Click);
-            // 
             // MainForm
             // 
             this.AllowDrop = true;
@@ -1263,13 +1265,13 @@ namespace CNCMaps.GUI {
             this.tpMain.ResumeLayout(false);
             this.tpMain.PerformLayout();
             this.tpMisc.ResumeLayout(false);
+            this.tpBatch.ResumeLayout(false);
+            this.gbBatchRender.ResumeLayout(false);
+            this.gbBatchRender.PerformLayout();
             this.tpLog.ResumeLayout(false);
             this.gbLog.ResumeLayout(false);
             this.tpAbout.ResumeLayout(false);
             this.tpAbout.PerformLayout();
-            this.tpBatch.ResumeLayout(false);
-            this.groupBox1.ResumeLayout(false);
-            this.groupBox1.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -1360,13 +1362,13 @@ namespace CNCMaps.GUI {
         private CheckBox cbStartMarkers;
         private GroupBox gbOreGems;
         private TabPage tpBatch;
-        private GroupBox groupBox1;
+        private GroupBox gbBatchRender;
         private Label label2;
         private TextBox tbBatchInput;
         private Label label6;
         private Button btnBrowseMaps;
         private Button btnClearList;
-        private Button button1;
+        private Button btnBatchRender;
     }
 }
 
