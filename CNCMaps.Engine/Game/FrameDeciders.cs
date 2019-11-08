@@ -187,14 +187,14 @@ namespace CNCMaps.Engine.Game {
 
 		private static Dictionary<ObjectOverride, Func<GameObject, int>> cachedDeciders =
 			new Dictionary<ObjectOverride, Func<GameObject, int>>();
-		public static Func<GameObject, int> GetOverrideFrameDecider(ObjectOverride ovr) {
+/*		public static Func<GameObject, int> GetOverrideFrameDecider(ObjectOverride ovr) {
 			Func<GameObject, int> fd;
 			if (!cachedDeciders.TryGetValue(ovr, out fd)) {
 				cachedDeciders[ovr] = fd = FrameDeciderCompiler.CompileFrameDecider(ovr.FrameDeciderCode);
 			}
 			return fd;
 		}
-
+*/
 		/*
 		public static Func<GameObject, int> CreateCacher(Func<GameObject, int> wrap) {
 			int cachedFrame = -1;

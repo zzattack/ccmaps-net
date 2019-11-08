@@ -360,8 +360,6 @@ namespace CNCMaps.GUI
             ofd.CheckFileExists = true;
             ofd.Multiselect = false;
             ofd.Filter = "RA2/TS map files (*.map, *.mpr, *.mmx, *.yrm, *.yro)|*.mpr;*.map;*.mmx;*.yrm;*.yro|All files (*.*)|*";
-            //if (string.IsNullOrEmpty(ofd.InitialDirectory))
-            //    ofd.InitialDirectory = FindMixDir(rbEngineAuto.Checked || rbEngineRA2.Checked || rbEngineYR.Checked);
 
             ofd.FileName = "";
             if (ofd.ShowDialog() == DialogResult.OK)
@@ -497,6 +495,72 @@ namespace CNCMaps.GUI
             rtbLog.Clear();
             rtbLog.Text = "";
             rtbLog.Update();
+        }
+
+        private void BtnAddMaps_Click(object sender, EventArgs e)
+        {
+            ofd.CheckFileExists = true;
+            ofd.Multiselect = true;
+            ofd.Filter = "RA2/TS map files (*.map, *.mpr, *.mmx, *.yrm, *.yro)|*.mpr;*.map;*.mmx;*.yrm;*.yro|All files (*.*)|*";
+
+            ofd.FileName = "";
+            if (ofd.ShowDialog() == DialogResult.OK)
+            {
+                tbBatchInput.Lines = new List<string>().Concat(tbBatchInput.Lines).Concat(ofd.FileNames).ToArray();
+                ofd.InitialDirectory = Path.GetDirectoryName(ofd.FileName);
+            }
+        }
+
+        private void BtnClearList_Click(object sender, EventArgs e)
+        {
+            tbBatchInput.Clear();
+        }
+
+        private void BtnBatchRender_Click(object sender, EventArgs e)
+        {
+            if (String.IsNullOrWhiteSpace(tbBatchInput.Text))
+            {
+                UpdateStatus("no files provided in batch", 100);
+                MessageBox.Show("Add at least one map file for processing!");
+                return;
+            }
+			if (!ValidUIOptions())
+				return;
+
+			List<string> mapNames = new List<string>();
+			HashSet<string> mapNamesSet = new HashSet<string>();
+			List<string> errorMapNames = new List<string>();
+
+			// Filter duplicates
+            foreach (string filename in tbBatchInput.Lines)
+            {
+				if (!String.IsNullOrWhiteSpace(filename))
+				{
+					filename.Trim();
+					if (!mapNamesSet.Contains(filename))
+					{
+						mapNames.Add(filename);
+						mapNamesSet.Add(filename);
+					}
+				}
+			}
+
+			tabControl.SelectTab(tpLog);
+            tpLog.Update();
+
+            foreach (string mapname in mapNames)
+				if (!ExecuteRenderer(mapname))
+					errorMapNames.Add(mapname);
+
+			if (errorMapNames.Count() > 0)
+			{
+				Log("Batch processing for the following map(s) failed: \r\n------------------------------");
+	            foreach (string mapFilename in errorMapNames)
+					Log(mapFilename);
+				Log("------------------------------\r\n");
+			}
+			else
+				Log("Batch processing succeeded.\r\n------------------------------\r\n");
         }
 
         private void UpdateCommandline()
@@ -640,10 +704,10 @@ namespace CNCMaps.GUI
             return cmd;
         }
 
-        private RenderSettings GetRenderSettings()
+        private RenderSettings GetRenderSettings(string inFilename)
         {
             var rs = new RenderSettings();
-            rs.InputFile = tbInput.Text;
+            rs.InputFile = inFilename;
 
             rs.SavePNG = cbOutputPNG.Checked;
             if (cbOutputPNG.Checked)
@@ -653,7 +717,7 @@ namespace CNCMaps.GUI
             if (cbOutputJPG.Checked)
                 rs.JPEGCompression = (int)nudEncodingQuality.Value;
 
-			if (rbUseFilename.Checked) rs.OutputFile = Path.GetFileNameWithoutExtension(tbInput.Text);
+			if (rbUseFilename.Checked) rs.OutputFile = Path.GetFileNameWithoutExtension(rs.InputFile);
 			else if (rbCustomFilename.Checked) rs.OutputFile = tbCustomOutput.Text;
 
             if (cbModConfig.Checked)
@@ -751,7 +815,16 @@ namespace CNCMaps.GUI
                 MessageBox.Show("Input file doesn't exist. Aborting.");
                 return;
             }
+			if (!ValidUIOptions())
+				return;
 
+			tabControl.SelectTab(tpLog);
+            tpLog.Update();
+            ExecuteRenderer(tbInput.Text);
+		}
+
+        private bool ValidUIOptions()
+		{
             if (!cbOutputPNG.Checked && !cbOutputJPG.Checked && !cbOutputThumbnail.Checked &&
 				!cbReplacePreview.Checked && !ckbFixupTiles.Checked && !cbFixOverlay.Checked && !cbCompressTiles.Checked && 
 				!cbDiagnosticWindow.Checked)
@@ -759,16 +832,17 @@ namespace CNCMaps.GUI
                 UpdateStatus("aborted, no processing", 100);
                 MessageBox.Show("Either generate PNG/JPEG/Thumbnail or modify map or use preview window.", "Nothing to do..", MessageBoxButtons.OK,
                     MessageBoxIcon.Information);
-                return;
+                return false;
             }
-            tabControl.SelectTab(tpLog);
-            tpLog.Update();
-            ExecuteRenderer();
-        }
+			else
+				return true;
+		}
 
-        private void ExecuteRenderer()
+        private bool ExecuteRenderer(string inputFilename)
         {
-            var engineCfg = GetRenderSettings();
+            var engineCfg = GetRenderSettings(inputFilename);
+			bool success = false;
+
             try
             {
                 VFS.Reset();
@@ -785,6 +859,7 @@ namespace CNCMaps.GUI
                     case EngineResult.RenderedOk:
                         Log("\r\nSpecified action(s) completed.\r\n------------------------------\r\n"); 
 						// +" Please send an email to frank@zzattack.org with your map as an attachment.");
+						success = true;
                         break;
                     case EngineResult.LoadTheaterFailed:
                         Log("\r\nTheater loading failed. Please make sure the mix directory is correct and that the required expansion packs are installed "
@@ -802,6 +877,7 @@ namespace CNCMaps.GUI
             {
                 AskBugReport(exc);
             }
+			return success;
         }
         private void AskBugReport(Exception exc)
         {
@@ -819,6 +895,7 @@ namespace CNCMaps.GUI
 		*/
         }
 
+		/*
         private void SubmitBugReport(string email, Exception exc)
         {
             try
@@ -829,7 +906,7 @@ namespace CNCMaps.GUI
                 var data = new NameValueCollection();
                 data.Set("renderer_version", typeof(Map).Assembly.GetName().Version.ToString());
                 data.Set("exception", exc == null ? "" : exc.ToString());
-                data.Set("input_map", File.ReadAllText(tbInput.Text));
+                data.Set("input_map", File.ReadAllText(tbInput.Text));	// batch passes filename instead of UI main setting input
                 data.Set("input_name", Path.GetFileName(tbInput.Text));
                 data.Set("commandline", GetCommandLine());
                 data.Set("log_text", rtbLog.Text);
@@ -863,6 +940,7 @@ namespace CNCMaps.GUI
             Log("Submitting bug report failed. Please send a manual bug report to frank@zzattack.org including your map, settings and error log");
             UpdateStatus("bug report failed", 100);
         }
+		*/
 
         #endregion
 
@@ -939,47 +1017,5 @@ namespace CNCMaps.GUI
         }
 
         #endregion
-
-        private void BtnAddMaps_Click(object sender, EventArgs e)
-        {
-            ofd.CheckFileExists = true;
-            ofd.Multiselect = true;
-            ofd.Filter = "RA2/TS map files (*.map, *.mpr, *.mmx, *.yrm, *.yro)|*.mpr;*.map;*.mmx;*.yrm;*.yro|All files (*.*)|*";
-            //if (string.IsNullOrEmpty(ofd.InitialDirectory))
-            //    ofd.InitialDirectory = FindMixDir(rbEngineAuto.Checked || rbEngineRA2.Checked || rbEngineYR.Checked);
-
-            ofd.FileName = "";
-            if (ofd.ShowDialog() == DialogResult.OK)
-            {
-                tbBatchInput.Lines = new List<string>().Concat(tbBatchInput.Lines).Concat(ofd.FileNames).ToArray();
-                ofd.InitialDirectory = Path.GetDirectoryName(ofd.FileName);
-            }
-        }
-
-        private void BtnClearList_Click(object sender, EventArgs e)
-        {
-            tbBatchInput.Clear();
-        }
-
-        private void BtnBatchRender_Click(object sender, EventArgs e)
-        {
-            if (String.IsNullOrWhiteSpace(tbBatchInput.Text))
-            {
-                UpdateStatus("no files provided in batch", 100);
-                MessageBox.Show("Add at least one map file to render!");
-                return;
-            }
-            string oldInputMap = tbInput.Text;
-            foreach (string mapPath in tbBatchInput.Lines)
-            {
-                
-                if (!String.IsNullOrWhiteSpace(mapPath))
-                {
-                    tbInput.Text = mapPath;
-                    ExecuteCommand(this, EventArgs.Empty);
-                }
-            }
-            tbInput.Text = oldInputMap;
-        }
     }
 }

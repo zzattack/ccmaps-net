@@ -1348,7 +1348,7 @@ namespace CNCMaps.Engine.Map {
 		}
 
 		public void CompressIsoMapPack5() {
-			Logger.Info("Generating compressed IsoMapPack5 section");
+			Logger.Info("Generating compressed IsoMapPack5 section. Please wait ...");
 			_mapFile.Tiles.SerializeIsoMapPack5(_mapFile.GetSection("IsoMapPack5"), true);
 		}
 
