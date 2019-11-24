@@ -182,7 +182,8 @@ namespace CNCMaps.Engine {
 				if (Settings.MarkStartPos && (Settings.StartPositionMarking == StartPositionMarking.Squared ||
 					Settings.StartPositionMarking == StartPositionMarking.Circled ||
 					Settings.StartPositionMarking == StartPositionMarking.Diamond ||
-					Settings.StartPositionMarking == StartPositionMarking.Ellipsed))
+					Settings.StartPositionMarking == StartPositionMarking.Ellipsed ||
+					Settings.StartPositionMarking == StartPositionMarking.Starred))
 					map.DrawStartPositions();
 
 				if (Settings.DiagnosticWindow) {

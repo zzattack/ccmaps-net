@@ -808,7 +808,7 @@ namespace CNCMaps.Engine.Map {
 
 		public unsafe void DrawStartPositions() {
 			Logger.Info("Marking start positions");
-			double markerSize = StartMarkerSize - 0.6; //scaling
+			double markerSize = StartMarkerSize;
 			_drawingSurface.Unlock();
 			using (Graphics g = Graphics.FromImage(_drawingSurface.Bitmap)) {
 				foreach (var entry in _wayPoints) {
@@ -820,9 +820,10 @@ namespace CNCMaps.Engine.Map {
 							int centerY = (t.Dy - t.Z + 1) * TileHeight / 2;
 							int halfWidth = (int)((double)TileWidth * (markerSize / 2.0));
 							int halfHeight = (int)((double)TileHeight * (markerSize / 2.0));
-							int opacity = 155 + (int)((7 - StartMarkerSize) * 18);
+							int opacity = 155 + (int)((7.2 - StartMarkerSize) * 18);
+							if (opacity < 145) opacity = 145; 
+							if (opacity > 255) opacity = 255;
 
-							if (opacity < 100 || opacity > 255) opacity = 180;
 							if (StartPosMarking == StartPositionMarking.Squared || StartPosMarking == StartPositionMarking.Ellipsed ||
 								StartPosMarking == StartPositionMarking.Circled) {
 								int startX = centerX - halfWidth;
@@ -833,8 +834,8 @@ namespace CNCMaps.Engine.Map {
 								if (StartPosMarking == StartPositionMarking.Ellipsed)
 									g.FillEllipse(new SolidBrush(Color.FromArgb(opacity,Color.Red)), startX, startY, width, height);
 								else {
-									startY = centerY - height;
-									height *= 2;
+									width /= 2;
+									startX = centerX - halfWidth / 2;
 									if (StartPosMarking == StartPositionMarking.Squared)
 										g.FillRectangle(new SolidBrush(Color.FromArgb(opacity,Color.Red)), startX, startY, width, height);
 									else
@@ -849,6 +850,19 @@ namespace CNCMaps.Engine.Map {
 									new Point(centerX - halfWidth, centerY)
 								};
 								g.FillPolygon(new SolidBrush(Color.FromArgb(opacity,Color.Red)), rhombus);
+							}
+							else if (StartPosMarking == StartPositionMarking.Starred) {
+								Point[] star = new Point[10];
+								double angle = Math.PI / 5;
+								double shorter = (halfWidth + halfHeight) / 4.0;
+								double longer = shorter * 2.3;
+								for (int i = 0; i < 10; i += 2) {
+									star[i].X = centerX + (int)(longer * Math.Cos((i - 0.5) * angle));
+									star[i].Y = centerY + (int)(longer * Math.Sin((i - 0.5) * angle));
+									star[i + 1].X = centerX + (int)(shorter * Math.Cos((i + 0.5) * angle));
+									star[i + 1].Y = centerY + (int)(shorter * Math.Sin((i + 0.5) * angle));
+								}
+								g.FillPolygon(new SolidBrush(Color.FromArgb(opacity,Color.Red)), star);
 							}
 						}
 						catch (Exception) {
@@ -1115,7 +1129,7 @@ namespace CNCMaps.Engine.Map {
 					RedrawTiledStartPositions(false);
 				}
 				else if (StartPosMarking == StartPositionMarking.Squared || StartPosMarking == StartPositionMarking.Ellipsed || 
-					StartPosMarking == StartPositionMarking.Diamond || StartPosMarking == StartPositionMarking.Circled) {
+					StartPosMarking == StartPositionMarking.Diamond || StartPosMarking == StartPositionMarking.Circled || StartPosMarking == StartPositionMarking.Starred) {
 					RedrawTiledStartPositions(true);
 					DrawStartPositions();
 				}

@@ -101,6 +101,7 @@ namespace CNCMaps.Shared {
 		Circled,
 		Diamond,
 		Ellipsed,
+		Starred,
 		Tiled,
 	}
 

@@ -625,6 +625,9 @@ namespace CNCMaps.GUI
 					case "Ellipsed":
 						cmd += "--start-pos-ellipsed ";
 						break;
+					case "Starred":
+						cmd += "--start-pos-star ";
+						break;
 					case "Tiled":
 						cmd += "-s ";
 						break;
@@ -756,6 +759,9 @@ namespace CNCMaps.GUI
 						break;
 					case "Ellipsed":
 						rs.StartPositionMarking = StartPositionMarking.Ellipsed;
+						break;
+					case "Starred":
+						rs.StartPositionMarking = StartPositionMarking.Starred;
 						break;
 					case "Tiled":
 						rs.StartPositionMarking = StartPositionMarking.Tiled;

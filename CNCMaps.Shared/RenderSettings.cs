@@ -97,6 +97,7 @@ namespace CNCMaps.Shared {
 				{"start-pos-circled", "Mark starting positions in a circled manner",v => StartPositionMarking = StartPositionMarking.Circled},
 				{"start-pos-diamond", "Mark starting positions in a diamond manner",v => StartPositionMarking = StartPositionMarking.Diamond},
 				{"start-pos-ellipsed", "Mark starting positions in a ellipsed manner",v => StartPositionMarking = StartPositionMarking.Ellipsed}, 
+				{"start-pos-star", "Mark starting positions in a star manner",v => StartPositionMarking = StartPositionMarking.Starred}, 
 				{"s|start-pos-tiled", "Mark starting positions in a tiled manner",v => StartPositionMarking = StartPositionMarking.Tiled},
 				{"start-pos-size", "Mark starting positions with given size (2-6)", v => MarkStartSize = v},
 				{"r|mark-ore", "Mark ore and gem fields more explicity, looks good when resizing to a preview", v => MarkOreFields = true},

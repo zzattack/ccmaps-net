@@ -224,6 +224,7 @@ namespace CNCMaps.GUI {
             this.lblMarkerSize.Size = new System.Drawing.Size(63, 13);
             this.lblMarkerSize.TabIndex = 36;
             this.lblMarkerSize.Text = "Marker Size";
+            this.toolTip.SetToolTip(this.lblMarkerSize, "Shapes other than Tiled can use decimal input sizes.");
             // 
             // lblStartMarkerType
             // 
@@ -259,6 +260,7 @@ namespace CNCMaps.GUI {
             "Circled",
             "Diamond",
             "Ellipsed",
+			"Starred",
             "Tiled"});
             this.cmbStartMarkers.Location = new System.Drawing.Point(341, 28);
             this.cmbStartMarkers.Name = "cmbStartMarkers";
