@@ -233,7 +233,6 @@ namespace CNCMaps.Engine.Map {
 					MapTile tileBottomLeft = tiles.GetNeighbourTile(t, TileLayer.TileDirection.BottomLeft);
 					MapTile tileTopLeft = tiles.GetNeighbourTile(t, TileLayer.TileDirection.TopLeft);
 
-
 					// Find out setnums of adjacent cells
 					if (tileTopRight != null && collection.ConnectTiles(t.SetNum, tileTopRight.SetNum))
 						transitionTile += 1;
@@ -246,6 +245,22 @@ namespace CNCMaps.Engine.Map {
 
 					if (tileTopLeft != null && collection.ConnectTiles(t.SetNum, tileTopLeft.SetNum))
 						transitionTile += 8;
+
+					// Crystal LAT tile connects to specific tiles in CrystalCliff
+					if (collection.IsCrystalLAT(t.SetNum)) {
+						if (tileTopRight != null && collection.IsCrystalCliff(tileTopRight.SetNum) && 
+							tileTopRight.TileNum == collection.GetTileNumFromSet(tileTopRight.SetNum, 1))
+								transitionTile = 0;
+						if (tileBottomRight != null && collection.IsCrystalCliff(tileBottomRight.SetNum) && 
+							tileBottomRight.TileNum == collection.GetTileNumFromSet(tileBottomRight.SetNum, 4))
+								transitionTile = 0;
+						if (tileBottomLeft != null && collection.IsCrystalCliff(tileBottomLeft.SetNum) && 
+							tileBottomLeft.TileNum == collection.GetTileNumFromSet(tileBottomLeft.SetNum, 0))
+								transitionTile = 0;
+						if (tileTopLeft != null && collection.IsCrystalCliff(tileTopLeft.SetNum) &&
+							tileTopLeft.TileNum == collection.GetTileNumFromSet(tileTopLeft.SetNum, 5))
+								transitionTile = 0;
+					}
 
 					if (transitionTile > 0) {
 						// Find Tileset that contains the connecting pieces
