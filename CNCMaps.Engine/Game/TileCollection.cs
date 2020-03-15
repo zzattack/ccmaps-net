@@ -355,6 +355,10 @@ namespace CNCMaps.Engine.Game {
 			else if (setNum1 == PaveTile && setNum2 == Medians ||
 				(setNum2 == PaveTile && setNum1 == Medians)) return false;
 
+			// pave's don't connect with misc pave tiles.
+			else if (setNum1 == PaveTile && setNum2 == MiscPaveTile ||
+				(setNum2 == PaveTile && setNum1 == MiscPaveTile)) return false;
+
 			// all other transitions are connected with a CLAT set
 			return true;
 		}
