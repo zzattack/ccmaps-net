@@ -73,7 +73,7 @@ namespace CNCMaps.GUI
 				int y = 40;
 				string[] locXY = Settings.Default.windowlocation.Split(',');
 				if (locXY.Length > 1 && locXY[0] != null && locXY[1] != null)
-					if (!int.TryParse(locXY[0], out x) || !int.TryParse(locXY[1], out y))
+					if (!int.TryParse(locXY[0], out x) || !int.TryParse(locXY[1], out y) || x < 0 || y < 0)
 						x = y = 40;
 				this.Location = new System.Drawing.Point(x, y);
 			}
@@ -195,7 +195,8 @@ namespace CNCMaps.GUI
 
             Settings.Default.batchinput = String.Join("\n", tbBatchInput.Lines);
 
-            Settings.Default.windowlocation = this.Location.X + ", " +  this.Location.Y;
+            if (WindowState != FormWindowState.Minimized)
+                Settings.Default.windowlocation = this.Location.X + ", " +  this.Location.Y;
 
             Settings.Default.Save();
         }
