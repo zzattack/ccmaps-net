@@ -72,8 +72,10 @@ namespace CNCMaps.GUI
 				int x = 40;
 				int y = 40;
 				string[] locXY = Settings.Default.windowlocation.Split(',');
+				Screen[] displays = Screen.AllScreens;
 				if (locXY.Length > 1 && locXY[0] != null && locXY[1] != null)
-					if (!int.TryParse(locXY[0], out x) || !int.TryParse(locXY[1], out y) || x < 0 || y < 0)
+					if (!int.TryParse(locXY[0], out x) || !int.TryParse(locXY[1], out y) || x < 0 || y < 0 ||
+						(displays != null && displays.Length == 1 && (x > Screen.PrimaryScreen.Bounds.Width || y > Screen.PrimaryScreen.Bounds.Height)))
 						x = y = 40;
 				this.Location = new System.Drawing.Point(x, y);
 			}
