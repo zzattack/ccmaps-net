@@ -7,7 +7,6 @@ using NLog;
 using OpenTK;
 using OpenTK.Graphics;
 using OpenTK.Graphics.OpenGL;
-//using OpenTK.Platform.Mesa;
 using PixelFormat = System.Drawing.Imaging.PixelFormat;
 
 namespace CNCMaps.Engine.Rendering
@@ -34,7 +33,7 @@ namespace CNCMaps.Engine.Rendering
             _isInit = true;
 
             _surface = new DrawingSurface(400, 400, PixelFormat.Format32bppArgb);
-            if (!CreateContext())
+            if (!CreateGameWindow())
             {
                 Logger.Error("No graphics context could not be initialized, voxel rendering will be unavailable");
                 return;
@@ -61,17 +60,6 @@ namespace CNCMaps.Engine.Rendering
             }
         }
 
-        private bool CreateContext()
-        {
-            // logger.Debug("Creating graphics context, trying {0} first", Program.Settings.PreferOSMesa ? "OSMesa" : "Window Manager");
-
-            //if (Program.Settings.PreferOSMesa)
-            //	return CreateMesaContext() || CreateGameWindow();
-            //else
-
-            return CreateGameWindow();	// || CreateMesaContext();
-        }
-
         private bool CreateGameWindow()
         {
             try
@@ -84,29 +72,6 @@ namespace CNCMaps.Engine.Rendering
                 Logger.Warn("GameWindow could not be created.");
                 return false;
             }
-        }
-
-        private bool CreateMesaContext()
-        {
-            return false; // Mesa fallback is not available on updated OpenTK.dll.
-                          /*
-                          try {
-                              _ctx = GraphicsContext.CreateMesaContext();
-                              long ctxPtr = long.Parse(_ctx.ToString()); // cannot access private .Context
-                              if (ctxPtr != 0) {
-                                  _ctx.MakeCurrent(new BitmapWindowInfo(_surface.BitmapData));
-                                  if (!_ctx.IsCurrent) {
-                                      Logger.Warn("Could not make context current");
-                                      throw new InvalidOperationException("Mesa context could not be made current");
-                                  }
-                              }
-                              Logger.Info("Successfully acquired Mesa context");
-                              return true;
-                          }
-                          catch {
-                              Logger.Warn("Mesa context could not be created");
-                              return false;
-                          }*/
         }
 
         public void Dispose()
