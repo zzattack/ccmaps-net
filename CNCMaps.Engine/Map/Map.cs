@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
+using System.Globalization;
 using System.Linq;
 using CNCMaps.Engine.Drawables;
 using CNCMaps.Engine.Game;
@@ -11,6 +12,7 @@ using CNCMaps.Engine.Utility;
 using CNCMaps.FileFormats;
 using CNCMaps.FileFormats.Map;
 using CNCMaps.FileFormats.VirtualFileSystem;
+using CNCMaps.FileFormats.Encodings;
 using CNCMaps.Shared;
 using NLog;
 
@@ -21,6 +23,7 @@ namespace CNCMaps.Engine.Map {
 		public TheaterType TheaterType { get; private set; }
 		public bool IgnoreLighting { get; set; }
 		public StartPositionMarking StartPosMarking { get; set; }
+		public double StartMarkerSize;
 		public bool MarkOreFields { get; set; }
 
 		public Rectangle FullSize { get; private set; }
@@ -50,6 +53,8 @@ namespace CNCMaps.Engine.Map {
 		private DrawingSurface _drawingSurface;
 		private MapFile _mapFile;
 
+		private bool _overlaysAltered;
+
 		public bool Initialize(MapFile mf, EngineType et, List<string> customRulesININames, List<string> customArtININames) {
 			if (et == EngineType.AutoDetect) {
 				Logger.Fatal("Engine type needs to be known by now!");
@@ -65,8 +70,41 @@ namespace CNCMaps.Engine.Map {
 
 			LoadAllObjects(mf);
 
-			if (!IgnoreLighting)
+			if (!IgnoreLighting) {
 				_lighting = mf.Lighting;
+				if (ModConfig.ActiveConfig.ExtraOptions.FirstOrDefault() != null) {
+					double ambient = 0;
+					double red = 0;
+					double green = 0;
+					double blue = 0;
+					string argb = ModConfig.ActiveConfig.ExtraOptions.FirstOrDefault().LightingAmbientRGBDelta;
+					string[] ambientParts = argb.Split(',');
+					if (ambientParts.Length > 0 && ambientParts[0] != null)
+						double.TryParse(ambientParts[0], NumberStyles.Number, CultureInfo.CreateSpecificCulture("en-US"), out ambient);
+					if (ambientParts.Length > 1 && ambientParts[1] != null)
+						double.TryParse(ambientParts[1], NumberStyles.Number, CultureInfo.CreateSpecificCulture("en-US"), out red);
+					if (ambientParts.Length > 2 && ambientParts[2] != null)
+						double.TryParse(ambientParts[2], NumberStyles.Number, CultureInfo.CreateSpecificCulture("en-US"), out green);
+					if (ambientParts.Length > 3 && ambientParts[3] != null)
+						double.TryParse(ambientParts[3], NumberStyles.Number, CultureInfo.CreateSpecificCulture("en-US"), out blue);
+					if (ambient <= 1 && ambient >= -1) {
+						_lighting.Ambient += ambient;
+						_lighting.Ambient = _lighting.Ambient < 0 ? 0 : _lighting.Ambient;
+					}
+					if (red <= 1 && red >= -1) {
+						_lighting.Red += red;
+						_lighting.Red = _lighting.Red < 0 ? 0 : _lighting.Red;
+					}
+					if (green <= 1 && green >= -1) {
+						_lighting.Green += green;
+						_lighting.Green = _lighting.Green < 0 ? 0 : _lighting.Green;
+					}
+					if (blue <= 1 && blue >= -1) {
+						_lighting.Blue += blue;
+						_lighting.Blue = _lighting.Blue < 0 ? 0 : _lighting.Blue;
+					}
+				}
+			}
 			else
 				_lighting = new Lighting();
 
@@ -88,7 +126,7 @@ namespace CNCMaps.Engine.Map {
 
 			// import tiles
 			foreach (var iso in mf.Tiles)
-				_tiles[iso.Dx, iso.Dy / 2] = new MapTile(iso.Dx, iso.Dy, iso.Rx, iso.Ry, iso.Z, iso.TileNum, iso.SubTile, _tiles);
+				_tiles[iso.Dx, iso.Dy / 2] = new MapTile(iso.Dx, iso.Dy, iso.Rx, iso.Ry, iso.Z, iso.TileNum, iso.SubTile, iso.IceGrowth, _tiles);
 
 			// import terrain
 			foreach (var terr in mf.Terrains) {
@@ -205,7 +243,10 @@ namespace CNCMaps.Engine.Map {
 				return false;
 
 			// needs to be done before drawables are set
-			if (!ModConfig.ActiveConfig.DisableOreRandomization)
+			bool disableOreRandomizing = false;
+			if (ModConfig.ActiveConfig.ExtraOptions.FirstOrDefault() != null)
+				disableOreRandomizing = ModConfig.ActiveConfig.ExtraOptions.FirstOrDefault().DisableOreRandomization;
+			if (!disableOreRandomizing)
 				Operations.RecalculateOreSpread(_overlayObjects, Engine);
 
 			RemoveUnknownObjects();
@@ -219,6 +260,8 @@ namespace CNCMaps.Engine.Map {
 			Operations.FixTiles(_tiles, _theater.GetTileCollection());
 			if (Engine <= EngineType.Firestorm)
 				Operations.RecalculateVeinsSpread(_overlayObjects, _tiles);
+
+			RevisitWallBuildings();
 
 			CreateLevelPalettes();
 			LoadPalettes();
@@ -235,6 +278,65 @@ namespace CNCMaps.Engine.Map {
 			RecalculatePalettes();
 
 			return true;
+		}
+
+		// For walls given as buildings in the map instead of overlays, recalculate its SHP frame 
+		// so that those connect with its adjacent objects
+		private void RevisitWallBuildings() {
+			var generalSection = _rules.GetSection("General");
+			string EWGate1 = generalSection.ReadString("GDIGateOne","");
+			string NSGate1 = generalSection.ReadString("GDIGateTwo","");
+			string EWGate2 = generalSection.ReadString("NodGateOne","");
+			string NSGate2 = generalSection.ReadString("NodGateTwo","");
+			string WallTower = generalSection.ReadString("WallTower","");
+
+			foreach (StructureObject obj in _structureObjects) {
+				if (obj.Drawable.IsActualWall) {
+					int frame = 0;
+					MapTile t = _tiles.GetTileR(obj.Tile.Rx, obj.Tile.Ry);
+					var ne = t.Layer.GetNeighbourTile(t, TileLayer.TileDirection.TopRight);
+					var se = t.Layer.GetNeighbourTile(t, TileLayer.TileDirection.BottomRight);
+					var sw = t.Layer.GetNeighbourTile(t, TileLayer.TileDirection.BottomLeft);
+					var nw = t.Layer.GetNeighbourTile(t, TileLayer.TileDirection.TopLeft);
+
+					if(ne != null && (ne.AllObjects.OfType<StructureObject>().Any(o => o.Drawable != null && 
+						((o.Drawable.IsActualWall && obj.Name == o.Name) || o.Name == WallTower))
+						|| (ne.AllObjects.OfType<OverlayObject>().Any(o => o.Drawable != null && o.Drawable.Name == obj.Name))))
+						frame |= 1;
+					if(se != null && (se.AllObjects.OfType<StructureObject>().Any(o => o.Drawable != null && 
+						((o.Drawable.IsActualWall && obj.Name == o.Name) || o.Drawable.IsGate || o.Name == WallTower))
+						|| (se.AllObjects.OfType<OverlayObject>().Any(o => o.Drawable != null && o.Drawable.Name == obj.Name))))
+						frame |= 2;
+					if(sw != null && (sw.AllObjects.OfType<StructureObject>().Any(o => o.Drawable != null && 
+						((o.Drawable.IsActualWall && obj.Name == o.Name) || o.Drawable.IsGate || o.Name == WallTower)) 
+						|| (sw.AllObjects.OfType<OverlayObject>().Any(o => o.Drawable != null && o.Drawable.Name == obj.Name))))
+						frame |= 4;
+					if(nw != null && (nw.AllObjects.OfType<StructureObject>().Any(o => o.Drawable != null && 
+						((o.Drawable.IsActualWall && obj.Name == o.Name) || o.Name == WallTower)) 
+						|| (nw.AllObjects.OfType<OverlayObject>().Any(o => o.Drawable != null && o.Drawable.Name == obj.Name))))
+						frame |= 8;
+
+					if(ne != null) {
+						var ne2 = ne.Layer.GetNeighbourTile(ne, TileLayer.TileDirection.TopRight);
+						if (ne2 != null) {
+							var ne3 = ne2.Layer.GetNeighbourTile(ne2, TileLayer.TileDirection.TopRight);
+							if (ne3 != null && ne3.AllObjects.OfType<StructureObject>().Any(o => o.Drawable != null &&
+								o.Drawable.IsGate && (o.Name == NSGate1 || o.Name == NSGate2)))
+								frame |= 1;
+						}
+					}
+					if(nw != null) {
+						var nw2 = nw.Layer.GetNeighbourTile(nw, TileLayer.TileDirection.TopLeft);
+						if (nw2 != null) {
+							var nw3 = nw2.Layer.GetNeighbourTile(nw2, TileLayer.TileDirection.TopLeft);
+							if (nw3 != null && nw3.AllObjects.OfType<StructureObject>().Any(o => o.Drawable != null &&
+								o.Drawable.IsGate && (o.Name == EWGate1 || o.Name == EWGate2)))
+								frame |= 8;
+						}
+					}
+					obj.WallBuildingFrame = frame;
+				}
+			}
 		}
 
 		private void SetBaseTiles() {
@@ -302,12 +404,38 @@ namespace CNCMaps.Engine.Map {
 				_smudgeObjects.Remove(obj);
 			}
 
-
 			c = _theater.GetCollection(CollectionType.Building);
 			var cAlt = _theater.GetCollection(CollectionType.Overlay);
 			foreach (var obj in _structureObjects.Where(obj => !c.HasObject(obj) && !cAlt.HasObject(obj)).ToList()) {
 				obj.Tile.RemoveObject(obj);
 				_structureObjects.Remove(obj);
+			}
+
+			// Overlay check
+			_overlaysAltered = false;
+			c = _theater.GetCollection(CollectionType.Overlay);
+			foreach (OverlayObject obj in _overlayObjects.ToList()) {
+				if (!c.HasObject(obj)) {
+						obj.Tile.RemoveObject(obj);
+						_overlayObjects.Remove(obj);
+						_overlaysAltered = true;
+				}
+				else {
+					ShpDrawable drawable = (ShpDrawable)c.GetDrawable(obj);
+					if (drawable.Shp == null) {
+						obj.Tile.RemoveObject(obj);
+						_overlayObjects.Remove(obj);
+						_overlaysAltered = true;
+					}
+					else {
+						drawable.Shp.Initialize();
+						if ((drawable.Shp.NumImages - 1) < obj.OverlayValue) {
+							obj.Tile.RemoveObject(obj);
+							_overlayObjects.Remove(obj);
+							_overlaysAltered = true;
+						}
+					}
+				}
 			}
 		}
 
@@ -352,6 +480,27 @@ namespace CNCMaps.Engine.Map {
 					tile.AddObject(anim);
 					_animationObjects.Add(anim);
 				}*/
+
+				// TODO: Tunnel top for TS. Attempt : Anim is read from the file but its anim offsets are incorrect
+				/*
+				var tileCol =  _theater.GetTileCollection();
+				var tDrawable = tileCol.GetDrawable(tile) as TileDrawable;
+				var tileSetEntry = tDrawable.GetTileSetEntry();
+
+				if (tileSetEntry != null && tileSetEntry.AnimationSubtile == tile.SubTile && (tileSetEntry.MemberOfSet.TileSetNum == tileCol.DirtTrackTunnels || 
+					tileSetEntry.MemberOfSet.TileSetNum == tileCol.DirtTunnels || tileSetEntry.MemberOfSet.TileSetNum == tileCol.TrackTunnels ||
+					tileSetEntry.MemberOfSet.TileSetNum == tileCol.Tunnels)) {
+					var tunnelTopDrawable = (AnimDrawable)tileSetEntry.AnimationDrawable;
+					if (tunnelTopDrawable.Shp == null) {
+						tunnelTopDrawable.Shp = VFS.Open<ShpFile>(tunnelTopDrawable.GetFilename());
+						if(tunnelTopDrawable.Shp != null)
+							tunnelTopDrawable.Shp.Initialize();
+					}
+					var tunnelAnim = new AnimationObject(tileSetEntry.AnimationDrawable.Name, tunnelTopDrawable);
+					tile.AddObject(tunnelAnim);
+					// _tileAnimObjects.Add(tunnelAnim);
+				}
+				*/
 
 				foreach (var obj in tile.AllObjects.Union(new[] { tile }).ToList()) {
 					if (obj == null) continue;
@@ -406,8 +555,11 @@ namespace CNCMaps.Engine.Map {
 				}
 			}
 
-			// TS needs tiberium remapped
-			if (Engine <= EngineType.Firestorm) {
+            // Original TS needs tiberium remapped
+			bool disableTibRemapping = false;
+			if (ModConfig.ActiveConfig.ExtraOptions.FirstOrDefault() != null)
+				disableTibRemapping = ModConfig.ActiveConfig.ExtraOptions.FirstOrDefault().DisableTibRemap;
+            if (Engine <= EngineType.Firestorm && !disableTibRemapping) {
 				var tiberiums = _rules.GetSection("Tiberiums").OrderedEntries.Select(tib => tib.Value.ToString());
 				var remaps = tiberiums.Select(tib => _rules.GetOrCreateSection(tib).ReadString("Color"));
 				var tibRemaps = tiberiums.Zip(remaps, (k, v) => new { k, v }).ToDictionary(x => x.k, x => x.v);
@@ -473,13 +625,66 @@ namespace CNCMaps.Engine.Map {
 				p.Recalculate();
 		}
 
+		public unsafe void MarkIceGrowth() {
+			Logger.Info("Marking ice growth cells");
+			foreach (var tile in _tiles.Where(t => t != null).ToList()) {
+				var t = _mapFile.Tiles.GetTileR(tile.Rx, tile.Ry);
+
+				try {
+					if (t != null && tile != null && t.IceGrowth > 0) {
+						int destX = tile.Dx * TileWidth / 2;
+						int destY = (tile.Dy - tile.Z) * TileHeight / 2;
+						bool vert = FullSize.Height * 2 > FullSize.Width;
+
+						int radius;
+						if (vert)
+							radius = FullSize.Height * TileHeight / 2 / 144 / 3;
+						else
+							radius = FullSize.Width * TileWidth / 2 / 133 / 3;
+
+						int h = radius, w = radius;
+						for (int drawY = destY - h / 2; drawY < destY + h; drawY++) {
+							for (int drawX = destX - w / 2; drawX < destX + w; drawX++) {
+								byte* p = (byte*)_drawingSurface.BitmapData.Scan0 + drawY * _drawingSurface.BitmapData.Stride + 3 * drawX;
+								*p++ = 0x88;
+								*p++ = 0xFF;
+								*p++ = 0x00;
+							}
+						}
+					}
+				}
+				catch (FormatException) { }
+				catch (IndexOutOfRangeException) { }
+			}
+		}
+
 		public void MarkTiledStartPositions() {
 			var red = Palette.MakePalette(Color.Red);
-
+			int markSize = (int)StartMarkerSize;
+			int delta1, delta2;
+			switch (markSize) {
+				case 2 :
+					delta1 = -1; delta2 = 1;
+					break;
+				case 3 :
+					delta1 = -1; delta2 = 2;
+					break;
+				case 4 :
+					delta1 = -1; delta2 = 3;
+					break;
+				case 5 :
+					delta1 = -2; delta2 = 3;
+					break;
+				case 6 :
+					delta1 = -2; delta2 = 4;
+					break;
+				default:
+					delta1 = -1; delta2 = 3;
+					break;
+			}
 			foreach (var w in _wayPoints.Where(w => w.Number < 8)) {
-				// Draw 4x4 cell around start pos
-				for (int x = w.Tile.Rx - 1; x < w.Tile.Rx + 3; x++) {
-					for (int y = w.Tile.Ry - 1; y < w.Tile.Ry + 3; y++) {
+				for (int x = w.Tile.Rx + delta1; x < w.Tile.Rx + delta2; x++) {
+					for (int y = w.Tile.Ry + delta1; y < w.Tile.Ry + delta2; y++) {
 						MapTile t = _tiles.GetTileR(x, y);
 						if (t != null) {
 							t.Palette = Palette.Merge(t.Palette, red, 0.4);
@@ -491,21 +696,21 @@ namespace CNCMaps.Engine.Map {
 			}
 		}
 
-		public void UndrawTiledStartPositions() {
-			foreach (var w in _wayPoints.Where(w => w.Tile != null)) {
-				// Redraw the 4x4 cell around start pos with original palette;
+		public void RedrawTiledStartPositions(bool reset = false) {
+			foreach (var w in _wayPoints.Where(w => (w.Tile != null && w.Number < 8))) {
+				// Redraw the cells around start pos with original palette if needed;
 				// first the tiles, then the objects
-				for (int x = w.Tile.Rx - 2; x < w.Tile.Rx + 2; x++) {
-					for (int y = w.Tile.Ry - 2; y < w.Tile.Ry + 2; y++) {
+				for (int x = w.Tile.Rx - 5; x < w.Tile.Rx + 5; x++) {
+					for (int y = w.Tile.Ry - 5; y < w.Tile.Ry + 5; y++) {
 						MapTile t = _tiles.GetTileR(x, y);
 						if (t == null) continue;
-						t.Palette = _palettePerLevel[t.Z];
+						if (reset) t.Palette = _palettePerLevel[t.Z];
 						// redraw tile
 						_theater.Draw(t, _drawingSurface);
 					}
 				}
-				for (int x = w.Tile.Rx - 5; x < w.Tile.Rx + 5; x++) {
-					for (int y = w.Tile.Ry - 5; y < w.Tile.Ry + 5; y++) {
+				for (int x = w.Tile.Rx - 7; x < w.Tile.Rx + 7; x++) {
+					for (int y = w.Tile.Ry - 7; y < w.Tile.Ry + 7; y++) {
 						MapTile t = _tiles.GetTileR(x, y);
 						if (t == null) continue;
 						// redraw objects on here
@@ -537,19 +742,19 @@ namespace CNCMaps.Engine.Map {
 
 		private void DrawStartMarkersAro(Graphics gfx, Rectangle fullImage, Rectangle previewImage) {
 			foreach (var w in _wayPoints.Where(w => w.Number < 8)) {
-				var center = TileLayer.GetTilePixelCenter(w.Tile);
+                var t = _tiles.GetTile(w.Tile);
+                var center = new Point(t.Dx * Drawable.TileWidth / 2, (t.Dy - t.Z) * Drawable.TileHeight / 2);// TileLayer.GetTilePixelCenter(w.Tile);
 				// project to preview dimensions
-				double pctFullX = (center.X - fullImage.Left) / (double)previewImage.Width;
-				double pctFullY = (center.Y - fullImage.Top) / (double)previewImage.Height;
+				double pctFullX = (center.X - fullImage.Left) / (double)fullImage.Width;
+				double pctFullY = (center.Y - fullImage.Top) / (double)fullImage.Height;
 				Point dest = new Point((int)(pctFullX * previewImage.Width), (int)(pctFullY * previewImage.Height));
-				var img = Resources.ResourceManager.GetObject("aro_marker_" + w) as Image;
-				// center marker img
-				dest.Offset(-img.Width / 2, -img.Height / 2);
+				var img = Resources.ResourceManager.GetObject("aro_marker_" + (w.Number + 1)) as Image;
+                // center marker img
+                dest.Offset(-img.Width / 2, -img.Height / 2);
 				// draw it
 				gfx.DrawImage(img, dest);
 			}
 		}
-
 
 		/// <summary>Loads the colors. </summary>
 		private void LoadColors() {
@@ -601,40 +806,71 @@ namespace CNCMaps.Engine.Map {
 			}
 		}
 
-		public unsafe void DrawSquaredStartPositions() {
-			Logger.Info("Marking squared start positions");
-			foreach (var entry in _wayPoints) {
-				try {
-					if (entry.Number >= 8)
-						continue;
+		public unsafe void DrawStartPositions() {
+			Logger.Info("Marking start positions");
+			double markerSize = StartMarkerSize;
+			_drawingSurface.Unlock();
+			using (Graphics g = Graphics.FromImage(_drawingSurface.Bitmap)) {
+				foreach (var entry in _wayPoints) {
+					if (entry.Number < 8) {
+						try {
+							MapTile t = _tiles.GetTile(entry.Tile);
+							if (t == null) continue;
+							int centerX = (t.Dx + 1) * TileWidth / 2;
+							int centerY = (t.Dy - t.Z + 1) * TileHeight / 2;
+							int halfWidth = (int)((double)TileWidth * (markerSize / 2.0));
+							int halfHeight = (int)((double)TileHeight * (markerSize / 2.0));
+							int opacity = 155 + (int)((7.2 - StartMarkerSize) * 18);
+							if (opacity < 145) opacity = 145; 
+							if (opacity > 255) opacity = 255;
 
-					MapTile t = _tiles.GetTile(entry.Tile);
-					if (t == null) continue;
-					int destX = t.Dx * TileWidth / 2;
-					int destY = (t.Dy - t.Z) * TileHeight / 2;
+							if (StartPosMarking == StartPositionMarking.Squared || StartPosMarking == StartPositionMarking.Ellipsed ||
+								StartPosMarking == StartPositionMarking.Circled) {
+								int startX = centerX - halfWidth;
+								int startY = centerY - halfHeight;
+								int width = (int)((double)TileWidth * markerSize);
+								int height = (int)((double)TileHeight * markerSize);
 
-					bool vert = FullSize.Height * 2 > FullSize.Width;
-					int radius;
-					if (vert)
-						radius = 10 * FullSize.Height * TileHeight / 2 / 144;
-					else
-						radius = 10 * FullSize.Width * TileWidth / 2 / 133;
-
-					int h = radius, w = radius;
-					for (int drawY = destY - h / 2; drawY < destY + h; drawY++) {
-						for (int drawX = destX - w / 2; drawX < destX + w; drawX++) {
-							byte* p = (byte*)_drawingSurface.BitmapData.Scan0 + drawY * _drawingSurface.BitmapData.Stride + 3 * drawX;
-							*p++ = 0x00;
-							*p++ = 0x00;
-							*p++ = 0xFF;
+								if (StartPosMarking == StartPositionMarking.Ellipsed)
+									g.FillEllipse(new SolidBrush(Color.FromArgb(opacity,Color.Red)), startX, startY, width, height);
+								else {
+									width /= 2;
+									startX = centerX - halfWidth / 2;
+									if (StartPosMarking == StartPositionMarking.Squared)
+										g.FillRectangle(new SolidBrush(Color.FromArgb(opacity,Color.Red)), startX, startY, width, height);
+									else
+										g.FillEllipse(new SolidBrush(Color.FromArgb(opacity,Color.Red)), startX, startY, width, height);
+								}
+							}
+							else if (StartPosMarking == StartPositionMarking.Diamond) {
+								Point[] rhombus = new Point[] {
+									new Point(centerX, centerY - halfHeight),
+									new Point(centerX + halfWidth, centerY),
+									new Point(centerX, centerY + halfHeight),
+									new Point(centerX - halfWidth, centerY)
+								};
+								g.FillPolygon(new SolidBrush(Color.FromArgb(opacity,Color.Red)), rhombus);
+							}
+							else if (StartPosMarking == StartPositionMarking.Starred) {
+								Point[] star = new Point[10];
+								double angle = Math.PI / 5;
+								double shorter = (halfWidth + halfHeight) / 4.0;
+								double longer = shorter * 2.3;
+								for (int i = 0; i < 10; i += 2) {
+									star[i].X = centerX + (int)(longer * Math.Cos((i - 0.5) * angle));
+									star[i].Y = centerY + (int)(longer * Math.Sin((i - 0.5) * angle));
+									star[i + 1].X = centerX + (int)(shorter * Math.Cos((i + 0.5) * angle));
+									star[i + 1].Y = centerY + (int)(shorter * Math.Sin((i + 0.5) * angle));
+								}
+								g.FillPolygon(new SolidBrush(Color.FromArgb(opacity,Color.Red)), star);
+							}
+						}
+						catch (Exception) {
 						}
 					}
 				}
-				catch (FormatException) {
-				}
-				catch (IndexOutOfRangeException) {
-				}
 			}
+			_drawingSurface.Lock();
 		}
 
 		public int FindCutoffHeight() {
@@ -714,6 +950,14 @@ namespace CNCMaps.Engine.Map {
 			int right = (LocalSize.Left + LocalSize.Width) * TileWidth;
 
 			int bottom1 = 2 * (LocalSize.Top - 3 + LocalSize.Height + 5);
+			if (ModConfig.ActiveConfig.ExtraOptions.FirstOrDefault() != null) {
+				int bottomCrop = 0;
+				if (int.TryParse(ModConfig.ActiveConfig.ExtraOptions.FirstOrDefault().MapLocalSizeBottomCropValue, out bottomCrop)) {
+					bottomCrop = Math.Abs(bottomCrop);
+					if (bottom1 > bottomCrop && bottomCrop >= 0 && bottomCrop < 17)
+						bottom1 -= bottomCrop;
+				}
+			}
 			int cutoff = FindCutoffHeight() * 2;
 			int bottom2 = (cutoff + 1 + (cutoff % 2));
 			int bottom = Math.Min(bottom1, bottom2) * (TileHeight / 2);
@@ -727,6 +971,8 @@ namespace CNCMaps.Engine.Map {
 			// init sensible defaults
 			if (Engine >= EngineType.RedAlert2) {
 				markerPalettes[OverlayTibType.Ore] = Palette.MakePalette(Color.Yellow);
+				markerPalettes[OverlayTibType.Ore2] = Palette.MakePalette(Color.Yellow);
+				markerPalettes[OverlayTibType.Ore3] = Palette.MakePalette(Color.Yellow);
 				markerPalettes[OverlayTibType.Gems] = Palette.MakePalette(Color.Purple);
 			}
 
@@ -753,7 +999,7 @@ namespace CNCMaps.Engine.Map {
 				var ovlType = SpecialOverlays.GetOverlayTibType(o, Engine);
 				if (!markerPalettes.ContainsKey(ovlType)) continue;
 
-				double opacityBase = ovlType == OverlayTibType.Ore && Engine == EngineType.RedAlert2 ? 0.3 : 0.15;
+				double opacityBase = ((ovlType == OverlayTibType.Ore || ovlType == OverlayTibType.Ore2 || ovlType == OverlayTibType.Ore3) && Engine == EngineType.RedAlert2) ? 0.3 : 0.15;
 				double opacity = Math.Max(0, 12 - o.OverlayValue) / 11.0 * 0.5 + opacityBase;
 				o.Tile.Palette = Palette.Merge(o.Tile.Palette, markerPalettes[ovlType], opacity);
 				o.Palette = Palette.Merge(o.Palette, markerPalettes[ovlType], opacity);
@@ -871,19 +1117,27 @@ namespace CNCMaps.Engine.Map {
 				Logger.Debug("Redrawing ore and gems areas");
 				RedrawOreAndGems();
 			}
-			// undo tiled, if needed
-			if (StartPosMarking == StartPositionMarking.Tiled)
-				UndrawTiledStartPositions();
 
 			switch (previewMarkers) {
 			case PreviewMarkersType.None:
+				RedrawTiledStartPositions(true);
 				break;
-			case PreviewMarkersType.Squared:
-				DrawSquaredStartPositions();
+			case PreviewMarkersType.SelectedAsAbove:
+				if (StartPosMarking == StartPositionMarking.Tiled) {
+					RedrawTiledStartPositions(true);
+					MarkTiledStartPositions();
+					RedrawTiledStartPositions(false);
+				}
+				else if (StartPosMarking == StartPositionMarking.Squared || StartPosMarking == StartPositionMarking.Ellipsed || 
+					StartPosMarking == StartPositionMarking.Diamond || StartPosMarking == StartPositionMarking.Circled || StartPosMarking == StartPositionMarking.Starred) {
+					RedrawTiledStartPositions(true);
+					DrawStartPositions();
+				}
 				break;
 			case PreviewMarkersType.Bittah:
 			case PreviewMarkersType.Aro:
-				// to be injected later
+				RedrawTiledStartPositions(true);
+				// is being injected later
 				break;
 			}
 			_drawingSurface.Unlock();
@@ -925,7 +1179,7 @@ namespace CNCMaps.Engine.Map {
 
 					switch (previewMarkers) {
 					case PreviewMarkersType.None:
-					case PreviewMarkersType.Squared:
+					case PreviewMarkersType.SelectedAsAbove:
 						break;
 					case PreviewMarkersType.Bittah:
 						DrawStartMarkersBittah(gfx, srcRect, dstRect);
@@ -1032,7 +1286,18 @@ namespace CNCMaps.Engine.Map {
 					brokenTiles++;
 					ChangeTileToClear(coll, tile);
 				}
-
+				else {
+					try {
+						if (!drawable.DoesSubTileExist(tile)) {
+							Logger.Warn(string.Format("Removing tile-subtile,count #{2}-{7},{8}@({0},{1}) because subtile for it was not found; set {3} ({4}), expected filename {5}xx{6}",
+								tile.Rx, tile.Ry, tile.TileNum, drawable.Name, drawable.TsEntry?.MemberOfSet?.SetName ?? "", drawable.TsEntry?.MemberOfSet?.FileName ?? "",
+								ModConfig.ActiveTheater.Extension,tile.SubTile,drawable.TsEntry?.GetTmpFile(tile).Images.Count));
+							brokenTiles++;
+							ChangeTileToClear(coll, tile);
+						}
+					}
+					catch (Exception) { 	}
+				}
 			}
 			if (brokenTiles == 0) {
 				Logger.Info("No undefined/broken tiles found, not altering IsoMapPack5 section");
@@ -1053,5 +1318,171 @@ namespace CNCMaps.Engine.Map {
 			t.TileNum = 0;
 			t.SubTile = 0;
 		}
+
+		public void FixupOverlays() {
+			// Byte arrays of 256KB fixed size
+			byte[] overlayPack = new byte[1 << 18];
+			byte[] overlayDataPack = new byte[1 << 18];
+
+			if (_overlaysAltered)	{
+				// Fill with no overlays
+				for (int x = 0; x < 262144; x++) {
+					overlayPack[x] = 255;
+					overlayDataPack[x] = 0;
+				}
+
+				// Missing removed during RemoveUnknownObjects
+				foreach (OverlayObject obj in _overlayObjects.ToList()) {
+					int location = (obj.Tile.Ry * 512) + obj.Tile.Rx;
+					overlayPack[location] = obj.OverlayID;
+					overlayDataPack[location] = obj.OverlayValue;
+				}
+
+				// Encode the byte arrays into LCW/Format80 and then into Base64
+				string oPackEncoded = Convert.ToBase64String(Format5.Encode(overlayPack, 80), Base64FormattingOptions.None);
+				string oDataPackEncoded = Convert.ToBase64String(Format5.Encode(overlayDataPack, 80), Base64FormattingOptions.None);
+
+				var overlayPackSection = _mapFile.GetSection("OverlayPack");
+				overlayPackSection.Clear();
+
+				// Split the string into lines of 70 chars and build the sections
+				int rowNum = 1;
+				for (int i = 0; i < oPackEncoded.Length; i += 70) {
+					overlayPackSection.SetValue(rowNum++.ToString(CultureInfo.InvariantCulture), oPackEncoded.Substring(i, Math.Min(70, oPackEncoded.Length - i)));
+				}
+
+				var overlayDataPackSection = _mapFile.GetSection("OverlayDataPack");
+				overlayDataPackSection.Clear();
+
+				rowNum = 1;
+				for (int i = 0; i < oDataPackEncoded.Length; i += 70) {
+					overlayDataPackSection.SetValue(rowNum++.ToString(CultureInfo.InvariantCulture), oDataPackEncoded.Substring(i, Math.Min(70, oDataPackEncoded.Length - i)));
+				}
+			}
+		}
+
+		public void CompressIsoMapPack5() {
+			Logger.Info("Generating compressed IsoMapPack5 section. Please wait ...");
+			_mapFile.Tiles.SerializeIsoMapPack5(_mapFile.GetSection("IsoMapPack5"), true);
+		}
+
+		public void PlotTunnels(bool adjustPosition = true) {
+			Logger.Info("Plotting Tunnel path");
+			_drawingSurface.Unlock();
+			using (Graphics g = Graphics.FromImage(_drawingSurface.Bitmap)) {
+				Pen linePen = new Pen(Color.FromArgb(148,255,0,0), 3);
+				Pen dashlinePen = new Pen(Color.FromArgb(180,0,255,205), 3);
+				float[] dashValues = {2, 1};
+				dashlinePen.DashPattern = dashValues;
+
+				HashSet<int> endCells = new HashSet<int>();
+
+				foreach (TunnelLine tunnelLine in _mapFile.TunnelEntries) {
+					int deltaFromCenterY = 1;
+					int deltaFromCenterX = 0;
+					List<Point> linePoints = new List<Point>();
+
+					MapTile startTile = _tiles.GetTileR(tunnelLine.StartX, tunnelLine.StartY);
+					MapTile endTile = _tiles.GetTileR(tunnelLine.EndX, tunnelLine.EndY);
+
+					// Current adjustment makes it look correct but the back facing tunnel coordinates are shown inaccurately
+	                Point startTileCenter = new Point((startTile.Dx + 1) * Drawable.TileWidth / 2, (startTile.Dy - startTile.Z + 1 - (adjustPosition ? 4 : 0)) * Drawable.TileHeight / 2);
+	                Point endTileCenter = new Point((endTile.Dx + 1) * Drawable.TileWidth / 2, (endTile.Dy - endTile.Z + 1 - (adjustPosition ? 4 : 0)) * Drawable.TileHeight / 2);
+
+					endCells.Add(tunnelLine.EndX + 1000 * tunnelLine.EndY);
+					if (endCells.Contains(tunnelLine.StartX + 1000 * tunnelLine.StartY)) {
+						linePen.Color = Color.FromArgb(148,255,30,255);
+						dashlinePen.Color = Color.FromArgb(180,0,0,255);
+						deltaFromCenterY = 2;
+					}
+					else {
+						linePen.Color = Color.FromArgb(148,255,0,0);
+						dashlinePen.Color = Color.FromArgb(180,0,255,205);
+						deltaFromCenterY = -2;
+					}
+
+					MapTile currentTile = startTile;
+					MapTile nextTile = currentTile;
+					Point currentPoint = new Point(startTileCenter.X, startTileCenter.Y + deltaFromCenterY);
+					int addWidth = 0;
+					int addHeight = 0;
+
+					linePoints.Add(currentPoint);
+
+					if (tunnelLine.Direction != null) {
+						foreach (int d in tunnelLine.Direction) {
+                            deltaFromCenterX = 0;
+							switch (d) {
+								case 0:
+									nextTile = currentTile.Layer.GetNeighbourTile(currentTile, TileLayer.TileDirection.TopRight);
+									addWidth = Drawable.TileWidth / 2;
+									addHeight = -Drawable.TileHeight / 2;
+									break;
+								case 1:
+									nextTile = currentTile.Layer.GetNeighbourTile(currentTile, TileLayer.TileDirection.Right);
+									addWidth = Drawable.TileWidth;
+									addHeight = 0;
+									break;
+								case 2:
+									nextTile = currentTile.Layer.GetNeighbourTile(currentTile, TileLayer.TileDirection.BottomRight);
+									addWidth = Drawable.TileWidth / 2;
+									addHeight = Drawable.TileHeight / 2;
+									break;
+								case 3:
+									nextTile = currentTile.Layer.GetNeighbourTile(currentTile, TileLayer.TileDirection.Bottom);
+									addWidth = 0;
+									addHeight = Drawable.TileHeight;
+									deltaFromCenterX = deltaFromCenterY - 6;
+									break;
+								case 4:
+									nextTile = currentTile.Layer.GetNeighbourTile(currentTile, TileLayer.TileDirection.BottomLeft);
+									addWidth = -Drawable.TileWidth / 2;
+									addHeight = Drawable.TileHeight / 2;
+									break;
+								case 5:
+									nextTile = currentTile.Layer.GetNeighbourTile(currentTile, TileLayer.TileDirection.Left);
+									addWidth = -Drawable.TileWidth;
+									addHeight = 0;
+									break;
+								case 6:
+									nextTile = currentTile.Layer.GetNeighbourTile(currentTile, TileLayer.TileDirection.TopLeft);
+									addWidth = -Drawable.TileWidth / 2;
+									addHeight = -Drawable.TileHeight / 2;
+									break;
+								case 7:
+									nextTile = currentTile.Layer.GetNeighbourTile(currentTile, TileLayer.TileDirection.Top);
+									addWidth = 0;
+									addHeight = -Drawable.TileHeight;
+									deltaFromCenterX = deltaFromCenterY + 6;
+									break;
+							}
+							if (nextTile != null) {
+								currentTile = nextTile;
+								currentPoint.X += addWidth;
+								currentPoint.Y += addHeight;
+								linePoints.Add(new Point(currentPoint.X + deltaFromCenterX, currentPoint.Y + deltaFromCenterY));
+							}
+						}
+						if (linePoints.Count > 1) {
+							g.DrawLines(linePen, linePoints.ToArray());
+						}
+					}
+
+					if (endTile.Rx != currentTile.Rx || endTile.Ry != currentTile.Ry) {
+						Point dashlineStart = new Point(currentPoint.X, currentPoint.Y + deltaFromCenterY);
+						Point dashlineEnd = new Point(endTileCenter.X, endTileCenter.Y + deltaFromCenterY);
+						g.DrawLine(dashlinePen, dashlineStart, dashlineEnd);
+					}
+
+					g.FillEllipse(new SolidBrush(Color.FromArgb(138,Color.Red)), startTileCenter.X - 10, startTileCenter.Y - 5, 20, 10);
+					g.FillEllipse(new SolidBrush(Color.FromArgb(138,Color.Red)), endTileCenter.X - 10, endTileCenter.Y - 5, 20, 10);
+				}
+
+				linePen.Dispose();
+				dashlinePen.Dispose();
+			}
+			_drawingSurface.Lock();
+		}
+
 	}
 }

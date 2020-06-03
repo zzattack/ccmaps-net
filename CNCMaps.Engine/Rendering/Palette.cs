@@ -28,12 +28,20 @@ namespace CNCMaps.Engine.Rendering {
 		}
 
 		public Palette(PalFile originalPalette, string name = "", bool objectPalette = false) {
-			_originalPalette = originalPalette;
-            _objectPalette = objectPalette;
-			if (!string.IsNullOrEmpty(name))
-				Name = name;
-			else
-				Name = Path.GetFileNameWithoutExtension(originalPalette.FileName);
+            try
+            {
+                _originalPalette = originalPalette;
+                _objectPalette = objectPalette;
+                if (!string.IsNullOrEmpty(name))
+                    Name = name;
+                else
+                    Name = Path.GetFileNameWithoutExtension(originalPalette.FileName);
+            }
+            catch (Exception)
+            {
+                
+                throw;
+            }
 		}
 
 		public Palette(byte[] colors, string name) {

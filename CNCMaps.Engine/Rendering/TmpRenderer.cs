@@ -118,6 +118,7 @@ namespace CNCMaps.Engine.Rendering {
 			zIdx = offset.X + offset.Y * ds.Width;
 			rIdx = 0;
 
+
 			// identify extra-data affected tiles for cutoff
 			var extraScreenBounds = Rectangle.FromLTRB(
 				Math.Max(0, offset.X), Math.Max(0, offset.Y),
@@ -140,7 +141,8 @@ namespace CNCMaps.Engine.Rendering {
 				for (x = 0; x < img.ExtraWidth; x++) {
 					// Checking per line is required because v needs to be checked every time
 					byte paletteValue = img.ExtraData[rIdx];
-					short zBufVal = (short)((tile.Rx + tile.Ry) * tmp.BlockHeight / 2 + (img.ExtraZData != null ? img.ExtraZData[rIdx] : 0));
+                    // Starkku: Matched to formula with normal tile zdata one to fix several glitches with certain kind of tile setups.
+                    short zBufVal = (short)((tile.Rx + tile.Ry) * tmp.BlockHeight / 2 - (img.ExtraZData != null ? img.ExtraZData[rIdx] : 0));
 
 					if (paletteValue != 0 && w_low <= w && w < w_high && zBufVal >= zBuffer[zIdx]) {
 						*w++ = p.Colors[paletteValue].B;

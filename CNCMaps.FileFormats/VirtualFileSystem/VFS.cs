@@ -122,8 +122,8 @@ namespace CNCMaps.FileFormats.VirtualFileSystem {
 		public bool LoadMixes(string dir, EngineType engine) {
 			// if we don't have this directory in the VFS yet
 			if (!AllArchives.OfType<DirArchive>().Any(da => string.Equals(
-				Path.GetFullPath(dir).TrimEnd('\\'),
-				Path.GetFullPath(da.Directory).TrimEnd('\\'),
+				Path.GetFullPath(dir).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar),
+				Path.GetFullPath(da.Directory).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar),
 				StringComparison.InvariantCultureIgnoreCase))) {
 				this.AddItem(dir);
 			}
@@ -139,13 +139,20 @@ namespace CNCMaps.FileFormats.VirtualFileSystem {
 			// see http://modenc.renegadeprojects.com/MIX for more info
 			Logger.Info("Initializing filesystem for the {0} engine", engine.ToString());
 
-			// try all expand\d{2}md?\.mix files
+			if (engine == EngineType.Firestorm)
+				if (FileExists("patch.mix"))
+					AddItem("patch.mix");
+
+			// try all expand(md).mix files
 			for (int i = 99; i >= 0; i--) {
-				string file = "expand" + i.ToString("00") + ".mix";
-				if (FileExists(file))
-					AddItem(file);
+				string file = "";
 				if (engine == EngineType.YurisRevenge) {
 					file = "expandmd" + i.ToString("00") + ".mix";
+					if (FileExists(file))
+						AddItem(file);
+				}
+				else {
+					file = "expand" + i.ToString("00") + ".mix";
 					if (FileExists(file))
 						AddItem(file);
 				}
@@ -159,8 +166,7 @@ namespace CNCMaps.FileFormats.VirtualFileSystem {
 				}
 			}
 
-			// the game actually loads these earlier, but modders like to override them
-			// with ares or something
+			// Game loads this earlier, but Ares override it for YR
 			if (engine >= EngineType.RedAlert2) {
 				if (engine == EngineType.YurisRevenge) AddItem("langmd.mix");
 				AddItem("language.mix");
@@ -172,15 +178,12 @@ namespace CNCMaps.FileFormats.VirtualFileSystem {
 				AddItem("ra2.mix");
 			}
 			else {
-				if (engine == EngineType.Firestorm)
-					AddItem("patch.mix");
 				AddItem("tibsun.mix");
 			}
 			
 			if (engine == EngineType.YurisRevenge)
 				AddItem("cachemd.mix");
 			AddItem("cache.mix");
-
 
 			if (engine == EngineType.YurisRevenge)
 				AddItem("localmd.mix");
@@ -190,11 +193,14 @@ namespace CNCMaps.FileFormats.VirtualFileSystem {
 				AddItem("audiomd.mix");
 
 			if (engine >= EngineType.RedAlert2) {
-				for (int i = 99; i >= 0; i--) {
-					string file = string.Format("ecache{0:d2}.mix", i);
-					if (FileExists(file))
-						AddItem(file);
+				List <string> ecacheList = new List<string>();
+				foreach (var dir in AllArchives.OfType<DirArchive>().ToList()) {
+					foreach (string file in Directory.GetFiles(dir.Directory, "ecache*.mix"))
+						ecacheList.Add(Path.GetFileName(file));
 				}
+				ecacheList.Reverse();
+				foreach (string ecachefile in ecacheList)
+					AddItem(ecachefile);
 			}
 
 			for (int i = 99; i >= 0; i--) {
@@ -242,7 +248,7 @@ namespace CNCMaps.FileFormats.VirtualFileSystem {
 		}
 		public void Clear() {
 			foreach (var arch in AllArchives)
-				arch.Close();
+				if(arch != null) arch.Close();
 			AllArchives.Clear();
 		}
 

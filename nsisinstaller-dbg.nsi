@@ -57,7 +57,7 @@ Section "Maps Renderer" sec_program
 	SetOverwrite ifnewer
 	
 	File "Lib\NLog.dll"
-	File "Lib\OSMesa.dll"
+	;File "Lib\OSMesa.dll"
 	File "Lib\OpenTK.dll"
 SectionEnd
 
@@ -107,7 +107,7 @@ Section Uninstall
 	Delete "$INSTDIR\NLog.dll"
 	Delete "$INSTDIR\NLog.config"
 	Delete "$INSTDIR\NLog.Debug.config"
-	Delete "$INSTDIR\opengl32.dll"
+	Delete "$INSTDIR\opentk.dll"
 	Delete "$INSTDIR\osmesa.dll"
 
 	; Remove remaining directories

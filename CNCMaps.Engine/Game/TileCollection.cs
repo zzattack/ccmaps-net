@@ -26,12 +26,14 @@ namespace CNCMaps.Engine.Game {
 			public string SetName { get; private set; }
 			public int TilesInSet { get; private set; }
 			public List<TileSetEntry> Entries { get; private set; }
+			public short TileSetNum { get; private set; }
 
-			public TileSet(string fileName, string setName, int tilesInSet) {
+			public TileSet(string fileName, string setName, int tilesInSet, short tileSetNum) {
 				FileName = fileName;
 				SetName = setName;
 				TilesInSet = tilesInSet;
 				Entries = new List<TileSetEntry>();
+				TileSetNum = tileSetNum;
 			}
 
 			public override string ToString() {
@@ -80,7 +82,8 @@ namespace CNCMaps.Engine.Game {
 		// ReSharper disable InconsistentNaming
 		public short ACliffMMPieces;
 		public short ACliffPieces;
-		public short BlackTile; 
+		public short BlackTile;
+		public short BlueMoldTile;
 		public short BridgeBottomLeft1;
 		public short BridgeBottomLeft2;
 		public short BridgeBottomRight1;
@@ -93,12 +96,16 @@ namespace CNCMaps.Engine.Game {
 		public short BridgeTopRight1;
 		public short BridgeTopRight2;
 		public short ClearTile;
+		public short ClearToBlueMoldLat;
+		public short ClearToCrystalLat;
 		public short ClearToGreenLat;
 		public short ClearToPaveLat;
 		public short ClearToRoughLat;
 		public short ClearToSandLat;
 		public short CliffRamps;
 		public short CliffSet;
+		public short CrystalCliff;
+		public short CrystalTile;
 		public short DestroyableCliffs;
 		public short DirtRoadCurve;
 		public short DirtRoadJunction;
@@ -130,6 +137,7 @@ namespace CNCMaps.Engine.Game {
 		public short ShorePieces;
 		public short SlopeSetPieces;
 		public short SlopeSetPieces2;
+		public short SwampTile;
 		public short TrackTunnels;
 		public short TrainBridgeSet;
 		public short Tunnels;
@@ -142,6 +150,7 @@ namespace CNCMaps.Engine.Game {
 		public short WaterfallNorth;
 		public short WaterfallSouth;
 		public short WaterfallWest;
+		public short WaterToSwampLat;
 		public short WoodBridgeSet;
 		// ReSharper restore InconsistentNaming
 
@@ -173,6 +182,7 @@ namespace CNCMaps.Engine.Game {
 			ACliffMMPieces = General.ReadShort("ACliffMMPieces", -1);
 			ACliffPieces = General.ReadShort("ACliffPieces", -1);
 			BlackTile = General.ReadShort("BlackTile", -1);
+			BlueMoldTile = General.ReadShort("BlueMoldTile", -1);
 			BridgeBottomLeft1 = General.ReadShort("BridgeBottomLeft1", -1);
 			BridgeBottomLeft2 = General.ReadShort("BridgeBottomLeft2", -1);
 			BridgeBottomRight1 = General.ReadShort("BridgeBottomRight1", -1);
@@ -185,12 +195,16 @@ namespace CNCMaps.Engine.Game {
 			BridgeTopRight1 = General.ReadShort("BridgeTopRight1", -1);
 			BridgeTopRight2 = General.ReadShort("BridgeTopRight2", -1);
 			ClearTile = General.ReadShort("ClearTile", -1);
+			ClearToBlueMoldLat = General.ReadShort("ClearToBlueMoldLat", -1);
+			ClearToCrystalLat = General.ReadShort("ClearToCrystalLat", -1);
 			ClearToGreenLat = General.ReadShort("ClearToGreenLat", -1);
 			ClearToPaveLat = General.ReadShort("ClearToPaveLat", -1);
 			ClearToRoughLat = General.ReadShort("ClearToRoughLat", -1);
 			ClearToSandLat = General.ReadShort("ClearToSandLat", -1);
 			CliffRamps = General.ReadShort("CliffRamps", -1);
 			CliffSet = General.ReadShort("CliffSet", -1);
+			CrystalCliff = General.ReadShort("CrystalCliff", -1);
+			CrystalTile = General.ReadShort("CrystalTile", -1);
 			DestroyableCliffs = General.ReadShort("DestroyableCliffs", -1);
 			DirtRoadCurve = General.ReadShort("DirtRoadCurve", -1);
 			DirtRoadJunction = General.ReadShort("DirtRoadJunction", -1);
@@ -222,6 +236,7 @@ namespace CNCMaps.Engine.Game {
 			ShorePieces = General.ReadShort("ShorePieces", -1);
 			SlopeSetPieces = General.ReadShort("SlopeSetPieces", -1);
 			SlopeSetPieces2 = General.ReadShort("SlopeSetPieces2", -1);
+			SwampTile = General.ReadShort("SwampTile", -1);
 			TrackTunnels = General.ReadShort("TrackTunnels", -1);
 			TrainBridgeSet = General.ReadShort("TrainBridgeSet", -1);
 			Tunnels = General.ReadShort("Tunnels", -1);
@@ -234,6 +249,7 @@ namespace CNCMaps.Engine.Game {
 			WaterfallNorth = General.ReadShort("WaterfallNorth", -1);
 			WaterfallSouth = General.ReadShort("WaterfallSouth", -1);
 			WaterfallWest = General.ReadShort("WaterfallWest", -1);
+			WaterToSwampLat = General.ReadShort("WaterToSwampLat", -1);
 			WoodBridgeSet = General.ReadShort("WoodBridgeSet", -1);
 
 			#endregion
@@ -247,12 +263,12 @@ namespace CNCMaps.Engine.Game {
 				var sect = _theaterIni.GetSection(sectionName);
 				if (sect == null)
 					break;
-				sectionIdx++;
 
 				Logger.Trace("Loading tileset {0}", sectionName);
-				var ts = new TileSet(sect.ReadString("FileName"), sect.ReadString("SetName"), sect.ReadInt("TilesInSet"));
+				var ts = new TileSet(sect.ReadString("FileName"), sect.ReadString("SetName"), sect.ReadInt("TilesInSet"), (short)sectionIdx);
 				_setNumToFirstTile.Add((short)_drawables.Count);
 				_tileSets.Add(ts);
+				sectionIdx++;
 
 				for (int j = 1; j <= ts.TilesInSet; j++) {
 					_tileNumToSet.Add((short)setNum);
@@ -260,7 +276,7 @@ namespace CNCMaps.Engine.Game {
 
 					// add as many tiles (with randomized name) as can be found
 					for (var r = (char)('a' - 1); r <= 'z'; r++) {
-						if ((r >= 'a') && ts.SetName == "Bridges") continue;
+						if ((r >= 'a') && (ts.TileSetNum == BridgeSet || ts.TileSetNum == TrainBridgeSet || ts.TileSetNum == WoodBridgeSet)) continue;
 
 						// filename = set filename + dd + .tmp/.urb/.des etc
 						string filename = ts.FileName + j.ToString("00");
@@ -314,6 +330,7 @@ namespace CNCMaps.Engine.Game {
 					int attachTo = extraSection.ReadInt(n + "AttachesTo");
 					var offset = new Point(extraSection.ReadInt(n + "XOffset"), extraSection.ReadInt(n + "YOffset"));
 					drawable.Props.Offset.Offset(offset.X, offset.Y);
+					drawable.Props.ZAdjust = extraSection.ReadInt(n + "ZAdjust");
 					tileSet.Entries[a - 1].AddAnimation(attachTo, drawable);
 				}
 			}
@@ -338,30 +355,40 @@ namespace CNCMaps.Engine.Game {
 			else if (setNum1 == PaveTile && setNum2 == Medians ||
 				(setNum2 == PaveTile && setNum1 == Medians)) return false;
 
+			// pave's don't connect with misc pave tiles.
+			else if (setNum1 == PaveTile && setNum2 == MiscPaveTile ||
+				(setNum2 == PaveTile && setNum1 == MiscPaveTile)) return false;
+
 			// all other transitions are connected with a CLAT set
 			return true;
 		}
 
-		public bool IsLAT(short setNum) {
+		public bool IsLAT(int setNum) {
 			return
 				setNum == RoughTile ||
 				setNum == SandTile ||
 				setNum == GreenTile ||
-				setNum == PaveTile;
+				setNum == PaveTile ||
+				setNum == BlueMoldTile ||
+				setNum == CrystalTile ||
+				setNum == SwampTile;
 		}
-		public bool IsSlope(short setNum) {
+		public bool IsSlope(int setNum) {
 			return setNum == SlopeSetPieces || setNum == SlopeSetPieces2;
 		}
 
-		public bool IsCLAT(short setNum) {
+		public bool IsCLAT(int setNum) {
 			return
 				setNum == ClearToRoughLat ||
 				setNum == ClearToSandLat ||
 				setNum == ClearToGreenLat ||
-				setNum == ClearToPaveLat;
+				setNum == ClearToPaveLat ||
+				setNum == ClearToBlueMoldLat ||
+				setNum == ClearToCrystalLat ||
+				setNum == WaterToSwampLat;
 		}
 
-		public short GetLAT(short clatSetNum) {
+		public short GetLAT(int clatSetNum) {
 			if (clatSetNum == ClearToRoughLat)
 				return RoughTile;
 			else if (clatSetNum == ClearToSandLat)
@@ -370,11 +397,17 @@ namespace CNCMaps.Engine.Game {
 				return GreenTile;
 			else if (clatSetNum == ClearToPaveLat)
 				return PaveTile;
+			else if (clatSetNum == ClearToBlueMoldLat)
+				return BlueMoldTile;
+			else if (clatSetNum == ClearToCrystalLat)
+				return CrystalTile;
+			else if (clatSetNum == WaterToSwampLat)
+				return SwampTile;
 			else
 				return -1;
 		}
 
-		public short GetCLATSet(short setNum) {
+		public short GetCLATSet(int setNum) {
 			if (setNum == RoughTile)
 				return ClearToRoughLat;
 			else if (setNum == SandTile)
@@ -383,17 +416,31 @@ namespace CNCMaps.Engine.Game {
 				return ClearToGreenLat;
 			else if (setNum == PaveTile)
 				return ClearToPaveLat;
+			else if (setNum == BlueMoldTile)
+				return ClearToBlueMoldLat;
+			else if (setNum == CrystalTile)
+				return ClearToCrystalLat;
+			else if (setNum == SwampTile)
+				return WaterToSwampLat;
 			else
 				return -1;
 		}
 
-		public short GetSetNum(short tileNum) {
+		public bool IsCrystalLAT(int setNum) {
+			return (setNum == CrystalTile);
+		}
+
+		public bool IsCrystalCliff(int setNum) {
+			return (setNum == CrystalCliff);
+		}
+
+		public int GetSetNum(int tileNum) {
 			if (tileNum < 0 || tileNum >= _tileNumToSet.Count) return 0;
 			return _tileNumToSet[tileNum];
 		}
 
-		public short GetTileNumFromSet(short setNum, byte tileNumWithinSet = 0) {
-			return (short)(_setNumToFirstTile[setNum] + tileNumWithinSet);
+		public int GetTileNumFromSet(int setNum, byte tileNumWithinSet = 0) {
+			return (int)(_setNumToFirstTile[setNum] + tileNumWithinSet);
 		}
 
 		public int NumTiles {

@@ -33,15 +33,14 @@ namespace CNCMaps.Engine.Game {
 		}
 
 		public override void Draw(GameObject obj, DrawingSurface ds, bool omitShadow = false) {
+			if (Props.HasShadow && !omitShadow && !obj.Drawable.Props.Cloakable)
+				ShpRenderer.DrawShadow(obj, Shp, Props, ds);
 			if (TransLucency == 0)
 				base.Draw(obj, ds, omitShadow);
-			else {
+			else if (!(obj.Drawable.Props.Cloakable && TransLucency > 0)) {
 				Logger.Debug("Drawing object {0} with {1}% translucency", obj, TransLucency);
 				ShpRenderer.Draw(Shp, obj, this, Props, ds, TransLucency);
 			}
-			if (Props.HasShadow && !omitShadow)
-				ShpRenderer.DrawShadow(obj, Shp, Props, ds);
 		}
-
 	}
 }

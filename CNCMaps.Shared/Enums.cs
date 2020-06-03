@@ -15,6 +15,8 @@ namespace CNCMaps.Shared {
 		Aboreus = 8,
 		Ore = 1, // ts: rip
 		Gems = 2, // ts: cru
+		Ore2 = 4, // ts: vini - unused
+		Ore3 = 8, // ts: abor - unused
 		All = 15,
 	};
 
@@ -95,13 +97,17 @@ namespace CNCMaps.Shared {
 
 	public enum StartPositionMarking {
 		None,
+		Squared,
+		Circled,
+		Diamond,
+		Ellipsed,
+		Starred,
 		Tiled,
-		Squared
 	}
 
 	public enum PreviewMarkersType {
 		None,
-		Squared,
+		SelectedAsAbove,
 		Bittah,
 		Aro,
 	}

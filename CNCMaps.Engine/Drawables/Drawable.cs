@@ -34,6 +34,7 @@ namespace CNCMaps.Engine.Drawables {
 
 		public bool Overrides { get; set; }
 		public bool IsWall { get; set; }
+		public bool IsActualWall { get; set; }
 		public bool IsGate { get; set; }
         public bool IsRubble { get; set; }
 		public bool IsVeins { get; set; }
@@ -45,6 +46,9 @@ namespace CNCMaps.Engine.Drawables {
         public int StandingFrames { get; set; }
         public int WalkFrames { get; set; }
         public int Facings { get; set; }
+        public int Ready_Start { get; set; } 
+        public int Ready_Count { get; set; }
+        public int Ready_CountNext { get; set; }
 		public bool Theater { get; set; }
 		public bool IsBuildingPart = true;
 
@@ -58,6 +62,9 @@ namespace CNCMaps.Engine.Drawables {
 
 		protected Drawable() { }
 		protected Drawable(IniFile.IniSection rules, IniFile.IniSection art) {
+            Ready_Start = 0;
+            Ready_Count = 1;
+            Ready_CountNext = 1;
 			Rules = rules;
 			Art = art;
 			Name = rules != null ? rules.Name : "";
@@ -113,8 +120,18 @@ namespace CNCMaps.Engine.Drawables {
 			}
 
 			Props.HasShadow = Art.ReadBool("Shadow", Defaults.GetShadowAssumption(OwnerCollection.Type));
+			Props.HasShadow = !Rules.ReadBool("NoShadow");
+            Props.Cloakable = Rules.ReadBool("Cloakable");
 			Flat = Rules.ReadBool("DrawFlat", Defaults.GetFlatnessAssumption(OwnerCollection.Type))
 				|| Rules.ReadBool("Flat");
+
+			if (Rules.ReadBool("Gate")) {
+				IsGate = true;
+				Flat = false;
+				IsBuildingPart = true;
+				Props.PaletteType = PaletteType.Unit;
+				Props.FrameDecider = FrameDeciders.NullFrameDecider;
+			}
 
 			if (Rules.ReadBool("Wall")) {
 				IsWall = true;
@@ -128,13 +145,7 @@ namespace CNCMaps.Engine.Drawables {
 				Props.LightingType = LightingType.Ambient;
 				Props.FrameDecider = FrameDeciders.OverlayValueFrameDecider;
 			}
-			if (Rules.ReadBool("Gate")) {
-				IsGate = true;
-				Flat = false;
-				IsBuildingPart = true;
-				Props.PaletteType = PaletteType.Unit;
-				Props.FrameDecider = FrameDeciders.NullFrameDecider;
-			}
+
             // Starkku: Overlays with IsRubble are not drawn.
             if (Rules.ReadBool("IsRubble"))
             {
@@ -160,6 +171,8 @@ namespace CNCMaps.Engine.Drawables {
 			}
 			else if (Rules.ReadString("Land") == "Road") {
 				Props.Offset.Y += TileHeight / 2;
+                // Starkku: Some silly crap with low bridges not rendering.
+                if (Name.ToUpper().Contains("LOBRDG") || Name.ToUpper().Contains("LOBRDB")) Props.ZAdjust += TileHeight;
 				// drawable.Foundation = new Size(3, 1); // ensures bridges are drawn a bit lower than where they're stored
 			}
 			else if (Rules.ReadString("Land") == "Railroad") {
@@ -184,12 +197,26 @@ namespace CNCMaps.Engine.Drawables {
 			}
             */
             // Starkku: Better support for SHP vehicles.
-            Facings = 8; //Art.ReadInt("Facings", 8); // Hardcoded atm in the game, other values do not work properly.
+            Facings = Art.ReadInt("Facings", 8);
+			StartStandFrame = Art.ReadInt("StartStandFrame", 0);
+            StandingFrames = Art.ReadInt("StandingFrames", 0);
 			StartWalkFrame = Art.ReadInt("StartWalkFrame", 0);
             WalkFrames = Art.ReadInt("WalkFrames", 0);
-			StartStandFrame = Art.ReadInt("StartStandFrame", StartWalkFrame + (WalkFrames * Facings));
-            StandingFrames = Art.ReadInt("StandingFrames", 1);
+
 			Props.Offset.Offset(Art.ReadInt("XDrawOffset"), Art.ReadInt("YDrawOffset"));
+			
+			string sequence = Art.ReadString("Sequence");
+			if (sequence != string.Empty) {
+				IniFile.IniSection seqSection = OwnerCollection.Art.GetOrCreateSection(sequence);
+				string seqReady = seqSection.ReadString("Ready");
+				string[] readyParts = seqReady.Split(',');
+				int start, frames, facingcount;
+				if(readyParts.Length == 3 && int.TryParse(readyParts[0], out start) && int.TryParse(readyParts[1], out frames) && int.TryParse(readyParts[2], out facingcount)) {
+					Ready_Start = start;
+					Ready_Count = frames;
+					Ready_CountNext = facingcount;
+				}
+			}
 		}
 
 		public abstract void Draw(GameObject obj, DrawingSurface ds, bool shadow = true);
@@ -204,18 +231,18 @@ namespace CNCMaps.Engine.Drawables {
 				gfx.DrawRectangle(BoundsRectPenVoxel, obj.GetBounds());
 			else
 				gfx.DrawRectangle(BoundsRectPenSHP, obj.GetBounds());
-
 			var top = obj.TopTile;
 			var left = obj.Tile.Layer.GetTileR(obj.TopTile.Rx, obj.TopTile.Ry + obj.Drawable.Foundation.Height);
 			var bottom = obj.Tile.Layer.GetTileR(obj.TopTile.Rx + obj.Drawable.Foundation.Width, obj.TopTile.Ry + obj.Drawable.Foundation.Height);
 			var right = obj.Tile.Layer.GetTileR(obj.TopTile.Rx + obj.Drawable.Foundation.Width, obj.TopTile.Ry);
 
 			List<Point> verts = new List<Point>();
-			verts.Add(new Point(top.Dx * TileWidth / 2, top.Dy * TileHeight / 2));
-			verts.Add(new Point(left.Dx * TileWidth / 2 - TileWidth / 4, left.Dy * TileHeight / 2 + TileHeight / 4));
-			verts.Add(new Point(bottom.Dx * TileWidth / 2, bottom.Dy * TileHeight / 2 + TileHeight / 2));
-			verts.Add(new Point(right.Dx * TileWidth / 2 + TileHeight / 2, right.Dy * TileHeight / 2 + TileHeight / 4));
-			verts.Add(new Point(top.Dx * TileWidth / 2, top.Dy * TileHeight / 2));
+            // Starkku: Failsafe because these don't always seem to get initialized properly with buildings places near edges of the map for some reason.
+			if (top != null) verts.Add(new Point(top.Dx * TileWidth / 2, top.Dy * TileHeight / 2));
+            if (left != null)  verts.Add(new Point(left.Dx * TileWidth / 2 - TileWidth / 4, left.Dy * TileHeight / 2 + TileHeight / 4));
+            if (bottom!= null) verts.Add(new Point(bottom.Dx * TileWidth / 2, bottom.Dy * TileHeight / 2 + TileHeight / 2));
+            if (right != null) verts.Add(new Point(right.Dx * TileWidth / 2 + TileHeight / 2, right.Dy * TileHeight / 2 + TileHeight / 4));
+            if (top != null) verts.Add(new Point(top.Dx * TileWidth / 2, top.Dy * TileHeight / 2));
 
 			List<Point> verts2 = new List<Point>();
 			foreach (var p in verts) {

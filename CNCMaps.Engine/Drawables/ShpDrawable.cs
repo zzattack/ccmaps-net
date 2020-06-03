@@ -1,4 +1,6 @@
-﻿using System.Drawing;
+﻿using System;
+using System.Drawing;
+using System.Linq;
 using CNCMaps.Engine.Drawables;
 using CNCMaps.Engine.Map;
 using CNCMaps.Engine.Rendering;
@@ -7,31 +9,42 @@ using CNCMaps.Shared;
 
 namespace CNCMaps.Engine.Game {
 	class ShpDrawable : Drawable {
+		private Random random;
+
 		public ShpFile Shp { get; set; }
 
 		public ShpDrawable(IniFile.IniSection rules, IniFile.IniSection art)
 			: base(rules, art) {
+			random = new Random();
 		}
 
 		public ShpDrawable(ShpFile shpFile) {
 			Shp = shpFile;
+			random = new Random();
 		}
 
 		public ShpDrawable(IniFile.IniSection rules, IniFile.IniSection art, ShpFile shpFile)
 			: base(rules, art) {
 			Shp = shpFile;
+			random = new Random();
 		}
 
 		public override void Draw(GameObject obj, DrawingSurface ds, bool shadow = true) {
 			if (InvisibleInGame || Shp == null) return;
-			ShpRenderer.Draw(Shp, obj, this, Props, ds);
-			if (Props.HasShadow && shadow)
+			if (OwnerCollection != null && OwnerCollection.Type == CollectionType.Infantry) {
+				int randomDir = -1;
+				if (ModConfig.ActiveConfig.ExtraOptions.FirstOrDefault() != null && ModConfig.ActiveConfig.ExtraOptions.FirstOrDefault().EnableRandomInfantryFacing)
+					randomDir = random.Next(256);
+				Props.FrameDecider = FrameDeciders.InfantryFrameDecider(Ready_Start, Ready_Count, Ready_CountNext, randomDir);
+			}
+			if (Props.HasShadow && shadow && !Props.Cloakable)
 				ShpRenderer.DrawShadow(obj, Shp, Props, ds);
+			ShpRenderer.Draw(Shp, obj, this, Props, ds, Props.Cloakable ? 50 : 0);
 		}
 
 		public override void DrawShadow(GameObject obj, DrawingSurface ds) {
 			if (InvisibleInGame || Shp == null) return;
-			if (Props.HasShadow)
+			if (Props.HasShadow && !Props.Cloakable)
 				ShpRenderer.DrawShadow(obj, Shp, Props, ds);
 		}
 

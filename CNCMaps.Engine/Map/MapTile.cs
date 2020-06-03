@@ -15,13 +15,14 @@ namespace CNCMaps.Engine.Map {
 		public ushort Ry { get; private set; }
 		public short Z { get; private set; }
 
-		public short TileNum { get; set; }
+		public int TileNum { get; set; }
 		public override int Number {
 			get { return TileNum; }
-			protected set { TileNum = (short)value; }
+			protected set { TileNum = value; }
 		}
+		public short IceGrowth { get; private set; }
 
-		public short SetNum { get; set; }
+		public int SetNum { get; set; }
 		public ushort SubTile { get; set; }
 
 		internal TileLayer Layer { get; private set; }
@@ -33,7 +34,7 @@ namespace CNCMaps.Engine.Map {
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 		private readonly List<GameObject> _allObjects = new List<GameObject>();
 
-		public MapTile(ushort dx, ushort dy, ushort rx, ushort ry, short rz, short tilenum, ushort subtile, TileLayer layer, short setnum = 0) {
+		public MapTile(ushort dx, ushort dy, ushort rx, ushort ry, short rz, int tilenum, ushort subtile, short icegrowth, TileLayer layer, int setnum = 0) {
 			Dx = dx;
 			Dy = dy;
 			Rx = rx;
@@ -42,6 +43,7 @@ namespace CNCMaps.Engine.Map {
 			TileNum = tilenum;
 			SetNum = setnum;
 			SubTile = subtile;
+			IceGrowth = icegrowth;
 			Layer = layer;
 		}
 

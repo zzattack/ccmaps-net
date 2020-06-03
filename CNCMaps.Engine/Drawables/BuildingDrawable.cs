@@ -43,9 +43,15 @@ namespace CNCMaps.Engine.Game {
 		private readonly List<AnimDrawable> _anims = new List<AnimDrawable>();
 		private readonly List<AnimDrawable> _animsDamaged = new List<AnimDrawable>();
 		private readonly List<AnimDrawable> _fires = new List<AnimDrawable>();
+		private Random _random;
+		private bool _canBeOccupied;
+		private int _techLevel;
+		private int _conditionYellowHealth;
+		private int _conditionRedHealth;
 
 		public BuildingDrawable(IniFile.IniSection rules, IniFile.IniSection art)
 			: base(rules, art) {
+			_random = new Random();
 		}
 
 		public override void LoadFromRules() {
@@ -66,7 +72,22 @@ namespace CNCMaps.Engine.Game {
 			}
 			Props.SortIndex = Art.ReadInt("NormalYSort") - Art.ReadInt("NormalZAdjust"); // "main" building image before anims
 			Props.ZShapePointMove = Art.ReadPoint("ZShapePointMove");
-
+			
+			_canBeOccupied= Rules.ReadBool("CanBeOccupied");
+			_techLevel = Rules.ReadInt("TechLevel");
+			_conditionYellowHealth = 128;
+			_conditionRedHealth = 64;
+			IniFile.IniSection audioVisual = OwnerCollection.Rules.GetOrCreateSection("AudioVisual");
+			if (audioVisual != null) {
+				if (audioVisual.HasKey("ConditionYellow")) {
+					int conditionYellow = audioVisual.ReadPercent("ConditionYellow");
+					_conditionYellowHealth = (int)(256 * (double)conditionYellow / 100);
+				}
+				if (audioVisual.HasKey("ConditionRed")) {
+					int conditionRed = audioVisual.ReadPercent("ConditionRed");
+					_conditionRedHealth = (int)(256 * (double)conditionRed / 100);
+				}
+			}
 			_baseShp = new ShpDrawable(Rules, Art);
 			_baseShp.OwnerCollection = OwnerCollection;
 			_baseShp.LoadFromArtEssential();
@@ -96,9 +117,11 @@ namespace CNCMaps.Engine.Game {
 			// Add turrets
 			if (Rules.ReadBool("Turret") && Rules.HasKey("TurretAnim")) {
 				string turretName = Rules.ReadString("TurretAnim");
+				IniFile.IniSection turretArt = OwnerCollection.Art.GetOrCreateSection(turretName);
+				if (turretArt.HasKey("Image"))
+					turretName = turretArt.ReadString("Image");
                 // Starkku: NewTheater/generic image fallback support for turrets.
-                string turretNameShp = NewTheater ? OwnerCollection.ApplyNewTheaterIfNeeded(turretName, turretName) : turretName;
-				turretNameShp += ".shp";
+                string turretNameShp = NewTheater ? OwnerCollection.ApplyNewTheaterIfNeeded(turretName, turretName + ".shp") : turretName + ".shp";
 				Drawable turret = Rules.ReadBool("TurretAnimIsVoxel")
 					? (Drawable)new VoxelDrawable(VFS.Open<VxlFile>(turretName + ".vxl"), VFS.Open<HvaFile>(turretName + ".hva"))
 					: new ShpDrawable(VFS.Open<ShpFile>(turretNameShp));
@@ -106,6 +129,7 @@ namespace CNCMaps.Engine.Game {
 				turret.Props.HasShadow = Rules.ReadBool("UseTurretShadow");
 				turret.Props.FrameDecider = FrameDeciders.TurretFrameDecider;
 				turret.Props.ZAdjust = Rules.ReadInt("TurretAnimZAdjust");
+                turret.Props.Cloakable = Props.Cloakable;
 				SubDrawables.Add(turret);
 
 				if (turret is VoxelDrawable && turretName.ToUpper().Contains("TUR")) {
@@ -134,13 +158,17 @@ namespace CNCMaps.Engine.Game {
 
 			// Powerup slots, at most 3
 			for (int i = 1; i <= 3; i++) {
-				if (!Art.HasKey(String.Format("PowerUp{0}LocXX", i))) break;
 				_powerupSlots.Add(new PowerupSlot {
-					X = Art.ReadInt(String.Format("PowerUp{0}LocXX", i)),
-					Y = Art.ReadInt(String.Format("PowerUp{0}LocYY", i)),
-					Z = Art.ReadInt(String.Format("PowerUp{0}LocZZ", i)),
-					YSort = Art.ReadInt(String.Format("PowerUp{0}LocYSort", i)),
+					X = Art.ReadInt(String.Format("PowerUp{0}LocXX", i), 0),
+					Y = Art.ReadInt(String.Format("PowerUp{0}LocYY", i), 0),
+					Z = Art.ReadInt(String.Format("PowerUp{0}LocZZ", i), 0),
+					YSort = Art.ReadInt(String.Format("PowerUp{0}LocYSort", i), 0),
 				});
+			}
+
+			if (IsWall && _baseShp.Shp != null) {
+				_baseShp.Shp.Initialize();
+				if (_baseShp.Shp.NumImages >= 32) IsActualWall = true;
 			}
 		}
 
@@ -173,6 +201,37 @@ namespace CNCMaps.Engine.Game {
 			return anim;
 		}
 
+		private AnimDrawable LoadUpgrade(StructureObject structObj, int upgradeSlot, DrawProperties inheritProps) {
+			string upgradeName = "";
+			if (upgradeSlot == 0)
+				upgradeName = structObj.Upgrade1;
+			else if (upgradeSlot == 1)
+				upgradeName = structObj.Upgrade2;
+			else if (upgradeSlot == 2)
+				upgradeName = structObj.Upgrade3;
+
+			IniFile.IniSection upgradeRules = OwnerCollection.Rules.GetOrCreateSection(upgradeName);
+			if (upgradeRules != null && upgradeRules.HasKey("Image"))
+				upgradeName = upgradeRules.ReadString("Image");
+			IniFile.IniSection upgradeArt = OwnerCollection.Art.GetOrCreateSection(upgradeName);
+			if (upgradeArt != null && upgradeArt.HasKey("Image"))
+				upgradeName = upgradeArt.ReadString("Image");
+
+			IniFile.IniSection upgRules = OwnerCollection.Rules.GetOrCreateSection(upgradeName);
+			IniFile.IniSection upgArt = OwnerCollection.Art.GetOrCreateSection(upgradeName);
+			AnimDrawable upgrade = new AnimDrawable(upgRules, upgArt);
+			upgrade.OwnerCollection = OwnerCollection;
+			upgrade.Props = inheritProps;
+			upgrade.LoadFromRules();
+			upgrade.NewTheater = this.NewTheater;
+			upgrade.IsBuildingPart = true;
+            string shpfilename = NewTheater ? OwnerCollection.ApplyNewTheaterIfNeeded(upgradeName, upgradeName + ".shp") : upgradeName + ".shp";
+			upgrade.Shp = VFS.Open<ShpFile>(shpfilename);
+			Point powerupOffset = new Point(_powerupSlots[upgradeSlot].X, _powerupSlots[upgradeSlot].Y);
+			upgrade.Props.Offset.Offset(powerupOffset);
+			return upgrade;
+		}
+
 		// Adds fire animations to a building. Supports custom-paletted animations.
 		private void LoadFireAnimations() {
 			// http://modenc.renegadeprojects.com/DamageFireTypes
@@ -183,12 +242,12 @@ namespace CNCMaps.Engine.Game {
 					break;
 
 				string[] coords = dfo.Split(new[] { ',', '.' }, StringSplitOptions.RemoveEmptyEntries);
-				string fireAnim = OwnerCollection.FireNames[Rand.Next(OwnerCollection.FireNames.Length)];
+				string fireAnim = OwnerCollection.FireNames[_random.Next(OwnerCollection.FireNames.Length)];
 				IniFile.IniSection fireArt = OwnerCollection.Art.GetOrCreateSection(fireAnim);
 
 				var fire = new AnimDrawable(Rules, Art, VFS.Open<ShpFile>(fireAnim + ".shp"));
 				fire.Props.PaletteOverride = GetFireAnimPalette(fireArt);
-				fire.Props.Offset = new Point(Int32.Parse(coords[0]), Int32.Parse(coords[1]));
+				fire.Props.Offset = new Point(Int32.Parse(coords[0]) + (TileWidth / 2), Int32.Parse(coords[1]));
 				fire.Props.FrameDecider = FrameDeciders.RandomFrameDecider;
 				_fires.Add(fire);
 			}
@@ -223,12 +282,45 @@ namespace CNCMaps.Engine.Game {
 			if (InvisibleInGame)
 				return;
 
+			// RA2/YR building rubble
+			if (obj is StructureObject && (obj as StructureObject).Health == 0 && OwnerCollection.Engine >= EngineType.RedAlert2 && _baseShp.Shp != null) {
+				ShpDrawable rubble = (ShpDrawable)_baseShp.Clone();
+				rubble.Props = _baseShp.Props.Clone();
+				rubble.Shp.Initialize();
+				if (rubble.Shp.NumImages >= 8) {
+					rubble.Props.PaletteOverride = OwnerCollection.Palettes.IsoPalette;
+					rubble.Props.FrameDecider = FrameDeciders.BuildingRubbleFrameDecider(rubble.Shp.NumImages);
+					if (shadows)
+						rubble.DrawShadow(obj, ds);
+					rubble.Draw(obj, ds, false);
+					return;
+				}
+			}
+
+			bool isDamaged = false;
+			bool isOnFire = false;
+			if (obj is StructureObject) {
+				int health = (obj as StructureObject).Health;
+				if (health <= _conditionYellowHealth) {
+					isDamaged = true;
+					if (health > _conditionRedHealth && _canBeOccupied && _techLevel < 1)
+						isDamaged = false;
+				}
+				_baseShp.Props.FrameDecider = FrameDeciders.BaseBuildingFrameDecider(isDamaged);
+
+				if (OwnerCollection.Engine >= EngineType.RedAlert2) {
+					if (isDamaged) isOnFire = true;
+					if (health > _conditionRedHealth && _canBeOccupied) isOnFire = false;
+				}
+			}
+
 			var drawList = new List<Drawable>();
 			drawList.Add(_baseShp);
 
-			if (obj is StructureObject && (obj as StructureObject).Health < 128) {
+			if (obj is StructureObject && isDamaged) {
 				drawList.AddRange(_animsDamaged);
-				drawList.AddRange(_fires);
+				if (isOnFire)
+					drawList.AddRange(_fires);
 			}
 			else
 				drawList.AddRange(_anims);
@@ -242,26 +334,27 @@ namespace CNCMaps.Engine.Game {
 			ActiveAnims+ZAdjust=-32 */
 			drawList = drawList.OrderBy(d => d.Flat ? -1 : 1).ThenBy(d => d.Props.SortIndex).ToList();
 
-			foreach (var d in drawList)
-				d.Draw(obj, ds, false);
-			if (shadows)
-				foreach (var d in drawList)
+			foreach (var d in drawList) {
+				if (shadows)
 					d.DrawShadow(obj, ds);
+				d.Draw(obj, ds, false);
+			}
 
 			var strObj = obj as StructureObject;
-			if (!strObj.Upgrade1.Equals("None", StringComparison.InvariantCultureIgnoreCase) && _powerupSlots.Count >= 1) {
-				var powerup = OwnerCollection.GetDrawable(strObj.Upgrade1);
-				DrawPowerup(obj, powerup, 0, ds);
+
+			if (!strObj.Upgrade1.Equals("None", StringComparison.InvariantCultureIgnoreCase)) {
+				AnimDrawable up1 = LoadUpgrade(strObj, 0, Props.Clone());
+				up1.Draw(obj, ds, false);
 			}
 
-			if (!strObj.Upgrade2.Equals("None", StringComparison.InvariantCultureIgnoreCase) && _powerupSlots.Count >= 2) {
-				var powerup = OwnerCollection.GetDrawable(strObj.Upgrade2);
-				DrawPowerup(obj, powerup, 1, ds);
+			if (!strObj.Upgrade2.Equals("None", StringComparison.InvariantCultureIgnoreCase)) {
+				AnimDrawable up2 = LoadUpgrade(strObj, 1, Props.Clone());
+				up2.Draw(obj, ds, false);
 			}
 
-			if (!strObj.Upgrade3.Equals("None", StringComparison.InvariantCultureIgnoreCase) && _powerupSlots.Count >= 3) {
-				var powerup = OwnerCollection.GetDrawable(strObj.Upgrade3);
-				DrawPowerup(obj, powerup, 2, ds);
+			if (!strObj.Upgrade3.Equals("None", StringComparison.InvariantCultureIgnoreCase)) {
+				AnimDrawable up3 = LoadUpgrade(strObj, 2, Props.Clone());
+				up3.Draw(obj, ds, false);
 			}
 		}
 
@@ -295,19 +388,7 @@ namespace CNCMaps.Engine.Game {
 			foreach (var d in parts)
 				d.DrawBoundingBox(obj, gfx);
 		}
-
-		public void DrawPowerup(GameObject obj, Drawable powerup, int slot, DrawingSurface ds) {
-			if (slot >= _powerupSlots.Count)
-				throw new InvalidOperationException("Building does not have requested slot ");
-
-			var powerupOffset = new Point(_powerupSlots[slot].X, _powerupSlots[slot].Y);
-			powerup.Props.Offset.Offset(powerupOffset);
-			powerup.Draw(obj, ds);
-			// undo offset
-			powerup.Props.Offset.Offset(-powerupOffset.X, -powerupOffset.Y);
-		}
-	}
-
+}
 
 	public class PowerupSlot {
 		public int X { get; set; }

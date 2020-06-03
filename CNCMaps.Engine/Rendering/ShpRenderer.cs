@@ -27,10 +27,10 @@ namespace CNCMaps.Engine.Rendering {
 
 		unsafe public static void Draw(ShpFile shp, GameObject obj, Drawable dr, DrawProperties props, DrawingSurface ds, int transLucency = 0) {
 			shp.Initialize();
-
-			int frameIndex = props.FrameDecider(obj);
 			Palette p = props.PaletteOverride ?? obj.Palette;
-
+			int frameIndex = props.FrameDecider(obj);
+			if (obj.Drawable.IsActualWall)
+				frameIndex = ((StructureObject)obj).WallBuildingFrame;
 			frameIndex = DecideFrameIndex(frameIndex, shp.NumImages);
 			if (frameIndex >= shp.Images.Count)
 				return;
@@ -61,7 +61,7 @@ namespace CNCMaps.Engine.Rendering {
 			int rIdx = 0; // image pixel index
 			int zIdx = offset.X + offset.Y * ds.Width; // z-buffer pixel index
 			short hBufVal = (short)(obj.Tile.Z * Drawable.TileHeight / 2);
-			short zOffset = (short)((obj.BottomTile.Rx + obj.BottomTile.Ry) * Drawable.TileHeight / 2);
+            short zOffset = (short)((obj.BottomTile.Rx + obj.BottomTile.Ry) * Drawable.TileHeight / 2 + props.ZAdjust);
 
 			if (!dr.Flat)
 				hBufVal += shp.Height;
@@ -128,7 +128,10 @@ namespace CNCMaps.Engine.Rendering {
 
 
 		public static unsafe void DrawShadow(GameObject obj, ShpFile shp, DrawProperties props, DrawingSurface ds) {
+			shp.Initialize();
 			int frameIndex = props.FrameDecider(obj);
+			if (obj.Drawable.IsActualWall)
+				frameIndex = ((StructureObject)obj).WallBuildingFrame;
 			frameIndex = DecideFrameIndex(frameIndex, shp.NumImages);
 			frameIndex += shp.Images.Count / 2; // latter half are shadow Images
 			if (frameIndex >= shp.Images.Count)
@@ -223,7 +226,7 @@ namespace CNCMaps.Engine.Rendering {
 			int dx = offset.X + Drawable.TileWidth / 2 - shp.Width / 2 + img.X,
 				dy = offset.Y - shp.Height / 2 + img.Y;
 			byte* w = (byte*)ds.BitmapData.Scan0 + dx * 3 + stride * dy;
-			short zOffset = (short)((obj.Tile.Rx + obj.Tile.Ry) * Drawable.TileHeight / 2 - shp.Height / 2 + img.Y);
+            short zOffset = (short)((obj.Tile.Rx + obj.Tile.Ry) * Drawable.TileHeight / 2 - shp.Height / 2 + img.Y + props.ZAdjust);
 			int rIdx = 0;
 
 			for (int y = 0; y < img.Height; y++) {

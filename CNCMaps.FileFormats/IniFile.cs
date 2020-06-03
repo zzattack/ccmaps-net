@@ -286,6 +286,23 @@ namespace CNCMaps.FileFormats {
 					return defaultValue;
 			}
 
+			public int ReadPercent(string key, int defaultValue = 0) {
+				int ret = defaultValue;
+				string val = ReadString(key);
+				if (!string.IsNullOrEmpty(val)) {
+					if (val.Contains("%")) {
+						string[] c = val.Split('%');
+						int.TryParse(c[0], out ret);
+					}
+					else {
+						double valDec = 0;
+						double.TryParse(val.Replace(',', '.'), NumberStyles.Any, culture, out valDec);
+						ret = (int)(valDec * 100);
+					}
+				}
+				return ret;
+			}
+
 			public Color ReadColor(string key) {
 				string colorStr = ReadString(key, "0,0,0");
 				string[] colorParts = colorStr.Split(new[] { "," }, StringSplitOptions.RemoveEmptyEntries);

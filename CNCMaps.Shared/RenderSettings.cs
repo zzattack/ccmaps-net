@@ -21,13 +21,23 @@ namespace CNCMaps.Shared {
 		public SizeMode SizeMode { get; set; }
 		public EngineType Engine { get; set; }
 		public StartPositionMarking StartPositionMarking;
+		public bool MarkStartPos { get; set; }
+		public string MarkStartSize { get; set; }
 		public bool PreferOSMesa { get; set; }
 		public string ThumbnailConfig { get; set; }
 		public bool FixupTiles { get; set; }
 		public bool GeneratePreviewPack { get; set; }
 		public PreviewMarkersType PreviewMarkers { get; set; }
-		public bool FixPreviewDimensions { get; set; }
+        public bool SavePNGThumbnails { get; set; }
+        public bool FixPreviewDimensions { get; set; }
 		public bool Debug { get; set; }
+		public bool MarkIceGrowth { get; set; }
+		public bool DiagnosticWindow { get; set; }
+		public bool Backup { get; set; }
+		public bool FixOverlays { get; set; }
+		public bool CompressTiles { get; set; }
+		public bool TunnelPaths { get; set; }
+		public bool TunnelPosition { get; set; }
 
 		public RenderSettings() {
 			PNGQuality = 6;
@@ -44,9 +54,19 @@ namespace CNCMaps.Shared {
 			MixFilesDirectory = "";
 			ModConfig = "";
 			ThumbnailConfig = "";
+            SavePNGThumbnails = false;
 			SizeMode = SizeMode.Auto;
 			FixPreviewDimensions = true;
 			Debug = false;
+			MarkIceGrowth = false;
+			DiagnosticWindow = false;
+			Backup = true;
+			FixOverlays = false;
+			CompressTiles = false;
+			TunnelPaths = false;
+			TunnelPosition = false;
+			MarkStartPos = false;
+			MarkStartSize = "4.0";
 		}
 
 		public void ConfigureFromArgs(string[] args) {
@@ -72,8 +92,14 @@ namespace CNCMaps.Shared {
 				{"c|png-compression=", "Set PNG compression level (1-9)", (int v) => PNGQuality = v}, 
 				{"m|mixdir=", "Specify location of .mix files, read from registry if not specified (win only)",v => MixFilesDirectory = v},
 				{"M|modconfig=", "Filename of a game configuration specific to your mod (create with GUI)",v => ModConfig = v},
-				{"s|start-pos-tiled", "Mark starting positions in a tiled manner",v => StartPositionMarking = StartPositionMarking.Tiled},
+				{"mark-start-pos", "Mark starting positions",v => MarkStartPos = true},
 				{"S|start-pos-squared", "Mark starting positions in a squared manner",v => StartPositionMarking = StartPositionMarking.Squared}, 
+				{"start-pos-circled", "Mark starting positions in a circled manner",v => StartPositionMarking = StartPositionMarking.Circled},
+				{"start-pos-diamond", "Mark starting positions in a diamond manner",v => StartPositionMarking = StartPositionMarking.Diamond},
+				{"start-pos-ellipsed", "Mark starting positions in a ellipsed manner",v => StartPositionMarking = StartPositionMarking.Ellipsed}, 
+				{"start-pos-star", "Mark starting positions in a star manner",v => StartPositionMarking = StartPositionMarking.Starred}, 
+				{"s|start-pos-tiled", "Mark starting positions in a tiled manner",v => StartPositionMarking = StartPositionMarking.Tiled},
+				{"start-pos-size", "Mark starting positions with given size (2-6)", v => MarkStartSize = v},
 				{"r|mark-ore", "Mark ore and gem fields more explicity, looks good when resizing to a preview", v => MarkOreFields = true},
 				{"F|force-fullmap", "Ignore LocalSize definition and just save the full map", v => SizeMode = SizeMode.Full},
 				{"f|force-localsize", "Use localsize for map dimensions (default)", v => SizeMode = SizeMode.Local}, 
@@ -84,10 +110,10 @@ namespace CNCMaps.Shared {
 						PreviewMarkers = PreviewMarkersType.None;
 					}
 				},
-				{"K|preview-markers-squared", "Update the maps [PreviewPack] data with the rendered image, using a red squared marker on the start positions",
+				{"K|preview-markers-selected", "Update the maps [PreviewPack] data with the rendered image, using the selected options of marker type and size on the start positions",
 					v => {
 						GeneratePreviewPack = true;
-						PreviewMarkers = PreviewMarkersType.Squared;
+						PreviewMarkers = PreviewMarkersType.SelectedAsAbove;
 					}
 				},
 				{"l|preview-markers-bittah", "Update the maps [PreviewPack] data with the rendered image, using Bittah's image on the start positions",
@@ -105,10 +131,18 @@ namespace CNCMaps.Shared {
 
 				{"n|ignore-lighting", "Ignore all lighting and lamps on the map",v => IgnoreLighting = true}, 
 				// {"G|graphics-winmgr", "Attempt rendering voxels using window manager context first (default)",v => Settings.PreferOSMesa = false},
-				{"g|graphics-osmesa", "Attempt rendering voxels using OSMesa context first", v => PreferOSMesa = true},
+				//{"g|graphics-osmesa", "Attempt rendering voxels using OSMesa context first", v => PreferOSMesa = true},
 				{"z|create-thumbnail=", "Also save a thumbnail along with the fullmap in dimensions (x,y), prefix with + to keep aspect ratio	", v => ThumbnailConfig = v},
 				{"x|no-preview-fixup=", "Also save a thumbnail along with the fullmap in dimensions (x,y), prefix with + to keep aspect ratio	", v => ThumbnailConfig = v},
-				{"fixup-tiles", "Remove undefined tiles and overwrite IsoMapPack5 section in map", v => FixupTiles = true },
+                {"thumb-png", "Save thumbnails as PNG instead of JPEG.", v => SavePNGThumbnails = true },
+                {"fixup-tiles", "Remove undefined tiles and overwrite IsoMapPack5 section in map", v => FixupTiles = true },
+				{"g|icegrowth", "Mark cells with ice growth set, used in TS snow maps", v => MarkIceGrowth = true},
+				{"e|diagwindow", "Show the diagnostic window", v => DiagnosticWindow = true},
+				{"b|bkp", "Create map file backup when modifying", v => Backup = true},
+				{"fix-overlays", "Remove undefined overlays and update overlay packs in map", v => FixOverlays = true},
+				{"cmprs-tiles", "Compress and update IsoMapPack5 in map", v => CompressTiles = true},
+				{"tunnels", "Show tunnels path lines", v => TunnelPaths = true},
+				{"tunnelpos", "Adjust position of tunnel path lines", v => TunnelPaths = true},
 			};
 
 			return _options;
