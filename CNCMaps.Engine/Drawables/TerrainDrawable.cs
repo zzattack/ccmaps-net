@@ -36,7 +36,7 @@ namespace CNCMaps.Engine.Game {
 		}
 
 		public override Rectangle GetBounds(GameObject obj) {
-			if (InvisibleInGame || terrainShp.Shp == null) return Rectangle.Empty;
+			if (InvisibleInGame || terrainShp?.Shp == null) return Rectangle.Empty;
 
 			var bounds = ShpRenderer.GetBounds(obj, terrainShp.Shp, Props);
 			bounds.Offset(obj.Tile.Dx * TileWidth / 2, (obj.Tile.Dy - obj.Tile.Z) * TileHeight / 2);
