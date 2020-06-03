@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 using System.Drawing;
@@ -28,14 +29,20 @@ namespace CNCMaps.Engine.Rendering {
 			_cells = (_map.FullSize.Width * 2 - 1) * _map.FullSize.Height;
 
 			ds.Unlock();
-			pictureBox1.Image = ds.Bitmap;
+			canvas.Image = ds.Bitmap;
 		}
 
-		private void pictureBox1_MouseMove(object sender, MouseEventArgs e) {
+		private void canvas_MouseMove(object sender, MouseEventArgs e) {
 			StringBuilder sb = new StringBuilder();
-			int rIdx = e.Location.X + e.Location.Y * _drawingSurface.Width;
+            var pixelLocationF = canvas.PointToImagePixel(e.Location);
+			var location = new Point((int)Math.Round(pixelLocationF.X, 0), (int)Math.Round(pixelLocationF.Y, 0));
+            if (location.X < 0 || location.Y < 0 || location.X >= canvas.Image.Width || location.Y >= canvas.Image.Height)
+                return;
+			
+            int rIdx = location.X + location.Y * _drawingSurface.Width;
+			
 
-			var tile = _tiles.GetTileScreen(e.Location);
+			var tile = _tiles.GetTileScreen(location);
 			if (tile == null || !(tile.Drawable is TileDrawable)) {
 				sb.Append("No valid tile under mouse");
 			}
@@ -70,10 +77,10 @@ namespace CNCMaps.Engine.Rendering {
 				}
 
 #if DEBUG
-				sb.AppendFormat("\nMouse: ({0},{1}) ", e.Location.X, e.Location.Y);
+				sb.AppendFormat("\nMouse: ({0},{1}) ", location.X, location.Y);
 				sb.AppendFormat(": d({0},{1}) ", tile.Dx, tile.Dy);
 
-				var gridTilenoZ = _tiles.GetTileScreen(e.Location, true, true);
+				var gridTilenoZ = _tiles.GetTileScreen(location, true, true);
 				sb.AppendFormat(" Touched: {0}", _tiles.GridTouched[gridTilenoZ.Dx, gridTilenoZ.Dy / 2]);
 
 				if (_tiles.GridTouchedBy[gridTilenoZ.Dx, gridTilenoZ.Dy / 2] != null)
@@ -87,16 +94,21 @@ namespace CNCMaps.Engine.Rendering {
 			toolStripStatusLabel1.Text = sb.ToString();
 
 			if (e.Button == MouseButtons.Right) {
-				Point newPoint = new Point(e.Location.X - _oldPoint.X,  e.Location.Y - _oldPoint.Y);
+				Point newPoint = new Point(location.X - _oldPoint.X,  location.Y - _oldPoint.Y);
 				panel1.AutoScrollPosition = new Point(-panel1.AutoScrollPosition.X - newPoint.X, -panel1.AutoScrollPosition.Y - newPoint.Y);
 			}
 		}
 
 		public delegate void TileEvaluationDelegate(MapTile t);
 		public event TileEvaluationDelegate RequestTileEvaluate;
-		private void pictureBox1_MouseDown(object sender, MouseEventArgs e) {
+		private void canvas_MouseDown(object sender, MouseEventArgs e) {
 			if (e.Button == MouseButtons.Left) {
-				var tile = _tiles.GetTileScreen(e.Location);
+            var pixelLocationF = canvas.PointToImagePixel(e.Location);
+                var location = new Point((int)Math.Round(pixelLocationF.X, 0), (int)Math.Round(pixelLocationF.Y, 0));
+                if (location.X < 0 || location.Y < 0 || location.X >= canvas.Image.Width || location.Y >= canvas.Image.Height)
+                    return;
+
+				var tile = _tiles.GetTileScreen(location);
 				if (tile == null) return;
 				_drawingSurface.Lock();
 				RequestTileEvaluate(tile);

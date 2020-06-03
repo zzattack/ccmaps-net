@@ -115,6 +115,9 @@
     <Compile Include="Drawables\UnitDrawable.cs" />
     <Compile Include="Drawables\VoxelDrawable.cs" />
     <Compile Include="Rendering\VxlRenderer.cs" />
+    <Compile Include="Rendering\ZoomableCanvas.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
