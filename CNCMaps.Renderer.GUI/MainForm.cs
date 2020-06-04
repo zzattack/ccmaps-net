@@ -373,12 +373,12 @@ namespace CNCMaps.GUI
         }
         private void BrowseMixDir(object sender, EventArgs e)
         {
-            folderBrowserDialog1.Description = "The directory that contains the mix files.";
-            folderBrowserDialog1.RootFolder = Environment.SpecialFolder.MyComputer;
-            folderBrowserDialog1.SelectedPath = FindMixDir(rbEngineAuto.Checked || rbEngineRA2.Checked || rbEngineYR.Checked);
-            folderBrowserDialog1.ShowNewFolderButton = false;
-            if (folderBrowserDialog1.ShowDialog() == DialogResult.OK)
-                tbMixDir.Text = folderBrowserDialog1.SelectedPath;
+            folderBrowserDialog.Description = "The directory that contains the mix files.";
+            folderBrowserDialog.RootFolder = Environment.SpecialFolder.MyComputer;
+            folderBrowserDialog.SelectedPath = FindMixDir(rbEngineAuto.Checked || rbEngineRA2.Checked || rbEngineYR.Checked);
+            folderBrowserDialog.ShowNewFolderButton = false;
+            if (folderBrowserDialog.ShowDialog() == DialogResult.OK)
+                tbMixDir.Text = folderBrowserDialog.SelectedPath;
         }
         private void InputDragEnter(object sender, DragEventArgs e)
         {

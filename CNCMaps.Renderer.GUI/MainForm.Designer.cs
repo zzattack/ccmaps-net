@@ -93,7 +93,7 @@ namespace CNCMaps.GUI {
             this.btnRenderExecute = new System.Windows.Forms.Button();
             this.tbCommandPreview = new System.Windows.Forms.TextBox();
             this.ofd = new System.Windows.Forms.OpenFileDialog();
-            this.folderBrowserDialog1 = new System.Windows.Forms.FolderBrowserDialog();
+            this.folderBrowserDialog = new System.Windows.Forms.FolderBrowserDialog();
             this.statusStrip = new System.Windows.Forms.StatusStrip();
             this.lblStatus = new System.Windows.Forms.ToolStripStatusLabel();
             this.lblFill = new System.Windows.Forms.ToolStripStatusLabel();
@@ -116,7 +116,7 @@ namespace CNCMaps.GUI {
             this.gbLog = new System.Windows.Forms.GroupBox();
             this.rtbLog = new System.Windows.Forms.RichTextBox();
             this.tpAbout = new System.Windows.Forms.TabPage();
-            this.label1 = new System.Windows.Forms.Label();
+            this.lblCopyright = new System.Windows.Forms.LinkLabel();
             this.gbMiscOptions.SuspendLayout();
             this.gbOreGems.SuspendLayout();
             this.gbStartMarkers.SuspendLayout();
@@ -260,7 +260,7 @@ namespace CNCMaps.GUI {
             "Circled",
             "Diamond",
             "Ellipsed",
-			"Starred",
+            "Starred",
             "Tiled"});
             this.cmbStartMarkers.Location = new System.Drawing.Point(341, 28);
             this.cmbStartMarkers.Name = "cmbStartMarkers";
@@ -1201,7 +1201,7 @@ namespace CNCMaps.GUI {
             // tpAbout
             // 
             this.tpAbout.AllowDrop = true;
-            this.tpAbout.Controls.Add(this.label1);
+            this.tpAbout.Controls.Add(this.lblCopyright);
             this.tpAbout.Location = new System.Drawing.Point(4, 22);
             this.tpAbout.Name = "tpAbout";
             this.tpAbout.Padding = new System.Windows.Forms.Padding(3);
@@ -1210,15 +1210,17 @@ namespace CNCMaps.GUI {
             this.tpAbout.Text = "About";
             this.tpAbout.UseVisualStyleBackColor = true;
             // 
-            // label1
+            // lblCopyright
             // 
-            this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(20, 24);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(220, 52);
-            this.label1.TabIndex = 0;
-            this.label1.Text = "Program by Frank Razenberg © 2005-2016\r\n\r\nSpecial thanks to Olaf van der Spek for" +
-    " XCC.\r\nSpecial thanks to #renproj for modenc.";
+            this.lblCopyright.AutoSize = true;
+            this.lblCopyright.LinkArea = new System.Windows.Forms.LinkArea(133, 58);
+            this.lblCopyright.Location = new System.Drawing.Point(20, 24);
+            this.lblCopyright.Name = "lblCopyright";
+            this.lblCopyright.Size = new System.Drawing.Size(359, 129);
+            this.lblCopyright.TabIndex = 0;
+            this.lblCopyright.TabStop = true;
+            this.lblCopyright.Text = resources.GetString("lblCopyright.Text");
+            this.lblCopyright.UseCompatibleTextRendering = true;
             // 
             // MainForm
             // 
@@ -1294,7 +1296,7 @@ namespace CNCMaps.GUI {
 		private System.Windows.Forms.Button btnRenderExecute;
 		private System.Windows.Forms.TextBox tbCommandPreview;
 		private System.Windows.Forms.OpenFileDialog ofd;
-		private System.Windows.Forms.FolderBrowserDialog folderBrowserDialog1;
+		private System.Windows.Forms.FolderBrowserDialog folderBrowserDialog;
 		private System.Windows.Forms.TextBox tbCustomOutput;
 		private System.Windows.Forms.RadioButton rbCustomFilename;
 		private System.Windows.Forms.RadioButton rbAutoFilename;
@@ -1331,7 +1333,7 @@ namespace CNCMaps.GUI {
 		private TabPage tpAbout;
 		private ComboBox cbMarkersType;
 		private Label lblMarkersType;
-		private Label label1;
+		private LinkLabel lblCopyright;
 		private CheckBox ckbFixupTiles;
 		private GroupBox gbSizeMode;
         private CheckBox cbThumbPNG;

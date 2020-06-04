@@ -154,7 +154,7 @@ This will never render the map as if it is a TS/FS map, if it is you need to man
   <metadata name="ofd.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>186, 17</value>
   </metadata>
-  <metadata name="folderBrowserDialog1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <metadata name="folderBrowserDialog.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>17, 17</value>
   </metadata>
   <metadata name="statusStrip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
@@ -162,6 +162,18 @@ This will never render the map as if it is a TS/FS map, if it is you need to man
   </metadata>
   <data name="lblBatchDesc.Text" xml:space="preserve">
     <value>Batch rendering can be used to process multiple maps of the same game/mod with the same settings. First configure the desired settings on "Main settings" and "Misc settings" tabs and then add the needed maps either by the "Add maps" button or drag and drop the files in the field below. Finally, press the "Start batch processing" button.</value>
+  </data>
+  <data name="lblCopyright.Text" xml:space="preserve">
+    <value>Original program © 2005-2020 by Frank Razenberg 
+
+Includes contributions from
+   Starkku
+   E1 Elite
+   Metadorius
+Full list @ https://github.com/zzattack/ccmaps-net/graphs/contributors
+
+Special thanks to Olaf van der Spek for XCC.
+Special thanks to #renproj for modenc.</value>
   </data>
   <metadata name="$this.TrayHeight" type="System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>39</value>
