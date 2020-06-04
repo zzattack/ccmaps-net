@@ -43,7 +43,6 @@ namespace CNCMaps.Engine.Game {
 		private readonly List<AnimDrawable> _anims = new List<AnimDrawable>();
 		private readonly List<AnimDrawable> _animsDamaged = new List<AnimDrawable>();
 		private readonly List<AnimDrawable> _fires = new List<AnimDrawable>();
-		private Random _random;
 		private bool _canBeOccupied;
 		private int _techLevel;
 		private int _conditionYellowHealth;
@@ -51,7 +50,6 @@ namespace CNCMaps.Engine.Game {
 
 		public BuildingDrawable(IniFile.IniSection rules, IniFile.IniSection art)
 			: base(rules, art) {
-			_random = new Random();
 		}
 
 		public override void LoadFromRules() {
@@ -242,7 +240,7 @@ namespace CNCMaps.Engine.Game {
 					break;
 
 				string[] coords = dfo.Split(new[] { ',', '.' }, StringSplitOptions.RemoveEmptyEntries);
-				string fireAnim = OwnerCollection.FireNames[_random.Next(OwnerCollection.FireNames.Length)];
+				string fireAnim = OwnerCollection.FireNames[Rand.Next(OwnerCollection.FireNames.Length)];
 				IniFile.IniSection fireArt = OwnerCollection.Art.GetOrCreateSection(fireAnim);
 
 				var fire = new AnimDrawable(Rules, Art, VFS.Open<ShpFile>(fireAnim + ".shp"));

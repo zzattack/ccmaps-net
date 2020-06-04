@@ -6,27 +6,24 @@ using CNCMaps.Engine.Map;
 using CNCMaps.Engine.Rendering;
 using CNCMaps.FileFormats;
 using CNCMaps.Shared;
+using CNCMaps.Shared.Utility;
 
 namespace CNCMaps.Engine.Game {
 	class ShpDrawable : Drawable {
-		private Random random;
 
 		public ShpFile Shp { get; set; }
 
 		public ShpDrawable(IniFile.IniSection rules, IniFile.IniSection art)
 			: base(rules, art) {
-			random = new Random();
 		}
 
 		public ShpDrawable(ShpFile shpFile) {
 			Shp = shpFile;
-			random = new Random();
 		}
 
 		public ShpDrawable(IniFile.IniSection rules, IniFile.IniSection art, ShpFile shpFile)
 			: base(rules, art) {
 			Shp = shpFile;
-			random = new Random();
 		}
 
 		public override void Draw(GameObject obj, DrawingSurface ds, bool shadow = true) {
@@ -34,7 +31,7 @@ namespace CNCMaps.Engine.Game {
 			if (OwnerCollection != null && OwnerCollection.Type == CollectionType.Infantry) {
 				int randomDir = -1;
 				if (ModConfig.ActiveConfig.ExtraOptions.FirstOrDefault() != null && ModConfig.ActiveConfig.ExtraOptions.FirstOrDefault().EnableRandomInfantryFacing)
-					randomDir = random.Next(256);
+					randomDir = Rand.Next(256);
 				Props.FrameDecider = FrameDeciders.InfantryFrameDecider(Ready_Start, Ready_Count, Ready_CountNext, randomDir);
 			}
 			if (Props.HasShadow && shadow && !Props.Cloakable)
