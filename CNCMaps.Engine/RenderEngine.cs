@@ -22,24 +22,24 @@ namespace CNCMaps.Engine {
 	public class RenderEngine {
 		static Logger _logger = LogManager.GetCurrentClassLogger();
 		private RenderSettings _settings = new RenderSettings();
-		private VFS _vfs = new VFS(); 
+		private VFS _vfs = new VFS();
 
 		public bool ConfigureFromArgs(string[] args) {
-            InitLoggerConfig();
+			InitLoggerConfig();
 			_settings.ConfigureFromArgs(args);
 
-			if (_settings.Debug && !Debugger.IsAttached) 
+			if (_settings.Debug && !Debugger.IsAttached)
 				Debugger.Launch();
 
 			return ValidateSettings();
 		}
 
-		public bool ConfigureFromSettings(RenderSettings settings) { 
+		public bool ConfigureFromSettings(RenderSettings settings) {
 			_settings = settings;
 			return ValidateSettings();
 		}
 
-		public EngineResult Execute() { 
+		public EngineResult Execute() {
 			try {
 				_logger.Info("Initializing virtual filesystem");
 
@@ -109,17 +109,17 @@ namespace CNCMaps.Engine {
 
 				// first add the dirs, then load the extra mixes, then scan the dirs
 				foreach (string modDir in ModConfig.ActiveConfig.Directories)
-                    _vfs.Add(modDir);
+					_vfs.Add(modDir);
 
 				// add mixdir to VFS (if it's not included in the mod config)
 				if (!ModConfig.ActiveConfig.Directories.Any()) {
 					string mixDir = VFS.DetermineMixDir(_settings.MixFilesDirectory, _settings.Engine);
-                    _vfs.Add(mixDir);
+					_vfs.Add(mixDir);
 				}
 				foreach (string mixFile in ModConfig.ActiveConfig.ExtraMixes)
-                    _vfs.Add(mixFile);
+					_vfs.Add(mixFile);
 
-                _vfs.LoadMixes(_settings.Engine);
+				_vfs.LoadMixes(_settings.Engine);
 
 				double markerStartSize = 4.0;
 				if (double.TryParse(_settings.MarkStartSize, NumberStyles.Number, CultureInfo.CreateSpecificCulture("en-US"), out markerStartSize))
@@ -162,7 +162,7 @@ namespace CNCMaps.Engine {
 							File.Copy(fileInput, fileBackup, true);
 							_logger.Info("Creating map backup: " + fileBackup);
 						}
-						catch (Exception ) {
+						catch (Exception) {
 							_logger.Error("Unable to generate a map file backup!");
 						}
 					}
@@ -175,7 +175,7 @@ namespace CNCMaps.Engine {
 
 				if (_settings.MarkIceGrowth)
 					map.MarkIceGrowth();
-				
+
 				if (_settings.TunnelPaths)
 					map.PlotTunnels(_settings.TunnelPosition);
 
@@ -188,7 +188,7 @@ namespace CNCMaps.Engine {
 
 				if (_settings.DiagnosticWindow) {
 					using (var form = new DebugDrawingSurfaceWindow(map.GetDrawingSurface(), map.GetTiles(), map.GetTheater(), map)) {
-					    form.RequestTileEvaluate += map.DebugDrawTile; form.ShowDialog();
+						form.RequestTileEvaluate += map.DebugDrawTile; form.ShowDialog();
 					}
 				}
 
@@ -201,9 +201,9 @@ namespace CNCMaps.Engine {
 				// free up as much memory as possible before saving the large images
 				Rectangle saveRect = map.GetSizePixels(_settings.SizeMode);
 				DrawingSurface ds = map.GetDrawingSurface();
-                saveRect.Intersect(new Rectangle(0, 0, ds.Width, ds.Height));
-                // if we don't need this data anymore, we can try to save some memory
-                if (!_settings.GeneratePreviewPack) {
+				saveRect.Intersect(new Rectangle(0, 0, ds.Width, ds.Height));
+				// if we don't need this data anymore, we can try to save some memory
+				if (!_settings.GeneratePreviewPack) {
 					ds.FreeNonBitmap();
 					map.FreeUseless();
 					GC.Collect();
@@ -224,38 +224,34 @@ namespace CNCMaps.Engine {
 					var cutRect = map.GetSizePixels(_settings.SizeMode);
 
 					if (match.Groups[1].Captures[0].Value == "+") {
-                        // + means maintain aspect ratio
+						// + means maintain aspect ratio
 
-                        if (dimensions.Width > 0 && dimensions.Height > 0)
-                        {
-                            float scaleHeight = (float)dimensions.Height / (float)cutRect.Height;
-                            float scaleWidth = (float)dimensions.Width / (float)cutRect.Width;
-                            float scale = Math.Min(scaleHeight, scaleWidth);
-                            dimensions.Width = Math.Max((int)(cutRect.Width * scale), 1);
-                            dimensions.Height = Math.Max((int)(cutRect.Height * scale), 1);
-                        }
-                        else
-                        {
-                            double aspectRatio = cutRect.Width / (double)cutRect.Height;
-                            if (dimensions.Width / (double)dimensions.Height > aspectRatio) {
-                                dimensions.Height = (int)(dimensions.Width / aspectRatio);
-                            }
-                            else {
-                                dimensions.Width = (int)(dimensions.Height * aspectRatio);
-                            }
-                        }
-                    }
-                    _logger.Info("Saving thumbnail with dimensions {0}x{1}", dimensions.Width, dimensions.Height);
+						if (dimensions.Width > 0 && dimensions.Height > 0) {
+							float scaleHeight = (float)dimensions.Height / (float)cutRect.Height;
+							float scaleWidth = (float)dimensions.Width / (float)cutRect.Width;
+							float scale = Math.Min(scaleHeight, scaleWidth);
+							dimensions.Width = Math.Max((int)(cutRect.Width * scale), 1);
+							dimensions.Height = Math.Max((int)(cutRect.Height * scale), 1);
+						}
+						else {
+							double aspectRatio = cutRect.Width / (double)cutRect.Height;
+							if (dimensions.Width / (double)dimensions.Height > aspectRatio) {
+								dimensions.Height = (int)(dimensions.Width / aspectRatio);
+							}
+							else {
+								dimensions.Width = (int)(dimensions.Height * aspectRatio);
+							}
+						}
+					}
+					_logger.Info("Saving thumbnail with dimensions {0}x{1}", dimensions.Width, dimensions.Height);
 
-                    if (!_settings.SavePNGThumbnails)
-                    {
-                        ds.SaveThumb(dimensions, cutRect, Path.Combine(_settings.OutputDir, "thumb_" + _settings.OutputFile + ".jpg"));
-                    }
-                    else
-                    {
-                        ds.SaveThumb(dimensions, cutRect, Path.Combine(_settings.OutputDir, "thumb_" + _settings.OutputFile + ".png"), true);
-                    }
-                }
+					if (!_settings.SavePNGThumbnails) {
+						ds.SaveThumb(dimensions, cutRect, Path.Combine(_settings.OutputDir, "thumb_" + _settings.OutputFile + ".jpg"));
+					}
+					else {
+						ds.SaveThumb(dimensions, cutRect, Path.Combine(_settings.OutputDir, "thumb_" + _settings.OutputFile + ".png"), true);
+					}
+				}
 
 				if (_settings.GeneratePreviewPack || _settings.FixupTiles || _settings.FixOverlays || _settings.CompressTiles) {
 					if (mapFile.BaseStream is MixFile)
@@ -286,7 +282,7 @@ namespace CNCMaps.Engine {
 			return EngineResult.RenderedOk;
 		}
 
-        /*private static void DumpTileProperties() {
+		/*private static void DumpTileProperties() {
 			ModConfig.LoadDefaultConfig(EngineType.YurisRevenge);
 			VFS.Instance.ScanMixDir("", EngineType.YurisRevenge);
 
@@ -308,7 +304,7 @@ namespace CNCMaps.Engine {
 			}
 		}*/
 
-        private static void InitLoggerConfig() {
+		private static void InitLoggerConfig() {
 			if (LogManager.Configuration == null) {
 				// init default config
 				var target = new ColoredConsoleTarget();
@@ -359,7 +355,7 @@ namespace CNCMaps.Engine {
 				_logger.Error("Specified input file does not exist");
 				return false;
 			}
-			else if (!_settings.SaveJPEG && !_settings.SavePNG && !_settings.SavePNGThumbnails 	&&
+			else if (!_settings.SaveJPEG && !_settings.SavePNG && !_settings.SavePNGThumbnails  &&
 				!_settings.GeneratePreviewPack && !_settings.FixupTiles && !_settings.FixOverlays && !_settings.CompressTiles &&
 				!_settings.DiagnosticWindow) {
 				_logger.Error("No action to perform. Either generate PNG/JPEG/Thumbnail or modify map or use preview window.");
@@ -507,7 +503,7 @@ namespace CNCMaps.Engine {
 					mapName = basic.ReadString("Name", fileNameWithoutExtension);
 			}
 
-				// if this is a RA2/YR mission (csfEntry set) or official map with valid pktMapEntry
+			// if this is a RA2/YR mission (csfEntry set) or official map with valid pktMapEntry
 			else if (missionEntry != null || pktMapEntry != null) {
 				string csfEntryName = missionEntry != null ? missionName : pktMapEntry.Description;
 

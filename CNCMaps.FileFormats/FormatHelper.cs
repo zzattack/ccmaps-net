@@ -8,7 +8,7 @@ namespace CNCMaps.FileFormats {
 	public static class FormatHelper {
 
 		static Logger logger = LogManager.GetCurrentClassLogger();
-		
+
 		public static readonly string[] MixArchiveExtensions = { ".mix", ".yro", ".mmx" };
 		public static readonly string[] MapExtensions = { ".map", ".yrm", ".mpr" };
 
@@ -47,7 +47,7 @@ namespace CNCMaps.FileFormats {
 				format = GuessFormat(filename);
 				logger.Debug("Guessed format: {0}", format);
 			}
-		
+
 			switch (format) {
 				case FileFormat.Csf:
 					return new CsfFile(baseStream, filename, offset, length, m != CacheMethod.NoCache); // defaults to cache

@@ -16,7 +16,7 @@ namespace CNCMaps.Engine.Game {
 			: base(vfs, rules, art) { }
 
 		public override void Draw(GameObject obj, DrawingSurface ds, bool shadows = true) {
-            terrainShp = new ShpDrawable(_vfs, Rules, Art);
+			terrainShp = new ShpDrawable(_vfs, Rules, Art);
 			terrainShp.OwnerCollection = OwnerCollection;
 			terrainShp.LoadFromArtEssential();
 			terrainShp.Props = Props;

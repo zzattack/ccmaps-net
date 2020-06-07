@@ -44,9 +44,9 @@ namespace CNCMaps.FileFormats {
 			public byte[] ExtraData; // available is presency flags says so
 			public byte[] ZData; // available is presency flags says so
 			public byte[] ExtraZData; // available is presency flags says so
-			
+
 			public void Read(TmpFile f) {
-				X = f.ReadInt32();				Y = f.ReadInt32();
+				X = f.ReadInt32(); Y = f.ReadInt32();
 				_extraDataOffset = f.ReadInt32();
 				_zDataOffset = f.ReadInt32();
 				_extraZDataOffset = f.ReadInt32();
@@ -102,7 +102,7 @@ namespace CNCMaps.FileFormats {
 
 		public void Initialize() {
 			if (_isInitialized) return;
-						logger.Trace("Initializing TMP data for file {0}", FileName);
+			logger.Trace("Initializing TMP data for file {0}", FileName);
 			_isInitialized = true;
 			Position = 0;
 

@@ -174,9 +174,9 @@ namespace CNCMaps.Engine.Map {
 
 			// units on bridges can only be drawn after the bridge
 			if (objA is OverlayObject && SpecialOverlays.IsHighBridge(objA as OverlayObject)
-                && objB is OwnableObject && (objB as OwnableObject).OnBridge) return objB;
+				&& objB is OwnableObject && (objB as OwnableObject).OnBridge) return objB;
 			else if (objB is OverlayObject && SpecialOverlays.IsHighBridge(objB as OverlayObject)
-                     && objA is OwnableObject && (objA as OwnableObject).OnBridge) return objA;
+					 && objA is OwnableObject && (objA as OwnableObject).OnBridge) return objA;
 
 			// no proper separation is possible, if one of both
 			// objects is flat then mark the other one as in front,
@@ -187,16 +187,16 @@ namespace CNCMaps.Engine.Map {
 			// try to make distinction based on object type
 			// tile, smudge, overlay, terrain, unit/building, aircraft
 			var priorities = new Dictionary<Type, int> {
-                {typeof(MapTile), 0},
-                {typeof(SmudgeObject), 1},
-                {typeof(OverlayObject), 2},
-                {typeof(TerrainObject), 3},
-                {typeof(StructureObject), 3},
-                {typeof(AnimationObject), 3},
-                {typeof(UnitObject), 3},
-                {typeof(InfantryObject), 3},
-                {typeof(AircraftObject), 4},
-            };
+				{typeof(MapTile), 0},
+				{typeof(SmudgeObject), 1},
+				{typeof(OverlayObject), 2},
+				{typeof(TerrainObject), 3},
+				{typeof(StructureObject), 3},
+				{typeof(AnimationObject), 3},
+				{typeof(UnitObject), 3},
+				{typeof(InfantryObject), 3},
+				{typeof(AircraftObject), 4},
+			};
 			int prioA = priorities[objA.GetType()];
 			int prioB = priorities[objB.GetType()];
 

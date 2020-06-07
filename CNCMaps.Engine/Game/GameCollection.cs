@@ -18,7 +18,7 @@ namespace CNCMaps.Engine.Game {
 		protected readonly Dictionary<int, string> _drawableIndexNameMap = new Dictionary<int, string>();
 		private readonly Dictionary<string, Drawable> _drawablesDict = new Dictionary<string, Drawable>();
 		private readonly Dictionary<Drawable, bool> _drawableLoaded = new Dictionary<Drawable, bool>();
-		
+
 		protected GameCollection(CollectionType type, TheaterType theater, EngineType engine, VFS vfs, IniFile rules, IniFile art) {
 			Engine = engine;
 			_vfs = vfs;
@@ -74,6 +74,6 @@ namespace CNCMaps.Engine.Game {
 		}
 
 		protected abstract Drawable MakeDrawable(string objName);
-		protected virtual void LoadDrawable(Drawable d) { 	}
+		protected virtual void LoadDrawable(Drawable d) { }
 	}
 }

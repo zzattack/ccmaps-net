@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 14
-VisualStudioVersion = 14.0.25420.1
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30128.74
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CNCMaps.FileFormats", "CNCMaps.FileFormats\CNCMaps.FileFormats.csproj", "{761CEC32-9254-4EEE-AC76-07C8E4279835}"
 EndProject
@@ -17,6 +17,11 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CNCMaps.Renderer", "CNCMaps.Renderer\CNCMaps.Renderer.csproj", "{BA2CD618-F414-4AD5-960F-2232221323F1}"
 	ProjectSection(ProjectDependencies) = postProject
 		{761CEC32-9254-4EEE-AC76-07C8E4279835} = {761CEC32-9254-4EEE-AC76-07C8E4279835}
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{AB027550-AF18-4C6F-8FE7-87ADE16D052E}"
+	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
 	EndProjectSection
 EndProject
 Global
@@ -106,18 +111,15 @@ Global
 		{BA2CD618-F414-4AD5-960F-2232221323F1}.Release|x64.Build.0 = Release|x64
 		{BA2CD618-F414-4AD5-960F-2232221323F1}.Release|x86.ActiveCfg = Release|x86
 		{BA2CD618-F414-4AD5-960F-2232221323F1}.Release|x86.Build.0 = Release|x86
-		{9446CCDD-4A79-46FC-A58F-F133E74082E5}.Debug|x64.ActiveCfg = Debug|x64
-		{9446CCDD-4A79-46FC-A58F-F133E74082E5}.Debug|x64.Build.0 = Debug|x64
-		{9446CCDD-4A79-46FC-A58F-F133E74082E5}.Release|x64.ActiveCfg = Release|x64
-		{9446CCDD-4A79-46FC-A58F-F133E74082E5}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
-		BuildVersion_AssemblyInfoFilename = CNCMaps\Properties\AssemblyInfoGlobal.cs
-		BuildVersion_UseGlobalSettings = True
-		BuildVersion_UpdateAssemblyVersion = True
 		BuildVersion_UpdateFileVersion = True
+		BuildVersion_UpdateAssemblyVersion = True
+		BuildVersion_UseGlobalSettings = True
+		BuildVersion_AssemblyInfoFilename = CNCMaps\Properties\AssemblyInfoGlobal.cs
+		SolutionGuid = {B6D27F9B-D879-41DD-8DCD-3C450B766503}
 	EndGlobalSection
 EndGlobal

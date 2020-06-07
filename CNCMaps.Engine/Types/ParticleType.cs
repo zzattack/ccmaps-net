@@ -37,7 +37,7 @@ namespace CNCMaps.Engine.Types {
 		public ParticleType NextParticle;
 		public Behaviour2 BehavesLike;
 
-		public ParticleType(string ID) : base(ID) {}
+		public ParticleType(string ID) : base(ID) { }
 
 		public override void LoadRules(FileFormats.IniFile.IniSection rules) {
 			base.LoadRules(rules);

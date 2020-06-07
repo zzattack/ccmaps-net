@@ -12,19 +12,18 @@ using CNCMaps.Shared.Utility;
 namespace CNCMaps.Engine.Game {
 	class ShpDrawable : Drawable {
 
-        public ShpFile Shp { get; set; }
-        protected readonly ShpRenderer _renderer;
+		public ShpFile Shp { get; set; }
+		protected readonly ShpRenderer _renderer;
 
 		public ShpDrawable(VFS vfs, IniFile.IniSection rules, IniFile.IniSection art, ShpFile shpFile = null)
-			: base(vfs, rules, art)
-        {
-            _renderer =  new ShpRenderer(vfs);
+			: base(vfs, rules, art) {
+			_renderer =  new ShpRenderer(vfs);
 			Shp = shpFile;
-        }
+		}
 
 		public ShpDrawable(ShpRenderer renderer, ShpFile shpFile) {
-            _renderer = renderer;
-            Shp = shpFile;
+			_renderer = renderer;
+			Shp = shpFile;
 		}
 
 		public override void Draw(GameObject obj, DrawingSurface ds, bool shadow = true) {

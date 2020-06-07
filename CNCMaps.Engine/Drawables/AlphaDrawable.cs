@@ -5,7 +5,7 @@ using CNCMaps.FileFormats;
 using CNCMaps.FileFormats.VirtualFileSystem;
 
 namespace CNCMaps.Engine.Game {
-	class AlphaDrawable  : ShpDrawable {
+	class AlphaDrawable : ShpDrawable {
 		public AlphaDrawable(ShpRenderer renderer, ShpFile alphaShpFile) : base(renderer, alphaShpFile) {
 			Props.Offset = new Point(0, 15);
 			Props.FrameDecider = FrameDeciders.AlphaImageFrameDecider(Shp);

@@ -18,7 +18,7 @@ namespace CNCMaps.Shared {
 		public static ModConfig ActiveConfig { get; set; }
 		public static TheaterSettings ActiveTheater { get; private set; }
 
-		static ModConfig() { 
+		static ModConfig() {
 			DefaultsFS.Engine = EngineType.Firestorm;
 		}
 
@@ -123,7 +123,7 @@ namespace CNCMaps.Shared {
 		private BindingList<ModOption> _modOptions;
 
 
-        public ModConfig() {
+		public ModConfig() {
 			Name = "Custom mod config";
 			Theaters = new BindingList<TheaterSettings>();
 			ObjectOverrides = new BindingList<ObjectOverride>();
@@ -571,7 +571,7 @@ namespace CNCMaps.Shared {
 		}
 
 		public override string ToString() {
-			return string.Format("ModOption for DisableOreRandomization: " + _disableOreRandomization + " DisableTibRemap: " + _disableTibRemap 
+			return string.Format("ModOption for DisableOreRandomization: " + _disableOreRandomization + " DisableTibRemap: " + _disableTibRemap
 				+ " EnableRandomInfantryFacing: " + _enableRandomInfantryFacing + " BottomCrop: " + MapLocalSizeBottomCropValue + " LightingDelta: " + LightingAmbientRGBDelta);
 		}
 	}

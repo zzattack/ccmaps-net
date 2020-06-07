@@ -123,7 +123,7 @@ namespace CNCMaps.FileFormats.Encodings {
 						if (count < 0x3e) {
 							//command 2 (11cccccc p p): copy
 							count += 3;
-							copyp = &pdest[*(ushort*) readp];
+							copyp = &pdest[*(ushort*)readp];
 
 							readp += 2;
 							while (count-- != 0)
@@ -131,7 +131,7 @@ namespace CNCMaps.FileFormats.Encodings {
 						}
 						else if (count == 0x3e) {
 							//command 3 (11111110 c c v): fill
-							count = *(ushort*) readp;
+							count = *(ushort*)readp;
 							readp += 2;
 							code = *readp++;
 							while (count-- != 0)
@@ -139,9 +139,9 @@ namespace CNCMaps.FileFormats.Encodings {
 						}
 						else {
 							//command 4 (copy 11111111 c c p p): copy
-							count = *(ushort*) readp;
+							count = *(ushort*)readp;
 							readp += 2;
-							copyp = &pdest[*(ushort*) readp];
+							copyp = &pdest[*(ushort*)readp];
 							readp += 2;
 							while (count-- != 0)
 								*writep++ = *copyp++;
@@ -150,28 +150,25 @@ namespace CNCMaps.FileFormats.Encodings {
 				}
 			}
 
-			return (uint) (dest - pdest);
+			return (uint)(dest - pdest);
 		}
 
-        static int CountSame(byte[] src, int offset, int maxCount)
-        {
-            maxCount = Math.Min(src.Length - offset, maxCount);
-            if (maxCount <= 0)
-                return 0;
+		static int CountSame(byte[] src, int offset, int maxCount) {
+			maxCount = Math.Min(src.Length - offset, maxCount);
+			if (maxCount <= 0)
+				return 0;
 
-            var first = src[offset++];
-            var count = 1;
+			var first = src[offset++];
+			var count = 1;
 
-            while (count < maxCount && src[offset++] == first)
-                count++;
+			while (count < maxCount && src[offset++] == first)
+				count++;
 
-            return count;
-        }
+			return count;
+		}
 
-		static void WriteCopyBlocks(byte[] src, int offset, int count, MemoryStream output)
-		{
-			while (count > 0)
-			{
+		static void WriteCopyBlocks(byte[] src, int offset, int count, MemoryStream output) {
+			while (count > 0) {
 				var writeNow = Math.Min(count, 0x3F);
 				output.WriteByte((byte)(0x80 | writeNow));
 				output.Write(src, offset, writeNow);
@@ -181,51 +178,46 @@ namespace CNCMaps.FileFormats.Encodings {
 			}
 		}
 
-        // Quick and dirty Format80 encoder version 2
-        // Uses raw copy and RLE compression
-        public static byte[] Encode(byte[] src)
-        {
-            using (var ms = new MemoryStream())
-            {
-                var offset = 0;
-                var left = src.Length;
-                var blockStart = 0;
+		// Quick and dirty Format80 encoder version 2
+		// Uses raw copy and RLE compression
+		public static byte[] Encode(byte[] src) {
+			using (var ms = new MemoryStream()) {
+				var offset = 0;
+				var left = src.Length;
+				var blockStart = 0;
 
-                while (offset < left)
-                {
-                    var repeatCount = CountSame(src, offset, 0xFFFF);
-                    if (repeatCount >= 4)
-                    {
-                        // Write what we haven't written up to now
-                        WriteCopyBlocks(src, blockStart, offset - blockStart, ms);
+				while (offset < left) {
+					var repeatCount = CountSame(src, offset, 0xFFFF);
+					if (repeatCount >= 4) {
+						// Write what we haven't written up to now
+						WriteCopyBlocks(src, blockStart, offset - blockStart, ms);
 
-                        // Command 4: Repeat byte n times
-                        ms.WriteByte(0xFE);
-                        // Low byte
-                        ms.WriteByte((byte)(repeatCount & 0xFF));
-                        // High byte
-                        ms.WriteByte((byte)(repeatCount >> 8));
-                        // Value to repeat
-                        ms.WriteByte(src[offset]);
+						// Command 4: Repeat byte n times
+						ms.WriteByte(0xFE);
+						// Low byte
+						ms.WriteByte((byte)(repeatCount & 0xFF));
+						// High byte
+						ms.WriteByte((byte)(repeatCount >> 8));
+						// Value to repeat
+						ms.WriteByte(src[offset]);
 
-                        offset += repeatCount;
-                        blockStart = offset;
-                    }
-                    else
-                    {
-                        offset++;
-                    }
-                }
+						offset += repeatCount;
+						blockStart = offset;
+					}
+					else {
+						offset++;
+					}
+				}
 
-                // Write what we haven't written up to now
-                WriteCopyBlocks(src, blockStart, offset - blockStart, ms);
+				// Write what we haven't written up to now
+				WriteCopyBlocks(src, blockStart, offset - blockStart, ms);
 
-                // Write terminator
-                ms.WriteByte(0x80);
+				// Write terminator
+				ms.WriteByte(0x80);
 
-                return ms.ToArray();
-            }
-        }
+				return ms.ToArray();
+			}
+		}
 
 	}
 }

@@ -25,14 +25,14 @@
 						count--;
 						v = *r++;
 						if (x + v > cx)
-							v = (byte) (cx - x);
+							v = (byte)(cx - x);
 						x += v;
 						while (v-- != 0)
 							*w++ = 0;
 					}
 				}
 			}
-			return (uint) (w - dst);
+			return (uint)(w - dst);
 		}
 	}
 }

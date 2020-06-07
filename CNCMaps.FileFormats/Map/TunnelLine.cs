@@ -14,23 +14,21 @@ namespace CNCMaps.FileFormats.Map {
 
 		static Logger logger = LogManager.GetCurrentClassLogger();
 
-        public TunnelLine()
-        {
-            StartX = -1;
-            StartY = -1;
-            Facing = -1;
-            EndX = -1;
-            EndY = -1;
+		public TunnelLine() {
+			StartX = -1;
+			StartY = -1;
+			Facing = -1;
+			EndX = -1;
+			EndY = -1;
 			Direction = new List<int>();
-        }
+		}
 
-        public TunnelLine(int sx, int sy, int facing, int ex, int ey,  List<int> ds)
-        {
-            StartX = sx;
-            StartY = sy;
-            Facing = facing;
-            EndX = ex;
-            EndY = ey;
+		public TunnelLine(int sx, int sy, int facing, int ex, int ey, List<int> ds) {
+			StartX = sx;
+			StartY = sy;
+			Facing = facing;
+			EndX = ex;
+			EndY = ey;
 			Direction = new List<int>();
 			if (ds != null)
 				Direction = ds.ToList();

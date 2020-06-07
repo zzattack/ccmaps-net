@@ -8,7 +8,7 @@
 		public int SecondaryProne;
 		public string SequenceName;
 
-		public InfantryType(string ID) : base(ID) {}
+		public InfantryType(string ID) : base(ID) { }
 
 		public override void LoadArt(FileFormats.IniFile.IniSection art) {
 			base.LoadArt(art);

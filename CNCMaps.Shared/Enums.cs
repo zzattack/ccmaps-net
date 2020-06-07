@@ -52,7 +52,7 @@ namespace CNCMaps.Shared {
 		Infantry = 4,
 		Overlay = 8,
 		Smudge = 16,
-		Terrain = 32 ,
+		Terrain = 32,
 		Vehicle = 64,
 		Animation = 128,
 		Tiles = 256,

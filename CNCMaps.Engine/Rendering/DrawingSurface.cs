@@ -112,17 +112,16 @@ namespace CNCMaps.Engine.Rendering {
 					gfx.DrawImage(Bitmap, dstRect, srcRect, GraphicsUnit.Pixel);
 				}
 
-                ImageCodecInfo encoder = ImageCodecInfo.GetImageEncoders().First(e => e.FormatID == ImageFormat.Jpeg.Guid);
-                var encoderParams = new EncoderParameters(1);
-                encoderParams.Param[0] = new EncoderParameter(Encoder.Quality, 95L);
+				ImageCodecInfo encoder = ImageCodecInfo.GetImageEncoders().First(e => e.FormatID == ImageFormat.Jpeg.Guid);
+				var encoderParams = new EncoderParameters(1);
+				encoderParams.Param[0] = new EncoderParameter(Encoder.Quality, 95L);
 
-                if (saveAsPng)
-                {
-                    encoder = ImageCodecInfo.GetImageEncoders().First(e => e.FormatID == ImageFormat.Png.Guid);
-                    encoderParams.Param[0] = new EncoderParameter(Encoder.Quality, 6);
-                }
+				if (saveAsPng) {
+					encoder = ImageCodecInfo.GetImageEncoders().First(e => e.FormatID == ImageFormat.Png.Guid);
+					encoderParams.Param[0] = new EncoderParameter(Encoder.Quality, 6);
+				}
 
-                thumb.Save(path, encoder, encoderParams);
+				thumb.Save(path, encoder, encoderParams);
 			}
 		}
 

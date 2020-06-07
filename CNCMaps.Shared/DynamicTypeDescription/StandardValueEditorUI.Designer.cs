@@ -65,15 +65,15 @@ namespace CNCMaps.Shared.DynamicTypeDescription {
 			this.listViewEnum.BorderStyle = System.Windows.Forms.BorderStyle.None;
 			this.listViewEnum.CheckBoxes = true;
 			this.listViewEnum.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
-            this.columnHeader1});
+			this.columnHeader1});
 			this.listViewEnum.Dock = System.Windows.Forms.DockStyle.Fill;
 			this.listViewEnum.FullRowSelect = true;
 			this.listViewEnum.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.None;
 			listViewItem1.StateImageIndex = 0;
 			listViewItem2.StateImageIndex = 0;
 			this.listViewEnum.Items.AddRange(new System.Windows.Forms.ListViewItem[] {
-            listViewItem1,
-            listViewItem2});
+			listViewItem1,
+			listViewItem2});
 			this.listViewEnum.Location = new System.Drawing.Point(0, 0);
 			this.listViewEnum.MultiSelect = false;
 			this.listViewEnum.Name = "listViewEnum";

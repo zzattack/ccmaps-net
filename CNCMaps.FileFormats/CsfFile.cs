@@ -27,7 +27,7 @@ namespace CNCMaps.FileFormats {
 			: base(baseStream, filename, baseOffset, fileSize, isBuffered) {
 			Parse();
 		}
-		
+
 		class CsfEntry {
 			public string Value { get; private set; }
 			public string ExtraValue { get; private set; }

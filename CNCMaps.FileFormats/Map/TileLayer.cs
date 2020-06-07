@@ -79,18 +79,18 @@ namespace CNCMaps.FileFormats.Map {
 			foreach (var isoTile in this.isoTiles) {
 				tileSet.Add(isoTile);
 			}
-			
+
 			// Compressing involves removing level 0 clear tiles and then sort the tiles before encoding
 			if (compress) {
 				List<IsoTile> tileSetStage = new List<IsoTile>();
 				List<byte[]> sortedTiles = new List<byte[]>();
 
 				foreach (var t in tileSet) {
-                    if (t.TileNum > 0 || t.Z > 0 || t.SubTile > 0 || t.IceGrowth > 0)
-                        tileSetStage.Add(t);
+					if (t.TileNum > 0 || t.Z > 0 || t.SubTile > 0 || t.IceGrowth > 0)
+						tileSetStage.Add(t);
 				}
-	            if (tileSetStage.Count == 0) {
-	                tileSetStage.Add(tileSet.First());
+				if (tileSetStage.Count == 0) {
+					tileSetStage.Add(tileSet.First());
 					encoded = GetEncoded(tileSetStage);
 				}
 				else {
@@ -127,9 +127,9 @@ namespace CNCMaps.FileFormats.Map {
 			else {
 				encoded = GetEncoded(tileSet);
 			}
-			
+
 			string compressed64 = Convert.ToBase64String(encoded, Base64FormattingOptions.None);
-			
+
 			int i = 1;
 			int idx = 0;
 			isoMapPack5.Clear();

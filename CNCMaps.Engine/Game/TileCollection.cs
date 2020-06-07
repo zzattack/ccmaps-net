@@ -19,7 +19,7 @@ namespace CNCMaps.Engine.Game {
 		readonly List<short> _setNumToFirstTile = new List<short>();
 		readonly List<TileSet> _tileSets = new List<TileSet>();
 
-        private readonly TheaterSettings _theaterSettings;
+		private readonly TheaterSettings _theaterSettings;
 
 		public class TileSet {
 			public string FileName { get; private set; }
@@ -158,7 +158,7 @@ namespace CNCMaps.Engine.Game {
 
 		public TileCollection(TheaterType theater, EngineType engine, VFS vfs, IniFile rules, IniFile art, TheaterSettings theaterSettings, IniFile theaterIni = null)
 			: base(CollectionType.Tiles, theater, engine, vfs, rules, art) {
-            _theaterSettings = theaterSettings;
+			_theaterSettings = theaterSettings;
 			if (theaterIni == null) {
 				_theaterIni = _vfs.Open<IniFile>(theaterSettings.TheaterIni);
 				if (_theaterIni == null) {
@@ -166,8 +166,8 @@ namespace CNCMaps.Engine.Game {
 					return;
 				}
 			}
-			else 
-                _theaterIni = theaterIni;
+			else
+				_theaterIni = theaterIni;
 
 			#region Set numbers
 

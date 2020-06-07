@@ -3,7 +3,7 @@ using NLog;
 
 namespace CNCMaps {
 	class Program {
-		public static int Main(string[] args) { 
+		public static int Main(string[] args) {
 			var engine = new RenderEngine();
 			if (engine.ConfigureFromArgs(args)) {
 				var result = engine.Execute();

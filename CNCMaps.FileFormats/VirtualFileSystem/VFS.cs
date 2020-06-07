@@ -15,7 +15,7 @@ namespace CNCMaps.FileFormats.VirtualFileSystem {
 		public VirtualFile Open(string filename) {
 			return OpenFile(filename);
 		}
-		
+
 		static FileFormat GetFormatFromTypeclass(Type t) {
 			if (t == typeof(IniFile)) return FileFormat.Ini;
 			if (t == typeof(CsfFile)) return FileFormat.Csf;
@@ -48,11 +48,11 @@ namespace CNCMaps.FileFormats.VirtualFileSystem {
 		public T Open<T>(string filename, CacheMethod m = CacheMethod.Default) where T : VirtualFile {
 			return Open(filename, GetFormatFromTypeclass(typeof(T)), m) as T;
 		}
-		
+
 		public T OpenFile<T>(string filename, CacheMethod m = CacheMethod.Default) where T : VirtualFile {
 			return Open(filename, GetFormatFromTypeclass(typeof(T)), m) as T;
 		}
-		
+
 		public VirtualFile Open(string filename, FileFormat format = FileFormat.None, CacheMethod m = CacheMethod.Default) {
 			if (AllArchives == null || AllArchives.Count == 0) return null;
 			var archive = AllArchives.FirstOrDefault(v => v != null && v.ContainsFile(filename));
@@ -122,7 +122,7 @@ namespace CNCMaps.FileFormats.VirtualFileSystem {
 				Logger.Fatal("Scanning mixdir for auto detect theater is no longer supported!");
 				return false;
 			}
-			
+
 			// see http://modenc.renegadeprojects.com/MIX for more info
 			Logger.Info("Initializing filesystem for the {0} engine", engine.ToString());
 
@@ -167,7 +167,7 @@ namespace CNCMaps.FileFormats.VirtualFileSystem {
 			else {
 				AddItem("tibsun.mix");
 			}
-			
+
 			if (engine == EngineType.YurisRevenge)
 				AddItem("cachemd.mix");
 			AddItem("cache.mix");
@@ -229,10 +229,10 @@ namespace CNCMaps.FileFormats.VirtualFileSystem {
 
 			return true;
 		}
-		
-        public void Reset() {
+
+		public void Reset() {
 			foreach (var arch in AllArchives)
-				if(arch != null) arch.Close();
+				if (arch != null) arch.Close();
 			AllArchives.Clear();
 		}
 
@@ -248,18 +248,18 @@ namespace CNCMaps.FileFormats.VirtualFileSystem {
 				return ReadRegistryString(key, "SOFTWARE\\Westwood\\Tiberian Sun", "InstallPath");
 			}
 		}
-		
+
 		private static string ra2DirCached ;
 		public static string RA2InstallDir {
 			get {
 				if (ra2DirCached == null) {
 					try { ra2DirCached = Path.GetDirectoryName(RA2InstallPath); }
-					catch {}
+					catch { }
 				}
 				return ra2DirCached;
 			}
 		}
-		
+
 
 		private static string tsDirCached = null;
 		public static string TSInstallDir {

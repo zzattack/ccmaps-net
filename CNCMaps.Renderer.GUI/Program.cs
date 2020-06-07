@@ -25,11 +25,11 @@ namespace CNCMaps.GUI {
 				bool skipUpdateCheck = false;
 
 				_options = new OptionSet {
-			        {"h|help", "Show this short help text", v => showHelp = true},
-			        {"k|killpid=", "Kill calling (old) process (to be used by updater)", KillDanglingProcess },
-			        {"c|cleanupdate=", "Delete (old) executable (to be used by updater)", RemoveOldExecutable },
+					{"h|help", "Show this short help text", v => showHelp = true},
+					{"k|killpid=", "Kill calling (old) process (to be used by updater)", KillDanglingProcess },
+					{"c|cleanupdate=", "Delete (old) executable (to be used by updater)", RemoveOldExecutable },
 					{"s|skip-update-check", "Skip update check)", v => skipUpdateCheck = true },
-			    };
+				};
 				_options.Parse(args);
 				if (showHelp) {
 					ShowHelp();

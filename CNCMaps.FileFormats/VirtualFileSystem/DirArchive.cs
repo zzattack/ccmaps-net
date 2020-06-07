@@ -18,6 +18,6 @@ namespace CNCMaps.FileFormats.VirtualFileSystem {
 			return FormatHelper.OpenAsFormat(fs, filename, 0, (int)fs.Length, format);
 		}
 
-		public void Close() {}
+		public void Close() { }
 	}
 }

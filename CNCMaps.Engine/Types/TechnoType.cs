@@ -342,8 +342,8 @@ namespace CNCMaps.Engine.Types {
 		public int MaxDebris;
 		public int MinDebris;
 		public List<int> DebrisMaximums;
-		
-		public TechnoType(string ID) : base(ID) {}
+
+		public TechnoType(string ID) : base(ID) { }
 
 		public override void LoadArt(FileFormats.IniFile.IniSection art) {
 			base.LoadArt(art);
@@ -437,25 +437,25 @@ namespace CNCMaps.Engine.Types {
 			WeaponX = TypesRepository.GetWeaponType(rules.ReadString("WeaponX"));
 			EliteWeaponX = TypesRepository.GetWeaponType(rules.ReadString("EliteWeaponX"));
 			VoiceMove = GetList<Sound>(rules.ReadList("VoiceMove"));
-			VoiceSelect =GetList<Sound>( rules.ReadList("VoiceSelect"));
-			VoiceSelectEnslaved = GetList<Sound>( rules.ReadList("VoiceSelectEnslaved"));
-			VoiceSelectDeactivated = GetList<Sound>( rules.ReadList("VoiceSelectDeactivated"));
-			VoiceAttack = GetList<Sound>( rules.ReadList("VoiceAttack"));
-			VoiceSpecialAttack = GetList<Sound>( rules.ReadList("VoiceSpecialAttack"));
-			VoiceDie = GetList<Sound>( rules.ReadList("VoiceDie"));
-			VoiceFeedback = GetList<Sound>( rules.ReadList("VoiceFeedback"));
+			VoiceSelect =GetList<Sound>(rules.ReadList("VoiceSelect"));
+			VoiceSelectEnslaved = GetList<Sound>(rules.ReadList("VoiceSelectEnslaved"));
+			VoiceSelectDeactivated = GetList<Sound>(rules.ReadList("VoiceSelectDeactivated"));
+			VoiceAttack = GetList<Sound>(rules.ReadList("VoiceAttack"));
+			VoiceSpecialAttack = GetList<Sound>(rules.ReadList("VoiceSpecialAttack"));
+			VoiceDie = GetList<Sound>(rules.ReadList("VoiceDie"));
+			VoiceFeedback = GetList<Sound>(rules.ReadList("VoiceFeedback"));
 			AuxSound1 = TypesRepository.GetSound(rules.ReadString("AuxSound1"));
-			AuxSound2	 = TypesRepository.GetSound(rules.ReadString("AuxSound2"));
-			CreateSound	 = TypesRepository.GetSound(rules.ReadString("CreateSound"));
-			DamageSound	 = TypesRepository.GetSound(rules.ReadString("DamageSound"));
-			ImpactWaterSound	 = TypesRepository.GetSound(rules.ReadString("ImpactWaterSound"));
+			AuxSound2    = TypesRepository.GetSound(rules.ReadString("AuxSound2"));
+			CreateSound  = TypesRepository.GetSound(rules.ReadString("CreateSound"));
+			DamageSound  = TypesRepository.GetSound(rules.ReadString("DamageSound"));
+			ImpactWaterSound     = TypesRepository.GetSound(rules.ReadString("ImpactWaterSound"));
 			ImpactLandSound = TypesRepository.GetSound(rules.ReadString("ImpactLandSound"));
-			CrashingSound	 = TypesRepository.GetSound(rules.ReadString("CrashingSound"));
-			SinkingSound	 = TypesRepository.GetSound(rules.ReadString("SinkingSound"));
-			VoiceFalling	 = TypesRepository.GetSound(rules.ReadString("VoiceFalling"));
-			VoiceCrashing	 = TypesRepository.GetSound(rules.ReadString("VoiceCrashing"));
-			VoiceSinking	 = TypesRepository.GetSound(rules.ReadString("VoiceSinking"));
-			VoiceEnter	 = TypesRepository.GetSound(rules.ReadString("VoiceEnter"));
+			CrashingSound    = TypesRepository.GetSound(rules.ReadString("CrashingSound"));
+			SinkingSound     = TypesRepository.GetSound(rules.ReadString("SinkingSound"));
+			VoiceFalling     = TypesRepository.GetSound(rules.ReadString("VoiceFalling"));
+			VoiceCrashing    = TypesRepository.GetSound(rules.ReadString("VoiceCrashing"));
+			VoiceSinking     = TypesRepository.GetSound(rules.ReadString("VoiceSinking"));
+			VoiceEnter   = TypesRepository.GetSound(rules.ReadString("VoiceEnter"));
 			VoiceCapture = TypesRepository.GetSound(rules.ReadString("VoiceCapture"));
 			CloakStop = rules.ReadBool("CloakStop");
 			Storage = rules.ReadInt("Storage");
@@ -471,29 +471,29 @@ namespace CNCMaps.Engine.Types {
 			TurretSpins = rules.ReadBool("TurretSpins");
 			TiltCrashJumpjet = rules.ReadBool("TiltCrashJumpjet");
 			Turret = rules.ReadBool("Turret");
-			TurretRotateSound	 = TypesRepository.GetSound(rules.ReadString("TurretRotateSound"));	
-			EnterTransportSound	 = TypesRepository.GetSound(rules.ReadString("EnterTransportSound"));	
-			LeaveTransportSound		 = TypesRepository.GetSound(rules.ReadString("LeaveTransportSound"));	
+			TurretRotateSound    = TypesRepository.GetSound(rules.ReadString("TurretRotateSound"));
+			EnterTransportSound  = TypesRepository.GetSound(rules.ReadString("EnterTransportSound"));
+			LeaveTransportSound      = TypesRepository.GetSound(rules.ReadString("LeaveTransportSound"));
 			MoveSound = GetList<Sound>(rules.ReadList("MoveSound"));
 			DieSound = GetList<Sound>(rules.ReadList("DieSound"));
-			DeploySound	 = TypesRepository.GetSound(rules.ReadString("DeploySound"));		
-			UndeploySound	= TypesRepository.GetSound(rules.ReadString("UndeploySound"));			
-			ChronoInSound	= TypesRepository.GetSound(rules.ReadString("ChronoInSound"));			
-			ChronoOutSound	= TypesRepository.GetSound(rules.ReadString("ChronoOutSound"));			
-			VoiceHarvest	= TypesRepository.GetSound(rules.ReadString("VoiceHarvest"));			
-			VoicePrimaryWeaponAttack	= TypesRepository.GetSound(rules.ReadString("VoicePrimaryWeaponAttack"));			
-			VoicePrimaryEliteWeaponAttack	= TypesRepository.GetSound(rules.ReadString("VoicePrimaryEliteWeaponAttack"));			
-			VoiceSecondaryWeaponAttack	= TypesRepository.GetSound(rules.ReadString("VoiceSecondaryWeaponAttack"));			
-			VoiceSecondaryEliteWeaponAttack	= TypesRepository.GetSound(rules.ReadString("VoiceSecondaryEliteWeaponAttack"));			
-			VoiceDeploy	= TypesRepository.GetSound(rules.ReadString("VoiceDeploy"));			
-			VoiceUndeploy	= TypesRepository.GetSound(rules.ReadString("VoiceUndeploy"));			
-			EnterGrinderSound	= TypesRepository.GetSound(rules.ReadString("EnterGrinderSound"));			
-			LeaveGrinderSound	= TypesRepository.GetSound(rules.ReadString("LeaveGrinderSound"));			
-			EnterBioReactorSound	= TypesRepository.GetSound(rules.ReadString("EnterBioReactorSound"));			
-			LeaveBioReactorSound	= TypesRepository.GetSound(rules.ReadString("LeaveBioReactorSound"));			
-			ActivateSound	= TypesRepository.GetSound(rules.ReadString("ActivateSound"));			
-			DeactivateSound	= TypesRepository.GetSound(rules.ReadString("DeactivateSound"));			
-			MindClearedSound	= TypesRepository.GetSound(rules.ReadString("MindClearedSound"));			
+			DeploySound  = TypesRepository.GetSound(rules.ReadString("DeploySound"));
+			UndeploySound   = TypesRepository.GetSound(rules.ReadString("UndeploySound"));
+			ChronoInSound   = TypesRepository.GetSound(rules.ReadString("ChronoInSound"));
+			ChronoOutSound  = TypesRepository.GetSound(rules.ReadString("ChronoOutSound"));
+			VoiceHarvest    = TypesRepository.GetSound(rules.ReadString("VoiceHarvest"));
+			VoicePrimaryWeaponAttack    = TypesRepository.GetSound(rules.ReadString("VoicePrimaryWeaponAttack"));
+			VoicePrimaryEliteWeaponAttack   = TypesRepository.GetSound(rules.ReadString("VoicePrimaryEliteWeaponAttack"));
+			VoiceSecondaryWeaponAttack  = TypesRepository.GetSound(rules.ReadString("VoiceSecondaryWeaponAttack"));
+			VoiceSecondaryEliteWeaponAttack = TypesRepository.GetSound(rules.ReadString("VoiceSecondaryEliteWeaponAttack"));
+			VoiceDeploy = TypesRepository.GetSound(rules.ReadString("VoiceDeploy"));
+			VoiceUndeploy   = TypesRepository.GetSound(rules.ReadString("VoiceUndeploy"));
+			EnterGrinderSound   = TypesRepository.GetSound(rules.ReadString("EnterGrinderSound"));
+			LeaveGrinderSound   = TypesRepository.GetSound(rules.ReadString("LeaveGrinderSound"));
+			EnterBioReactorSound    = TypesRepository.GetSound(rules.ReadString("EnterBioReactorSound"));
+			LeaveBioReactorSound    = TypesRepository.GetSound(rules.ReadString("LeaveBioReactorSound"));
+			ActivateSound   = TypesRepository.GetSound(rules.ReadString("ActivateSound"));
+			DeactivateSound = TypesRepository.GetSound(rules.ReadString("DeactivateSound"));
+			MindClearedSound    = TypesRepository.GetSound(rules.ReadString("MindClearedSound"));
 
 			Explosion = GetList<Animation>(rules.ReadList("Explosion"));
 			DestroyAnim = GetList<Animation>(rules.ReadList("DestroyAnim"));

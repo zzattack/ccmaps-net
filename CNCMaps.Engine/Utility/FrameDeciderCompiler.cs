@@ -46,7 +46,7 @@ namespace CNCMaps.Engine.Utility {
 			// compile DOM
 			CodeDomProvider cp = CodeDomProvider.CreateProvider("CS");
 			var options = new CompilerParameters();
-			
+
 			options.GenerateInMemory = true;
 			options.ReferencedAssemblies.Add(typeof(Map.Map).Assembly.Location);
 			options.ReferencedAssemblies.Add(typeof(CNCMaps.Shared.ModConfig).Assembly.Location);
@@ -57,8 +57,8 @@ namespace CNCMaps.Engine.Utility {
 			MethodInfo mi = cpRes.CompiledAssembly.GetType("DynamicFrameDeciders.FrameDecider").GetMethod("DecideFrame");
 
 			// and wrap it
-			return obj => (int)mi.Invoke(null, new[] {obj});
+			return obj => (int)mi.Invoke(null, new[] { obj });
 		}
-		
+
 	}
 }

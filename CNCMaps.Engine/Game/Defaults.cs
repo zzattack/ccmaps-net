@@ -7,7 +7,7 @@ namespace CNCMaps.Engine.Game {
 	public static class Defaults {
 		// Managed at:
 		// https://docs.google.com/spreadsheet/ccc?key=0AiVQdoAJ4w7bdE9ILUpvNVVDa2J2MG04RnBURU96VUE#gid=0
-		
+
 		public static PaletteType GetDefaultPalette(CollectionType t, EngineType engine) {
 			switch (t) {
 				case CollectionType.Building:
@@ -58,7 +58,7 @@ namespace CNCMaps.Engine.Game {
 					throw new ArgumentOutOfRangeException("type");
 			}
 		}
-		
+
 		public static bool GetShadowAssumption(CollectionType t) {
 			switch (t) {
 				case CollectionType.Overlay:
@@ -89,7 +89,7 @@ namespace CNCMaps.Engine.Game {
 					return true;
 			}
 		}
-		
+
 		public static Func<GameObject, int> GetDefaultFrameDecider(CollectionType collection) {
 			switch (collection) {
 				case CollectionType.Vehicle:

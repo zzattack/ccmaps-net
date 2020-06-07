@@ -51,7 +51,7 @@ namespace CNCMaps.Engine.Game {
 		private static bool IsTib(OverlayObject o) {
 			return IsTS_Riparius(o) || IsTS_Cruentus(o) || IsTS_Vinifera(o) || IsTS_Aboreus(o);
 		}
-		
+
 		public static bool IsHighBridge(OverlayObject o) {
 			return o.OverlayID == 24 || o.OverlayID == 25 || o.OverlayID == 238 || o.OverlayID == 237;
 		}

@@ -7,9 +7,9 @@ using System.Linq.Expressions;
 using System.Xml.Linq;
 
 namespace CNCMaps.GUI {
-    // taken from http://stackoverflow.com/questions/2265271/custom-path-of-the-user-config
+	// taken from http://stackoverflow.com/questions/2265271/custom-path-of-the-user-config
 
-    class CustomSettingsProvider : SettingsProvider {
+	class CustomSettingsProvider : SettingsProvider {
 		const string NAME = "name";
 		const string SERIALIZE_AS = "serializeAs";
 		const string CONFIG = "configuration";
@@ -139,8 +139,7 @@ namespace CNCMaps.GUI {
 		/// Creates an empty user.config file...looks like the one MS creates.  
 		/// This could be overkill a simple key/value pairing would probably do.
 		/// </summary>
-		private void CreateEmptyConfig()
-		{
+		private void CreateEmptyConfig() {
 			var doc = new XDocument();
 			var declaration = new XDeclaration("1.0", "utf-8", "true");
 			var config = new XElement(CONFIG);
@@ -152,13 +151,13 @@ namespace CNCMaps.GUI {
 			doc.Declaration = declaration;
 			var dir = Path.GetDirectoryName(UserConfigPath);
 			try {
-				if (!Directory.Exists(dir)) 
+				if (!Directory.Exists(dir))
 					Directory.CreateDirectory(dir);
 				doc.Save(UserConfigPath);
 			}
 			catch (IOException) { }
 		}
-	
+
 
 		/// <summary>
 		/// Saves the in memory dictionary to the user config file

@@ -13,10 +13,10 @@ using CNCMaps.Shared.Utility;
 namespace CNCMaps.Engine.Game {
 	class BuildingDrawable : Drawable {
 
-        #region crap
+		#region crap
 		private static readonly string[] LampNames = {
 			"REDLAMP", "BLUELAMP", "GRENLAMP", "YELWLAMP", "PURPLAMP", "INORANLAMP", "INGRNLMP", "INREDLMP", "INBLULMP",
-			"INGALITE", "GALITE", "TSTLAMP", 
+			"INGALITE", "GALITE", "TSTLAMP",
 			"INYELWLAMP", "INPURPLAMP", "NEGLAMP", "NERGRED", "TEMMORLAMP", "TEMPDAYLAMP", "TEMDAYLAMP", "TEMDUSLAMP",
 			"TEMNITLAMP", "SNOMORLAMP",
 			"SNODAYLAMP", "SNODUSLAMP", "SNONITLAMP"
@@ -70,7 +70,7 @@ namespace CNCMaps.Engine.Game {
 			}
 			Props.SortIndex = Art.ReadInt("NormalYSort") - Art.ReadInt("NormalZAdjust"); // "main" building image before anims
 			Props.ZShapePointMove = Art.ReadPoint("ZShapePointMove");
-			
+
 			_canBeOccupied= Rules.ReadBool("CanBeOccupied");
 			_techLevel = Rules.ReadInt("TechLevel");
 			_conditionYellowHealth = 128;
@@ -118,8 +118,8 @@ namespace CNCMaps.Engine.Game {
 				IniFile.IniSection turretArt = OwnerCollection.Art.GetOrCreateSection(turretName);
 				if (turretArt.HasKey("Image"))
 					turretName = turretArt.ReadString("Image");
-                // Starkku: NewTheater/generic image fallback support for turrets.
-                string turretNameShp = NewTheater ? OwnerCollection.ApplyNewTheaterIfNeeded(turretName, turretName + ".shp") : turretName + ".shp";
+				// Starkku: NewTheater/generic image fallback support for turrets.
+				string turretNameShp = NewTheater ? OwnerCollection.ApplyNewTheaterIfNeeded(turretName, turretName + ".shp") : turretName + ".shp";
 				Drawable turret = Rules.ReadBool("TurretAnimIsVoxel")
 					? (Drawable)new VoxelDrawable(_vfs.Open<VxlFile>(turretName + ".vxl"), _vfs.Open<HvaFile>(turretName + ".hva"))
 					: (Drawable)new ShpDrawable(new ShpRenderer(_vfs), _vfs.Open<ShpFile>(turretNameShp));
@@ -127,7 +127,7 @@ namespace CNCMaps.Engine.Game {
 				turret.Props.HasShadow = Rules.ReadBool("UseTurretShadow");
 				turret.Props.FrameDecider = FrameDeciders.TurretFrameDecider;
 				turret.Props.ZAdjust = Rules.ReadInt("TurretAnimZAdjust");
-                turret.Props.Cloakable = Props.Cloakable;
+				turret.Props.Cloakable = Props.Cloakable;
 				SubDrawables.Add(turret);
 
 				if (turret is VoxelDrawable && turretName.ToUpper().Contains("TUR")) {
@@ -223,7 +223,7 @@ namespace CNCMaps.Engine.Game {
 			upgrade.LoadFromRules();
 			upgrade.NewTheater = this.NewTheater;
 			upgrade.IsBuildingPart = true;
-            string shpfilename = NewTheater ? OwnerCollection.ApplyNewTheaterIfNeeded(upgradeName, upgradeName + ".shp") : upgradeName + ".shp";
+			string shpfilename = NewTheater ? OwnerCollection.ApplyNewTheaterIfNeeded(upgradeName, upgradeName + ".shp") : upgradeName + ".shp";
 			upgrade.Shp = _vfs.Open<ShpFile>(shpfilename);
 			Point powerupOffset = new Point(_powerupSlots[upgradeSlot].X, _powerupSlots[upgradeSlot].Y);
 			upgrade.Props.Offset.Offset(powerupOffset);
@@ -257,23 +257,21 @@ namespace CNCMaps.Engine.Game {
 		 * from the custom object palettes).
 		 */
 		private Palette GetFireAnimPalette(IniFile.IniSection animation) {
-            // Starkku: Altered as a part of a fix for crash that happened if custom palette was declared but file wasn't there.
-            Palette pal = null;
-            if (animation.ReadString("Palette") != "")
-            {
-                pal = OwnerCollection.Palettes.GetCustomPalette(animation.ReadString("Palette"));
-                if (pal == null) pal = OwnerCollection.Palettes.AnimPalette;
-            }
-            else if (animation.ReadString("CustomPalette") != "")
-            {
-                pal = OwnerCollection.Palettes.GetCustomPalette(animation.ReadString("CustomPalette"));
-                if (pal == null) pal = OwnerCollection.Palettes.AnimPalette;
-            }
-            else if (animation.ReadString("AltPalette") != "")
-                pal = OwnerCollection.Palettes.UnitPalette;
-            else
-                pal = OwnerCollection.Palettes.AnimPalette;
-            return pal;
+			// Starkku: Altered as a part of a fix for crash that happened if custom palette was declared but file wasn't there.
+			Palette pal = null;
+			if (animation.ReadString("Palette") != "") {
+				pal = OwnerCollection.Palettes.GetCustomPalette(animation.ReadString("Palette"));
+				if (pal == null) pal = OwnerCollection.Palettes.AnimPalette;
+			}
+			else if (animation.ReadString("CustomPalette") != "") {
+				pal = OwnerCollection.Palettes.GetCustomPalette(animation.ReadString("CustomPalette"));
+				if (pal == null) pal = OwnerCollection.Palettes.AnimPalette;
+			}
+			else if (animation.ReadString("AltPalette") != "")
+				pal = OwnerCollection.Palettes.UnitPalette;
+			else
+				pal = OwnerCollection.Palettes.AnimPalette;
+			return pal;
 		}
 
 		public override void Draw(GameObject obj, DrawingSurface ds, bool shadows = true) {
@@ -386,7 +384,7 @@ namespace CNCMaps.Engine.Game {
 			foreach (var d in parts)
 				d.DrawBoundingBox(obj, gfx);
 		}
-}
+	}
 
 	public class PowerupSlot {
 		public int X { get; set; }

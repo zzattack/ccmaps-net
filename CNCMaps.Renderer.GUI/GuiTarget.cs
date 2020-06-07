@@ -31,7 +31,7 @@ namespace CNCMaps.GUI {
 				case "Warn":
 					c = Color.YellowGreen;
 					break;
-				}
+			}
 
 			SafeBeginInvoke(new Action(() => {
 				TargetControl.SelectionStart = TargetControl.TextLength;

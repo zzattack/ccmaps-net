@@ -56,15 +56,15 @@ namespace CNCMaps.FileFormats {
 			}
 		}
 
-        public void LoadAresIncludes(VFS vfs) {
+		public void LoadAresIncludes(VFS vfs) {
 			// support for Ares tag
 			var includes = GetOrCreateSection("#include");
-			foreach (var entry in includes.OrderedEntries) { 
+			foreach (var entry in includes.OrderedEntries) {
 				var include = vfs.Open<IniFile>(entry.Value);
 				include.LoadAresIncludes(vfs); // mechanism even works recursively!
-                MergeWith(include);
+				MergeWith(include);
 			}
-        }
+		}
 
 		int ProcessLine(string line) {
 			IniSection.FixLine(ref line);

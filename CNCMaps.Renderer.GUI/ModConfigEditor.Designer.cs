@@ -46,9 +46,9 @@
 			// 
 			// propertyGrid1
 			// 
-			this.propertyGrid1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
+			this.propertyGrid1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+			| System.Windows.Forms.AnchorStyles.Left)
+			| System.Windows.Forms.AnchorStyles.Right)));
 			this.propertyGrid1.Location = new System.Drawing.Point(0, 24);
 			this.propertyGrid1.Name = "propertyGrid1";
 			this.propertyGrid1.PropertySort = System.Windows.Forms.PropertySort.NoSort;
@@ -58,8 +58,8 @@
 			// menuStrip1
 			// 
 			this.menuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.fileToolStripMenuItem,
-            this.defaultsToolStripMenuItem});
+			this.fileToolStripMenuItem,
+			this.defaultsToolStripMenuItem});
 			this.menuStrip1.Location = new System.Drawing.Point(0, 0);
 			this.menuStrip1.Name = "menuStrip1";
 			this.menuStrip1.Size = new System.Drawing.Size(538, 24);
@@ -69,9 +69,9 @@
 			// fileToolStripMenuItem
 			// 
 			this.fileToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.toolStripMenuItem1,
-            this.openToolStripMenuItem,
-            this.saveToolStripMenuItem});
+			this.toolStripMenuItem1,
+			this.openToolStripMenuItem,
+			this.saveToolStripMenuItem});
 			this.fileToolStripMenuItem.Name = "fileToolStripMenuItem";
 			this.fileToolStripMenuItem.Size = new System.Drawing.Size(37, 20);
 			this.fileToolStripMenuItem.Text = "&File";
@@ -100,9 +100,9 @@
 			// defaultsToolStripMenuItem
 			// 
 			this.defaultsToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.loadTSToolStripMenuItem,
-            this.loadRA2ToolStripMenuItem,
-            this.loadYRToolStripMenuItem});
+			this.loadTSToolStripMenuItem,
+			this.loadRA2ToolStripMenuItem,
+			this.loadYRToolStripMenuItem});
 			this.defaultsToolStripMenuItem.Name = "defaultsToolStripMenuItem";
 			this.defaultsToolStripMenuItem.Size = new System.Drawing.Size(62, 20);
 			this.defaultsToolStripMenuItem.Text = "&Defaults";

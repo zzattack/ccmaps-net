@@ -111,7 +111,7 @@ namespace CNCMaps.Shared.DynamicTypeDescription {
 
 			if (e.NewValue == CheckState.Checked) {
 				if (IsZero(m_EnumDataType, ti.Item.Value))  // user is chekcing the item with zero value ( None )
-        {
+		{
 					m_Value = 0;
 				}
 				else {

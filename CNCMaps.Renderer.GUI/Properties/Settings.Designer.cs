@@ -9,574 +9,571 @@
 //------------------------------------------------------------------------------
 
 namespace CNCMaps.GUI.Properties {
-    
-    
-    [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.Editors.SettingsDesigner.SettingsSingleFileGenerator", "15.7.0.0")]
-    [System.Configuration.SettingsProvider(typeof(CustomSettingsProvider))]
-    public sealed partial class Settings : global::System.Configuration.ApplicationSettingsBase {
-        
-        private static Settings defaultInstance = ((Settings)(global::System.Configuration.ApplicationSettingsBase.Synchronized(new Settings())));
-        
-        public static Settings Default {
-            get {
-                return defaultInstance;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("")]
-        public string input {
-            get {
-                return ((string)(this["input"]));
-            }
-            set {
-                this["input"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("")]
-        public string mixdir {
-            get {
-                return ((string)(this["mixdir"]));
-            }
-            set {
-                this["mixdir"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("")]
-        public string output {
-            get {
-                return ((string)(this["output"]));
-            }
-            set {
-                this["output"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("90")]
-        public decimal outputjpgq {
-            get {
-                return ((decimal)(this["outputjpgq"]));
-            }
-            set {
-                this["outputjpgq"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("6")]
-        public decimal outputpngq {
-            get {
-                return ((decimal)(this["outputpngq"]));
-            }
-            set {
-                this["outputpngq"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("")]
-        public string customfilename {
-            get {
-                return ((string)(this["customfilename"]));
-            }
-            set {
-                this["customfilename"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("True")]
-        public bool engineauto {
-            get {
-                return ((bool)(this["engineauto"]));
-            }
-            set {
-                this["engineauto"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        public bool enginets {
-            get {
-                return ((bool)(this["enginets"]));
-            }
-            set {
-                this["enginets"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        public bool enginefs {
-            get {
-                return ((bool)(this["enginefs"]));
-            }
-            set {
-                this["enginefs"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        public bool enginera2 {
-            get {
-                return ((bool)(this["enginera2"]));
-            }
-            set {
-                this["enginera2"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        public bool engineyr {
-            get {
-                return ((bool)(this["engineyr"]));
-            }
-            set {
-                this["engineyr"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        public bool modconfig {
-            get {
-                return ((bool)(this["modconfig"]));
-            }
-            set {
-                this["modconfig"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("")]
-        public string modconfigfile {
-            get {
-                return ((string)(this["modconfigfile"]));
-            }
-            set {
-                this["modconfigfile"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        public bool emphore {
-            get {
-                return ((bool)(this["emphore"]));
-            }
-            set {
-                this["emphore"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("True")]
-        public bool autosize {
-            get {
-                return ((bool)(this["autosize"]));
-            }
-            set {
-                this["autosize"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        public bool localsize {
-            get {
-                return ((bool)(this["localsize"]));
-            }
-            set {
-                this["localsize"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        public bool fullsize {
-            get {
-                return ((bool)(this["fullsize"]));
-            }
-            set {
-                this["fullsize"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        public bool injectthumb {
-            get {
-                return ((bool)(this["injectthumb"]));
-            }
-            set {
-                this["injectthumb"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("True")]
-        public bool hwvoxels {
-            get {
-                return ((bool)(this["hwvoxels"]));
-            }
-            set {
-                this["hwvoxels"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        public bool swvoxels {
-            get {
-                return ((bool)(this["swvoxels"]));
-            }
-            set {
-                this["swvoxels"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("")]
-        public string renderprog {
-            get {
-                return ((string)(this["renderprog"]));
-            }
-            set {
-                this["renderprog"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        public bool outputauto {
-            get {
-                return ((bool)(this["outputauto"]));
-            }
-            set {
-                this["outputauto"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        public bool outputcustom {
-            get {
-                return ((bool)(this["outputcustom"]));
-            }
-            set {
-                this["outputcustom"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        public bool outputthumb {
-            get {
-                return ((bool)(this["outputthumb"]));
-            }
-            set {
-                this["outputthumb"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("800,0")]
-        public string thumbdimensions {
-            get {
-                return ((string)(this["thumbdimensions"]));
-            }
-            set {
-                this["thumbdimensions"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("True")]
-        public bool thumbpreserveaspect {
-            get {
-                return ((bool)(this["thumbpreserveaspect"]));
-            }
-            set {
-                this["thumbpreserveaspect"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("")]
-        public string email {
-            get {
-                return ((string)(this["email"]));
-            }
-            set {
-                this["email"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("None")]
-        public string markers {
-            get {
-                return ((string)(this["markers"]));
-            }
-            set {
-                this["markers"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        public bool outputjpg {
-            get {
-                return ((bool)(this["outputjpg"]));
-            }
-            set {
-                this["outputjpg"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("True")]
-        public bool outputpng {
-            get {
-                return ((bool)(this["outputpng"]));
-            }
-            set {
-                this["outputpng"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        public bool fixuptiles {
-            get {
-                return ((bool)(this["fixuptiles"]));
-            }
-            set {
-                this["fixuptiles"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("True")]
-        public bool usefilename {
-            get {
-                return ((bool)(this["usefilename"]));
-            }
-            set {
-                this["usefilename"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("True")]
-        public bool thumbpng {
-            get {
-                return ((bool)(this["thumbpng"]));
-            }
-            set {
-                this["thumbpng"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        public bool icegrowth {
-            get {
-                return ((bool)(this["icegrowth"]));
-            }
-            set {
-                this["icegrowth"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        public bool diagwindow {
-            get {
-                return ((bool)(this["diagwindow"]));
-            }
-            set {
-                this["diagwindow"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("True")]
-        public bool skipupdatecheck {
-            get {
-                return ((bool)(this["skipupdatecheck"]));
-            }
-            set {
-                this["skipupdatecheck"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("True")]
-        public bool backup {
-            get {
-                return ((bool)(this["backup"]));
-            }
-            set {
-                this["backup"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        public bool fixoverlays {
-            get {
-                return ((bool)(this["fixoverlays"]));
-            }
-            set {
-                this["fixoverlays"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        public bool compresstiles {
-            get {
-                return ((bool)(this["compresstiles"]));
-            }
-            set {
-                this["compresstiles"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        public bool tunnelpaths {
-            get {
-                return ((bool)(this["tunnelpaths"]));
-            }
-            set {
-                this["tunnelpaths"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("True")]
-        public bool tunnelpos {
-            get {
-                return ((bool)(this["tunnelpos"]));
-            }
-            set {
-                this["tunnelpos"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("40, 40")]
-        public string windowlocation {
-            get {
-                return ((string)(this["windowlocation"]));
-            }
-            set {
-                this["windowlocation"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        public bool startmarker {
-            get {
-                return ((bool)(this["startmarker"]));
-            }
-            set {
-                this["startmarker"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("Diamond")]
-        public string startmarkertype {
-            get {
-                return ((string)(this["startmarkertype"]));
-            }
-            set {
-                this["startmarkertype"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("4")]
-        public string startmarkersize {
-            get {
-                return ((string)(this["startmarkersize"]));
-            }
-            set {
-                this["startmarkersize"] = value;
-            }
-        }
 
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("")]
-        public string batchinput
-        {
-            get
-            {
-                return ((string)(this["batchinput"]));
-            }
-            set
-            {
-                this["batchinput"] = value;
-            }
-        }
-    }
+
+	[global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
+	[global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.Editors.SettingsDesigner.SettingsSingleFileGenerator", "15.7.0.0")]
+	[System.Configuration.SettingsProvider(typeof(CustomSettingsProvider))]
+	public sealed partial class Settings : global::System.Configuration.ApplicationSettingsBase {
+
+		private static Settings defaultInstance = ((Settings)(global::System.Configuration.ApplicationSettingsBase.Synchronized(new Settings())));
+
+		public static Settings Default {
+			get {
+				return defaultInstance;
+			}
+		}
+
+		[global::System.Configuration.UserScopedSettingAttribute()]
+		[global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+		[global::System.Configuration.DefaultSettingValueAttribute("")]
+		public string input {
+			get {
+				return ((string)(this["input"]));
+			}
+			set {
+				this["input"] = value;
+			}
+		}
+
+		[global::System.Configuration.UserScopedSettingAttribute()]
+		[global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+		[global::System.Configuration.DefaultSettingValueAttribute("")]
+		public string mixdir {
+			get {
+				return ((string)(this["mixdir"]));
+			}
+			set {
+				this["mixdir"] = value;
+			}
+		}
+
+		[global::System.Configuration.UserScopedSettingAttribute()]
+		[global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+		[global::System.Configuration.DefaultSettingValueAttribute("")]
+		public string output {
+			get {
+				return ((string)(this["output"]));
+			}
+			set {
+				this["output"] = value;
+			}
+		}
+
+		[global::System.Configuration.UserScopedSettingAttribute()]
+		[global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+		[global::System.Configuration.DefaultSettingValueAttribute("90")]
+		public decimal outputjpgq {
+			get {
+				return ((decimal)(this["outputjpgq"]));
+			}
+			set {
+				this["outputjpgq"] = value;
+			}
+		}
+
+		[global::System.Configuration.UserScopedSettingAttribute()]
+		[global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+		[global::System.Configuration.DefaultSettingValueAttribute("6")]
+		public decimal outputpngq {
+			get {
+				return ((decimal)(this["outputpngq"]));
+			}
+			set {
+				this["outputpngq"] = value;
+			}
+		}
+
+		[global::System.Configuration.UserScopedSettingAttribute()]
+		[global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+		[global::System.Configuration.DefaultSettingValueAttribute("")]
+		public string customfilename {
+			get {
+				return ((string)(this["customfilename"]));
+			}
+			set {
+				this["customfilename"] = value;
+			}
+		}
+
+		[global::System.Configuration.UserScopedSettingAttribute()]
+		[global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+		[global::System.Configuration.DefaultSettingValueAttribute("True")]
+		public bool engineauto {
+			get {
+				return ((bool)(this["engineauto"]));
+			}
+			set {
+				this["engineauto"] = value;
+			}
+		}
+
+		[global::System.Configuration.UserScopedSettingAttribute()]
+		[global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+		[global::System.Configuration.DefaultSettingValueAttribute("False")]
+		public bool enginets {
+			get {
+				return ((bool)(this["enginets"]));
+			}
+			set {
+				this["enginets"] = value;
+			}
+		}
+
+		[global::System.Configuration.UserScopedSettingAttribute()]
+		[global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+		[global::System.Configuration.DefaultSettingValueAttribute("False")]
+		public bool enginefs {
+			get {
+				return ((bool)(this["enginefs"]));
+			}
+			set {
+				this["enginefs"] = value;
+			}
+		}
+
+		[global::System.Configuration.UserScopedSettingAttribute()]
+		[global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+		[global::System.Configuration.DefaultSettingValueAttribute("False")]
+		public bool enginera2 {
+			get {
+				return ((bool)(this["enginera2"]));
+			}
+			set {
+				this["enginera2"] = value;
+			}
+		}
+
+		[global::System.Configuration.UserScopedSettingAttribute()]
+		[global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+		[global::System.Configuration.DefaultSettingValueAttribute("False")]
+		public bool engineyr {
+			get {
+				return ((bool)(this["engineyr"]));
+			}
+			set {
+				this["engineyr"] = value;
+			}
+		}
+
+		[global::System.Configuration.UserScopedSettingAttribute()]
+		[global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+		[global::System.Configuration.DefaultSettingValueAttribute("False")]
+		public bool modconfig {
+			get {
+				return ((bool)(this["modconfig"]));
+			}
+			set {
+				this["modconfig"] = value;
+			}
+		}
+
+		[global::System.Configuration.UserScopedSettingAttribute()]
+		[global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+		[global::System.Configuration.DefaultSettingValueAttribute("")]
+		public string modconfigfile {
+			get {
+				return ((string)(this["modconfigfile"]));
+			}
+			set {
+				this["modconfigfile"] = value;
+			}
+		}
+
+		[global::System.Configuration.UserScopedSettingAttribute()]
+		[global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+		[global::System.Configuration.DefaultSettingValueAttribute("False")]
+		public bool emphore {
+			get {
+				return ((bool)(this["emphore"]));
+			}
+			set {
+				this["emphore"] = value;
+			}
+		}
+
+		[global::System.Configuration.UserScopedSettingAttribute()]
+		[global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+		[global::System.Configuration.DefaultSettingValueAttribute("True")]
+		public bool autosize {
+			get {
+				return ((bool)(this["autosize"]));
+			}
+			set {
+				this["autosize"] = value;
+			}
+		}
+
+		[global::System.Configuration.UserScopedSettingAttribute()]
+		[global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+		[global::System.Configuration.DefaultSettingValueAttribute("False")]
+		public bool localsize {
+			get {
+				return ((bool)(this["localsize"]));
+			}
+			set {
+				this["localsize"] = value;
+			}
+		}
+
+		[global::System.Configuration.UserScopedSettingAttribute()]
+		[global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+		[global::System.Configuration.DefaultSettingValueAttribute("False")]
+		public bool fullsize {
+			get {
+				return ((bool)(this["fullsize"]));
+			}
+			set {
+				this["fullsize"] = value;
+			}
+		}
+
+		[global::System.Configuration.UserScopedSettingAttribute()]
+		[global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+		[global::System.Configuration.DefaultSettingValueAttribute("False")]
+		public bool injectthumb {
+			get {
+				return ((bool)(this["injectthumb"]));
+			}
+			set {
+				this["injectthumb"] = value;
+			}
+		}
+
+		[global::System.Configuration.UserScopedSettingAttribute()]
+		[global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+		[global::System.Configuration.DefaultSettingValueAttribute("True")]
+		public bool hwvoxels {
+			get {
+				return ((bool)(this["hwvoxels"]));
+			}
+			set {
+				this["hwvoxels"] = value;
+			}
+		}
+
+		[global::System.Configuration.UserScopedSettingAttribute()]
+		[global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+		[global::System.Configuration.DefaultSettingValueAttribute("False")]
+		public bool swvoxels {
+			get {
+				return ((bool)(this["swvoxels"]));
+			}
+			set {
+				this["swvoxels"] = value;
+			}
+		}
+
+		[global::System.Configuration.UserScopedSettingAttribute()]
+		[global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+		[global::System.Configuration.DefaultSettingValueAttribute("")]
+		public string renderprog {
+			get {
+				return ((string)(this["renderprog"]));
+			}
+			set {
+				this["renderprog"] = value;
+			}
+		}
+
+		[global::System.Configuration.UserScopedSettingAttribute()]
+		[global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+		[global::System.Configuration.DefaultSettingValueAttribute("False")]
+		public bool outputauto {
+			get {
+				return ((bool)(this["outputauto"]));
+			}
+			set {
+				this["outputauto"] = value;
+			}
+		}
+
+		[global::System.Configuration.UserScopedSettingAttribute()]
+		[global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+		[global::System.Configuration.DefaultSettingValueAttribute("False")]
+		public bool outputcustom {
+			get {
+				return ((bool)(this["outputcustom"]));
+			}
+			set {
+				this["outputcustom"] = value;
+			}
+		}
+
+		[global::System.Configuration.UserScopedSettingAttribute()]
+		[global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+		[global::System.Configuration.DefaultSettingValueAttribute("False")]
+		public bool outputthumb {
+			get {
+				return ((bool)(this["outputthumb"]));
+			}
+			set {
+				this["outputthumb"] = value;
+			}
+		}
+
+		[global::System.Configuration.UserScopedSettingAttribute()]
+		[global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+		[global::System.Configuration.DefaultSettingValueAttribute("800,0")]
+		public string thumbdimensions {
+			get {
+				return ((string)(this["thumbdimensions"]));
+			}
+			set {
+				this["thumbdimensions"] = value;
+			}
+		}
+
+		[global::System.Configuration.UserScopedSettingAttribute()]
+		[global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+		[global::System.Configuration.DefaultSettingValueAttribute("True")]
+		public bool thumbpreserveaspect {
+			get {
+				return ((bool)(this["thumbpreserveaspect"]));
+			}
+			set {
+				this["thumbpreserveaspect"] = value;
+			}
+		}
+
+		[global::System.Configuration.UserScopedSettingAttribute()]
+		[global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+		[global::System.Configuration.DefaultSettingValueAttribute("")]
+		public string email {
+			get {
+				return ((string)(this["email"]));
+			}
+			set {
+				this["email"] = value;
+			}
+		}
+
+		[global::System.Configuration.UserScopedSettingAttribute()]
+		[global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+		[global::System.Configuration.DefaultSettingValueAttribute("None")]
+		public string markers {
+			get {
+				return ((string)(this["markers"]));
+			}
+			set {
+				this["markers"] = value;
+			}
+		}
+
+		[global::System.Configuration.UserScopedSettingAttribute()]
+		[global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+		[global::System.Configuration.DefaultSettingValueAttribute("False")]
+		public bool outputjpg {
+			get {
+				return ((bool)(this["outputjpg"]));
+			}
+			set {
+				this["outputjpg"] = value;
+			}
+		}
+
+		[global::System.Configuration.UserScopedSettingAttribute()]
+		[global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+		[global::System.Configuration.DefaultSettingValueAttribute("True")]
+		public bool outputpng {
+			get {
+				return ((bool)(this["outputpng"]));
+			}
+			set {
+				this["outputpng"] = value;
+			}
+		}
+
+		[global::System.Configuration.UserScopedSettingAttribute()]
+		[global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+		[global::System.Configuration.DefaultSettingValueAttribute("False")]
+		public bool fixuptiles {
+			get {
+				return ((bool)(this["fixuptiles"]));
+			}
+			set {
+				this["fixuptiles"] = value;
+			}
+		}
+
+		[global::System.Configuration.UserScopedSettingAttribute()]
+		[global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+		[global::System.Configuration.DefaultSettingValueAttribute("True")]
+		public bool usefilename {
+			get {
+				return ((bool)(this["usefilename"]));
+			}
+			set {
+				this["usefilename"] = value;
+			}
+		}
+
+		[global::System.Configuration.UserScopedSettingAttribute()]
+		[global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+		[global::System.Configuration.DefaultSettingValueAttribute("True")]
+		public bool thumbpng {
+			get {
+				return ((bool)(this["thumbpng"]));
+			}
+			set {
+				this["thumbpng"] = value;
+			}
+		}
+
+		[global::System.Configuration.UserScopedSettingAttribute()]
+		[global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+		[global::System.Configuration.DefaultSettingValueAttribute("False")]
+		public bool icegrowth {
+			get {
+				return ((bool)(this["icegrowth"]));
+			}
+			set {
+				this["icegrowth"] = value;
+			}
+		}
+
+		[global::System.Configuration.UserScopedSettingAttribute()]
+		[global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+		[global::System.Configuration.DefaultSettingValueAttribute("False")]
+		public bool diagwindow {
+			get {
+				return ((bool)(this["diagwindow"]));
+			}
+			set {
+				this["diagwindow"] = value;
+			}
+		}
+
+		[global::System.Configuration.UserScopedSettingAttribute()]
+		[global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+		[global::System.Configuration.DefaultSettingValueAttribute("True")]
+		public bool skipupdatecheck {
+			get {
+				return ((bool)(this["skipupdatecheck"]));
+			}
+			set {
+				this["skipupdatecheck"] = value;
+			}
+		}
+
+		[global::System.Configuration.UserScopedSettingAttribute()]
+		[global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+		[global::System.Configuration.DefaultSettingValueAttribute("True")]
+		public bool backup {
+			get {
+				return ((bool)(this["backup"]));
+			}
+			set {
+				this["backup"] = value;
+			}
+		}
+
+		[global::System.Configuration.UserScopedSettingAttribute()]
+		[global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+		[global::System.Configuration.DefaultSettingValueAttribute("False")]
+		public bool fixoverlays {
+			get {
+				return ((bool)(this["fixoverlays"]));
+			}
+			set {
+				this["fixoverlays"] = value;
+			}
+		}
+
+		[global::System.Configuration.UserScopedSettingAttribute()]
+		[global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+		[global::System.Configuration.DefaultSettingValueAttribute("False")]
+		public bool compresstiles {
+			get {
+				return ((bool)(this["compresstiles"]));
+			}
+			set {
+				this["compresstiles"] = value;
+			}
+		}
+
+		[global::System.Configuration.UserScopedSettingAttribute()]
+		[global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+		[global::System.Configuration.DefaultSettingValueAttribute("False")]
+		public bool tunnelpaths {
+			get {
+				return ((bool)(this["tunnelpaths"]));
+			}
+			set {
+				this["tunnelpaths"] = value;
+			}
+		}
+
+		[global::System.Configuration.UserScopedSettingAttribute()]
+		[global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+		[global::System.Configuration.DefaultSettingValueAttribute("True")]
+		public bool tunnelpos {
+			get {
+				return ((bool)(this["tunnelpos"]));
+			}
+			set {
+				this["tunnelpos"] = value;
+			}
+		}
+
+		[global::System.Configuration.UserScopedSettingAttribute()]
+		[global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+		[global::System.Configuration.DefaultSettingValueAttribute("40, 40")]
+		public string windowlocation {
+			get {
+				return ((string)(this["windowlocation"]));
+			}
+			set {
+				this["windowlocation"] = value;
+			}
+		}
+
+		[global::System.Configuration.UserScopedSettingAttribute()]
+		[global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+		[global::System.Configuration.DefaultSettingValueAttribute("False")]
+		public bool startmarker {
+			get {
+				return ((bool)(this["startmarker"]));
+			}
+			set {
+				this["startmarker"] = value;
+			}
+		}
+
+		[global::System.Configuration.UserScopedSettingAttribute()]
+		[global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+		[global::System.Configuration.DefaultSettingValueAttribute("Diamond")]
+		public string startmarkertype {
+			get {
+				return ((string)(this["startmarkertype"]));
+			}
+			set {
+				this["startmarkertype"] = value;
+			}
+		}
+
+		[global::System.Configuration.UserScopedSettingAttribute()]
+		[global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+		[global::System.Configuration.DefaultSettingValueAttribute("4")]
+		public string startmarkersize {
+			get {
+				return ((string)(this["startmarkersize"]));
+			}
+			set {
+				this["startmarkersize"] = value;
+			}
+		}
+
+		[global::System.Configuration.UserScopedSettingAttribute()]
+		[global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+		[global::System.Configuration.DefaultSettingValueAttribute("")]
+		public string batchinput {
+			get {
+				return ((string)(this["batchinput"]));
+			}
+			set {
+				this["batchinput"] = value;
+			}
+		}
+	}
 }

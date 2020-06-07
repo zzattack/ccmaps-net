@@ -12,7 +12,7 @@ namespace CNCMaps.Engine.Rendering {
 		private TileLayer _tiles;
 		private Theater _theater;
 		private Map.Map _map;
-		private int _cells; 
+		private int _cells;
 		private Point _oldPoint;
 
 		public DebugDrawingSurfaceWindow() {
@@ -34,13 +34,13 @@ namespace CNCMaps.Engine.Rendering {
 
 		private void canvas_MouseMove(object sender, MouseEventArgs e) {
 			StringBuilder sb = new StringBuilder();
-            var pixelLocationF = canvas.PointToImagePixel(e.Location);
+			var pixelLocationF = canvas.PointToImagePixel(e.Location);
 			var location = new Point((int)Math.Round(pixelLocationF.X, 0), (int)Math.Round(pixelLocationF.Y, 0));
-            if (location.X < 0 || location.Y < 0 || location.X >= canvas.Image.Width || location.Y >= canvas.Image.Height)
-                return;
-			
-            int rIdx = location.X + location.Y * _drawingSurface.Width;
-			
+			if (location.X < 0 || location.Y < 0 || location.X >= canvas.Image.Width || location.Y >= canvas.Image.Height)
+				return;
+
+			int rIdx = location.X + location.Y * _drawingSurface.Width;
+
 
 			var tile = _tiles.GetTileScreen(location);
 			if (tile == null || !(tile.Drawable is TileDrawable)) {
@@ -103,10 +103,10 @@ namespace CNCMaps.Engine.Rendering {
 		public event TileEvaluationDelegate RequestTileEvaluate;
 		private void canvas_MouseDown(object sender, MouseEventArgs e) {
 			if (e.Button == MouseButtons.Left) {
-            var pixelLocationF = canvas.PointToImagePixel(e.Location);
-                var location = new Point((int)Math.Round(pixelLocationF.X, 0), (int)Math.Round(pixelLocationF.Y, 0));
-                if (location.X < 0 || location.Y < 0 || location.X >= canvas.Image.Width || location.Y >= canvas.Image.Height)
-                    return;
+				var pixelLocationF = canvas.PointToImagePixel(e.Location);
+				var location = new Point((int)Math.Round(pixelLocationF.X, 0), (int)Math.Round(pixelLocationF.Y, 0));
+				if (location.X < 0 || location.Y < 0 || location.X >= canvas.Image.Width || location.Y >= canvas.Image.Height)
+					return;
 
 				var tile = _tiles.GetTileScreen(location);
 				if (tile == null) return;

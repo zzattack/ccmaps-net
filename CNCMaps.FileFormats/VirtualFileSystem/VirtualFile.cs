@@ -167,7 +167,7 @@ namespace CNCMaps.FileFormats.VirtualFileSystem {
 
 		public override void Close() {
 			base.Close();
-			if(BaseStream != null) BaseStream.Close();
+			if (BaseStream != null) BaseStream.Close();
 		}
 
 		public override void SetLength(long value) {

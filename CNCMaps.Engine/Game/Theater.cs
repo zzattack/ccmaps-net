@@ -12,8 +12,8 @@ namespace CNCMaps.Engine.Game {
 	public class Theater {
 		readonly TheaterType _theaterType;
 		readonly EngineType _engine;
-        readonly VFS _vfs;
-        readonly IniFile _rules;
+		readonly VFS _vfs;
+		readonly IniFile _rules;
 		readonly IniFile _art;
 
 		ObjectCollection _infantryTypes;
@@ -32,17 +32,17 @@ namespace CNCMaps.Engine.Game {
 		public Theater(TheaterType theaterType, EngineType engine, VFS vfs, IniFile rules, IniFile art) {
 			_theaterType = theaterType;
 			_engine = engine;
-            _vfs = vfs;
+			_vfs = vfs;
 			_rules = rules;
 			_art = art;
 
 			_rules.LoadAresIncludes(vfs);
-        }
+		}
 
 		public Theater(TheaterType theaterType, EngineType engine, VFS vfs) {
 			_theaterType = theaterType;
 			_engine = engine;
-            _vfs = vfs;
+			_vfs = vfs;
 			if (engine == EngineType.RedAlert2 || engine == EngineType.TiberianSun) {
 				_rules = _vfs.Open<IniFile>("rules.ini");
 				_art = _vfs.Open<IniFile>("art.ini");
@@ -73,10 +73,10 @@ namespace CNCMaps.Engine.Game {
 			_palettes = new PaletteCollection(_vfs);
 			_palettes.IsoPalette = new Palette(_vfs.Open<PalFile>(ModConfig.ActiveTheater.IsoPaletteName));
 			_palettes.OvlPalette = new Palette(_vfs.Open<PalFile>(ModConfig.ActiveTheater.OverlayPaletteName));
-            _palettes.UnitPalette = new Palette(_vfs.Open<PalFile>(ModConfig.ActiveTheater.UnitPaletteName), ModConfig.ActiveTheater.UnitPaletteName, true);
+			_palettes.UnitPalette = new Palette(_vfs.Open<PalFile>(ModConfig.ActiveTheater.UnitPaletteName), ModConfig.ActiveTheater.UnitPaletteName, true);
 
 			foreach (string mix in ModConfig.ActiveTheater.Mixes)
-                _vfs.Add(mix, CacheMethod.Cache); // we wish for these to be cached as they're gonna be hit often
+				_vfs.Add(mix, CacheMethod.Cache); // we wish for these to be cached as they're gonna be hit often
 
 			_palettes.AnimPalette = new Palette(_vfs.Open<PalFile>("anim.pal"));
 
@@ -132,23 +132,20 @@ namespace CNCMaps.Engine.Game {
 		}
 
 		internal Palette GetPalette(Drawable drawable) {
-            // Starkku: Altered as a part of a fix for crash that happened if custom palette was declared but file wasn't there.
-            Palette pal = null;
-            if (drawable.Props.PaletteType == PaletteType.Custom)
-            {
-                pal = _palettes.GetCustomPalette(drawable.Props.CustomPaletteName);
-                if (pal == null)
-                {
-                    if (drawable is BuildingDrawable || drawable is UnitDrawable) return _palettes.UnitPalette;
-                    else if (drawable is AnimDrawable) return _palettes.AnimPalette;
-                    else return _palettes.IsoPalette;
-                }
-            }
-            else
-            {
-                pal = _palettes.GetPalette(drawable.Props.PaletteType);
-            }
-            return pal;
+			// Starkku: Altered as a part of a fix for crash that happened if custom palette was declared but file wasn't there.
+			Palette pal = null;
+			if (drawable.Props.PaletteType == PaletteType.Custom) {
+				pal = _palettes.GetCustomPalette(drawable.Props.CustomPaletteName);
+				if (pal == null) {
+					if (drawable is BuildingDrawable || drawable is UnitDrawable) return _palettes.UnitPalette;
+					else if (drawable is AnimDrawable) return _palettes.AnimPalette;
+					else return _palettes.IsoPalette;
+				}
+			}
+			else {
+				pal = _palettes.GetPalette(drawable.Props.PaletteType);
+			}
+			return pal;
 		}
 
 		public GameCollection GetObjectCollection(GameObject o) {

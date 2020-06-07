@@ -3,9 +3,8 @@ using System.Drawing;
 using CNCMaps.Engine.Map;
 using CNCMaps.Shared;
 
-namespace CNCMaps.Engine.Rendering
-{
-    public enum DrawFrame : int {
+namespace CNCMaps.Engine.Rendering {
+	public enum DrawFrame : int {
 		DirectionBased = -1,
 		Random = -2,
 		//RandomHealthy = -3,

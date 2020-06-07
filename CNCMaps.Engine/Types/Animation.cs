@@ -67,12 +67,12 @@ namespace CNCMaps.Engine.Types {
 		public ParticleType SpawnsParticle;
 		public int NumParticles;
 		public Point RandomRate;
-		
-		public Animation(string ID) : base(ID) {}
+
+		public Animation(string ID) : base(ID) { }
 
 		public override void LoadArt(FileFormats.IniFile.IniSection art) {
 			base.LoadArt(art);
-					
+
 			Shadow = art.ReadBool("Shadow");
 			Layer = art.ReadEnum("Layer", Layer.Ground);
 			AltPalette = art.ReadBool("AltPalette");

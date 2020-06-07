@@ -14,7 +14,7 @@
 		public Animation Trailer;
 		public int SpawnDelay;
 
-		public AircraftType(string ID) : base(ID) {}
+		public AircraftType(string ID) : base(ID) { }
 
 		public override void LoadRules(FileFormats.IniFile.IniSection rules) {
 			base.LoadRules(rules);

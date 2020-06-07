@@ -95,8 +95,7 @@ namespace CNCMaps.FileFormats.Map {
 			// In case, IsoMapPack5 contains less entries than the number of cells, fill up any number greater 
 			// than 511 and filter later.
 			int j = 0;
-			for (int i = 0; i < cells; i++)
-			{
+			for (int i = 0; i < cells; i++) {
 				isoMapPack[j] = 0x88;
 				isoMapPack[j + 1] = 0x40;
 				isoMapPack[j + 2] = 0x88;
@@ -130,8 +129,7 @@ namespace CNCMaps.FileFormats.Map {
 
 				if (tilenum >= 65535) tilenum = 0; // Tile 0xFFFF used as empty/clear
 
-				if (rx <= 511 && ry <= 511)
-				{
+				if (rx <= 511 && ry <= 511) {
 					int dx = rx - ry + FullSize.Width - 1;
 					int dy = rx + ry - FullSize.Width - 1;
 					numtiles++;
@@ -177,7 +175,7 @@ namespace CNCMaps.FileFormats.Map {
 					int ry = int.Parse(entries[2]);
 					var s = new Smudge(name);
 					s.Tile = Tiles.GetTileR(rx, ry);
-					if (s.Tile != null) 
+					if (s.Tile != null)
 						Smudges.Add(s);
 				}
 				catch (FormatException) {
@@ -232,7 +230,7 @@ namespace CNCMaps.FileFormats.Map {
 				Logger.Info("Infantry section unavailable in {0}", Path.GetFileName(FileName));
 				return;
 			}
-			
+
 			foreach (var v in infantrySection.OrderedEntries) {
 				try {
 
@@ -279,7 +277,7 @@ namespace CNCMaps.FileFormats.Map {
 					short direction = short.Parse(entries[5]);
 					bool onBridge = entries[10] == "1";
 					var u = new Unit(owner, name, health, direction, onBridge);
-						u.Tile = Tiles.GetTileR(rx, ry);
+					u.Tile = Tiles.GetTileR(rx, ry);
 					if (u.Tile != null)
 						Units.Add(u);
 				}

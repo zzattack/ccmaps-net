@@ -128,16 +128,16 @@ namespace CNCMaps.FileFormats.Encodings {
 
 			i2 = 0;
 			while (i < pubkeyStr.Length) {
-				tmp = (uint) char2num[pubkeyStr[i++]];
+				tmp = (uint)char2num[pubkeyStr[i++]];
 				tmp <<= 6;
-				tmp |= (byte) char2num[pubkeyStr[i++]];
+				tmp |= (byte)char2num[pubkeyStr[i++]];
 				tmp <<= 6;
-				tmp |= (byte) char2num[pubkeyStr[i++]];
+				tmp |= (byte)char2num[pubkeyStr[i++]];
 				tmp <<= 6;
-				tmp |= (byte) char2num[pubkeyStr[i++]];
-				keytmp[i2++] = (byte) ((tmp >> 16) & 0xff);
-				keytmp[i2++] = (byte) ((tmp >> 8) & 0xff);
-				keytmp[i2++] = (byte) (tmp & 0xff);
+				tmp |= (byte)char2num[pubkeyStr[i++]];
+				keytmp[i2++] = (byte)((tmp >> 16) & 0xff);
+				keytmp[i2++] = (byte)((tmp >> 8) & 0xff);
+				keytmp[i2++] = (byte)(tmp & 0xff);
 			}
 
 			key_to_bignum(pubkey.key1, keytmp, 64);
@@ -174,7 +174,7 @@ namespace CNCMaps.FileFormats.Encodings {
 			if (bits == 0) return;
 			for (i = 0; i < len - 1; i++)
 				n[i] = (n[i] >> bits) | (n[i + 1] << (32 -
-				                                      bits));
+													  bits));
 			n[i] = n[i] >> bits;
 		}
 
@@ -190,7 +190,7 @@ namespace CNCMaps.FileFormats.Encodings {
 			if (bits == 0) return;
 			for (i = len - 1; i > 0; i--)
 				n[i] = (n[i] << bits) | (n[i - 1] >> (32 -
-				                                      bits));
+													  bits));
 			n[0] <<= bits;
 		}
 
@@ -209,7 +209,7 @@ namespace CNCMaps.FileFormats.Encodings {
 					while (--len != -1) {
 						i1 = *ps1++;
 						i2 = *ps2++;
-						*pd++ = (ushort) (i1 - i2 - carry);
+						*pd++ = (ushort)(i1 - i2 - carry);
 						if (((i1 - i2 - carry) & 0x10000) != 0) carry = 1;
 						else carry = 0;
 					}
@@ -230,7 +230,7 @@ namespace CNCMaps.FileFormats.Encodings {
 			while (--len != -1) {
 				i1 = *ps1++;
 				i2 = *ps2++;
-				*pd++ = (ushort) (i1 - i2 - carry);
+				*pd++ = (ushort)(i1 - i2 - carry);
 				if (((i1 - i2 - carry) & 0x10000) != 0) carry = 1;
 				else carry = 0;
 			}
@@ -246,17 +246,17 @@ namespace CNCMaps.FileFormats.Encodings {
 
 			init_bignum(n_tmp, 0, len);
 			init_bignum(n1, 0, len);
-			n2_bitlen = (int) bitlen_bignum(n2, len);
-			bit = ((uint) 1) << (n2_bitlen%32);
+			n2_bitlen = (int)bitlen_bignum(n2, len);
+			bit = ((uint)1) << (n2_bitlen%32);
 			j = ((n2_bitlen + 32)/32) - 1;
-			n2_bytelen = (uint) ((n2_bitlen - 1)/32)*4;
-			n_tmp[n2_bytelen/4] |= ((uint) 1) << ((n2_bitlen - 1) & 0x1f);
+			n2_bytelen = (uint)((n2_bitlen - 1)/32)*4;
+			n_tmp[n2_bytelen/4] |= ((uint)1) << ((n2_bitlen - 1) & 0x1f);
 
 			while (n2_bitlen > 0) {
 				n2_bitlen--;
-				shl_bignum(n_tmp, 1, (int) len);
+				shl_bignum(n_tmp, 1, (int)len);
 				if (cmp_bignum(n_tmp, n2, len) != -1) {
-					sub_bignum(n_tmp, n_tmp, n2, 0, (int) len);
+					sub_bignum(n_tmp, n_tmp, n2, 0, (int)len);
 					n1[j] |= bit;
 				}
 				bit >>= 1;
@@ -277,9 +277,9 @@ namespace CNCMaps.FileFormats.Encodings {
 			mov_bignum(glob1, n, len);
 			glob1_bitlen = bitlen_bignum(glob1, len);
 			glob1_len_x2 = (glob1_bitlen + 15)/16;
-			mov_bignum(glob1_hi, glob1.Skip((int) len_bignum(glob1, len) - 2).ToArray(), 2);
+			mov_bignum(glob1_hi, glob1.Skip((int)len_bignum(glob1, len) - 2).ToArray(), 2);
 			glob1_hi_bitlen = bitlen_bignum(glob1_hi, 2) - 32;
-			shr_bignum(glob1_hi, (int) glob1_hi_bitlen, 2);
+			shr_bignum(glob1_hi, (int)glob1_hi_bitlen, 2);
 			inv_bignum(glob1_hi_inv, glob1_hi, 2);
 			shr_bignum(glob1_hi_inv, 1, 2);
 			glob1_hi_bitlen = (glob1_hi_bitlen + 15)%16 + 1;
@@ -288,8 +288,8 @@ namespace CNCMaps.FileFormats.Encodings {
 				shr_bignum(glob1_hi_inv, 1, 2);
 				glob1_hi_bitlen--;
 			}
-			glob1_hi_inv_lo = (ushort) glob1_hi_inv[0];
-			glob1_hi_inv_hi = (ushort) (glob1_hi_inv[0] >> 16);
+			glob1_hi_inv_lo = (ushort)glob1_hi_inv[0];
+			glob1_hi_inv_hi = (ushort)(glob1_hi_inv[0] >> 16);
 		}
 
 		private unsafe void mul_bignum_word(ushort* pn1, uint[] n2, uint mul, uint len) {
@@ -300,12 +300,12 @@ namespace CNCMaps.FileFormats.Encodings {
 				tmp = 0;
 				for (i = 0; i < len; i++) {
 					tmp = mul*(*pn2) + (*pn1) + tmp;
-					*pn1 = (ushort) tmp;
+					*pn1 = (ushort)tmp;
 					pn1++;
 					pn2++;
 					tmp >>= 16;
 				}
-				*pn1 += (ushort) tmp;
+				*pn1 += (ushort)tmp;
 			}
 		}
 
@@ -338,10 +338,10 @@ namespace CNCMaps.FileFormats.Encodings {
 		private unsafe uint get_mulword(uint* n) {
 			var wn = (ushort*) n;
 			var i = (uint) ((((((((((*(wn - 1) ^ 0xffff) & 0xffff)*glob1_hi_inv_lo + 0x10000) >> 1)
-			                     + (((*(wn - 2) ^ 0xffff)*glob1_hi_inv_hi + glob1_hi_inv_hi) >> 1) + 1)
-			                    >> 16) + ((((*(wn - 1) ^ 0xffff) & 0xffff)*glob1_hi_inv_hi) >> 1) +
-			                   (((*wn ^ 0xffff)*glob1_hi_inv_lo) >> 1) + 1) >> 14) + glob1_hi_inv_hi
-			                 *(*wn ^ 0xffff)*2) >> (int) glob1_hi_bitlen);
+								 + (((*(wn - 2) ^ 0xffff)*glob1_hi_inv_hi + glob1_hi_inv_hi) >> 1) + 1)
+								>> 16) + ((((*(wn - 1) ^ 0xffff) & 0xffff)*glob1_hi_inv_hi) >> 1) +
+							   (((*wn ^ 0xffff)*glob1_hi_inv_lo) >> 1) + 1) >> 14) + glob1_hi_inv_hi
+							 *(*wn ^ 0xffff)*2) >> (int) glob1_hi_bitlen);
 			if (i > 0xffff) i = 0xffff;
 			return i & 0xffff;
 		}
@@ -373,7 +373,7 @@ namespace CNCMaps.FileFormats.Encodings {
 							if (tmp > 0) {
 								mul_bignum_word(esi, glob1, tmp, 2*len);
 								if ((*edi & 0x8000) == 0) {
-									if (0 != sub_bignum((uint*) esi, (uint*) esi, g1, 0, (int) len)) (*edi)--;
+									if (0 != sub_bignum((uint*)esi, (uint*)esi, g1, 0, (int)len)) (*edi)--;
 								}
 							}
 						}
@@ -410,9 +410,9 @@ namespace CNCMaps.FileFormats.Encodings {
 					init_bignum(n1, 1, len);
 					n4_len = len_bignum(n4, len);
 					init_two_dw(n4, n4_len);
-					n3_bitlen = (int) bitlen_bignum(n3, n4_len);
-					n3_len = (uint) ((n3_bitlen + 31)/32);
-					bit_mask = (((uint) 1) << ((n3_bitlen - 1)%32)) >> 1;
+					n3_bitlen = (int)bitlen_bignum(n3, n4_len);
+					n3_len = (uint)((n3_bitlen + 31)/32);
+					bit_mask = (((uint)1) << ((n3_bitlen - 1)%32)) >> 1;
 					pn3 += n3_len - 1;
 					n3_bitlen--;
 					mov_bignum(n1, n2, n4_len);
@@ -446,11 +446,11 @@ namespace CNCMaps.FileFormats.Encodings {
 			while (a + 1 <= pre_len) {
 				init_bignum(n2, 0, 64);
 				fixed (uint* pn2 = &n2[0])
-					memcpy((byte*) pn2, pre, (int) a + 1);
+					memcpy((byte*)pn2, pre, (int)a + 1);
 				calc_a_key(n3, n2, pubkey.key2, pubkey.key1, 64);
 
 				fixed (uint* pn3 = &n3[0])
-					memcpy(buf, (byte*) pn3, (int) a);
+					memcpy(buf, (byte*)pn3, (int)a);
 
 				pre_len -= a + 1;
 				pre += a + 1;

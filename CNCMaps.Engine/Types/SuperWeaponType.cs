@@ -2,7 +2,7 @@
 
 namespace CNCMaps.Engine.Types {
 	public class SuperWeaponType : AbstractType {
-		
+
 		// rules
 		public WeaponType WeaponType;
 		public Action Action;
@@ -26,12 +26,12 @@ namespace CNCMaps.Engine.Types {
 		public string SidebarImage;
 
 
-		public SuperWeaponType(string ID) : base(ID) {}
+		public SuperWeaponType(string ID) : base(ID) { }
 
 		public override void LoadRules(IniFile.IniSection rules) {
 			base.LoadRules(rules);
 
-            WeaponType = rules.ReadEnum<WeaponType>("WeaponType", null);
+			WeaponType = rules.ReadEnum<WeaponType>("WeaponType", null);
 			Action = rules.ReadEnum<Action>("Action", Action.MultiMissile);
 			IsPowered = rules.ReadBool("IsPowered", true);
 			DisableableFromShell = rules.ReadBool("DisableableFromShell");

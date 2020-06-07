@@ -199,7 +199,7 @@ namespace CNCMaps.FileFormats.Encodings {
 		}
 
 		static int[] MultiplyDeBruijnBitPosition = {
-			  0, 1, 28, 2, 29, 14, 24, 3, 30, 22, 20, 15, 25, 17, 4, 8, 
+			  0, 1, 28, 2, 29, 14, 24, 3, 30, 22, 20, 15, 25, 17, 4, 8,
 			  31, 27, 13, 23, 21, 19, 16, 7, 26, 12, 18, 6, 11, 5, 10, 9
 			};
 		private static int lzo_bitops_ctz32(uint v) {
@@ -379,7 +379,7 @@ namespace CNCMaps.FileFormats.Encodings {
 						if (t > 0) do *op++ = *m_pos++; while (--t > 0);
 					}
 					else {
-					// copy_match:
+						// copy_match:
 						*op++ = *m_pos++; *op++ = *m_pos++;
 						do *op++ = *m_pos++; while (--t > 0);
 					}
@@ -387,7 +387,7 @@ namespace CNCMaps.FileFormats.Encodings {
 					t = (uint)(ip[-2] & 3);
 					if (t == 0)
 						break;
-				// match_next:
+					// match_next:
 					*op++ = *ip++;
 					if (t > 1) { *op++ = *ip++; if (t > 2) { *op++ = *ip++; } }
 					t = *ip++;

@@ -14,7 +14,7 @@ namespace CNCMaps.FileFormats {
 
 		bool _initialized;
 		static Logger logger = LogManager.GetCurrentClassLogger();
-		
+
 		public class Section {
 			public string Name;
 			public List<float[]> Matrices;

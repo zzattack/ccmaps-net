@@ -14,7 +14,7 @@ namespace CNCMaps.GUI {
 		public SubmitBug() {
 			InitializeComponent();
 		}
-		
+
 		private void btnOK_Click(object sender, EventArgs e) {
 			Ok();
 		}
@@ -31,7 +31,7 @@ namespace CNCMaps.GUI {
 		private void tbEmail_TextChanged(object sender, EventArgs e) {
 			_email = tbEmail.Text;
 		}
-		
+
 		private void Ok() {
 			DialogResult = DialogResult.OK;
 			Close();
@@ -103,7 +103,7 @@ namespace CNCMaps.GUI {
 			this.label1.Size = new System.Drawing.Size(321, 33);
 			this.label1.TabIndex = 3;
 			this.label1.Text = "Rendering appears to have failed. Would you like to transmit a bug report contain" +
-    "ing the error log and map to frank@zzattack.org?";
+	"ing the error log and map to frank@zzattack.org?";
 			// 
 			// label2
 			// 
