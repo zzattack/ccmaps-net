@@ -108,7 +108,7 @@ namespace CNCMaps.Engine.Game {
 				}
 			}
 
-			// Starkku: New code for adding fire animations to buildings, supports custom-paletted animations.
+			// RA2 and later support adding fire animations to buildings, supports custom-paletted animations.
 			if (OwnerCollection.Engine >= EngineType.RedAlert2)
 				LoadFireAnimations();
 
@@ -118,7 +118,7 @@ namespace CNCMaps.Engine.Game {
 				IniFile.IniSection turretArt = OwnerCollection.Art.GetOrCreateSection(turretName);
 				if (turretArt.HasKey("Image"))
 					turretName = turretArt.ReadString("Image");
-				// Starkku: NewTheater/generic image fallback support for turrets.
+				// NewTheater/generic image fallback support for turrets.
 				string turretNameShp = NewTheater ? OwnerCollection.ApplyNewTheaterIfNeeded(turretName, turretName + ".shp") : turretName + ".shp";
 				Drawable turret = Rules.ReadBool("TurretAnimIsVoxel")
 					? (Drawable)new VoxelDrawable(_vfs.Open<VxlFile>(turretName + ".vxl"), _vfs.Open<HvaFile>(turretName + ".hva"))
@@ -252,12 +252,11 @@ namespace CNCMaps.Engine.Game {
 		}
 
 		/* Finds out the correct name for an animation palette to use with fire animations.
-		 * Reason why this is so complicated is because NPatch & Ares, the YR logic extensions that support custom animation palettes
+		 * Reason why this is so complicated is because with NPatch & Ares, the YR logic extensions that support custom animation palettes
 		 * use different name for the flag declaring the palette. (NPatch uses 'Palette' whilst Ares uses 'CustomPalette' to make it distinct
 		 * from the custom object palettes).
 		 */
 		private Palette GetFireAnimPalette(IniFile.IniSection animation) {
-			// Starkku: Altered as a part of a fix for crash that happened if custom palette was declared but file wasn't there.
 			Palette pal = null;
 			if (animation.ReadString("Palette") != "") {
 				pal = OwnerCollection.Palettes.GetCustomPalette(animation.ReadString("Palette"));

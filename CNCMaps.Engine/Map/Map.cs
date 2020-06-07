@@ -180,7 +180,6 @@ namespace CNCMaps.Engine.Map {
 			}
 		}
 
-		// Starkku: Added support for custom ini filenames declared in mod config.
 		public bool LoadInis(List<string> customRulesIniFiles, List<string> customArtIniFiles) {
 
 			if (customRulesIniFiles.Count < 1) {

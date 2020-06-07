@@ -13,8 +13,7 @@ namespace CNCMaps.Engine.Rendering {
 		public Color[] Colors = new Color[256];
 		readonly PalFile _originalPalette;
 		bool _originalColorsLoaded;
-		// Starkku: Necessary to distinguish between object and theater/animation palettes when recalculating values.
-		bool _objectPalette;
+		bool _isObjectPalette; // Necessary to distinguish between object and theater/animation palettes when recalculating values.
 		byte[] _origColors;
 		public bool IsShared { get; set; }
 
@@ -30,7 +29,7 @@ namespace CNCMaps.Engine.Rendering {
 		public Palette(PalFile originalPalette, string name = "", bool objectPalette = false) {
 			try {
 				_originalPalette = originalPalette;
-				_objectPalette = objectPalette;
+				_isObjectPalette = objectPalette;
 				if (!string.IsNullOrEmpty(name))
 					Name = name;
 				else
@@ -96,8 +95,8 @@ namespace CNCMaps.Engine.Rendering {
 				rmult = _ambientMult * _redMult;
 				gmult = _ambientMult * _greenMult;
 				bmult = _ambientMult * _blueMult;
-				// Starkku: For object palettes colors 240-254 do not get any lighting applied on them.
-				if (i >= 240 && i <= 254 && _objectPalette) {
+				// For object palettes colors 240-254 do not get any lighting applied on them.
+				if (i >= 240 && i <= 254 && _isObjectPalette) {
 					rmult = gmult = bmult = 1.0;
 				}
 				var r = (byte)Math.Min(255, _origColors[i * 3 + 0] * (rmult) / 63.0 * 255.0);

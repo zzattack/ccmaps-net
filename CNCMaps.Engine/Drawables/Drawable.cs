@@ -144,7 +144,7 @@ namespace CNCMaps.Engine.Drawables {
 				Props.FrameDecider = FrameDeciders.OverlayValueFrameDecider;
 			}
 
-			// Starkku: Overlays with IsRubble are not drawn.
+			// Overlays with IsRubble are not drawn.
 			if (Rules.ReadBool("IsRubble")) {
 				InvisibleInGame = true;
 			}
@@ -168,9 +168,9 @@ namespace CNCMaps.Engine.Drawables {
 			}
 			else if (Rules.ReadString("Land") == "Road") {
 				Props.Offset.Y += TileHeight / 2;
-				// Starkku: Some silly crap with low bridges not rendering.
-				if (Name.ToUpper().Contains("LOBRDG") || Name.ToUpper().Contains("LOBRDB")) Props.ZAdjust += TileHeight;
-				// drawable.Foundation = new Size(3, 1); // ensures bridges are drawn a bit lower than where they're stored
+				// Some silly crap with low bridges not rendering.
+				if (Name.ToUpper().Contains("LOBRDG") || Name.ToUpper().Contains("LOBRDB")) 
+					Props.ZAdjust += TileHeight;
 			}
 			else if (Rules.ReadString("Land") == "Railroad") {
 				if (OwnerCollection.Engine <= EngineType.Firestorm)
@@ -187,13 +187,7 @@ namespace CNCMaps.Engine.Drawables {
 				Props.LightingType = LightingType.None; // todo: verify it's not NONE
 				Props.PaletteType = PaletteType.Unit;
 			}
-			// Starkku: Jumpjet units placed on maps actually start at same height as ground units so adjusting this for the renderer makes no sense.
-			/*
-            if (Rules.HasKey("JumpjetHeight")) {
-				Props.Offset.Offset(0, (int)(-Rules.ReadInt("JumpjetHeight") / 256.0 * TileHeight));
-			}
-            */
-			// Starkku: Better support for SHP vehicles.
+
 			Facings = Art.ReadInt("Facings", 8);
 			StartStandFrame = Art.ReadInt("StartStandFrame", 0);
 			StandingFrames = Art.ReadInt("StandingFrames", 0);
@@ -234,7 +228,7 @@ namespace CNCMaps.Engine.Drawables {
 			var right = obj.Tile.Layer.GetTileR(obj.TopTile.Rx + obj.Drawable.Foundation.Width, obj.TopTile.Ry);
 
 			List<Point> verts = new List<Point>();
-			// Starkku: Failsafe because these don't always seem to get initialized properly with buildings places near edges of the map for some reason.
+			// Fail-safe because these don't always seem to get initialized properly with buildings places near edges of the map for some reason.
 			if (top != null) verts.Add(new Point(top.Dx * TileWidth / 2, top.Dy * TileHeight / 2));
 			if (left != null) verts.Add(new Point(left.Dx * TileWidth / 2 - TileWidth / 4, left.Dy * TileHeight / 2 + TileHeight / 4));
 			if (bottom!= null) verts.Add(new Point(bottom.Dx * TileWidth / 2, bottom.Dy * TileHeight / 2 + TileHeight / 2));

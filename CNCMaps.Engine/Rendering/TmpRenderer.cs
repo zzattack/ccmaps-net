@@ -141,7 +141,6 @@ namespace CNCMaps.Engine.Rendering {
 				for (x = 0; x < img.ExtraWidth; x++) {
 					// Checking per line is required because v needs to be checked every time
 					byte paletteValue = img.ExtraData[rIdx];
-					// Starkku: Matched to formula with normal tile zdata one to fix several glitches with certain kind of tile setups.
 					short zBufVal = (short)((tile.Rx + tile.Ry) * tmp.BlockHeight / 2 - (img.ExtraZData != null ? img.ExtraZData[rIdx] : 0));
 
 					if (paletteValue != 0 && w_low <= w && w < w_high && zBufVal >= zBuffer[zIdx]) {

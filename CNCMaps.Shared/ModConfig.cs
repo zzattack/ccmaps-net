@@ -71,7 +71,6 @@ namespace CNCMaps.Shared {
 		[TypeConverter(typeof(CsvConverter))]
 		public List<string> ExtraMixes { get; set; }
 
-		// Starkku: Custom INI filename support that certain mods alas require to function correctly with the renderer.
 		[Id(5, 1)]
 		[Description("Custom rules.ini filenames that should be loaded specific to your mod. First one listed is primary one, overriding standard game file. Contents of the rest get merged to it. Can be entered as a comma-separated list.")]
 		[PropertyStateFlags((PropertyFlags.Default | PropertyFlags.ExpandIEnumerable) & ~PropertyFlags.SupportStandardValues)]

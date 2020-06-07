@@ -103,8 +103,8 @@ namespace CNCMaps.Engine.Game {
 			};
 		}
 
-		// Starkku: Necessary due to SHP vehicles not obeying the unwritten rule that infantry have with standing frames coming first.
-		// Plus the frame order is different compared to infantry.
+		// SHP vehicles and infantry behave differently, so they require different frame decider logic.
+		// This is due to SHP vehicles not obeying the unwritten rule that infantry have standing frames coming first.
 		public static Func<GameObject, int> SHPVehicleFrameDecider(int StartStandFrame, int StandingFrames, int StartWalkFrame, int WalkFrames, int Facings) {
 			return delegate (GameObject obj) {
 				int direction = 0;
@@ -166,7 +166,7 @@ namespace CNCMaps.Engine.Game {
 			};
 		}
 
-		// Starkku: DirectionBasedFrameDecider does not actually get infantry facings right (it displays them in same way as FA2 does, which is wrong).
+		// DirectionBasedFrameDecider does not actually get infantry facings right (it displays them in same way as FA2 does, which is wrong).
 		public static Func<GameObject, int> InfantryFrameDecider(int Ready_Start = 0, int Ready_Count = 1, int Ready_CountNext = 1, int randomFacing = -1) {
 			return delegate (GameObject obj) {
 				int val = 0;

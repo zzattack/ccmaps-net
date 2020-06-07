@@ -132,7 +132,6 @@ namespace CNCMaps.Engine.Game {
 		}
 
 		internal Palette GetPalette(Drawable drawable) {
-			// Starkku: Altered as a part of a fix for crash that happened if custom palette was declared but file wasn't there.
 			Palette pal = null;
 			if (drawable.Props.PaletteType == PaletteType.Custom) {
 				pal = _palettes.GetCustomPalette(drawable.Props.CustomPaletteName);

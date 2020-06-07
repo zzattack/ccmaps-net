@@ -240,7 +240,7 @@ namespace CNCMaps.Engine.Game {
 			}
 			else {
 				//  In Yuri's Revenge, the ID can also start with Y."
-				// Starkku: It can also use D, L & N as theater ID's.
+				// It can also use D, L & N as theater ID's.
 				// Ares allows use of any letter as the first letter. This is an experimental change seeing if enabling this behaviour without checking if Ares is in use
 				// or not leads to detrimental effects.
 				// if (new[] { 'G', 'N', 'C', 'Y' }.Contains(artName[0]) && new[] { 'A', 'T', 'U', 'D', 'L', 'N' }.Contains(artName[1]))

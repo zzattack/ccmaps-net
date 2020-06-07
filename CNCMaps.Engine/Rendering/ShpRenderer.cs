@@ -206,8 +206,7 @@ namespace CNCMaps.Engine.Rendering {
 		public unsafe void DrawAlpha(GameObject obj, ShpFile shp, DrawProperties props, DrawingSurface ds) {
 			shp.Initialize();
 
-			// Change originally implemented by Starkku: Ares supports multiframe AlphaImages, based on frame count 
-			// the direction the unit it facing.
+			// Ares supports multiframe AlphaImages, based on frame count and the direction the unit it facing.
 			int frameIndex = props.FrameDecider(obj);
 
 			var img = shp.GetImage(frameIndex);
