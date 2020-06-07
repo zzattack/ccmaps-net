@@ -4,6 +4,7 @@ using CNCMaps.Engine.Drawables;
 using CNCMaps.Engine.Map;
 using CNCMaps.Engine.Rendering;
 using CNCMaps.FileFormats;
+using CNCMaps.FileFormats.VirtualFileSystem;
 
 namespace CNCMaps.Engine.Game {
 	class VoxelDrawable : Drawable {
@@ -11,8 +12,7 @@ namespace CNCMaps.Engine.Game {
 		public VxlFile Vxl;
 		public HvaFile Hva;
 
-		public VoxelDrawable() { }
-		public VoxelDrawable(IniFile.IniSection rules, IniFile.IniSection art) : base(rules, art) { }
+		public VoxelDrawable(VFS vfs, IniFile.IniSection rules, IniFile.IniSection art) : base(vfs, rules, art) { }
 		public VoxelDrawable(VxlFile vxl, HvaFile hva) {
 			Vxl = vxl;
 			Hva = hva;

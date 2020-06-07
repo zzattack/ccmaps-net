@@ -13,7 +13,7 @@ using CNCMaps.Shared.Utility;
 namespace CNCMaps.Engine.Game {
 	class BuildingDrawable : Drawable {
 
-		#region crap
+        #region crap
 		private static readonly string[] LampNames = {
 			"REDLAMP", "BLUELAMP", "GRENLAMP", "YELWLAMP", "PURPLAMP", "INORANLAMP", "INGRNLMP", "INREDLMP", "INBLULMP",
 			"INGALITE", "GALITE", "TSTLAMP", 
@@ -48,8 +48,8 @@ namespace CNCMaps.Engine.Game {
 		private int _conditionYellowHealth;
 		private int _conditionRedHealth;
 
-		public BuildingDrawable(IniFile.IniSection rules, IniFile.IniSection art)
-			: base(rules, art) {
+		public BuildingDrawable(VFS vfs, IniFile.IniSection rules, IniFile.IniSection art)
+			: base(vfs, rules, art) {
 		}
 
 		public override void LoadFromRules() {
@@ -86,11 +86,11 @@ namespace CNCMaps.Engine.Game {
 					_conditionRedHealth = (int)(256 * (double)conditionRed / 100);
 				}
 			}
-			_baseShp = new ShpDrawable(Rules, Art);
+			_baseShp = new ShpDrawable(_vfs, Rules, Art);
 			_baseShp.OwnerCollection = OwnerCollection;
 			_baseShp.LoadFromArtEssential();
 			_baseShp.Props = Props;
-			_baseShp.Shp = VFS.Open<ShpFile>(_baseShp.GetFilename());
+			_baseShp.Shp = _vfs.Open<ShpFile>(_baseShp.GetFilename());
 
 			var extraProps = Props.Clone();
 			extraProps.SortIndex = 0;
@@ -121,8 +121,8 @@ namespace CNCMaps.Engine.Game {
                 // Starkku: NewTheater/generic image fallback support for turrets.
                 string turretNameShp = NewTheater ? OwnerCollection.ApplyNewTheaterIfNeeded(turretName, turretName + ".shp") : turretName + ".shp";
 				Drawable turret = Rules.ReadBool("TurretAnimIsVoxel")
-					? (Drawable)new VoxelDrawable(VFS.Open<VxlFile>(turretName + ".vxl"), VFS.Open<HvaFile>(turretName + ".hva"))
-					: new ShpDrawable(VFS.Open<ShpFile>(turretNameShp));
+					? (Drawable)new VoxelDrawable(_vfs.Open<VxlFile>(turretName + ".vxl"), _vfs.Open<HvaFile>(turretName + ".hva"))
+					: (Drawable)new ShpDrawable(new ShpRenderer(_vfs), _vfs.Open<ShpFile>(turretNameShp));
 				turret.Props.Offset = Props.Offset + new Size(Rules.ReadInt("TurretAnimX"), Rules.ReadInt("TurretAnimY"));
 				turret.Props.HasShadow = Rules.ReadBool("UseTurretShadow");
 				turret.Props.FrameDecider = FrameDeciders.TurretFrameDecider;
@@ -132,8 +132,8 @@ namespace CNCMaps.Engine.Game {
 
 				if (turret is VoxelDrawable && turretName.ToUpper().Contains("TUR")) {
 					string barrelName = turretName.Replace("TUR", "BARL");
-					if (VFS.Exists(barrelName + ".vxl")) {
-						var barrel = new VoxelDrawable(VFS.Open<VxlFile>(barrelName + ".vxl"), VFS.Open<HvaFile>(barrelName + ".hva"));
+					if (_vfs.FileExists(barrelName + ".vxl")) {
+						var barrel = new VoxelDrawable(_vfs.Open<VxlFile>(barrelName + ".vxl"), _vfs.Open<HvaFile>(barrelName + ".hva"));
 						SubDrawables.Add(barrel);
 						barrel.Props = turret.Props;
 					}
@@ -145,9 +145,9 @@ namespace CNCMaps.Engine.Game {
 				var bibImg = Art.ReadString("BibShape") + ".shp";
 				if (NewTheater)
 					bibImg = OwnerCollection.ApplyNewTheaterIfNeeded(bibImg, bibImg);
-				var bibShp = VFS.Open<ShpFile>(bibImg);
+				var bibShp = _vfs.Open<ShpFile>(bibImg);
 				if (bibShp != null) {
-					var bib = new ShpDrawable(bibShp);
+					var bib = new ShpDrawable(new ShpRenderer(_vfs), bibShp);
 					bib.Props = this.Props.Clone();
 					bib.Flat = true;
 					SubDrawables.Add(bib);
@@ -176,7 +176,7 @@ namespace CNCMaps.Engine.Game {
 
 			IniFile.IniSection extraRules = OwnerCollection.Rules.GetOrCreateSection(animSection);
 			IniFile.IniSection extraArt = OwnerCollection.Art.GetOrCreateSection(animSection);
-			var anim = new AnimDrawable(extraRules, extraArt);
+			var anim = new AnimDrawable(_vfs, extraRules, extraArt);
 			anim.OwnerCollection = OwnerCollection;
 			anim.LoadFromRules();
 
@@ -195,7 +195,7 @@ namespace CNCMaps.Engine.Game {
 			anim.Props.ZAdjust = Art.ReadInt(extraImage + "ZAdjust");
 			anim.IsBuildingPart = true;
 
-			anim.Shp = VFS.Open<ShpFile>(anim.GetFilename());
+			anim.Shp = _vfs.Open<ShpFile>(anim.GetFilename());
 			return anim;
 		}
 
@@ -217,14 +217,14 @@ namespace CNCMaps.Engine.Game {
 
 			IniFile.IniSection upgRules = OwnerCollection.Rules.GetOrCreateSection(upgradeName);
 			IniFile.IniSection upgArt = OwnerCollection.Art.GetOrCreateSection(upgradeName);
-			AnimDrawable upgrade = new AnimDrawable(upgRules, upgArt);
+			AnimDrawable upgrade = new AnimDrawable(_vfs, upgRules, upgArt);
 			upgrade.OwnerCollection = OwnerCollection;
 			upgrade.Props = inheritProps;
 			upgrade.LoadFromRules();
 			upgrade.NewTheater = this.NewTheater;
 			upgrade.IsBuildingPart = true;
             string shpfilename = NewTheater ? OwnerCollection.ApplyNewTheaterIfNeeded(upgradeName, upgradeName + ".shp") : upgradeName + ".shp";
-			upgrade.Shp = VFS.Open<ShpFile>(shpfilename);
+			upgrade.Shp = _vfs.Open<ShpFile>(shpfilename);
 			Point powerupOffset = new Point(_powerupSlots[upgradeSlot].X, _powerupSlots[upgradeSlot].Y);
 			upgrade.Props.Offset.Offset(powerupOffset);
 			return upgrade;
@@ -243,7 +243,7 @@ namespace CNCMaps.Engine.Game {
 				string fireAnim = OwnerCollection.FireNames[Rand.Next(OwnerCollection.FireNames.Length)];
 				IniFile.IniSection fireArt = OwnerCollection.Art.GetOrCreateSection(fireAnim);
 
-				var fire = new AnimDrawable(Rules, Art, VFS.Open<ShpFile>(fireAnim + ".shp"));
+				var fire = new AnimDrawable(_vfs, Rules, Art, _vfs.Open<ShpFile>(fireAnim + ".shp"));
 				fire.Props.PaletteOverride = GetFireAnimPalette(fireArt);
 				fire.Props.Offset = new Point(Int32.Parse(coords[0]) + (TileWidth / 2), Int32.Parse(coords[1]));
 				fire.Props.FrameDecider = FrameDeciders.RandomFrameDecider;

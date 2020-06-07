@@ -28,6 +28,7 @@ namespace CNCMaps.Engine.Map {
 
 		public Rectangle FullSize { get; private set; }
 		public Rectangle LocalSize { get; private set; }
+        private VFS _vfs;
 		private Theater _theater;
 		private IniFile _rules;
 		private IniFile _art;
@@ -55,13 +56,14 @@ namespace CNCMaps.Engine.Map {
 
 		private bool _overlaysAltered;
 
-		public bool Initialize(MapFile mf, EngineType et, List<string> customRulesININames, List<string> customArtININames) {
+		public bool Initialize(MapFile mf, EngineType et, VFS vfs, List<string> customRulesININames, List<string> customArtININames) {
 			if (et == EngineType.AutoDetect) {
 				Logger.Fatal("Engine type needs to be known by now!");
 				return false;
 			}
 			this._mapFile = mf;
 			Engine = et;
+            _vfs = vfs;
 			TheaterType = Theater.TheaterTypeFromString(mf.ReadString("Map", "Theater"));
 			FullSize = mf.FullSize;
 			LocalSize = mf.LocalSize;
@@ -183,15 +185,15 @@ namespace CNCMaps.Engine.Map {
 
 			if (customRulesIniFiles.Count < 1) {
 				if (Engine == EngineType.YurisRevenge) {
-					_rules = VFS.Open<IniFile>("rulesmd.ini");
+					_rules = _vfs.Open<IniFile>("rulesmd.ini");
 				}
 				else if (Engine == EngineType.Firestorm) {
-					_rules = VFS.Open<IniFile>("rules.ini");
+					_rules = _vfs.Open<IniFile>("rules.ini");
 					Logger.Info("Merging Firestorm rules with TS rules");
-					_rules.MergeWith(VFS.Open<IniFile>("firestrm.ini"));
+					_rules.MergeWith(_vfs.Open<IniFile>("firestrm.ini"));
 				}
 				else {
-					_rules = VFS.Open<IniFile>("rules.ini");
+					_rules = _vfs.Open<IniFile>("rules.ini");
 				}
 			}
 			else {
@@ -201,15 +203,15 @@ namespace CNCMaps.Engine.Map {
 
 			if (customArtIniFiles.Count < 1) {
 				if (Engine == EngineType.YurisRevenge) {
-					_art = VFS.Open<IniFile>("artmd.ini");
+					_art = _vfs.Open<IniFile>("artmd.ini");
 				}
 				else if (Engine == EngineType.Firestorm) {
-					_art = VFS.Open<IniFile>("art.ini");
+					_art = _vfs.Open<IniFile>("art.ini");
 					Logger.Info("Merging Firestorm art with TS art");
-					_art.MergeWith(VFS.Open<IniFile>("artfs.ini"));
+					_art.MergeWith(_vfs.Open<IniFile>("artfs.ini"));
 				}
 				else {
-					_art = VFS.Open<IniFile>("art.ini");
+					_art = _vfs.Open<IniFile>("art.ini");
 				}
 			}
 			else {
@@ -225,10 +227,10 @@ namespace CNCMaps.Engine.Map {
 		}
 
 		private IniFile LoadCustomInis(List<string> fileNames) {
-			IniFile ini = VFS.Open<IniFile>(fileNames[0]);
+			IniFile ini = _vfs.Open<IniFile>(fileNames[0]);
 			for (int i = 1; i < fileNames.Count; i++) {
 				Logger.Info("Merging " + fileNames[i] + " with " + fileNames[0]);
-				ini.MergeWith(VFS.Open<IniFile>(fileNames[i]));
+				ini.MergeWith(_vfs.Open<IniFile>(fileNames[i]));
 			}
 			return ini;
 		}
@@ -238,7 +240,7 @@ namespace CNCMaps.Engine.Map {
 			Drawable.TileWidth = (ushort)TileWidth;
 			Drawable.TileHeight = (ushort)TileHeight;
 
-			_theater = new Theater(TheaterType, Engine, _rules, _art);
+			_theater = new Theater(TheaterType, Engine, _vfs, _rules, _art);
 			if (!_theater.Initialize())
 				return false;
 

@@ -76,7 +76,7 @@
     <Compile Include="..\CNCMaps.Shared\Properties\AssemblyInfoGlobal.cs">
       <Link>Properties\AssemblyInfoGlobal.cs</Link>
     </Compile>
-    <Compile Include="EngineSettings.cs" />
+    <Compile Include="RenderEngine.cs" />
     <Compile Include="Game\Defaults.cs" />
     <Compile Include="Game\FrameDeciders.cs" />
     <Compile Include="Game\GameCollection.cs" />

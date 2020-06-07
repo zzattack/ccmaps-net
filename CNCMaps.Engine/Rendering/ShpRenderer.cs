@@ -11,8 +11,11 @@ using NLog;
 namespace CNCMaps.Engine.Rendering {
 	class ShpRenderer {
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+        public ShpRenderer(VFS vfs) {
+            _vfs = vfs;
+        }
 
-		public static Rectangle GetBounds(GameObject obj, ShpFile shp, DrawProperties props) {
+		public Rectangle GetBounds(GameObject obj, ShpFile shp, DrawProperties props) {
 			shp.Initialize();
 			int frameIndex = DecideFrameIndex(props.FrameDecider(obj), shp.NumImages);
 			var offset = new Point(-shp.Width / 2, -shp.Height / 2);
@@ -25,7 +28,7 @@ namespace CNCMaps.Engine.Rendering {
 			return new Rectangle(offset, size);
 		}
 
-		unsafe public static void Draw(ShpFile shp, GameObject obj, Drawable dr, DrawProperties props, DrawingSurface ds, int transLucency = 0) {
+        public unsafe void Draw(ShpFile shp, GameObject obj, Drawable dr, DrawProperties props, DrawingSurface ds, int transLucency = 0) {
 			shp.Initialize();
 			Palette p = props.PaletteOverride ?? obj.Palette;
 			int frameIndex = props.FrameDecider(obj);
@@ -126,8 +129,7 @@ namespace CNCMaps.Engine.Rendering {
 			}
 		}
 
-
-		public static unsafe void DrawShadow(GameObject obj, ShpFile shp, DrawProperties props, DrawingSurface ds) {
+		public unsafe void DrawShadow(GameObject obj, ShpFile shp, DrawProperties props, DrawingSurface ds) {
 			shp.Initialize();
 			int frameIndex = props.FrameDecider(obj);
 			if (obj.Drawable.IsActualWall)
@@ -180,28 +182,28 @@ namespace CNCMaps.Engine.Rendering {
 					zBufVal += img.Height;
 
 				for (int x = 0; x < img.Width; x++) {
-					if (0 <= offset.X + x && offset.X + x < ds.Width && 0 <= y + offset.Y && y + offset.Y < ds.Height
-						&& imgData[rIdx] != 0 && !shadows[zIdx] 
-						//&& zBufVal >= zBuffer[zIdx] 
-						&& castHeight >= heightBuffer[zIdx]
-						) {
-						*(w + 0) /= 2;
+					if (0 <= offset.X + x && offset.X + x < ds.Width && 0 <= y + offset.Y && y + offset.Y < ds.Height && 
+                        imgData[rIdx] != 0 && !shadows[zIdx] && 
+                        // zBufVal >= zBuffer[zIdx] &&
+						castHeight >= heightBuffer[zIdx]) {
+                    
+                        *(w + 0) /= 2;
 						*(w + 1) /= 2;
 						*(w + 2) /= 2;
 						shadows[zIdx] = true;
 					}
-					// Up to the next pixel
-					rIdx++;
-					zIdx++;
-					w += 3;
-				}
-				w += stride - 3 * img.Width;	// ... and if we're no more on the same row,
-				zIdx += ds.Width - img.Width;
-				// adjust the writing pointer accordingy
+				    // Up to the next pixel
+				    rIdx++;
+				    zIdx++;
+				    w += 3;
+			    }
+			    w += stride - 3 * img.Width;	// ... and if we're no more on the same row,
+			    zIdx += ds.Width - img.Width;
+			    // adjust the writing pointer accordingy
 			}
 		}
 
-		unsafe public static void DrawAlpha(GameObject obj, ShpFile shp, DrawProperties props, DrawingSurface ds) {
+        public unsafe void DrawAlpha(GameObject obj, ShpFile shp, DrawProperties props, DrawingSurface ds) {
 			shp.Initialize();
 
 			// Change originally implemented by Starkku: Ares supports multiframe AlphaImages, based on frame count 
@@ -242,7 +244,7 @@ namespace CNCMaps.Engine.Rendering {
 					w += 3;
 				}
 				w += stride - 3 * img.Width;	// ... and if we're no more on the same row,
-				// adjust the writing pointer accordingy
+				// adjust the writing pointer accordingly
 			}
 		}
 
@@ -266,16 +268,18 @@ namespace CNCMaps.Engine.Rendering {
 		}
 
 		static ShpFile BuildingZ;
-		private static bool _noBuildingZAvailable = false;
-		private static short GetBuildingZ(int x, int y, ShpFile shp, ShpFile.ShpImage img, GameObject obj) {
+		private bool _noBuildingZAvailable = false;
+        private readonly VFS _vfs;
+		
+        private short GetBuildingZ(int x, int y, ShpFile shp, ShpFile.ShpImage img, GameObject obj) {
 			if (_noBuildingZAvailable)
 				return 0;
 			
 			else if (BuildingZ == null) {
 				if (ModConfig.ActiveConfig.Engine < EngineType.YurisRevenge)
-					BuildingZ = VFS.Open<ShpFile>("buildngz.shp");
+					BuildingZ = _vfs.Open<ShpFile>("buildngz.shp");
 				else // Yuri's Revenge uses .sha as a file extension for this
-					BuildingZ = VFS.Open<ShpFile>("buildngz.sha");
+					BuildingZ = _vfs.Open<ShpFile>("buildngz.sha");
 				if (BuildingZ != null)
 					BuildingZ.Initialize();
 				else

@@ -4,9 +4,9 @@ using NLog;
 namespace CNCMaps {
 	class Program {
 		public static int Main(string[] args) { 
-			var engineSettings = new EngineSettings();
-			if (engineSettings.ConfigureFromArgs(args)) {
-				var result = engineSettings.Execute();
+			var engine = new RenderEngine();
+			if (engine.ConfigureFromArgs(args)) {
+				var result = engine.Execute();
 				LogManager.Configuration = null; // required for mono release to flush possible targets
 				return (int)result;
 			}

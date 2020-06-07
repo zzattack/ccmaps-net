@@ -9,27 +9,13 @@ using NLog;
 namespace CNCMaps.FileFormats.VirtualFileSystem {
 
 	public class VFS {
-		public static readonly VFS Instance = new VFS();
 		public readonly List<IArchive> AllArchives = new List<IArchive>();
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
-		public static VirtualFile Open(string filename) {
-			return Instance.OpenFile(filename);
+		public VirtualFile Open(string filename) {
+			return OpenFile(filename);
 		}
-
-		public static T Open<T>(string filename, CacheMethod m = CacheMethod.Default) where T : VirtualFile {
-			return Open(filename, GetFormatFromTypeclass(typeof(T)), m) as T;
-		}
-
-		public static T Open<T>(string filename, FileFormat f, CacheMethod m) where T : VirtualFile {
-			return Open(filename, f, m) as T;
-		}
-
-		public T OpenFile<T>(string filename, CacheMethod m = CacheMethod.Default) where T : VirtualFile {
-			return OpenFile(filename, GetFormatFromTypeclass(typeof(T)), m) as T;
-		}
-
-
+		
 		static FileFormat GetFormatFromTypeclass(Type t) {
 			if (t == typeof(IniFile)) return FileFormat.Ini;
 			if (t == typeof(CsfFile)) return FileFormat.Csf;
@@ -45,28 +31,29 @@ namespace CNCMaps.FileFormats.VirtualFileSystem {
 			return FileFormat.Ukn;
 		}
 
-		public static VirtualFile Open(string filename, FileFormat f, CacheMethod m) {
-			return Instance.OpenFile(filename, f, m);
+
+		public bool Add(string filename, CacheMethod cache = CacheMethod.Default) {
+			return AddItem(filename, cache);
 		}
 
-		public static bool Add(string filename, CacheMethod cache = CacheMethod.Default) {
-			return Instance.AddItem(filename, cache);
-		}
-
-		public static bool Exists(string imageFileName) {
-			return Instance.FileExists(imageFileName);
-		}
-
-		private bool FileExists(string filename) {
+		public bool FileExists(string filename) {
 			return AllArchives.Any(v => v != null && v.ContainsFile(filename));
 		}
 
 		public VirtualFile OpenFile(string filename) {
 			var format = FormatHelper.GuessFormat(filename);
-			return OpenFile(filename, format);
+			return Open(filename, format);
 		}
 
-		public VirtualFile OpenFile(string filename, FileFormat format = FileFormat.None, CacheMethod m = CacheMethod.Default) {
+		public T Open<T>(string filename, CacheMethod m = CacheMethod.Default) where T : VirtualFile {
+			return Open(filename, GetFormatFromTypeclass(typeof(T)), m) as T;
+		}
+		
+		public T OpenFile<T>(string filename, CacheMethod m = CacheMethod.Default) where T : VirtualFile {
+			return Open(filename, GetFormatFromTypeclass(typeof(T)), m) as T;
+		}
+		
+		public VirtualFile Open(string filename, FileFormat format = FileFormat.None, CacheMethod m = CacheMethod.Default) {
 			if (AllArchives == null || AllArchives.Count == 0) return null;
 			var archive = AllArchives.FirstOrDefault(v => v != null && v.ContainsFile(filename));
 			if (archive == null) return null;
@@ -100,7 +87,7 @@ namespace CNCMaps.FileFormats.VirtualFileSystem {
 			}
 			// virtual mix file
 			else if (FileExists(path)) {
-				var mx = OpenFile(path, FileFormat.Mix) as MixFile;
+				var mx = Open(path, FileFormat.Mix) as MixFile;
 				AllArchives.Add(mx);
 				Logger.Trace("Added <VirtualMixFile> {0} to VFS", path);
 				return true;
@@ -243,10 +230,7 @@ namespace CNCMaps.FileFormats.VirtualFileSystem {
 			return true;
 		}
 		
-		public static void Reset() {
-			Instance.Clear();
-		}
-		public void Clear() {
+        public void Reset() {
 			foreach (var arch in AllArchives)
 				if(arch != null) arch.Close();
 			AllArchives.Clear();

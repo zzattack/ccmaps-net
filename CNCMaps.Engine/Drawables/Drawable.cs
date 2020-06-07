@@ -24,13 +24,14 @@ namespace CNCMaps.Engine.Drawables {
 
 		internal IniFile.IniSection Rules { get; private set; }
 		internal IniFile.IniSection Art { get; private set; }
+		protected VFS _vfs;
 		internal ObjectCollection OwnerCollection { get; set; }
 		public DrawProperties Props = new DrawProperties();
 		public readonly List<Drawable> SubDrawables = new List<Drawable>();
 
 		public bool IsRemapable { get; set; }
 		public bool InvisibleInGame { get; set; }
-		public Size Foundation { get; set; }
+		public Size Foundation { get; set; } = new Size(1, 1);
 
 		public bool Overrides { get; set; }
 		public bool IsWall { get; set; }
@@ -46,9 +47,9 @@ namespace CNCMaps.Engine.Drawables {
         public int StandingFrames { get; set; }
         public int WalkFrames { get; set; }
         public int Facings { get; set; }
-        public int Ready_Start { get; set; } 
-        public int Ready_Count { get; set; }
-        public int Ready_CountNext { get; set; }
+        public int Ready_Start { get; set; } = 0;
+        public int Ready_Count { get; set; } = 1;
+        public int Ready_CountNext { get; set; } = 1;
 		public bool Theater { get; set; }
 		public bool IsBuildingPart = true;
 
@@ -61,14 +62,11 @@ namespace CNCMaps.Engine.Drawables {
 		public static ushort TileHeight { get; set; }
 
 		protected Drawable() { }
-		protected Drawable(IniFile.IniSection rules, IniFile.IniSection art) {
-            Ready_Start = 0;
-            Ready_Count = 1;
-            Ready_CountNext = 1;
+		protected Drawable(VFS vfs, IniFile.IniSection rules, IniFile.IniSection art) {
+			_vfs = vfs;
 			Rules = rules;
 			Art = art;
 			Name = rules != null ? rules.Name : "";
-			Foundation = new Size(1, 1);
 		}
 
 		public virtual void LoadFromRules() {
@@ -112,8 +110,8 @@ namespace CNCMaps.Engine.Drawables {
 
 			if (Rules.ReadString("AlphaImage") != "") {
 				string alphaImageFile = Rules.ReadString("AlphaImage") + ".shp";
-				if (VFS.Exists(alphaImageFile)) {
-					var ad = new AlphaDrawable(VFS.Open<ShpFile>(alphaImageFile));
+				if (_vfs.FileExists(alphaImageFile)) {
+					var ad = new AlphaDrawable(new ShpRenderer(_vfs), _vfs.Open<ShpFile>(alphaImageFile));
 					ad.OwnerCollection = OwnerCollection;
 					SubDrawables.Add(ad);
 				}

@@ -12,7 +12,8 @@ namespace CNCMaps.Engine.Game {
 	public class Theater {
 		readonly TheaterType _theaterType;
 		readonly EngineType _engine;
-		readonly IniFile _rules;
+        readonly VFS _vfs;
+        readonly IniFile _rules;
 		readonly IniFile _art;
 
 		ObjectCollection _infantryTypes;
@@ -28,31 +29,37 @@ namespace CNCMaps.Engine.Game {
 
 		static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
-		public Theater(TheaterType theaterType, EngineType engine, IniFile rules, IniFile art) {
+		public Theater(TheaterType theaterType, EngineType engine, VFS vfs, IniFile rules, IniFile art) {
 			_theaterType = theaterType;
 			_engine = engine;
+            _vfs = vfs;
 			_rules = rules;
 			_art = art;
-		}
 
-		public Theater(TheaterType theaterType, EngineType engine) {
+			_rules.LoadAresIncludes(vfs);
+        }
+
+		public Theater(TheaterType theaterType, EngineType engine, VFS vfs) {
 			_theaterType = theaterType;
 			_engine = engine;
+            _vfs = vfs;
 			if (engine == EngineType.RedAlert2 || engine == EngineType.TiberianSun) {
-				_rules = VFS.Open<IniFile>("rules.ini");
-				_art = VFS.Open<IniFile>("art.ini");
+				_rules = _vfs.Open<IniFile>("rules.ini");
+				_art = _vfs.Open<IniFile>("art.ini");
 			}
 			else if (engine == EngineType.YurisRevenge) {
-				_rules = VFS.Open<IniFile>("rulesmd.ini");
-				_art = VFS.Open<IniFile>("artmd.ini");
+				_rules = _vfs.Open<IniFile>("rulesmd.ini");
+				_art = _vfs.Open<IniFile>("artmd.ini");
 			}
 			else if (engine == EngineType.Firestorm) {
-				_rules = VFS.Open<IniFile>("rules.ini");
-				var fsRules = VFS.Open<IniFile>("firestrm.ini");
+				_rules = _vfs.Open<IniFile>("rules.ini");
+				var fsRules = _vfs.Open<IniFile>("firestrm.ini");
 				Logger.Info("Merging Firestorm rules with TS rules");
 				_rules.MergeWith(fsRules);
-				_art = VFS.Open<IniFile>("artmd.ini");
+				_art = _vfs.Open<IniFile>("artmd.ini");
 			}
+
+			_rules.LoadAresIncludes(_vfs);
 		}
 
 		public bool Initialize() {
@@ -63,40 +70,40 @@ namespace CNCMaps.Engine.Game {
 			Active = this;
 
 			// load palettes and additional mix files for this theater
-			_palettes = new PaletteCollection();
-			_palettes.IsoPalette = new Palette(VFS.Open<PalFile>(ModConfig.ActiveTheater.IsoPaletteName));
-			_palettes.OvlPalette = new Palette(VFS.Open<PalFile>(ModConfig.ActiveTheater.OverlayPaletteName));
-            _palettes.UnitPalette = new Palette(VFS.Open<PalFile>(ModConfig.ActiveTheater.UnitPaletteName), ModConfig.ActiveTheater.UnitPaletteName, true);
+			_palettes = new PaletteCollection(_vfs);
+			_palettes.IsoPalette = new Palette(_vfs.Open<PalFile>(ModConfig.ActiveTheater.IsoPaletteName));
+			_palettes.OvlPalette = new Palette(_vfs.Open<PalFile>(ModConfig.ActiveTheater.OverlayPaletteName));
+            _palettes.UnitPalette = new Palette(_vfs.Open<PalFile>(ModConfig.ActiveTheater.UnitPaletteName), ModConfig.ActiveTheater.UnitPaletteName, true);
 
 			foreach (string mix in ModConfig.ActiveTheater.Mixes)
-				VFS.Add(mix, CacheMethod.Cache); // we wish for these to be cached as they're gonna be hit often
+                _vfs.Add(mix, CacheMethod.Cache); // we wish for these to be cached as they're gonna be hit often
 
-			_palettes.AnimPalette = new Palette(VFS.Open<PalFile>("anim.pal"));
+			_palettes.AnimPalette = new Palette(_vfs.Open<PalFile>("anim.pal"));
 
-			_animations = new ObjectCollection(CollectionType.Animation, _theaterType, _engine, _rules, _art,
+			_animations = new ObjectCollection(CollectionType.Animation, _theaterType, _engine, _vfs, _rules, _art,
 				_rules.GetSection("Animations"), _palettes);
 
-			_tileTypes = new TileCollection(CollectionType.Tiles, _theaterType, _engine, _rules, _art, ModConfig.ActiveTheater);
+			_tileTypes = new TileCollection(_theaterType, _engine, _vfs, _rules, _art, ModConfig.ActiveTheater);
 
-			_buildingTypes = new ObjectCollection(CollectionType.Building, _theaterType, _engine, _rules, _art,
+			_buildingTypes = new ObjectCollection(CollectionType.Building, _theaterType, _engine, _vfs, _rules, _art,
 				_rules.GetSection("BuildingTypes"), _palettes);
 
-			_aircraftTypes = new ObjectCollection(CollectionType.Aircraft, _theaterType, _engine, _rules, _art,
+			_aircraftTypes = new ObjectCollection(CollectionType.Aircraft, _theaterType, _engine, _vfs, _rules, _art,
 				_rules.GetSection("AircraftTypes"), _palettes);
 
-			_infantryTypes = new ObjectCollection(CollectionType.Infantry, _theaterType, _engine, _rules, _art,
+			_infantryTypes = new ObjectCollection(CollectionType.Infantry, _theaterType, _engine, _vfs, _rules, _art,
 				_rules.GetSection("InfantryTypes"), _palettes);
 
-			_overlayTypes = new ObjectCollection(CollectionType.Overlay, _theaterType, _engine, _rules, _art,
+			_overlayTypes = new ObjectCollection(CollectionType.Overlay, _theaterType, _engine, _vfs, _rules, _art,
 				_rules.GetSection("OverlayTypes"), _palettes);
 
-			_terrainTypes = new ObjectCollection(CollectionType.Terrain, _theaterType, _engine, _rules, _art,
+			_terrainTypes = new ObjectCollection(CollectionType.Terrain, _theaterType, _engine, _vfs, _rules, _art,
 				_rules.GetSection("TerrainTypes"), _palettes);
 
-			_smudgeTypes = new ObjectCollection(CollectionType.Smudge, _theaterType, _engine, _rules, _art,
+			_smudgeTypes = new ObjectCollection(CollectionType.Smudge, _theaterType, _engine, _vfs, _rules, _art,
 				_rules.GetSection("SmudgeTypes"), _palettes);
 
-			_vehicleTypes = new ObjectCollection(CollectionType.Vehicle, _theaterType, _engine, _rules, _art,
+			_vehicleTypes = new ObjectCollection(CollectionType.Vehicle, _theaterType, _engine, _vfs, _rules, _art,
 				_rules.GetSection("VehicleTypes"), _palettes);
 
 			_tileTypes.InitTilesets();

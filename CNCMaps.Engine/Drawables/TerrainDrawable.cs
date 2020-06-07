@@ -12,19 +12,15 @@ namespace CNCMaps.Engine.Game {
 
 		private ShpDrawable terrainShp;
 
-		public TerrainDrawable(IniFile.IniSection rules, IniFile.IniSection art)
-			: base(rules, art) { }
-
-		public override void LoadFromRules() {
-			base.LoadFromRules();
-		}
+		public TerrainDrawable(VFS vfs, IniFile.IniSection rules, IniFile.IniSection art)
+			: base(vfs, rules, art) { }
 
 		public override void Draw(GameObject obj, DrawingSurface ds, bool shadows = true) {
-            terrainShp = new ShpDrawable(Rules, Art);
+            terrainShp = new ShpDrawable(_vfs, Rules, Art);
 			terrainShp.OwnerCollection = OwnerCollection;
 			terrainShp.LoadFromArtEssential();
 			terrainShp.Props = Props;
-			terrainShp.Shp = VFS.Open<ShpFile>(terrainShp.GetFilename());
+			terrainShp.Shp = _vfs.Open<ShpFile>(terrainShp.GetFilename());
 
 			foreach (var sub in SubDrawables.OfType<AlphaDrawable>()) {
 				sub.Draw(obj, ds, false);
@@ -37,8 +33,8 @@ namespace CNCMaps.Engine.Game {
 
 		public override Rectangle GetBounds(GameObject obj) {
 			if (InvisibleInGame || terrainShp?.Shp == null) return Rectangle.Empty;
-
-			var bounds = ShpRenderer.GetBounds(obj, terrainShp.Shp, Props);
+			var renderer = new ShpRenderer(_vfs);
+			var bounds = renderer.GetBounds(obj, terrainShp.Shp, Props);
 			bounds.Offset(obj.Tile.Dx * TileWidth / 2, (obj.Tile.Dy - obj.Tile.Z) * TileHeight / 2);
 			bounds.Offset(Props.GetOffset(obj));
 			return bounds;

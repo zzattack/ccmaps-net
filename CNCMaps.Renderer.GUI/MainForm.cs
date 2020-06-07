@@ -854,8 +854,7 @@ namespace CNCMaps.GUI
 
             try
             {
-                VFS.Reset();
-                var engine = new EngineSettings();
+                var engine = new RenderEngine();
                 engine.ConfigureFromSettings(engineCfg);
                 var result = engine.Execute();
 

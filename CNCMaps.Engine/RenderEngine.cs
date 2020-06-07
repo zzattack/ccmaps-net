@@ -19,23 +19,23 @@ using NLog.Config;
 using NLog.Targets;
 
 namespace CNCMaps.Engine {
-	public class EngineSettings {
+	public class RenderEngine {
 		static Logger _logger = LogManager.GetCurrentClassLogger();
-		public static RenderSettings Settings;
+		private RenderSettings _settings = new RenderSettings();
+		private VFS _vfs = new VFS(); 
 
 		public bool ConfigureFromArgs(string[] args) {
             InitLoggerConfig();
-            Settings = new RenderSettings();
-			Settings.ConfigureFromArgs(args);
+			_settings.ConfigureFromArgs(args);
 
-			if (Settings.Debug && !Debugger.IsAttached) 
+			if (_settings.Debug && !Debugger.IsAttached) 
 				Debugger.Launch();
 
 			return ValidateSettings();
 		}
 
 		public bool ConfigureFromSettings(RenderSettings settings) { 
-			Settings = settings;
+			_settings = settings;
 			return ValidateSettings();
 		}
 
@@ -43,33 +43,33 @@ namespace CNCMaps.Engine {
 			try {
 				_logger.Info("Initializing virtual filesystem");
 
-				var mapStream = File.Open(Settings.InputFile, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+				var mapStream = File.Open(_settings.InputFile, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
 				VirtualFile vmapFile;
-				var mixMap = new MixFile(mapStream, Settings.InputFile, 0, mapStream.Length, false, false);
+				var mixMap = new MixFile(mapStream, _settings.InputFile, 0, mapStream.Length, false, false);
 				if (mixMap.IsValid()) { // input max is a mix
-					var mapArchive = new MixFile(mapStream, Path.GetFileName(Settings.InputFile), true);
+					var mapArchive = new MixFile(mapStream, Path.GetFileName(_settings.InputFile), true);
 					// grab the largest file in the archive
 					var mixEntry = mapArchive.Index.OrderByDescending(me => me.Value.Length).First();
 					vmapFile = mapArchive.OpenFile(mixEntry.Key);
 				}
 				else {
-					vmapFile = new VirtualFile(mapStream, Path.GetFileName(Settings.InputFile), true);
+					vmapFile = new VirtualFile(mapStream, Path.GetFileName(_settings.InputFile), true);
 				}
-				var mapFile = new MapFile(vmapFile, Path.GetFileName(Settings.InputFile));
+				var mapFile = new MapFile(vmapFile, Path.GetFileName(_settings.InputFile));
 
-				if (!string.IsNullOrEmpty(Settings.ModConfig)) {
-					if (File.Exists(Settings.ModConfig)) {
+				if (!string.IsNullOrEmpty(_settings.ModConfig)) {
+					if (File.Exists(_settings.ModConfig)) {
 						ModConfig cfg;
 						try {
-							using (FileStream f = File.OpenRead(Settings.ModConfig))
+							using (FileStream f = File.OpenRead(_settings.ModConfig))
 								cfg = ModConfig.Deserialize(f);
 							ModConfig.ActiveConfig = cfg;
-							if (Settings.Engine != EngineType.AutoDetect) {
-								if (Settings.Engine != cfg.Engine)
+							if (_settings.Engine != EngineType.AutoDetect) {
+								if (_settings.Engine != cfg.Engine)
 									_logger.Warn("Provided engine override does not match mod config.");
 							}
 							else
-								Settings.Engine = ModConfig.ActiveConfig.Engine;
+								_settings.Engine = ModConfig.ActiveConfig.Engine;
 						}
 						catch (IOException) {
 							_logger.Fatal("IOException while loading mod config");
@@ -86,53 +86,53 @@ namespace CNCMaps.Engine {
 					}
 				}
 
-				if (Settings.Engine == EngineType.AutoDetect) {
-					Settings.Engine = EngineDetector.DetectEngineType(mapFile);
-					_logger.Info("Engine autodetect result: {0}", Settings.Engine);
+				if (_settings.Engine == EngineType.AutoDetect) {
+					_settings.Engine = EngineDetector.DetectEngineType(mapFile);
+					_logger.Info("Engine autodetect result: {0}", _settings.Engine);
 				}
 
 				// ---------------------------------------------------------------
 				// Code to organize moving of maps in a directory for themselves
 				/*
-				string mapName = DetermineMapName(mapFile, Settings.Engine);
-				string ndir = Path.Combine(Path.GetDirectoryName(Settings.InputFile), mapName);
+				string mapName = DetermineMapName(mapFile, _settings.Engine);
+				string ndir = Path.Combine(Path.GetDirectoryName(_settings.InputFile), mapName);
 				if (!Directory.Exists(ndir)) Directory.CreateDirectory(ndir);
 				mapFile.Close();
 				mapFile.Dispose();
-				File.Move(Settings.InputFile, Path.Combine(ndir, Path.GetFileName(mapFile.FileName)));
+				File.Move(_settings.InputFile, Path.Combine(ndir, Path.GetFileName(mapFile.FileName)));
 				return 0;*/
 				// ---------------------------------------------------------------
 
 				// enginetype is now definitive, load mod config
 				if (ModConfig.ActiveConfig == null)
-					ModConfig.LoadDefaultConfig(Settings.Engine);
+					ModConfig.LoadDefaultConfig(_settings.Engine);
 
 				// first add the dirs, then load the extra mixes, then scan the dirs
 				foreach (string modDir in ModConfig.ActiveConfig.Directories)
-					VFS.Add(modDir);
+                    _vfs.Add(modDir);
 
 				// add mixdir to VFS (if it's not included in the mod config)
 				if (!ModConfig.ActiveConfig.Directories.Any()) {
-					string mixDir = VFS.DetermineMixDir(Settings.MixFilesDirectory, Settings.Engine);
-					VFS.Add(mixDir);
+					string mixDir = VFS.DetermineMixDir(_settings.MixFilesDirectory, _settings.Engine);
+                    _vfs.Add(mixDir);
 				}
 				foreach (string mixFile in ModConfig.ActiveConfig.ExtraMixes)
-					VFS.Add(mixFile);
+                    _vfs.Add(mixFile);
 
-				VFS.Instance.LoadMixes(Settings.Engine);
+                _vfs.LoadMixes(_settings.Engine);
 
 				double markerStartSize = 4.0;
-				if (double.TryParse(Settings.MarkStartSize, NumberStyles.Number, CultureInfo.CreateSpecificCulture("en-US"), out markerStartSize))
+				if (double.TryParse(_settings.MarkStartSize, NumberStyles.Number, CultureInfo.CreateSpecificCulture("en-US"), out markerStartSize))
 					markerStartSize = Math.Abs(markerStartSize);
 
 				var map = new Map.Map {
-					IgnoreLighting = Settings.IgnoreLighting,
-					StartPosMarking = Settings.StartPositionMarking,
+					IgnoreLighting = _settings.IgnoreLighting,
+					StartPosMarking = _settings.StartPositionMarking,
 					StartMarkerSize = markerStartSize,
-					MarkOreFields = Settings.MarkOreFields
+					MarkOreFields = _settings.MarkOreFields
 				};
 
-				if (!map.Initialize(mapFile, Settings.Engine, ModConfig.ActiveConfig.CustomRulesIniFiles, ModConfig.ActiveConfig.CustomArtIniFiles)) {
+				if (!map.Initialize(mapFile, _settings.Engine, _vfs, ModConfig.ActiveConfig.CustomRulesIniFiles, ModConfig.ActiveConfig.CustomArtIniFiles)) {
 					_logger.Error("Could not successfully load this map. Try specifying the engine type manually.");
 					return EngineResult.LoadRulesFailed;
 				}
@@ -142,21 +142,21 @@ namespace CNCMaps.Engine {
 					return EngineResult.LoadTheaterFailed;
 				}
 
-				if (Settings.MarkStartPos && Settings.StartPositionMarking == StartPositionMarking.Tiled)
+				if (_settings.MarkStartPos && _settings.StartPositionMarking == StartPositionMarking.Tiled)
 					map.MarkTiledStartPositions();
 
-				if (Settings.MarkOreFields)
+				if (_settings.MarkOreFields)
 					map.MarkOreAndGems();
 
-				if ((Settings.GeneratePreviewPack || Settings.FixupTiles || Settings.FixOverlays || Settings.CompressTiles) && Settings.Backup) {
+				if ((_settings.GeneratePreviewPack || _settings.FixupTiles || _settings.FixOverlays || _settings.CompressTiles) && _settings.Backup) {
 					if (mapFile.BaseStream is MixFile)
 						_logger.Error("Cannot generate a map file backup into an archive (.mmx/.yro/.mix)!");
 					else {
 						try {
 							string timestamp = DateTime.Now.ToString("yyyyMMddHHmmss");
-							string fileInput = Path.Combine(Path.GetDirectoryName(Settings.InputFile), Path.GetFileName(Settings.InputFile));
+							string fileInput = Path.Combine(Path.GetDirectoryName(_settings.InputFile), Path.GetFileName(_settings.InputFile));
 							fileInput = fileInput.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
-							string fileInputNoExtn = Path.Combine(Path.GetDirectoryName(Settings.InputFile), Path.GetFileNameWithoutExtension(Settings.InputFile));
+							string fileInputNoExtn = Path.Combine(Path.GetDirectoryName(_settings.InputFile), Path.GetFileNameWithoutExtension(_settings.InputFile));
 							fileInputNoExtn = fileInputNoExtn.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
 							string fileBackup = fileInputNoExtn + "_" + timestamp + ".bkp";
 							File.Copy(fileInput, fileBackup, true);
@@ -168,60 +168,60 @@ namespace CNCMaps.Engine {
 					}
 				}
 
-				if (Settings.FixupTiles)
+				if (_settings.FixupTiles)
 					map.FixupTileLayer();
 
 				map.Draw();
 
-				if (Settings.MarkIceGrowth)
+				if (_settings.MarkIceGrowth)
 					map.MarkIceGrowth();
 				
-				if (Settings.TunnelPaths)
-					map.PlotTunnels(Settings.TunnelPosition);
+				if (_settings.TunnelPaths)
+					map.PlotTunnels(_settings.TunnelPosition);
 
-				if (Settings.MarkStartPos && (Settings.StartPositionMarking == StartPositionMarking.Squared ||
-					Settings.StartPositionMarking == StartPositionMarking.Circled ||
-					Settings.StartPositionMarking == StartPositionMarking.Diamond ||
-					Settings.StartPositionMarking == StartPositionMarking.Ellipsed ||
-					Settings.StartPositionMarking == StartPositionMarking.Starred))
+				if (_settings.MarkStartPos && (_settings.StartPositionMarking == StartPositionMarking.Squared ||
+					_settings.StartPositionMarking == StartPositionMarking.Circled ||
+					_settings.StartPositionMarking == StartPositionMarking.Diamond ||
+					_settings.StartPositionMarking == StartPositionMarking.Ellipsed ||
+					_settings.StartPositionMarking == StartPositionMarking.Starred))
 					map.DrawStartPositions();
 
-				if (Settings.DiagnosticWindow) {
+				if (_settings.DiagnosticWindow) {
 					using (var form = new DebugDrawingSurfaceWindow(map.GetDrawingSurface(), map.GetTiles(), map.GetTheater(), map)) {
-					form.RequestTileEvaluate += map.DebugDrawTile; form.ShowDialog();
+					    form.RequestTileEvaluate += map.DebugDrawTile; form.ShowDialog();
 					}
 				}
 
-				if (Settings.OutputFile == "")
-					Settings.OutputFile = DetermineMapName(mapFile, Settings.Engine);
+				if (_settings.OutputFile == "")
+					_settings.OutputFile = DetermineMapName(mapFile, _settings.Engine);
 
-				if (Settings.OutputDir == "")
-					Settings.OutputDir = Path.GetDirectoryName(Settings.InputFile);
+				if (_settings.OutputDir == "")
+					_settings.OutputDir = Path.GetDirectoryName(_settings.InputFile);
 
 				// free up as much memory as possible before saving the large images
-				Rectangle saveRect = map.GetSizePixels(Settings.SizeMode);
+				Rectangle saveRect = map.GetSizePixels(_settings.SizeMode);
 				DrawingSurface ds = map.GetDrawingSurface();
                 saveRect.Intersect(new Rectangle(0, 0, ds.Width, ds.Height));
                 // if we don't need this data anymore, we can try to save some memory
-                if (!Settings.GeneratePreviewPack) {
+                if (!_settings.GeneratePreviewPack) {
 					ds.FreeNonBitmap();
 					map.FreeUseless();
 					GC.Collect();
 				}
 
-				if (Settings.SaveJPEG)
-					ds.SaveJPEG(Path.Combine(Settings.OutputDir, Settings.OutputFile + ".jpg"), Settings.JPEGCompression, saveRect);
+				if (_settings.SaveJPEG)
+					ds.SaveJPEG(Path.Combine(_settings.OutputDir, _settings.OutputFile + ".jpg"), _settings.JPEGCompression, saveRect);
 
-				if (Settings.SavePNG)
-					ds.SavePNG(Path.Combine(Settings.OutputDir, Settings.OutputFile + ".png"), Settings.PNGQuality, saveRect);
+				if (_settings.SavePNG)
+					ds.SavePNG(Path.Combine(_settings.OutputDir, _settings.OutputFile + ".png"), _settings.PNGQuality, saveRect);
 
 				Regex reThumb = new Regex(@"(\+|)?\((\d+),(\d+)\)");
-				var match = reThumb.Match(Settings.ThumbnailConfig);
+				var match = reThumb.Match(_settings.ThumbnailConfig);
 				if (match.Success) {
 					Size dimensions = new Size(
 						int.Parse(match.Groups[2].Captures[0].Value),
 						int.Parse(match.Groups[3].Captures[0].Value));
-					var cutRect = map.GetSizePixels(Settings.SizeMode);
+					var cutRect = map.GetSizePixels(_settings.SizeMode);
 
 					if (match.Groups[1].Captures[0].Value == "+") {
                         // + means maintain aspect ratio
@@ -247,32 +247,32 @@ namespace CNCMaps.Engine {
                     }
                     _logger.Info("Saving thumbnail with dimensions {0}x{1}", dimensions.Width, dimensions.Height);
 
-                    if (!Settings.SavePNGThumbnails)
+                    if (!_settings.SavePNGThumbnails)
                     {
-                        ds.SaveThumb(dimensions, cutRect, Path.Combine(Settings.OutputDir, "thumb_" + Settings.OutputFile + ".jpg"));
+                        ds.SaveThumb(dimensions, cutRect, Path.Combine(_settings.OutputDir, "thumb_" + _settings.OutputFile + ".jpg"));
                     }
                     else
                     {
-                        ds.SaveThumb(dimensions, cutRect, Path.Combine(Settings.OutputDir, "thumb_" + Settings.OutputFile + ".png"), true);
+                        ds.SaveThumb(dimensions, cutRect, Path.Combine(_settings.OutputDir, "thumb_" + _settings.OutputFile + ".png"), true);
                     }
                 }
 
-				if (Settings.GeneratePreviewPack || Settings.FixupTiles || Settings.FixOverlays || Settings.CompressTiles) {
+				if (_settings.GeneratePreviewPack || _settings.FixupTiles || _settings.FixOverlays || _settings.CompressTiles) {
 					if (mapFile.BaseStream is MixFile)
 						_logger.Error("Cannot fix tile layer or inject thumbnail into an archive (.mmx/.yro/.mix)!");
 					else {
-						if (Settings.GeneratePreviewPack)
-							map.GeneratePreviewPack(Settings.PreviewMarkers, Settings.SizeMode, mapFile, Settings.FixPreviewDimensions);
+						if (_settings.GeneratePreviewPack)
+							map.GeneratePreviewPack(_settings.PreviewMarkers, _settings.SizeMode, mapFile, _settings.FixPreviewDimensions);
 
-						if (Settings.FixOverlays)
+						if (_settings.FixOverlays)
 							map.FixupOverlays(); // fixing is done earlier, it now creates overlay and its data pack
 
 						// Keep this last in tiles manipulation
-						if (Settings.CompressTiles)
+						if (_settings.CompressTiles)
 							map.CompressIsoMapPack5();
 
-						_logger.Info("Saving map to " + Settings.InputFile);
-						mapFile.Save(Settings.InputFile);
+						_logger.Info("Saving map to " + _settings.InputFile);
+						mapFile.Save(_settings.InputFile);
 					}
 				}
 			}
@@ -350,35 +350,35 @@ namespace CNCMaps.Engine {
 			}
 			_logger = LogManager.GetCurrentClassLogger();
 		}
-		private static bool ValidateSettings() {
-			if (Settings.ShowHelp) {
+		private bool ValidateSettings() {
+			if (_settings.ShowHelp) {
 				ShowHelp();
 				return false; // not really false :/
 			}
-			else if (!File.Exists(Settings.InputFile)) {
+			else if (!File.Exists(_settings.InputFile)) {
 				_logger.Error("Specified input file does not exist");
 				return false;
 			}
-			else if (!Settings.SaveJPEG && !Settings.SavePNG && !Settings.SavePNGThumbnails 	&&
-				!Settings.GeneratePreviewPack && !Settings.FixupTiles && !Settings.FixOverlays && !Settings.CompressTiles &&
-				!Settings.DiagnosticWindow) {
+			else if (!_settings.SaveJPEG && !_settings.SavePNG && !_settings.SavePNGThumbnails 	&&
+				!_settings.GeneratePreviewPack && !_settings.FixupTiles && !_settings.FixOverlays && !_settings.CompressTiles &&
+				!_settings.DiagnosticWindow) {
 				_logger.Error("No action to perform. Either generate PNG/JPEG/Thumbnail or modify map or use preview window.");
 				return false;
 			}
-			else if (Settings.OutputDir != "" && !Directory.Exists(Settings.OutputDir)) {
+			else if (_settings.OutputDir != "" && !Directory.Exists(_settings.OutputDir)) {
 				_logger.Error("Specified output directory does not exist.");
 				return false;
 			}
 			return true;
 		}
 
-		private static void ShowHelp() {
+		private void ShowHelp() {
 			Console.ForegroundColor = ConsoleColor.Gray;
 			Console.Write("Usage: ");
 			Console.WriteLine("");
 			var sb = new StringBuilder();
 			var sw = new StringWriter(sb);
-			Settings.GetOptions().WriteOptionDescriptions(sw);
+			_settings.GetOptions().WriteOptionDescriptions(sw);
 			Console.WriteLine(sb.ToString());
 		}
 
@@ -391,14 +391,14 @@ namespace CNCMaps.Engine {
 
 		/// <summary>Gets the determine map name. </summary>
 		/// <returns>The filename to save the map as</returns>
-		public static string DetermineMapName(MapFile map, EngineType engine) {
+		public string DetermineMapName(MapFile map, EngineType engine) {
 			string fileNameWithoutExtension = Path.GetFileNameWithoutExtension(map.FileName);
 
 			IniFile.IniSection basic = map.GetSection("Basic");
 			if (basic.ReadBool("Official") == false)
 				return StripPlayersFromName(MakeValidFileName(basic.ReadString("Name", fileNameWithoutExtension)));
 
-			string mapExt = Path.GetExtension(Settings.InputFile);
+			string mapExt = Path.GetExtension(_settings.InputFile);
 			string missionName = "";
 			string mapName = "";
 			PktFile.PktMapEntry pktMapEntry = null;
@@ -421,7 +421,7 @@ namespace CNCMaps.Engine {
 					default:
 						throw new ArgumentOutOfRangeException("engine");
 				}
-				var mf = VFS.Open<MissionsFile>(missionsFile);
+				var mf = _vfs.Open<MissionsFile>(missionsFile);
 				if (mf != null)
 					missionEntry = mf.GetMissionEntry(Path.GetFileName(map.FileName));
 				if (missionEntry != null)
@@ -436,7 +436,7 @@ namespace CNCMaps.Engine {
 				if (FormatHelper.MixArchiveExtensions.Contains(mapExt)) {
 					// this is an 'official' map 'archive' containing a PKT file with its name
 					try {
-						var mix = new MixFile(File.Open(Settings.InputFile, FileMode.Open, FileAccess.Read, FileShare.ReadWrite));
+						var mix = new MixFile(File.Open(_settings.InputFile, FileMode.Open, FileAccess.Read, FileShare.ReadWrite));
 						pkt = mix.OpenFile(fileNameWithoutExtension + ".pkt", FileFormat.Pkt) as PktFile;
 						// pkt file is cached by default, so we can close the handle to the file
 						mix.Close();
@@ -452,13 +452,13 @@ namespace CNCMaps.Engine {
 					switch (engine) {
 						case EngineType.TiberianSun:
 						case EngineType.RedAlert2:
-							pkt = VFS.Open<PktFile>("missions.pkt");
+							pkt = _vfs.Open<PktFile>("missions.pkt");
 							break;
 						case EngineType.Firestorm:
-							pkt = VFS.Open<PktFile>("multi01.pkt");
+							pkt = _vfs.Open<PktFile>("multi01.pkt");
 							break;
 						case EngineType.YurisRevenge:
-							pkt = VFS.Open<PktFile>("missionsmd.pkt");
+							pkt = _vfs.Open<PktFile>("missionsmd.pkt");
 							break;
 						default:
 							throw new ArgumentOutOfRangeException("engine");
@@ -470,7 +470,7 @@ namespace CNCMaps.Engine {
 				// no YR objects so assumed to be ra2, but actually meant to be used on yr
 				if (mapExt == ".map" && pkt != null && !pkt.MapEntries.ContainsKey(pktEntryName) && engine >= EngineType.RedAlert2) {
 					var vfs = new VFS();
-					vfs.AddItem(Settings.InputFile);
+					vfs.AddItem(_settings.InputFile);
 					pkt = vfs.OpenFile<PktFile>("missionsmd.pkt");
 				}
 
@@ -513,7 +513,7 @@ namespace CNCMaps.Engine {
 
 				string csfFile = engine == EngineType.YurisRevenge ? "ra2md.csf" : "ra2.csf";
 				_logger.Info("Loading csf file {0}", csfFile);
-				var csf = VFS.Open<CsfFile>(csfFile);
+				var csf = _vfs.Open<CsfFile>(csfFile);
 				mapName = csf.GetValue(csfEntryName.ToLower());
 
 				if (missionEntry != null) {

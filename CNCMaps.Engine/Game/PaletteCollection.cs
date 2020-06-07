@@ -11,6 +11,11 @@ namespace CNCMaps.Engine.Game {
 	public class PaletteCollection : IEnumerable<Palette> {
 		public List<Palette> CustomPalettes = new List<Palette>();
 		public Palette IsoPalette, OvlPalette, UnitPalette, AnimPalette;
+		private readonly VFS _vfs;
+
+		public PaletteCollection(VFS vfs) {
+			_vfs = vfs;
+		}
 
 		internal Palette GetPalette(PaletteType paletteType) {
 			switch (paletteType) {
@@ -64,9 +69,9 @@ namespace CNCMaps.Engine.Game {
 				// palette hasn't been loaded yet
                 // Starkku: If the original does not exist, it means the file it should use does not exist. It now returns a null in this case, which is
                 // handled appropriately wherever this method is called to fall back to the default palette for that type of object.
-                PalFile orig = VFS.Open<PalFile>(fileName);
+                PalFile orig = _vfs.Open<PalFile>(fileName);
                 if (orig == null) return null;
-                pal = new Palette(VFS.Open<PalFile>(fileName), paletteName, objectPalette);
+                pal = new Palette(_vfs.Open<PalFile>(fileName), paletteName, objectPalette);
 				CustomPalettes.Add(pal);
 			}
 			return pal;

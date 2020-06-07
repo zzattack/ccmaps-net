@@ -19,7 +19,7 @@ namespace CNCMaps.Engine.Game {
 		readonly List<short> _setNumToFirstTile = new List<short>();
 		readonly List<TileSet> _tileSets = new List<TileSet>();
 
-		private readonly TheaterSettings _theaterSettings;
+        private readonly TheaterSettings _theaterSettings;
 
 		public class TileSet {
 			public string FileName { get; private set; }
@@ -156,25 +156,18 @@ namespace CNCMaps.Engine.Game {
 
 		private int _animsSectionsStartIdx = -1;
 
-		public TileCollection(TheaterSettings ths, IniFile theaterIni)
-			: base() {
-			_theaterSettings = ths;
-			_theaterIni = theaterIni;
-		}
-
-		public TileCollection(CollectionType type, TheaterType theater, EngineType engine, IniFile rules, IniFile art,
-			TheaterSettings theaterSettings, IniFile theaterIni=null)
-			: base(type, theater, engine, rules, art) {
-
-			_theaterSettings = theaterSettings;
+		public TileCollection(TheaterType theater, EngineType engine, VFS vfs, IniFile rules, IniFile art, TheaterSettings theaterSettings, IniFile theaterIni = null)
+			: base(CollectionType.Tiles, theater, engine, vfs, rules, art) {
+            _theaterSettings = theaterSettings;
 			if (theaterIni == null) {
-				_theaterIni = VFS.Open<IniFile>(theaterSettings.TheaterIni);
+				_theaterIni = _vfs.Open<IniFile>(theaterSettings.TheaterIni);
 				if (_theaterIni == null) {
 					Logger.Warn("Unavailable theater loaded, theater.ini not found");
 					return;
 				}
 			}
-			else _theaterIni = theaterIni;
+			else 
+                _theaterIni = theaterIni;
 
 			#region Set numbers
 
@@ -282,9 +275,9 @@ namespace CNCMaps.Engine.Game {
 						string filename = ts.FileName + j.ToString("00");
 						if (r >= 'a') filename += r;
 						filename += _theaterSettings.Extension;
-						var tmpFile = VFS.Open<TmpFile>(filename);
+						var tmpFile = _vfs.Open<TmpFile>(filename);
 						if (tmpFile == null && _theaterSettings.Type == TheaterType.NewUrban) {
-							tmpFile = VFS.Open<TmpFile>(filename.Replace(".ubn", ".tem"));
+							tmpFile = _vfs.Open<TmpFile>(filename.Replace(".ubn", ".tem"));
 						}
 						if (tmpFile != null) rs.AddTile(tmpFile);
 						else break;
@@ -302,7 +295,7 @@ namespace CNCMaps.Engine.Game {
 		}
 
 		protected override Drawable MakeDrawable(string objName) {
-			return new TileDrawable(null, null, null) { Name = objName };
+			return new TileDrawable(null, null, null, null) { Name = objName };
 		}
 
 		public void InitAnimations(ObjectCollection animations) {

@@ -22,9 +22,9 @@ namespace CNCMaps.Engine.Game
 
         static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
-        public ObjectCollection(CollectionType type, TheaterType theater, EngineType engine, IniFile rules, IniFile art,
+        public ObjectCollection(CollectionType type, TheaterType theater, EngineType engine, VFS vfs, IniFile rules, IniFile art,
             IniFile.IniSection objectsList, PaletteCollection palettes)
-            : base(type, theater, engine, rules, art)
+            : base(type, theater, engine, vfs, rules, art)
         {
 
             Palettes = palettes;
@@ -56,21 +56,21 @@ namespace CNCMaps.Engine.Game
             {
                 case CollectionType.Aircraft:
                 case CollectionType.Vehicle:
-                    drawable = new UnitDrawable(rulesSection, artSection);
+                    drawable = new UnitDrawable(_vfs, rulesSection, artSection);
                     break;
                 case CollectionType.Building:
-                    drawable = new BuildingDrawable(rulesSection, artSection);
+                    drawable = new BuildingDrawable(_vfs, rulesSection, artSection);
                     break;
                 case CollectionType.Infantry:
                 case CollectionType.Overlay:
                 case CollectionType.Smudge:
-                    drawable = new ShpDrawable(rulesSection, artSection);
+                    drawable = new ShpDrawable(_vfs, rulesSection, artSection);
                     break;
                 case CollectionType.Terrain:
-                    drawable = new TerrainDrawable(rulesSection, artSection);
+                    drawable = new TerrainDrawable(_vfs, rulesSection, artSection);
                     break;
 				case CollectionType.Animation:
-                    drawable = new AnimDrawable(rulesSection, artSection);
+                    drawable = new AnimDrawable(_vfs, rulesSection, artSection);
                     break;
                 default:
                     throw new InvalidEnumArgumentException();
@@ -150,7 +150,7 @@ namespace CNCMaps.Engine.Game
         {
             InitDrawableDefaults(anim);
             anim.LoadFromRules();
-            anim.Shp = VFS.Open<ShpFile>(anim.Image + ".shp");
+            anim.Shp = _vfs.Open<ShpFile>(anim.Image + ".shp");
         }
 
         private void InitDrawableDefaults(Drawable drawable)
@@ -191,7 +191,7 @@ namespace CNCMaps.Engine.Game
             drawable.LoadFromRules();
 
             string shpFile = drawable.GetFilename();
-            drawable.Shp = VFS.Open<ShpFile>(shpFile);
+            drawable.Shp = _vfs.Open<ShpFile>(shpFile);
 
             if (Type == CollectionType.Smudge)
                 drawable.Foundation = new Size(drawable.Rules.ReadInt("Width", 1), drawable.Rules.ReadInt("Height", 1));
@@ -285,10 +285,10 @@ namespace CNCMaps.Engine.Game
             var sb = new StringBuilder(imageFileName);
 
             sb[1] = ModConfig.ActiveTheater.NewTheaterChar;
-            if (!VFS.Exists(sb.ToString()))
+            if (!_vfs.FileExists(sb.ToString()))
             {
                 sb[1] = 'G'; // generic
-                if (!VFS.Exists(sb.ToString()))
+                if (!_vfs.FileExists(sb.ToString()))
                     sb[1] = imageFileName[1]; // fallback to original
             }
             imageFileName = sb.ToString();

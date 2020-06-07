@@ -5,25 +5,26 @@ using CNCMaps.Engine.Drawables;
 using CNCMaps.Engine.Map;
 using CNCMaps.Engine.Rendering;
 using CNCMaps.FileFormats;
+using CNCMaps.FileFormats.VirtualFileSystem;
 using CNCMaps.Shared;
 using CNCMaps.Shared.Utility;
 
 namespace CNCMaps.Engine.Game {
 	class ShpDrawable : Drawable {
 
-		public ShpFile Shp { get; set; }
+        public ShpFile Shp { get; set; }
+        protected readonly ShpRenderer _renderer;
 
-		public ShpDrawable(IniFile.IniSection rules, IniFile.IniSection art)
-			: base(rules, art) {
-		}
-
-		public ShpDrawable(ShpFile shpFile) {
+		public ShpDrawable(VFS vfs, IniFile.IniSection rules, IniFile.IniSection art, ShpFile shpFile = null)
+			: base(vfs, rules, art)
+        {
+            _renderer =  new ShpRenderer(vfs);
 			Shp = shpFile;
-		}
+        }
 
-		public ShpDrawable(IniFile.IniSection rules, IniFile.IniSection art, ShpFile shpFile)
-			: base(rules, art) {
-			Shp = shpFile;
+		public ShpDrawable(ShpRenderer renderer, ShpFile shpFile) {
+            _renderer = renderer;
+            Shp = shpFile;
 		}
 
 		public override void Draw(GameObject obj, DrawingSurface ds, bool shadow = true) {
@@ -35,20 +36,20 @@ namespace CNCMaps.Engine.Game {
 				Props.FrameDecider = FrameDeciders.InfantryFrameDecider(Ready_Start, Ready_Count, Ready_CountNext, randomDir);
 			}
 			if (Props.HasShadow && shadow && !Props.Cloakable)
-				ShpRenderer.DrawShadow(obj, Shp, Props, ds);
-			ShpRenderer.Draw(Shp, obj, this, Props, ds, Props.Cloakable ? 50 : 0);
+				_renderer.DrawShadow(obj, Shp, Props, ds);
+			_renderer.Draw(Shp, obj, this, Props, ds, Props.Cloakable ? 50 : 0);
 		}
 
 		public override void DrawShadow(GameObject obj, DrawingSurface ds) {
 			if (InvisibleInGame || Shp == null) return;
 			if (Props.HasShadow && !Props.Cloakable)
-				ShpRenderer.DrawShadow(obj, Shp, Props, ds);
+				_renderer.DrawShadow(obj, Shp, Props, ds);
 		}
 
 		public override Rectangle GetBounds(GameObject obj) {
 			if (InvisibleInGame || Shp == null) return Rectangle.Empty;
 
-			var bounds = ShpRenderer.GetBounds(obj, Shp, Props);
+			var bounds = _renderer.GetBounds(obj, Shp, Props);
 			bounds.Offset(obj.Tile.Dx * TileWidth / 2, (obj.Tile.Dy - obj.Tile.Z) * TileHeight / 2);
 			bounds.Offset(Props.GetOffset(obj));
 			return bounds;

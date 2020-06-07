@@ -107,7 +107,8 @@ namespace CNCMaps.Engine.Map {
 			int total = 0;
 
 			var tiles = mf.Tiles.Where(t => t != null).DistinctBy(t => t.TileNum);
-			var tilesCollection = new TileCollection(ths, vfs.OpenFile<IniFile>(ths.TheaterIni));
+
+			var tilesCollection = new TileCollection(ths.Type, EngineType.AutoDetect, vfs, null, null, ths, vfs.OpenFile<IniFile>(ths.TheaterIni));
 			tilesCollection.InitTilesets();
 			known += mf.Tiles.Count(o => o.TileNum <= tilesCollection.NumTiles);
 			total += mf.Tiles.Count();
