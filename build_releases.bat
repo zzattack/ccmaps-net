@@ -1,4 +1,5 @@
-set VER=2.3.1
+set VER=2.4.0
+set MAKENSIS="%PROGRAMFILES(X86)%\nsis\makensis.exe"
 
 del CNCMaps_*.zip
 del CNCMaps_setup_*.exe
@@ -7,14 +8,13 @@ del CNCMaps/obj/*.*
 del CNCMaps GUI/obj/*.*
 del CNCMaps GUI/obj/*.*
 
-REM MSBUILD=%WINDIR%\Microsoft.NET\Framework\v4.0.30319\msbuild.exe
-set MSBUILD="%PROGRAMFILES(X86)%\MSBuild\14.0\Bin\msbuild.exe"
-set MAKENSIS="%PROGRAMFILES(X86)%\nsis\makensis.exe"
+set VSINSTALLDIR=C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\
+set DevEnvDir=C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\IDE\
+call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\Tools\VsDevCmd.bat"
+msbuild kerfcheck.sln 
 
-%MSBUILD% CNCMaps.sln /p:Configuration=Release
+msbuild CNCMaps.sln /t:restore /t:Build /p:Configuration=Release
 %MAKENSIS% nsisinstaller-rls.nsi
-
-exit
 
 cd CNCMaps/bin/Release
 for /D %%f in (*.exe  *.dll NLog.config) DO (
