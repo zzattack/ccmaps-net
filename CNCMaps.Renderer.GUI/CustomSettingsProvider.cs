@@ -121,7 +121,7 @@ namespace CNCMaps.GUI {
 			var configXml = XDocument.Load(UserConfigPath);
 
 			//get all of the <setting name="..." serializeAs="..."> elements.
-			var settingElements = configXml.Element(CONFIG).Element(USER_SETTINGS).Element(typeof(Settings).FullName).Elements(SETTING);
+			var settingElements = configXml.Element(CONFIG).Element(USER_SETTINGS).Element(typeof(Properties.Settings).FullName).Elements(SETTING);
 
 			//iterate through, adding them to the dictionary, (checking for nulls, xml no likey nulls)
 			//using "String" as default serializeAs...just in case, no real good reason.
@@ -144,7 +144,7 @@ namespace CNCMaps.GUI {
 			var declaration = new XDeclaration("1.0", "utf-8", "true");
 			var config = new XElement(CONFIG);
 			var userSettings = new XElement(USER_SETTINGS);
-			var group = new XElement(typeof (Settings).FullName);
+			var group = new XElement(typeof (Properties.Settings).FullName);
 			userSettings.Add(group);
 			config.Add(userSettings);
 			doc.Add(config);
@@ -167,7 +167,7 @@ namespace CNCMaps.GUI {
 			var import = XDocument.Load(UserConfigPath);
 
 			//get the settings group (e.g. <Company.Project.Desktop.Settings>)
-			var settingsSection = import.Element(CONFIG).Element(USER_SETTINGS).Element(typeof(Settings).FullName);
+			var settingsSection = import.Element(CONFIG).Element(USER_SETTINGS).Element(typeof(Properties.Settings).FullName);
 
 			//iterate though the dictionary, either updating the value or adding the new setting.
 			foreach (var entry in SettingsDictionary) {
@@ -194,7 +194,7 @@ namespace CNCMaps.GUI {
 		/// </summary>
 		private string UserConfigPath {
 			get {
-				return Settings.Default.SettingsKey;
+				return Properties.Settings.Default.SettingsKey;
 			}
 
 		}

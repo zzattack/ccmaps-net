@@ -1,4 +1,4 @@
-﻿namespace CNCMaps.GUI {
+﻿namespace CNCMaps.GUI.Properties {
 
 
 	// This class allows you to handle specific events on the settings class:
