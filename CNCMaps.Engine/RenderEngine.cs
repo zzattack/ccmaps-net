@@ -273,7 +273,7 @@ namespace CNCMaps.Engine {
 				}
 			}
 			catch (Exception exc) {
-				_logger.Error(string.Format("An unknown fatal exception occured: {0}", exc), exc);
+				_logger.Error(string.Format("An unknown fatal exception occurred: {0}", exc), exc);
 #if DEBUG
 				throw;
 #endif

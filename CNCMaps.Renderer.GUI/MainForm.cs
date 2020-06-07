@@ -12,7 +12,6 @@ using System.Threading;
 using System.Windows.Forms;
 using CNCMaps.Engine;
 using CNCMaps.Engine.Map;
-using CNCMaps.FileFormats.VirtualFileSystem;
 using CNCMaps.GUI.Properties;
 using CNCMaps.Shared;
 using Microsoft.Win32;
@@ -131,6 +130,8 @@ namespace CNCMaps.GUI {
 
 			tbBatchInput.Lines = Settings.Default.batchinput.Split('\n');
 
+			ckbCheckForUpdates.Checked = !Settings.Default.skipupdatecheck;
+
 			if (!cbTunnelPaths.Checked)
 				cbTunnelPosition.Enabled = false;
 
@@ -187,6 +188,8 @@ namespace CNCMaps.GUI {
 			Settings.Default.tunnelpos = cbTunnelPosition.Checked;
 
 			Settings.Default.batchinput = String.Join("\n", tbBatchInput.Lines);
+
+			Settings.Default.skipupdatecheck = !ckbCheckForUpdates.Checked;
 
 			if (WindowState != FormWindowState.Minimized)
 				Settings.Default.windowlocation = this.Location.X + ", " +  this.Location.Y;
@@ -909,5 +912,9 @@ namespace CNCMaps.GUI {
 		}
 
 		#endregion
+
+		private void btnCheckForUpdate_Click(object sender, EventArgs e) {
+			PerformUpdateCheck();
+		}
 	}
 }
