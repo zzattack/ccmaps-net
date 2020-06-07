@@ -1,16 +1,12 @@
 using System;
-using System.Collections.Generic;
 using CNCMaps.Engine.Map;
 using CNCMaps.Engine.Rendering;
-using CNCMaps.Engine.Utility;
 using CNCMaps.FileFormats;
 using CNCMaps.Shared;
 using CNCMaps.Shared.Utility;
-using NLog;
 
 namespace CNCMaps.Engine.Game {
 	public static class FrameDeciders {
-		public static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
 		/// <summary>
 		/// Building turrets
@@ -179,28 +175,6 @@ namespace CNCMaps.Engine.Game {
 				return val;
 			};
 		}
-
-		private static Dictionary<ObjectOverride, Func<GameObject, int>> cachedDeciders =
-			new Dictionary<ObjectOverride, Func<GameObject, int>>();
-		/*		public static Func<GameObject, int> GetOverrideFrameDecider(ObjectOverride ovr) {
-					Func<GameObject, int> fd;
-					if (!cachedDeciders.TryGetValue(ovr, out fd)) {
-						cachedDeciders[ovr] = fd = FrameDeciderCompiler.CompileFrameDecider(ovr.FrameDeciderCode);
-					}
-					return fd;
-				}
-		*/
-		/*
-		public static Func<GameObject, int> CreateCacher(Func<GameObject, int> wrap) {
-			int cachedFrame = -1;
-			return delegate(GameObject obj) {
-				if (cachedFrame == -1 || obj.RequiresFrameInvalidation) {
-					cachedFrame = wrap(obj);
-					obj.RequiresFrameInvalidation = false;
-				}
-				return cachedFrame;
-			};
-		}*/
-
+		
 	}
 }

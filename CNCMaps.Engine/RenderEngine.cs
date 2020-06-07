@@ -91,18 +91,6 @@ namespace CNCMaps.Engine {
 					_logger.Info("Engine autodetect result: {0}", _settings.Engine);
 				}
 
-				// ---------------------------------------------------------------
-				// Code to organize moving of maps in a directory for themselves
-				/*
-				string mapName = DetermineMapName(mapFile, _settings.Engine);
-				string ndir = Path.Combine(Path.GetDirectoryName(_settings.InputFile), mapName);
-				if (!Directory.Exists(ndir)) Directory.CreateDirectory(ndir);
-				mapFile.Close();
-				mapFile.Dispose();
-				File.Move(_settings.InputFile, Path.Combine(ndir, Path.GetFileName(mapFile.FileName)));
-				return 0;*/
-				// ---------------------------------------------------------------
-
 				// enginetype is now definitive, load mod config
 				if (ModConfig.ActiveConfig == null)
 					ModConfig.LoadDefaultConfig(_settings.Engine);
@@ -281,28 +269,6 @@ namespace CNCMaps.Engine {
 			}
 			return EngineResult.RenderedOk;
 		}
-
-		/*private static void DumpTileProperties() {
-			ModConfig.LoadDefaultConfig(EngineType.YurisRevenge);
-			VFS.Instance.ScanMixDir("", EngineType.YurisRevenge);
-
-			foreach (var th in new[] { TheaterType.Temperate, TheaterType.Urban, TheaterType.Snow, TheaterType.Lunar, TheaterType.Desert, TheaterType.NewUrban }) {
-				ModConfig.SetActiveTheater(th);
-				foreach (var m in ModConfig.ActiveTheater.Mixes) VFS.Add(m);
-
-				var tc = new TileCollection(ModConfig.ActiveTheater, VFS.Open<IniFile>(ModConfig.ActiveTheater.TheaterIni));
-				tc.InitTilesets();
-				for (int i = 0; i < tc.NumTiles; i++) {
-					var mt = new MapTile(0, 0, 0, 0, 0, (short)i, 0, null);
-					var td = tc.GetDrawable(mt) as TileDrawable;
-					var tf = td.GetTileFile(mt);
-					if (tf != null) tf.Initialize(i);
-				}
-
-				Debug.WriteLine("_-----------------------------------------");
-
-			}
-		}*/
 
 		private static void InitLoggerConfig() {
 			if (LogManager.Configuration == null) {

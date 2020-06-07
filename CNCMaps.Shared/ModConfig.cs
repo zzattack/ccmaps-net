@@ -469,11 +469,6 @@ namespace CNCMaps.Shared {
 		public LightingType Lighting { get; set; }
 
 		[Id(7, 1)]
-		[Description("Compilable piece of C# code to determine a GameObjects frame")]
-		[EditorAttribute("System.ComponentModel.Design.MultilineStringEditor, System.Design", "System.Drawing.Design.UITypeEditor")]
-		public string FrameDeciderCode { get; set; }
-
-		[Id(8, 1)]
 		[Description("Priority of this override entry. Lower values indicate higher priority.")]
 		public int Priority { get; set; }
 

@@ -146,7 +146,6 @@
     <Compile Include="Types\WarHead.cs" />
     <Compile Include="Types\WeaponType.cs" />
     <Compile Include="Types\XYZ.cs" />
-    <Compile Include="Utility\FrameDeciderCompiler.cs" />
     <Compile Include="Utility\Hexagon.cs" />
     <Compile Include="Utility\HsvColor.cs" />
   </ItemGroup>

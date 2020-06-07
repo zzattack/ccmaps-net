@@ -1194,20 +1194,6 @@ namespace CNCMaps.Engine.Map {
 
 				Logger.Info("Injecting thumbnail into map");
 				ThumbInjector.InjectThumb(preview, map);
-
-				// debug thing to dump original previewpack dimensions
-				// preview.Save("C:\\thumbs\\" + Program.Settings.OutputFile + ".png");
-				// var originalPreview = ThumbInjector.ExtractThumb(this);
-				/*var prev = GetSection("Preview");
-				if (prev != null) {
-					var name = DetermineMapName(this.EngineType);
-					var size = GetSection("Preview").ReadString("Size").Split(',');
-					var previewSize = new Rectangle(int.Parse(size[0]), int.Parse(size[1]), int.Parse(size[2]), int.Parse(size[3]));
-					
-					File.AppendAllText("C:\\thumbs\\map_preview_dimensions.txt",
-										string.Format("{0}\t{1}\t{2}\t{3}\t{4}\t{5}\t{6}\n", name,
-										previewSize.Width, previewSize.Height, LocalSize.Width, LocalSize.Height, FullSize.Width, FullSize.Height));
-				}*/
 			}
 		}
 
