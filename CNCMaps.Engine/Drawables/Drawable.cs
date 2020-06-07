@@ -246,7 +246,9 @@ namespace CNCMaps.Engine.Drawables {
 
 
 		internal Drawable Clone() {
-			return (Drawable)MemberwiseClone();
+			var ret = (Drawable)MemberwiseClone();
+			ret.Props = this.Props.Clone();
+			return ret;
 		}
 
 		public override string ToString() {

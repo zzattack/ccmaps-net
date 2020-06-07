@@ -58,7 +58,7 @@ namespace CNCMaps.Engine.Drawables {
 			if (TheaterExtension)
 				fn += ModConfig.ActiveTheater.Extension;
 			else
-				fn+= ".shp";
+				fn += ".shp";
 			if (NewTheater)
 				fn = OwnerCollection.ApplyNewTheaterIfNeeded(Art.Name, fn);
 			return fn;

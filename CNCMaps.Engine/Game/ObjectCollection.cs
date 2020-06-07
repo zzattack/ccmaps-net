@@ -120,7 +120,7 @@ namespace CNCMaps.Engine.Game {
 		private void LoadAnimDrawable(AnimDrawable anim) {
 			InitDrawableDefaults(anim);
 			anim.LoadFromRules();
-			anim.Shp = _vfs.Open<ShpFile>(anim.Image + ".shp");
+			anim.Shp = _vfs.Open<ShpFile>(anim.GetFilename());
 		}
 
 		private void InitDrawableDefaults(Drawable drawable) {

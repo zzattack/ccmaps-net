@@ -317,13 +317,13 @@ namespace CNCMaps.Engine.Game {
 
 					// clone, so that the tile-specific offset doesn't require setting on the original 
 					// drawable, meaning it can be reused
-					drawable = drawable.Clone();
+					var drawableClone = drawable.Clone();
 
 					// in pixels
 					int attachTo = extraSection.ReadInt(n + "AttachesTo");
 					var offset = new Point(extraSection.ReadInt(n + "XOffset"), extraSection.ReadInt(n + "YOffset"));
-					drawable.Props.Offset.Offset(offset.X, offset.Y);
-					drawable.Props.ZAdjust = extraSection.ReadInt(n + "ZAdjust");
+					drawableClone.Props.Offset.Offset(offset.X, offset.Y);
+					drawableClone.Props.ZAdjust = extraSection.ReadInt(n + "ZAdjust");
 					tileSet.Entries[a - 1].AddAnimation(attachTo, drawable);
 				}
 			}

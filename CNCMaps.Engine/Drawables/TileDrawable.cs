@@ -20,11 +20,12 @@ namespace CNCMaps.Engine.Drawables {
 			if (obj == null || TsEntry == null) return;
 
 			var tmpFile = TsEntry.GetTmpFile(obj as MapTile);
-			if (tmpFile != null)
+			if (tmpFile != null) { 
 				TmpRenderer.Draw((MapTile)obj, tmpFile, ds);
 
-			if (TsEntry.AnimationDrawable != null && TsEntry.AnimationSubtile == obj.Tile.SubTile) {
-				TsEntry.AnimationDrawable.Draw(obj, ds, false);
+				if (TsEntry.AnimationDrawable != null && TsEntry.AnimationSubtile == (obj as MapTile).SubTile) {
+					TsEntry.AnimationDrawable.Draw(obj, ds, false);
+				}
 			}
 
 			// todo: tile shadows (TS)

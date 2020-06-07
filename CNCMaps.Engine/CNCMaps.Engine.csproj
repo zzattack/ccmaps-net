@@ -110,7 +110,7 @@
     <Compile Include="Game\PaletteCollection.cs" />
     <Compile Include="Drawables\ShpDrawable.cs" />
     <Compile Include="Rendering\ShpRenderer.cs" />
-    <Compile Include="Drawables\TmpDrawable.cs" />
+    <Compile Include="Drawables\TileDrawable.cs" />
     <Compile Include="Rendering\TmpRenderer.cs" />
     <Compile Include="Drawables\UnitDrawable.cs" />
     <Compile Include="Drawables\VoxelDrawable.cs" />
