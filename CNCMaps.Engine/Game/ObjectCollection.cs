@@ -114,25 +114,8 @@ namespace CNCMaps.Engine.Game {
 					drawable.Props.PaletteType = cfgOverride.Palette;
 					drawable.Props.CustomPaletteName = cfgOverride.CustomPaletteFile;
 				}
-				/*                if (!string.IsNullOrWhiteSpace(cfgOverride.FrameDeciderCode) && !_cannotCompile)
-								{
-									try
-									{
-										var fdc = FrameDeciders.GetOverrideFrameDecider(cfgOverride);
-										if (fdc != null)
-											drawable.Props.FrameDecider = fdc;
-									}
-									catch (TypeLoadException exc)
-									{
-										_cannotCompile = true;
-										Logger.Error("Custom framedecider could not be compiled. You need .NET 4.5 for this."
-											+ " Functionality will be unavailable.\r\n{0}", exc);
-									}
-								}		*/
 			}
 		}
-
-		//        private static bool _cannotCompile;
 
 		private void LoadAnimDrawable(AnimDrawable anim) {
 			InitDrawableDefaults(anim);

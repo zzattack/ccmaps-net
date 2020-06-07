@@ -22,12 +22,7 @@ namespace CNCMaps.Engine.Game {
 		public Palette PaletteOverride { get; set; } // if palettetype should be ignored
 		public Point ZShapePointMove { get; set; }
 
-		//private Func<GameObject, int> CachedFrameDecider;
-		public Func<GameObject, int> FrameDecider {
-			get; set;
-			//	get { return CachedFrameDecider; }
-			//	set { CachedFrameDecider = FrameDeciders.CreateCacher(value); }
-		}
+		public Func<GameObject, int> FrameDecider { get; set; }
 		public Func<GameObject, Point> OffsetHack { get; set; } // used to reposition bridges based on their overlay value
 		public Func<GameObject, Point> ShadowOffsetHack { get; set; } // used to reposition bridges based on their overlay value
 		public Point Offset;

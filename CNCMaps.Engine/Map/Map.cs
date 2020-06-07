@@ -473,36 +473,7 @@ namespace CNCMaps.Engine.Map {
 
 			foreach (var tile in _tiles) {
 				if (tile == null) continue;
-
-				// TODO: move this to a more sensible place
-				/*var tse = _theater.GetTileCollection().GetTileSetEntry(tile);
-				if (tse != null && tse.AnimationSubtile == tile.SubTile) {
-					var anim = new AnimationObject(tse.AnimationDrawable.Name, tse.AnimationDrawable);
-					tile.AddObject(anim);
-					_animationObjects.Add(anim);
-				}*/
-
-				// TODO: Tunnel top for TS. Attempt : Anim is read from the file but its anim offsets are incorrect
-				/*
-				var tileCol =  _theater.GetTileCollection();
-				var tDrawable = tileCol.GetDrawable(tile) as TileDrawable;
-				var tileSetEntry = tDrawable.GetTileSetEntry();
-
-				if (tileSetEntry != null && tileSetEntry.AnimationSubtile == tile.SubTile && (tileSetEntry.MemberOfSet.TileSetNum == tileCol.DirtTrackTunnels || 
-					tileSetEntry.MemberOfSet.TileSetNum == tileCol.DirtTunnels || tileSetEntry.MemberOfSet.TileSetNum == tileCol.TrackTunnels ||
-					tileSetEntry.MemberOfSet.TileSetNum == tileCol.Tunnels)) {
-					var tunnelTopDrawable = (AnimDrawable)tileSetEntry.AnimationDrawable;
-					if (tunnelTopDrawable.Shp == null) {
-						tunnelTopDrawable.Shp = VFS.Open<ShpFile>(tunnelTopDrawable.GetFilename());
-						if(tunnelTopDrawable.Shp != null)
-							tunnelTopDrawable.Shp.Initialize();
-					}
-					var tunnelAnim = new AnimationObject(tileSetEntry.AnimationDrawable.Name, tunnelTopDrawable);
-					tile.AddObject(tunnelAnim);
-					// _tileAnimObjects.Add(tunnelAnim);
-				}
-				*/
-
+				
 				foreach (var obj in tile.AllObjects.Union(new[] { tile }).ToList()) {
 					if (obj == null) continue;
 

@@ -23,6 +23,10 @@ namespace CNCMaps.Engine.Drawables {
 			if (tmpFile != null)
 				TmpRenderer.Draw((MapTile)obj, tmpFile, ds);
 
+			if (TsEntry.AnimationDrawable != null && TsEntry.AnimationSubtile == obj.Tile.SubTile) {
+				TsEntry.AnimationDrawable.Draw(obj, ds, false);
+			}
+
 			// todo: tile shadows (TS)
 		}
 
