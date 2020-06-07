@@ -887,25 +887,19 @@ namespace CNCMaps.GUI
             }
 			return success;
         }
-        private void AskBugReport(Exception exc)
-        {
-            return;
-        /*   // seems like rendering failed!
-            Log("\r\nIt appears an error ocurred during image rendering.");
+        private void AskBugReport(Exception exc) {
+            // seems like rendering failed!
+            Log("\r\nIt appears an error occurred during image rendering.");
             var form = new SubmitBug();
             form.Email = Settings.Default.email;
-            if (form.ShowDialog() == DialogResult.OK)
-            {
+            if (form.ShowDialog() == DialogResult.OK) {
                 if (!string.IsNullOrWhiteSpace(form.Email))
                     Settings.Default.email = form.Email;
                 SubmitBugReport(form.Email, exc);
             }
-		*/
         }
-
-		/*
-        private void SubmitBugReport(string email, Exception exc)
-        {
+        
+        private void SubmitBugReport(string email, Exception exc) {
             try
             {
                 const string url = UpdateChecker.UpdateCheckHost + "tool/report_bug";
@@ -948,14 +942,13 @@ namespace CNCMaps.GUI
             Log("Submitting bug report failed. Please send a manual bug report to frank@zzattack.org including your map, settings and error log");
             UpdateStatus("bug report failed", 100);
         }
-		*/
 
         #endregion
 
         #region Logging
         private delegate void LogDelegate(string s);
 
-        private string outputName; // filename of saved jpg
+        private string _outputName; // filename of saved jpg
         private void Log(string s)
         {
             if (InvokeRequired)
@@ -966,7 +959,7 @@ namespace CNCMaps.GUI
 
             if (s.Contains("Saving "))
             {
-                outputName = s;
+                _outputName = s;
                 int sIdx = s.IndexOf(" to ") + 4;
                 int endIdx = s.IndexOf(", quality");
                 if (endIdx == -1) endIdx = s.IndexOf(", compression");
