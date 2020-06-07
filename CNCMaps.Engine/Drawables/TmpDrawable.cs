@@ -1,15 +1,15 @@
 ﻿using System.Drawing;
-using CNCMaps.Engine.Drawables;
+using CNCMaps.Engine.Game;
 using CNCMaps.Engine.Map;
 using CNCMaps.Engine.Rendering;
 using CNCMaps.FileFormats;
 using CNCMaps.FileFormats.VirtualFileSystem;
 
-namespace CNCMaps.Engine.Game {
+namespace CNCMaps.Engine.Drawables {
 	public class TileDrawable : Drawable {
 		public TileCollection.TileSetEntry TsEntry;
 
-		public TileDrawable(VFS vfs, IniFile.IniSection rules, IniFile.IniSection art, TileCollection.TileSetEntry entry)
+		public TileDrawable(VirtualFileSystem vfs, IniFile.IniSection rules, IniFile.IniSection art, TileCollection.TileSetEntry entry)
 			: base(vfs, rules, art) {
 			TsEntry = entry;
 			if (entry != null)

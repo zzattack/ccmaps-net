@@ -3,6 +3,7 @@ using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 using System.Drawing;
+using CNCMaps.Engine.Drawables;
 using CNCMaps.Engine.Game;
 using CNCMaps.Engine.Map;
 

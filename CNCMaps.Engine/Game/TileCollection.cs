@@ -156,7 +156,7 @@ namespace CNCMaps.Engine.Game {
 
 		private int _animsSectionsStartIdx = -1;
 
-		public TileCollection(TheaterType theater, EngineType engine, VFS vfs, IniFile rules, IniFile art, TheaterSettings theaterSettings, IniFile theaterIni = null)
+		public TileCollection(TheaterType theater, EngineType engine, VirtualFileSystem vfs, IniFile rules, IniFile art, TheaterSettings theaterSettings, IniFile theaterIni = null)
 			: base(CollectionType.Tiles, theater, engine, vfs, rules, art) {
 			_theaterSettings = theaterSettings;
 			if (theaterIni == null) {

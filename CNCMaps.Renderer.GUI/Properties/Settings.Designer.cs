@@ -16,9 +16,9 @@ namespace CNCMaps.GUI.Properties {
 	[System.Configuration.SettingsProvider(typeof(CustomSettingsProvider))]
 	public sealed partial class Settings : global::System.Configuration.ApplicationSettingsBase {
 
-		private static Settings defaultInstance = ((Settings)(global::System.Configuration.ApplicationSettingsBase.Synchronized(new Settings())));
+		private static GUI.Settings defaultInstance = ((GUI.Settings)(global::System.Configuration.ApplicationSettingsBase.Synchronized(new GUI.Settings())));
 
-		public static Settings Default {
+		public static GUI.Settings Default {
 			get {
 				return defaultInstance;
 			}

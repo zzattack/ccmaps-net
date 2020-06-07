@@ -1,9 +1,10 @@
 using System;
 using System.Drawing;
 using CNCMaps.Engine.Map;
+using CNCMaps.Engine.Rendering;
 using CNCMaps.Shared;
 
-namespace CNCMaps.Engine.Rendering {
+namespace CNCMaps.Engine.Game {
 	public enum DrawFrame : int {
 		DirectionBased = -1,
 		Random = -2,

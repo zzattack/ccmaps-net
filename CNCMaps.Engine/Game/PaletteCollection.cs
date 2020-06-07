@@ -11,9 +11,9 @@ namespace CNCMaps.Engine.Game {
 	public class PaletteCollection : IEnumerable<Palette> {
 		public List<Palette> CustomPalettes = new List<Palette>();
 		public Palette IsoPalette, OvlPalette, UnitPalette, AnimPalette;
-		private readonly VFS _vfs;
+		private readonly VirtualFileSystem _vfs;
 
-		public PaletteCollection(VFS vfs) {
+		public PaletteCollection(VirtualFileSystem vfs) {
 			_vfs = vfs;
 		}
 

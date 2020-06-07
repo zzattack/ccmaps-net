@@ -20,7 +20,7 @@ namespace CNCMaps.Engine.Game {
 
 		static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
-		public ObjectCollection(CollectionType type, TheaterType theater, EngineType engine, VFS vfs, IniFile rules, IniFile art,
+		public ObjectCollection(CollectionType type, TheaterType theater, EngineType engine, VirtualFileSystem vfs, IniFile rules, IniFile art,
 			IniFile.IniSection objectsList, PaletteCollection palettes)
 			: base(type, theater, engine, vfs, rules, art) {
 

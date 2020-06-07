@@ -8,7 +8,7 @@ using NLog;
 
 namespace CNCMaps.FileFormats.VirtualFileSystem {
 
-	public class VFS {
+	public class VirtualFileSystem {
 		public readonly List<IArchive> AllArchives = new List<IArchive>();
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
@@ -30,7 +30,6 @@ namespace CNCMaps.FileFormats.VirtualFileSystem {
 			if (t == typeof(VxlFile)) return FileFormat.Vxl;
 			return FileFormat.Ukn;
 		}
-
 
 		public bool Add(string filename, CacheMethod cache = CacheMethod.Default) {
 			return AddItem(filename, cache);

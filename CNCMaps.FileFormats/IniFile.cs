@@ -56,7 +56,7 @@ namespace CNCMaps.FileFormats {
 			}
 		}
 
-		public void LoadAresIncludes(VFS vfs) {
+		public void LoadAresIncludes(VirtualFileSystem.VirtualFileSystem vfs) {
 			// support for Ares tag
 			var includes = GetOrCreateSection("#include");
 			foreach (var entry in includes.OrderedEntries) {

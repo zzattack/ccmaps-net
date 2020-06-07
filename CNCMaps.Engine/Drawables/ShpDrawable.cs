@@ -1,7 +1,6 @@
-﻿using System;
-using System.Drawing;
+﻿using System.Drawing;
 using System.Linq;
-using CNCMaps.Engine.Drawables;
+using CNCMaps.Engine.Game;
 using CNCMaps.Engine.Map;
 using CNCMaps.Engine.Rendering;
 using CNCMaps.FileFormats;
@@ -9,13 +8,13 @@ using CNCMaps.FileFormats.VirtualFileSystem;
 using CNCMaps.Shared;
 using CNCMaps.Shared.Utility;
 
-namespace CNCMaps.Engine.Game {
+namespace CNCMaps.Engine.Drawables {
 	class ShpDrawable : Drawable {
 
 		public ShpFile Shp { get; set; }
 		protected readonly ShpRenderer _renderer;
 
-		public ShpDrawable(VFS vfs, IniFile.IniSection rules, IniFile.IniSection art, ShpFile shpFile = null)
+		public ShpDrawable(VirtualFileSystem vfs, IniFile.IniSection rules, IniFile.IniSection art, ShpFile shpFile = null)
 			: base(vfs, rules, art) {
 			_renderer =  new ShpRenderer(vfs);
 			Shp = shpFile;

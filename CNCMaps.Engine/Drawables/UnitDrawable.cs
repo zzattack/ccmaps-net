@@ -1,15 +1,15 @@
 ﻿using System.Collections.Generic;
 using System.Drawing;
-using CNCMaps.Engine.Drawables;
+using CNCMaps.Engine.Game;
 using CNCMaps.Engine.Map;
 using CNCMaps.Engine.Rendering;
 using CNCMaps.FileFormats;
 using CNCMaps.FileFormats.VirtualFileSystem;
 
-namespace CNCMaps.Engine.Game {
+namespace CNCMaps.Engine.Drawables {
 	internal class UnitDrawable : Drawable {
 
-		public UnitDrawable(VFS vfs, IniFile.IniSection rules, IniFile.IniSection art)
+		public UnitDrawable(VirtualFileSystem vfs, IniFile.IniSection rules, IniFile.IniSection art)
 			: base(vfs, rules, art) { }
 
 		public override void LoadFromRules() {

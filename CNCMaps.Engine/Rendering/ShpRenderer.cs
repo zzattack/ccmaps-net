@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Drawing;
 using CNCMaps.Engine.Drawables;
+using CNCMaps.Engine.Game;
 using CNCMaps.Engine.Map;
 using CNCMaps.FileFormats;
 using CNCMaps.FileFormats.VirtualFileSystem;
@@ -11,7 +12,7 @@ using NLog;
 namespace CNCMaps.Engine.Rendering {
 	class ShpRenderer {
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
-		public ShpRenderer(VFS vfs) {
+		public ShpRenderer(VirtualFileSystem vfs) {
 			_vfs = vfs;
 		}
 
@@ -268,7 +269,7 @@ namespace CNCMaps.Engine.Rendering {
 
 		static ShpFile BuildingZ;
 		private bool _noBuildingZAvailable = false;
-		private readonly VFS _vfs;
+		private readonly VirtualFileSystem _vfs;
 
 		private short GetBuildingZ(int x, int y, ShpFile shp, ShpFile.ShpImage img, GameObject obj) {
 			if (_noBuildingZAvailable)

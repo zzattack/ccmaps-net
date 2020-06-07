@@ -12,7 +12,7 @@ namespace CNCMaps.Engine.Game {
 	public class Theater {
 		readonly TheaterType _theaterType;
 		readonly EngineType _engine;
-		readonly VFS _vfs;
+		readonly VirtualFileSystem _vfs;
 		readonly IniFile _rules;
 		readonly IniFile _art;
 
@@ -29,7 +29,7 @@ namespace CNCMaps.Engine.Game {
 
 		static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
-		public Theater(TheaterType theaterType, EngineType engine, VFS vfs, IniFile rules, IniFile art) {
+		public Theater(TheaterType theaterType, EngineType engine, VirtualFileSystem vfs, IniFile rules, IniFile art) {
 			_theaterType = theaterType;
 			_engine = engine;
 			_vfs = vfs;
@@ -39,7 +39,7 @@ namespace CNCMaps.Engine.Game {
 			_rules.LoadAresIncludes(vfs);
 		}
 
-		public Theater(TheaterType theaterType, EngineType engine, VFS vfs) {
+		public Theater(TheaterType theaterType, EngineType engine, VirtualFileSystem vfs) {
 			_theaterType = theaterType;
 			_engine = engine;
 			_vfs = vfs;

@@ -18,19 +18,19 @@ namespace CNCMaps.Engine.Map {
 		/// <param name="rules">The rules.ini file to be used.</param>
 		/// <returns>The engine to be used to render this map.</returns>
 		public static EngineType DetectEngineType(MapFile mf) {
-			var vfsTS = new VFS();
-			var vfsFS = new VFS();
-			var vfsRA2 = new VFS();
-			var vfsYR = new VFS();
+			var vfsTS = new VirtualFileSystem();
+			var vfsFS = new VirtualFileSystem();
+			var vfsRA2 = new VirtualFileSystem();
+			var vfsYR = new VirtualFileSystem();
 
-			if (Directory.Exists(VFS.TSInstallDir)) {
-				vfsTS.LoadMixes(VFS.TSInstallDir, EngineType.TiberianSun);
-				vfsFS.LoadMixes(VFS.TSInstallDir, EngineType.Firestorm);
+			if (Directory.Exists(VirtualFileSystem.TSInstallDir)) {
+				vfsTS.LoadMixes(VirtualFileSystem.TSInstallDir, EngineType.TiberianSun);
+				vfsFS.LoadMixes(VirtualFileSystem.TSInstallDir, EngineType.Firestorm);
 			}
 
-			if (Directory.Exists(VFS.RA2InstallDir)) {
-				vfsRA2.LoadMixes(VFS.RA2InstallDir, EngineType.RedAlert2);
-				vfsYR.LoadMixes(VFS.RA2InstallDir, EngineType.YurisRevenge);
+			if (Directory.Exists(VirtualFileSystem.RA2InstallDir)) {
+				vfsRA2.LoadMixes(VirtualFileSystem.RA2InstallDir, EngineType.RedAlert2);
+				vfsYR.LoadMixes(VirtualFileSystem.RA2InstallDir, EngineType.YurisRevenge);
 			}
 
 			IniFile rulesTS = vfsTS.OpenFile<IniFile>("rules.ini");
@@ -71,7 +71,7 @@ namespace CNCMaps.Engine.Map {
 		private static EngineType DetectEngineFromRules(MapFile mf,
 			IniFile rulesTS, IniFile rulesFS, IniFile rulesRA2, IniFile rulesYR,
 			TheaterSettings theaterTS, TheaterSettings theaterFS, TheaterSettings theaterRA2, TheaterSettings theaterYR,
-			VFS vfsTS, VFS vfsFS, VFS vfsRA2, VFS vfsYR) {
+			VirtualFileSystem vfsTS, VirtualFileSystem vfsFS, VirtualFileSystem vfsRA2, VirtualFileSystem vfsYR) {
 
 			double tsScore = PercentageObjectsKnown(mf, vfsTS, rulesTS, theaterTS);
 			double fsScore = PercentageObjectsKnown(mf, vfsFS, rulesFS, theaterFS);
@@ -86,7 +86,7 @@ namespace CNCMaps.Engine.Map {
 			return EngineType.YurisRevenge; // default
 		}
 
-		private static double PercentageObjectsKnown(MapFile mf, VFS vfs, IniFile rules, TheaterSettings ths) {
+		private static double PercentageObjectsKnown(MapFile mf, VirtualFileSystem vfs, IniFile rules, TheaterSettings ths) {
 			if (rules == null || ths == null) return 0.0;
 			var theaterIni = vfs.OpenFile<IniFile>(ths.TheaterIni);
 			if (theaterIni == null) return 0.0;

@@ -22,7 +22,7 @@ namespace CNCMaps.Engine {
 	public class RenderEngine {
 		static Logger _logger = LogManager.GetCurrentClassLogger();
 		private RenderSettings _settings = new RenderSettings();
-		private VFS _vfs = new VFS();
+		private VirtualFileSystem _vfs = new VirtualFileSystem();
 
 		public bool ConfigureFromArgs(string[] args) {
 			InitLoggerConfig();
@@ -101,7 +101,7 @@ namespace CNCMaps.Engine {
 
 				// add mixdir to VFS (if it's not included in the mod config)
 				if (!ModConfig.ActiveConfig.Directories.Any()) {
-					string mixDir = VFS.DetermineMixDir(_settings.MixFilesDirectory, _settings.Engine);
+					string mixDir = VirtualFileSystem.DetermineMixDir(_settings.MixFilesDirectory, _settings.Engine);
 					_vfs.Add(mixDir);
 				}
 				foreach (string mixFile in ModConfig.ActiveConfig.ExtraMixes)
@@ -431,7 +431,7 @@ namespace CNCMaps.Engine {
 				// fallback for multiplayer maps with, .map extension,
 				// no YR objects so assumed to be ra2, but actually meant to be used on yr
 				if (mapExt == ".map" && pkt != null && !pkt.MapEntries.ContainsKey(pktEntryName) && engine >= EngineType.RedAlert2) {
-					var vfs = new VFS();
+					var vfs = new VirtualFileSystem();
 					vfs.AddItem(_settings.InputFile);
 					pkt = vfs.OpenFile<PktFile>("missionsmd.pkt");
 				}

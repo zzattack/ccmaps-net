@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using CNCMaps.Engine.Drawables;
 using CNCMaps.Engine.Game;
 using CNCMaps.FileFormats;
 using NLog;

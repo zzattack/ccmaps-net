@@ -1,20 +1,21 @@
-﻿using CNCMaps.Engine.Map;
+﻿using CNCMaps.Engine.Game;
+using CNCMaps.Engine.Map;
 using CNCMaps.Engine.Rendering;
 using CNCMaps.FileFormats;
 using CNCMaps.FileFormats.VirtualFileSystem;
 using CNCMaps.Shared;
 using NLog;
 
-namespace CNCMaps.Engine.Game {
+namespace CNCMaps.Engine.Drawables {
 	class AnimDrawable : ShpDrawable {
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
 		private int _translucency;
 
-		public AnimDrawable(VFS vfs, IniFile.IniSection rules, IniFile.IniSection art)
+		public AnimDrawable(VirtualFileSystem vfs, IniFile.IniSection rules, IniFile.IniSection art)
 			: base(vfs, rules, art) {
 		}
-		public AnimDrawable(VFS vfs, IniFile.IniSection rules, IniFile.IniSection art, ShpFile shp)
+		public AnimDrawable(VirtualFileSystem vfs, IniFile.IniSection rules, IniFile.IniSection art, ShpFile shp)
 			: base(vfs, rules, art, shp) {
 		}
 

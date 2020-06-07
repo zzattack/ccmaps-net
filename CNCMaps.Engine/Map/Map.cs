@@ -28,7 +28,7 @@ namespace CNCMaps.Engine.Map {
 
 		public Rectangle FullSize { get; private set; }
 		public Rectangle LocalSize { get; private set; }
-		private VFS _vfs;
+		private VirtualFileSystem _vfs;
 		private Theater _theater;
 		private IniFile _rules;
 		private IniFile _art;
@@ -56,7 +56,7 @@ namespace CNCMaps.Engine.Map {
 
 		private bool _overlaysAltered;
 
-		public bool Initialize(MapFile mf, EngineType et, VFS vfs, List<string> customRulesININames, List<string> customArtININames) {
+		public bool Initialize(MapFile mf, EngineType et, VirtualFileSystem vfs, List<string> customRulesININames, List<string> customArtININames) {
 			if (et == EngineType.AutoDetect) {
 				Logger.Fatal("Engine type needs to be known by now!");
 				return false;

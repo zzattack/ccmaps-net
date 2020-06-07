@@ -101,7 +101,7 @@
     <Compile Include="VirtualFileSystem\DirArchive.cs" />
     <Compile Include="VirtualFileSystem\IArchive.cs" />
     <Compile Include="VirtualFileSystem\MemoryFile.cs" />
-    <Compile Include="VirtualFileSystem\VFS.cs" />
+    <Compile Include="VirtualFileSystem\VirtualFileSystem.cs" />
     <Compile Include="VirtualFileSystem\VirtualFile.cs" />
     <Compile Include="VirtualFileSystem\VirtualTextFile.cs" />
   </ItemGroup>

@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
-using CNCMaps.Engine.Drawables;
+using CNCMaps.Engine.Game;
 using CNCMaps.Engine.Map;
 using CNCMaps.Engine.Rendering;
 using CNCMaps.FileFormats;
@@ -10,7 +10,7 @@ using CNCMaps.FileFormats.VirtualFileSystem;
 using CNCMaps.Shared;
 using CNCMaps.Shared.Utility;
 
-namespace CNCMaps.Engine.Game {
+namespace CNCMaps.Engine.Drawables {
 	class BuildingDrawable : Drawable {
 
 		#region crap
@@ -48,7 +48,7 @@ namespace CNCMaps.Engine.Game {
 		private int _conditionYellowHealth;
 		private int _conditionRedHealth;
 
-		public BuildingDrawable(VFS vfs, IniFile.IniSection rules, IniFile.IniSection art)
+		public BuildingDrawable(VirtualFileSystem vfs, IniFile.IniSection rules, IniFile.IniSection art)
 			: base(vfs, rules, art) {
 		}
 

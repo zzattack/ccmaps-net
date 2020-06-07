@@ -1,18 +1,16 @@
-using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
-using CNCMaps.Engine.Drawables;
 using CNCMaps.Engine.Map;
 using CNCMaps.Engine.Rendering;
 using CNCMaps.FileFormats;
 using CNCMaps.FileFormats.VirtualFileSystem;
 
-namespace CNCMaps.Engine.Game {
+namespace CNCMaps.Engine.Drawables {
 	internal class TerrainDrawable : Drawable {
 
 		private ShpDrawable terrainShp;
 
-		public TerrainDrawable(VFS vfs, IniFile.IniSection rules, IniFile.IniSection art)
+		public TerrainDrawable(VirtualFileSystem vfs, IniFile.IniSection rules, IniFile.IniSection art)
 			: base(vfs, rules, art) { }
 
 		public override void Draw(GameObject obj, DrawingSurface ds, bool shadows = true) {

@@ -24,7 +24,7 @@ namespace CNCMaps.Engine.Drawables {
 
 		internal IniFile.IniSection Rules { get; private set; }
 		internal IniFile.IniSection Art { get; private set; }
-		protected VFS _vfs;
+		protected VirtualFileSystem _vfs;
 		internal ObjectCollection OwnerCollection { get; set; }
 		public DrawProperties Props = new DrawProperties();
 		public readonly List<Drawable> SubDrawables = new List<Drawable>();
@@ -62,7 +62,7 @@ namespace CNCMaps.Engine.Drawables {
 		public static ushort TileHeight { get; set; }
 
 		protected Drawable() { }
-		protected Drawable(VFS vfs, IniFile.IniSection rules, IniFile.IniSection art) {
+		protected Drawable(VirtualFileSystem vfs, IniFile.IniSection rules, IniFile.IniSection art) {
 			_vfs = vfs;
 			Rules = rules;
 			Art = art;

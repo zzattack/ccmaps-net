@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using CNCMaps.Engine.Drawables;
 using CNCMaps.Engine.Game;
 using CNCMaps.Shared;
 using CNCMaps.Shared.Utility;
