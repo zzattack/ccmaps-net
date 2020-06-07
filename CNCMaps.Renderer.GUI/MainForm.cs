@@ -302,10 +302,8 @@ namespace CNCMaps.GUI {
 			UpdateCommandline();
 		}
 		private void UpdateStatus(string text, int progressBarValue) {
-			var invokable = new Action(delegate
-			{
-				if (progressBarValue < pbProgress.Value && pbProgress.Value != 100)
-				{
+			var invokable = new Action(delegate {
+				if (progressBarValue < pbProgress.Value && pbProgress.Value != 100) {
                     // probably re-initializing filesystem after map autodetect
                     return;
 				}
@@ -322,12 +320,12 @@ namespace CNCMaps.GUI {
 				invokable();
 		}
 		private void OutputNameCheckedChanged(object sender, EventArgs e) {
-			tbCustomOutput.Visible = rbCustomFilename.Checked;
+			tbCustomOutput.Enabled = rbCustomFilename.Checked;
 			UpdateCommandline();
 		}
 
 		private void cbModConfig_CheckedChanged(object sender, EventArgs e) {
-			tbModConfig.Visible = btnModEditor.Visible = cbModConfig.Checked;
+			tbModConfig.Enabled = btnModEditor.Enabled = cbModConfig.Checked;
 			tbMixDir.Enabled = !cbModConfig.Checked;
 			UpdateCommandline();
 		}
@@ -378,11 +376,11 @@ namespace CNCMaps.GUI {
 			UpdateCommandline();
 		}
 		private void PngOutputCheckedChanged(object sender, EventArgs e) {
-			nudCompression.Visible = lblCompressionLevel.Visible = cbOutputPNG.Checked;
+			nudCompression.Enabled = lblCompressionLevel.Enabled = cbOutputPNG.Checked;
 			UpdateCommandline();
 		}
 		private void JpegOutputCheckedChanged(object sender, EventArgs e) {
-			lblQuality.Visible = nudEncodingQuality.Visible = cbOutputJPG.Checked;
+			lblQuality.Enabled = nudEncodingQuality.Enabled = cbOutputJPG.Checked;
 			UpdateCommandline();
 		}
 		private void cbStartMarkers_CheckedChanged(object sender, EventArgs e) {
@@ -404,8 +402,7 @@ namespace CNCMaps.GUI {
 			}
 		}
 		private void CbOutputThumbnailCheckedChanged(object sender, EventArgs e) {
-			tbThumbDimensions.Visible = cbPreserveThumbAspect.Visible =
-			cbThumbPNG.Visible = cbOutputThumbnail.Checked;
+			tbThumbDimensions.Enabled = cbPreserveThumbAspect.Enabled = cbThumbPNG.Enabled = cbOutputThumbnail.Checked;
 			UpdateCommandline();
 		}
 
@@ -506,6 +503,7 @@ namespace CNCMaps.GUI {
 		}
 
 		private void UpdateCommandline() {
+			return;
 			string cmd = GetCommandLine();
 			tbCommandPreview.Text = cmd;
 		}

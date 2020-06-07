@@ -117,16 +117,24 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="lblOreEmphasisDescription.Text" xml:space="preserve">
-    <value>Setting this will result in a yellow glow to be placed behind ore, and a purple glow behind gems. When scaling images down, for example to use them as small preview image of a map, this looks pretty good.</value>
-  </data>
   <metadata name="toolTip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>365, 17</value>
   </metadata>
+  <data name="cbEmphasizeOre.ToolTip" xml:space="preserve">
+    <value>Setting this will result in a yellow glow to be placed behind ore, and a purple glow behind gems. When scaling images down, for example to use them as small preview image of a map, this looks pretty good.</value>
+  </data>
   <data name="cbReplacePreview.ToolTip" xml:space="preserve">
     <value>FinalAlert2 previews generally look quite poor. Replacing them with a downscaled
 version of the resulting image often looks much better, which is what this option does.
 DANGEROUS: comments and ini formatting is lost. The original map is overwritten!</value>
+  </data>
+  <metadata name="toolTip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>365, 17</value>
+  </metadata>
+  <data name="rbEngineAuto.ToolTip" xml:space="preserve">
+    <value>Tries to automatically deduce whether your map is made for RA2/YR, but is often unsuccessful,
+since this information is not actually stored in the map.
+This will never render the map as if it is a TS/FS map, if it is you need to manually select this!</value>
   </data>
   <data name="rbAutoFilename.ToolTip" xml:space="preserve">
     <value>Automatic filename resolution uses a  CSF, missions.ini or [Basic]/Name if possible. 
@@ -146,11 +154,6 @@ for the non-zero component.</value>
 aspect ratio is preserved while the width/height is maximized
 for the non-zero component.</value>
   </data>
-  <data name="rbEngineAuto.ToolTip" xml:space="preserve">
-    <value>Tries to automatically deduce whether your map is made for RA2/YR, but is often unsuccessful,
-since this information is not actually stored in the map.
-This will never render the map as if it is a TS/FS map, if it is you need to manually select this!</value>
-  </data>
   <metadata name="ofd.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>186, 17</value>
   </metadata>
@@ -160,9 +163,9 @@ This will never render the map as if it is a TS/FS map, if it is you need to man
   <metadata name="statusStrip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>256, 17</value>
   </metadata>
-  <metadata name="toolTip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>365, 17</value>
-  </metadata>
+  <data name="lblBatchDesc.Text" xml:space="preserve">
+    <value>Batch rendering can be used to process multiple maps of the same game/mod with identicalsettings. First configure the desired settings on "Main settings" and "Misc settings" tabs and then add the needed maps either by the "Add maps" button or drag and drop the files in the field below. Finally, press the "Start batch processing" button.</value>
+  </data>
   <data name="lblCopyright.Text" xml:space="preserve">
     <value>Original program © 2005-2020 by Frank Razenberg 
 
@@ -174,9 +177,6 @@ Full list @ https://github.com/zzattack/ccmaps-net/graphs/contributors
 
 Special thanks to Olaf van der Spek for XCC.
 Special thanks to #renproj for modenc.</value>
-  </data>
-  <data name="lblBatchDesc.Text" xml:space="preserve">
-    <value>Batch rendering can be used to process multiple maps of the same game/mod with the same settings. First configure the desired settings on "Main settings" and "Misc settings" tabs and then add the needed maps either by the "Add maps" button or drag and drop the files in the field below. Finally, press the "Start batch processing" button.</value>
   </data>
   <metadata name="$this.TrayHeight" type="System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>39</value>
