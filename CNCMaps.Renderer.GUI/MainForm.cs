@@ -104,7 +104,7 @@ namespace CNCMaps.GUI {
 			rbEngineTS.Checked = Settings.Default.enginets;
 			rbEngineYR.Checked = Settings.Default.engineyr;
 
-			cbModConfig.Checked = Settings.Default.modconfig;
+			ckbModConfig.Checked = Settings.Default.modconfig;
 			tbModConfig.Text = Settings.Default.modconfigfile;
 
 			cbEmphasizeOre.Checked = Settings.Default.emphore;
@@ -132,10 +132,7 @@ namespace CNCMaps.GUI {
 
 			ckbCheckForUpdates.Checked = !Settings.Default.skipupdatecheck;
 
-			if (!cbTunnelPaths.Checked)
-				cbTunnelPosition.Enabled = false;
-
-			UpdateCommandline();
+			UpdateOptions();
 		}
 
 		private void MainFormClosing(object sender, FormClosingEventArgs e) {
@@ -163,7 +160,7 @@ namespace CNCMaps.GUI {
 			Settings.Default.enginets = rbEngineTS.Checked;
 			Settings.Default.engineyr = rbEngineYR.Checked;
 
-			Settings.Default.modconfig = cbModConfig.Checked;
+			Settings.Default.modconfig = ckbModConfig.Checked;
 			Settings.Default.modconfigfile = tbModConfig.Text;
 
 			Settings.Default.emphore = cbEmphasizeOre.Checked;
@@ -299,7 +296,7 @@ namespace CNCMaps.GUI {
 
 		#region ui events
 		private void UIChanged(object sender, EventArgs e) {
-			UpdateCommandline();
+			UpdateOptions();
 		}
 		private void UpdateStatus(string text, int progressBarValue) {
 			var invokable = new Action(delegate {
@@ -320,14 +317,11 @@ namespace CNCMaps.GUI {
 				invokable();
 		}
 		private void OutputNameCheckedChanged(object sender, EventArgs e) {
-			tbCustomOutput.Enabled = rbCustomFilename.Checked;
-			UpdateCommandline();
+			UpdateOptions();
 		}
 
 		private void cbModConfig_CheckedChanged(object sender, EventArgs e) {
-			tbModConfig.Enabled = btnModEditor.Enabled = cbModConfig.Checked;
-			tbMixDir.Enabled = !cbModConfig.Checked;
-			UpdateCommandline();
+			UpdateOptions();
 		}
 
 		private void BrowseInput(object sender, EventArgs e) {
@@ -357,7 +351,7 @@ namespace CNCMaps.GUI {
 			var files = (string[])e.Data.GetData(DataFormats.FileDrop);
 			if (files.Length == 1 && tabControl.SelectedTab != tpBatch) {
 				tbInput.Text = files[0];
-				UpdateCommandline();
+				UpdateOptions();
 				tabControl.SelectTab(tpMain);
 			}
 			else if (files.Length > 0) {
@@ -373,27 +367,25 @@ namespace CNCMaps.GUI {
 			else if (!_currentEngineRa2 && newEngineRA2 && tbMixDir.Text == FindMixDir(false))
 				tbMixDir.Text = FindMixDir(true);
 			_currentEngineRa2 = newEngineRA2;
-			UpdateCommandline();
+			UpdateOptions();
 		}
 		private void PngOutputCheckedChanged(object sender, EventArgs e) {
-			nudCompression.Enabled = lblCompressionLevel.Enabled = cbOutputPNG.Checked;
-			UpdateCommandline();
+			UpdateOptions();
 		}
 		private void JpegOutputCheckedChanged(object sender, EventArgs e) {
-			lblQuality.Enabled = nudEncodingQuality.Enabled = cbOutputJPG.Checked;
-			UpdateCommandline();
+			UpdateOptions();
 		}
 		private void cbStartMarkers_CheckedChanged(object sender, EventArgs e) {
-			UpdateCommandline();
+			UpdateOptions();
 		}
 		private void cmbStartMarkers_SelectedIndexChanged(object sender, EventArgs e) {
-			UpdateCommandline();
+			UpdateOptions();
 		}
 		private void cmbMarkerSize_SelectedIndexChanged(object sender, EventArgs e) {
-			UpdateCommandline();
+			UpdateOptions();
 		}
 		private void CbReplacePreviewCheckedChanged(object sender, EventArgs e) {
-			UpdateCommandline();
+			UpdateOptions();
 		}
 		private void BtnModEditorClick(object sender, EventArgs e) {
 			var editor = new ModConfigEditor(tbModConfig.Text);
@@ -402,41 +394,40 @@ namespace CNCMaps.GUI {
 			}
 		}
 		private void CbOutputThumbnailCheckedChanged(object sender, EventArgs e) {
-			tbThumbDimensions.Enabled = cbPreserveThumbAspect.Enabled = cbThumbPNG.Enabled = cbOutputThumbnail.Checked;
-			UpdateCommandline();
+			UpdateOptions();
 		}
 
 		private void rbUseFilename_CheckedChanged(object sender, EventArgs e) {
-			UpdateCommandline();
+			UpdateOptions();
 		}
 
 		private void cbMarkIceGrowth_CheckedChanged(object sender, EventArgs e) {
-			UpdateCommandline();
+			UpdateOptions();
 		}
 
 		private void cbDiagnosticWindow_CheckedChanged(object sender, EventArgs e) {
-			UpdateCommandline();
+			UpdateOptions();
 		}
 
 		private void cbBackup_CheckedChanged(object sender, EventArgs e) {
-			UpdateCommandline();
+			UpdateOptions();
 		}
 
 		private void cbFixOverlay_CheckedChanged(object sender, EventArgs e) {
-			UpdateCommandline();
+			UpdateOptions();
 		}
 
 		private void cbCompressTiles_CheckedChanged(object sender, EventArgs e) {
-			UpdateCommandline();
+			UpdateOptions();
 		}
 
 		private void cbTunnelPaths_CheckedChanged(object sender, EventArgs e) {
-			UpdateCommandline();
+			UpdateOptions();
 			cbTunnelPosition.Enabled = cbTunnelPaths.Checked;
 		}
 
 		private void cbTunnelPosition_CheckedChanged(object sender, EventArgs e) {
-			UpdateCommandline();
+			UpdateOptions();
 		}
 
 		private void btnClearLog_Click(object sender, EventArgs e) {
@@ -462,7 +453,7 @@ namespace CNCMaps.GUI {
 		}
 
 		private void BtnBatchRender_Click(object sender, EventArgs e) {
-			if (String.IsNullOrWhiteSpace(tbBatchInput.Text)) {
+			if (string.IsNullOrWhiteSpace(tbBatchInput.Text)) {
 				UpdateStatus("no files provided in batch", 100);
 				MessageBox.Show("Add at least one map file for processing!");
 				return;
@@ -476,7 +467,7 @@ namespace CNCMaps.GUI {
 
 			// Filter duplicates
 			foreach (string filename in tbBatchInput.Lines) {
-				if (!String.IsNullOrWhiteSpace(filename)) {
+				if (!string.IsNullOrWhiteSpace(filename)) {
 					filename.Trim();
 					if (!mapNamesSet.Contains(filename)) {
 						mapNames.Add(filename);
@@ -502,8 +493,15 @@ namespace CNCMaps.GUI {
 				Log("Batch processing succeeded.\r\n------------------------------\r\n");
 		}
 
-		private void UpdateCommandline() {
-			return;
+		private void UpdateOptions() {
+			nudCompression.Enabled = lblCompressionLevel.Enabled = cbOutputPNG.Checked;
+			lblQuality.Enabled = nudEncodingQuality.Enabled = cbOutputJPG.Checked;
+			tbThumbDimensions.Enabled = cbPreserveThumbAspect.Enabled = cbThumbPNG.Enabled = lblThumbSize.Enabled = cbOutputThumbnail.Checked;
+			cbTunnelPosition.Enabled = cbTunnelPaths.Checked;
+			tbCustomOutput.Enabled = rbCustomFilename.Checked;
+			tbModConfig.Enabled = btnModEditor.Enabled = ckbModConfig.Checked;
+			tbMixDir.Enabled = !ckbModConfig.Checked;
+
 			string cmd = GetCommandLine();
 			tbCommandPreview.Text = cmd;
 		}
@@ -526,7 +524,7 @@ namespace CNCMaps.GUI {
 			if (rbUseFilename.Checked) cmd += "-o \"" + Path.GetFileNameWithoutExtension(tbInput.Text) + "\" ";
 			else if (rbCustomFilename.Checked) cmd += "-o \"" + tbCustomOutput.Text + "\" ";
 
-			if (cbModConfig.Checked)
+			if (ckbModConfig.Checked)
 				cmd += "-M \"" + tbModConfig.Text + "\" ";
 			else if (!string.IsNullOrWhiteSpace(tbMixDir.Text) && tbMixDir.Text != FindMixDir(rbEngineAuto.Checked || rbEngineRA2.Checked || rbEngineYR.Checked))
 				cmd += "-m " + "\"" + tbMixDir.Text + "\" ";
@@ -645,7 +643,7 @@ namespace CNCMaps.GUI {
 			if (rbUseFilename.Checked) rs.OutputFile = Path.GetFileNameWithoutExtension(rs.InputFile);
 			else if (rbCustomFilename.Checked) rs.OutputFile = tbCustomOutput.Text;
 
-			if (cbModConfig.Checked)
+			if (ckbModConfig.Checked)
 				rs.ModConfig = tbModConfig.Text;
 			else if (!string.IsNullOrWhiteSpace(tbMixDir.Text) && tbMixDir.Text != FindMixDir(rbEngineAuto.Checked || rbEngineRA2.Checked || rbEngineYR.Checked))
 				rs.MixFilesDirectory = tbMixDir.Text;

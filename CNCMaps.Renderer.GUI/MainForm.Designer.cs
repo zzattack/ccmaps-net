@@ -28,8 +28,13 @@ namespace CNCMaps.GUI {
 			this.components = new System.ComponentModel.Container();
 			System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
 			this.gbMiscOptions = new System.Windows.Forms.GroupBox();
+			this.lblMiscHeader = new System.Windows.Forms.Label();
 			this.gbMarkings = new System.Windows.Forms.GroupBox();
+			this.cbDiagnosticWindow = new System.Windows.Forms.CheckBox();
+			this.cbTunnelPosition = new System.Windows.Forms.CheckBox();
+			this.cbMarkIceGrowth = new System.Windows.Forms.CheckBox();
 			this.cbEmphasizeOre = new System.Windows.Forms.CheckBox();
+			this.cbTunnelPaths = new System.Windows.Forms.CheckBox();
 			this.gbStartMarkers = new System.Windows.Forms.GroupBox();
 			this.cbStartMarkers = new System.Windows.Forms.CheckBox();
 			this.lblMarkerSize = new System.Windows.Forms.Label();
@@ -37,32 +42,37 @@ namespace CNCMaps.GUI {
 			this.cmbMarkerSize = new System.Windows.Forms.ComboBox();
 			this.cmbStartMarkers = new System.Windows.Forms.ComboBox();
 			this.lblSquaredStartPosDescription = new System.Windows.Forms.Label();
-			this.cbCompressTiles = new System.Windows.Forms.CheckBox();
-			this.cbFixOverlay = new System.Windows.Forms.CheckBox();
-			this.cbBackup = new System.Windows.Forms.CheckBox();
-			this.ckbFixupTiles = new System.Windows.Forms.CheckBox();
 			this.gbSizeMode = new System.Windows.Forms.GroupBox();
 			this.rbSizeAuto = new System.Windows.Forms.RadioButton();
 			this.rbSizeFullmap = new System.Windows.Forms.RadioButton();
 			this.rbSizeLocal = new System.Windows.Forms.RadioButton();
 			this.gbThumbs = new System.Windows.Forms.GroupBox();
+			this.cbCompressTiles = new System.Windows.Forms.CheckBox();
 			this.lblMarkersType = new System.Windows.Forms.Label();
+			this.cbFixOverlay = new System.Windows.Forms.CheckBox();
 			this.cbMarkersType = new System.Windows.Forms.ComboBox();
+			this.cbBackup = new System.Windows.Forms.CheckBox();
 			this.cbReplacePreview = new System.Windows.Forms.CheckBox();
-			this.cbTunnelPosition = new System.Windows.Forms.CheckBox();
-			this.cbTunnelPaths = new System.Windows.Forms.CheckBox();
-			this.cbDiagnosticWindow = new System.Windows.Forms.CheckBox();
-			this.cbMarkIceGrowth = new System.Windows.Forms.CheckBox();
+			this.ckbFixupTiles = new System.Windows.Forms.CheckBox();
 			this.gbInputOutput = new System.Windows.Forms.GroupBox();
+			this.gbFileName = new System.Windows.Forms.GroupBox();
+			this.rbUseFilename = new System.Windows.Forms.RadioButton();
+			this.tbCustomOutput = new System.Windows.Forms.TextBox();
+			this.rbAutoFilename = new System.Windows.Forms.RadioButton();
+			this.rbCustomFilename = new System.Windows.Forms.RadioButton();
+			this.groupBox1 = new System.Windows.Forms.GroupBox();
+			this.rbEngineFS = new System.Windows.Forms.RadioButton();
+			this.lbEngine = new System.Windows.Forms.Label();
+			this.rbEngineTS = new System.Windows.Forms.RadioButton();
+			this.rbEngineAuto = new System.Windows.Forms.RadioButton();
+			this.rbEngineYR = new System.Windows.Forms.RadioButton();
+			this.rbEngineRA2 = new System.Windows.Forms.RadioButton();
 			this.gbModConfig = new System.Windows.Forms.GroupBox();
 			this.btnModEditor = new System.Windows.Forms.Button();
 			this.tbModConfig = new System.Windows.Forms.TextBox();
-			this.cbModConfig = new System.Windows.Forms.CheckBox();
-			this.rbUseFilename = new System.Windows.Forms.RadioButton();
-			this.tbCustomOutput = new System.Windows.Forms.TextBox();
-			this.rbCustomFilename = new System.Windows.Forms.RadioButton();
-			this.rbAutoFilename = new System.Windows.Forms.RadioButton();
+			this.ckbModConfig = new System.Windows.Forms.CheckBox();
 			this.gbImageFormat = new System.Windows.Forms.GroupBox();
+			this.lblThumbSize = new System.Windows.Forms.Label();
 			this.cbThumbPNG = new System.Windows.Forms.CheckBox();
 			this.cbPreserveThumbAspect = new System.Windows.Forms.CheckBox();
 			this.tbThumbDimensions = new System.Windows.Forms.TextBox();
@@ -73,12 +83,6 @@ namespace CNCMaps.GUI {
 			this.cbOutputJPG = new System.Windows.Forms.CheckBox();
 			this.cbOutputPNG = new System.Windows.Forms.CheckBox();
 			this.nudCompression = new System.Windows.Forms.NumericUpDown();
-			this.rbEngineFS = new System.Windows.Forms.RadioButton();
-			this.rbEngineTS = new System.Windows.Forms.RadioButton();
-			this.rbEngineAuto = new System.Windows.Forms.RadioButton();
-			this.rbEngineRA2 = new System.Windows.Forms.RadioButton();
-			this.rbEngineYR = new System.Windows.Forms.RadioButton();
-			this.lbEngine = new System.Windows.Forms.Label();
 			this.tbMixDir = new System.Windows.Forms.TextBox();
 			this.lblMixFiles = new System.Windows.Forms.Label();
 			this.btnBrowseMixDir = new System.Windows.Forms.Button();
@@ -114,16 +118,14 @@ namespace CNCMaps.GUI {
 			this.btnCheckForUpdate = new System.Windows.Forms.Button();
 			this.ckbCheckForUpdates = new System.Windows.Forms.CheckBox();
 			this.lblCopyright = new System.Windows.Forms.LinkLabel();
-			this.groupBox1 = new System.Windows.Forms.GroupBox();
-			this.gbFileName = new System.Windows.Forms.GroupBox();
-			this.lblThumbSize = new System.Windows.Forms.Label();
-			this.lblMiscHeader = new System.Windows.Forms.Label();
 			this.gbMiscOptions.SuspendLayout();
 			this.gbMarkings.SuspendLayout();
 			this.gbStartMarkers.SuspendLayout();
 			this.gbSizeMode.SuspendLayout();
 			this.gbThumbs.SuspendLayout();
 			this.gbInputOutput.SuspendLayout();
+			this.gbFileName.SuspendLayout();
+			this.groupBox1.SuspendLayout();
 			this.gbModConfig.SuspendLayout();
 			this.gbImageFormat.SuspendLayout();
 			((System.ComponentModel.ISupportInitialize)(this.nudEncodingQuality)).BeginInit();
@@ -137,8 +139,6 @@ namespace CNCMaps.GUI {
 			this.tpLog.SuspendLayout();
 			this.gbLog.SuspendLayout();
 			this.tpAbout.SuspendLayout();
-			this.groupBox1.SuspendLayout();
-			this.gbFileName.SuspendLayout();
 			this.SuspendLayout();
 			// 
 			// gbMiscOptions
@@ -153,12 +153,22 @@ namespace CNCMaps.GUI {
 			this.gbMiscOptions.Controls.Add(this.gbThumbs);
 			this.gbMiscOptions.Location = new System.Drawing.Point(6, 6);
 			this.gbMiscOptions.Name = "gbMiscOptions";
-			this.gbMiscOptions.Size = new System.Drawing.Size(772, 420);
+			this.gbMiscOptions.Size = new System.Drawing.Size(592, 425);
 			this.gbMiscOptions.TabIndex = 1;
 			this.gbMiscOptions.TabStop = false;
 			this.gbMiscOptions.Text = "Misc. Options";
 			this.gbMiscOptions.DragDrop += new System.Windows.Forms.DragEventHandler(this.InputDragDrop);
 			this.gbMiscOptions.DragEnter += new System.Windows.Forms.DragEventHandler(this.InputDragEnter);
+			// 
+			// lblMiscHeader
+			// 
+			this.lblMiscHeader.AutoSize = true;
+			this.lblMiscHeader.Location = new System.Drawing.Point(13, 23);
+			this.lblMiscHeader.Name = "lblMiscHeader";
+			this.lblMiscHeader.Size = new System.Drawing.Size(437, 26);
+			this.lblMiscHeader.TabIndex = 39;
+			this.lblMiscHeader.Text = "Switches that affect the rendering process and enable map modifications are detai" +
+    "led here. \r\nTooltips provide additional information when hovering over them.";
 			// 
 			// gbMarkings
 			// 
@@ -171,10 +181,50 @@ namespace CNCMaps.GUI {
 			this.gbMarkings.Controls.Add(this.cbTunnelPaths);
 			this.gbMarkings.Location = new System.Drawing.Point(13, 246);
 			this.gbMarkings.Name = "gbMarkings";
-			this.gbMarkings.Size = new System.Drawing.Size(736, 104);
+			this.gbMarkings.Size = new System.Drawing.Size(573, 104);
 			this.gbMarkings.TabIndex = 38;
 			this.gbMarkings.TabStop = false;
 			this.gbMarkings.Text = "Additional markings";
+			// 
+			// cbDiagnosticWindow
+			// 
+			this.cbDiagnosticWindow.AutoSize = true;
+			this.cbDiagnosticWindow.Location = new System.Drawing.Point(13, 69);
+			this.cbDiagnosticWindow.Name = "cbDiagnosticWindow";
+			this.cbDiagnosticWindow.Size = new System.Drawing.Size(132, 17);
+			this.cbDiagnosticWindow.TabIndex = 28;
+			this.cbDiagnosticWindow.Text = "Show preview window";
+			this.toolTip.SetToolTip(this.cbDiagnosticWindow, "Show diagnostic window");
+			this.cbDiagnosticWindow.UseVisualStyleBackColor = true;
+			this.cbDiagnosticWindow.CheckedChanged += new System.EventHandler(this.cbDiagnosticWindow_CheckedChanged);
+			// 
+			// cbTunnelPosition
+			// 
+			this.cbTunnelPosition.AutoSize = true;
+			this.cbTunnelPosition.Checked = true;
+			this.cbTunnelPosition.CheckState = System.Windows.Forms.CheckState.Checked;
+			this.cbTunnelPosition.Enabled = false;
+			this.cbTunnelPosition.Location = new System.Drawing.Point(195, 46);
+			this.cbTunnelPosition.Name = "cbTunnelPosition";
+			this.cbTunnelPosition.Size = new System.Drawing.Size(141, 17);
+			this.cbTunnelPosition.TabIndex = 25;
+			this.cbTunnelPosition.Text = "Raise tunnel lines height";
+			this.toolTip.SetToolTip(this.cbTunnelPosition, "Raise the height of tunnel lines by 4 cells to compensate for tunnel entrance gra" +
+        "phics");
+			this.cbTunnelPosition.UseVisualStyleBackColor = true;
+			this.cbTunnelPosition.CheckedChanged += new System.EventHandler(this.cbTunnelPosition_CheckedChanged);
+			// 
+			// cbMarkIceGrowth
+			// 
+			this.cbMarkIceGrowth.AutoSize = true;
+			this.cbMarkIceGrowth.Location = new System.Drawing.Point(195, 23);
+			this.cbMarkIceGrowth.Name = "cbMarkIceGrowth";
+			this.cbMarkIceGrowth.Size = new System.Drawing.Size(102, 17);
+			this.cbMarkIceGrowth.TabIndex = 27;
+			this.cbMarkIceGrowth.Text = "Mark ice growth";
+			this.toolTip.SetToolTip(this.cbMarkIceGrowth, "Marks the cells having ice growth set, used in TS Snow maps");
+			this.cbMarkIceGrowth.UseVisualStyleBackColor = true;
+			this.cbMarkIceGrowth.CheckedChanged += new System.EventHandler(this.cbMarkIceGrowth_CheckedChanged);
 			// 
 			// cbEmphasizeOre
 			// 
@@ -188,6 +238,18 @@ namespace CNCMaps.GUI {
 			this.cbEmphasizeOre.UseVisualStyleBackColor = true;
 			this.cbEmphasizeOre.CheckedChanged += new System.EventHandler(this.UIChanged);
 			// 
+			// cbTunnelPaths
+			// 
+			this.cbTunnelPaths.AutoSize = true;
+			this.cbTunnelPaths.Location = new System.Drawing.Point(13, 46);
+			this.cbTunnelPaths.Name = "cbTunnelPaths";
+			this.cbTunnelPaths.Size = new System.Drawing.Size(114, 17);
+			this.cbTunnelPaths.TabIndex = 24;
+			this.cbTunnelPaths.Text = "Show tunnel paths";
+			this.toolTip.SetToolTip(this.cbTunnelPaths, "Show tunnel path lines.");
+			this.cbTunnelPaths.UseVisualStyleBackColor = true;
+			this.cbTunnelPaths.CheckedChanged += new System.EventHandler(this.cbTunnelPaths_CheckedChanged);
+			// 
 			// gbStartMarkers
 			// 
 			this.gbStartMarkers.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
@@ -200,7 +262,7 @@ namespace CNCMaps.GUI {
 			this.gbStartMarkers.Controls.Add(this.lblSquaredStartPosDescription);
 			this.gbStartMarkers.Location = new System.Drawing.Point(13, 58);
 			this.gbStartMarkers.Name = "gbStartMarkers";
-			this.gbStartMarkers.Size = new System.Drawing.Size(736, 85);
+			this.gbStartMarkers.Size = new System.Drawing.Size(573, 85);
 			this.gbStartMarkers.TabIndex = 37;
 			this.gbStartMarkers.TabStop = false;
 			this.gbStartMarkers.Text = "Start positions marking";
@@ -281,56 +343,6 @@ namespace CNCMaps.GUI {
 			this.lblSquaredStartPosDescription.Text = "Tiled marker option colors the tile itself whereas other options paint the marker" +
     " at the starting locations.";
 			// 
-			// cbCompressTiles
-			// 
-			this.cbCompressTiles.AutoSize = true;
-			this.cbCompressTiles.Location = new System.Drawing.Point(322, 46);
-			this.cbCompressTiles.Name = "cbCompressTiles";
-			this.cbCompressTiles.Size = new System.Drawing.Size(125, 17);
-			this.cbCompressTiles.TabIndex = 33;
-			this.cbCompressTiles.Text = "Compress Tiles Pack";
-			this.toolTip.SetToolTip(this.cbCompressTiles, "Compress IsoMapPack5 section in map, undone by FinalSun or FinalAlert2");
-			this.cbCompressTiles.UseVisualStyleBackColor = true;
-			this.cbCompressTiles.CheckedChanged += new System.EventHandler(this.cbCompressTiles_CheckedChanged);
-			// 
-			// cbFixOverlay
-			// 
-			this.cbFixOverlay.AutoSize = true;
-			this.cbFixOverlay.Location = new System.Drawing.Point(13, 69);
-			this.cbFixOverlay.Name = "cbFixOverlay";
-			this.cbFixOverlay.Size = new System.Drawing.Size(83, 17);
-			this.cbFixOverlay.TabIndex = 32;
-			this.cbFixOverlay.Text = "Fix Overlays";
-			this.toolTip.SetToolTip(this.cbFixOverlay, "Remove undefined overlays and overwrite overlay sections in map");
-			this.cbFixOverlay.UseVisualStyleBackColor = true;
-			this.cbFixOverlay.CheckedChanged += new System.EventHandler(this.cbFixOverlay_CheckedChanged);
-			// 
-			// cbBackup
-			// 
-			this.cbBackup.AutoSize = true;
-			this.cbBackup.Checked = true;
-			this.cbBackup.CheckState = System.Windows.Forms.CheckState.Checked;
-			this.cbBackup.Location = new System.Drawing.Point(322, 69);
-			this.cbBackup.Name = "cbBackup";
-			this.cbBackup.Size = new System.Drawing.Size(87, 17);
-			this.cbBackup.TabIndex = 34;
-			this.cbBackup.Text = "Map Backup";
-			this.toolTip.SetToolTip(this.cbBackup, "Create backup when modifying map file");
-			this.cbBackup.UseVisualStyleBackColor = true;
-			this.cbBackup.CheckedChanged += new System.EventHandler(this.cbBackup_CheckedChanged);
-			// 
-			// ckbFixupTiles
-			// 
-			this.ckbFixupTiles.AutoSize = true;
-			this.ckbFixupTiles.Location = new System.Drawing.Point(13, 46);
-			this.ckbFixupTiles.Name = "ckbFixupTiles";
-			this.ckbFixupTiles.Size = new System.Drawing.Size(64, 17);
-			this.ckbFixupTiles.TabIndex = 31;
-			this.ckbFixupTiles.Text = "Fix Tiles";
-			this.toolTip.SetToolTip(this.ckbFixupTiles, "Remove undefined tiles and overwrite IsoMapPack5 section in map");
-			this.ckbFixupTiles.UseVisualStyleBackColor = true;
-			this.ckbFixupTiles.CheckedChanged += new System.EventHandler(this.UIChanged);
-			// 
 			// gbSizeMode
 			// 
 			this.gbSizeMode.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
@@ -340,7 +352,7 @@ namespace CNCMaps.GUI {
 			this.gbSizeMode.Controls.Add(this.rbSizeLocal);
 			this.gbSizeMode.Location = new System.Drawing.Point(13, 356);
 			this.gbSizeMode.Name = "gbSizeMode";
-			this.gbSizeMode.Size = new System.Drawing.Size(736, 51);
+			this.gbSizeMode.Size = new System.Drawing.Size(573, 51);
 			this.gbSizeMode.TabIndex = 18;
 			this.gbSizeMode.TabStop = false;
 			this.gbSizeMode.Text = "Sizing mode";
@@ -397,10 +409,22 @@ namespace CNCMaps.GUI {
 			this.gbThumbs.Controls.Add(this.ckbFixupTiles);
 			this.gbThumbs.Location = new System.Drawing.Point(13, 149);
 			this.gbThumbs.Name = "gbThumbs";
-			this.gbThumbs.Size = new System.Drawing.Size(736, 91);
+			this.gbThumbs.Size = new System.Drawing.Size(573, 91);
 			this.gbThumbs.TabIndex = 20;
 			this.gbThumbs.TabStop = false;
 			this.gbThumbs.Text = "Map modifications";
+			// 
+			// cbCompressTiles
+			// 
+			this.cbCompressTiles.AutoSize = true;
+			this.cbCompressTiles.Location = new System.Drawing.Point(195, 46);
+			this.cbCompressTiles.Name = "cbCompressTiles";
+			this.cbCompressTiles.Size = new System.Drawing.Size(125, 17);
+			this.cbCompressTiles.TabIndex = 33;
+			this.cbCompressTiles.Text = "Compress Tiles Pack";
+			this.toolTip.SetToolTip(this.cbCompressTiles, "Compress IsoMapPack5 section in map, undone by FinalSun or FinalAlert2");
+			this.cbCompressTiles.UseVisualStyleBackColor = true;
+			this.cbCompressTiles.CheckedChanged += new System.EventHandler(this.cbCompressTiles_CheckedChanged);
 			// 
 			// lblMarkersType
 			// 
@@ -410,6 +434,18 @@ namespace CNCMaps.GUI {
 			this.lblMarkersType.Size = new System.Drawing.Size(111, 13);
 			this.lblMarkersType.TabIndex = 19;
 			this.lblMarkersType.Text = "Start position markers:";
+			// 
+			// cbFixOverlay
+			// 
+			this.cbFixOverlay.AutoSize = true;
+			this.cbFixOverlay.Location = new System.Drawing.Point(13, 69);
+			this.cbFixOverlay.Name = "cbFixOverlay";
+			this.cbFixOverlay.Size = new System.Drawing.Size(83, 17);
+			this.cbFixOverlay.TabIndex = 32;
+			this.cbFixOverlay.Text = "Fix Overlays";
+			this.toolTip.SetToolTip(this.cbFixOverlay, "Remove undefined overlays and overwrite overlay sections in map");
+			this.cbFixOverlay.UseVisualStyleBackColor = true;
+			this.cbFixOverlay.CheckedChanged += new System.EventHandler(this.cbFixOverlay_CheckedChanged);
 			// 
 			// cbMarkersType
 			// 
@@ -421,10 +457,24 @@ namespace CNCMaps.GUI {
             "Bittah"});
 			this.cbMarkersType.Location = new System.Drawing.Point(449, 19);
 			this.cbMarkersType.Name = "cbMarkersType";
-			this.cbMarkersType.Size = new System.Drawing.Size(121, 21);
+			this.cbMarkersType.Size = new System.Drawing.Size(101, 21);
 			this.cbMarkersType.TabIndex = 18;
 			this.cbMarkersType.Text = "None";
 			this.cbMarkersType.SelectedIndexChanged += new System.EventHandler(this.UIChanged);
+			// 
+			// cbBackup
+			// 
+			this.cbBackup.AutoSize = true;
+			this.cbBackup.Checked = true;
+			this.cbBackup.CheckState = System.Windows.Forms.CheckState.Checked;
+			this.cbBackup.Location = new System.Drawing.Point(195, 69);
+			this.cbBackup.Name = "cbBackup";
+			this.cbBackup.Size = new System.Drawing.Size(87, 17);
+			this.cbBackup.TabIndex = 34;
+			this.cbBackup.Text = "Map Backup";
+			this.toolTip.SetToolTip(this.cbBackup, "Create backup when modifying map file");
+			this.cbBackup.UseVisualStyleBackColor = true;
+			this.cbBackup.CheckedChanged += new System.EventHandler(this.cbBackup_CheckedChanged);
 			// 
 			// cbReplacePreview
 			// 
@@ -438,57 +488,17 @@ namespace CNCMaps.GUI {
 			this.cbReplacePreview.UseVisualStyleBackColor = true;
 			this.cbReplacePreview.CheckedChanged += new System.EventHandler(this.CbReplacePreviewCheckedChanged);
 			// 
-			// cbTunnelPosition
+			// ckbFixupTiles
 			// 
-			this.cbTunnelPosition.AutoSize = true;
-			this.cbTunnelPosition.Checked = true;
-			this.cbTunnelPosition.CheckState = System.Windows.Forms.CheckState.Checked;
-			this.cbTunnelPosition.Enabled = false;
-			this.cbTunnelPosition.Location = new System.Drawing.Point(322, 46);
-			this.cbTunnelPosition.Name = "cbTunnelPosition";
-			this.cbTunnelPosition.Size = new System.Drawing.Size(141, 17);
-			this.cbTunnelPosition.TabIndex = 25;
-			this.cbTunnelPosition.Text = "Raise tunnel lines height";
-			this.toolTip.SetToolTip(this.cbTunnelPosition, "Raise the height of tunnel lines by 4 cells to compensate for tunnel entrance gra" +
-        "phics");
-			this.cbTunnelPosition.UseVisualStyleBackColor = true;
-			this.cbTunnelPosition.CheckedChanged += new System.EventHandler(this.cbTunnelPosition_CheckedChanged);
-			// 
-			// cbTunnelPaths
-			// 
-			this.cbTunnelPaths.AutoSize = true;
-			this.cbTunnelPaths.Location = new System.Drawing.Point(13, 46);
-			this.cbTunnelPaths.Name = "cbTunnelPaths";
-			this.cbTunnelPaths.Size = new System.Drawing.Size(114, 17);
-			this.cbTunnelPaths.TabIndex = 24;
-			this.cbTunnelPaths.Text = "Show tunnel paths";
-			this.toolTip.SetToolTip(this.cbTunnelPaths, "Show tunnel path lines.");
-			this.cbTunnelPaths.UseVisualStyleBackColor = true;
-			this.cbTunnelPaths.CheckedChanged += new System.EventHandler(this.cbTunnelPaths_CheckedChanged);
-			// 
-			// cbDiagnosticWindow
-			// 
-			this.cbDiagnosticWindow.AutoSize = true;
-			this.cbDiagnosticWindow.Location = new System.Drawing.Point(13, 69);
-			this.cbDiagnosticWindow.Name = "cbDiagnosticWindow";
-			this.cbDiagnosticWindow.Size = new System.Drawing.Size(132, 17);
-			this.cbDiagnosticWindow.TabIndex = 28;
-			this.cbDiagnosticWindow.Text = "Show preview window";
-			this.toolTip.SetToolTip(this.cbDiagnosticWindow, "Show diagnostic window");
-			this.cbDiagnosticWindow.UseVisualStyleBackColor = true;
-			this.cbDiagnosticWindow.CheckedChanged += new System.EventHandler(this.cbDiagnosticWindow_CheckedChanged);
-			// 
-			// cbMarkIceGrowth
-			// 
-			this.cbMarkIceGrowth.AutoSize = true;
-			this.cbMarkIceGrowth.Location = new System.Drawing.Point(322, 23);
-			this.cbMarkIceGrowth.Name = "cbMarkIceGrowth";
-			this.cbMarkIceGrowth.Size = new System.Drawing.Size(102, 17);
-			this.cbMarkIceGrowth.TabIndex = 27;
-			this.cbMarkIceGrowth.Text = "Mark ice growth";
-			this.toolTip.SetToolTip(this.cbMarkIceGrowth, "Marks the cells having ice growth set, used in TS Snow maps");
-			this.cbMarkIceGrowth.UseVisualStyleBackColor = true;
-			this.cbMarkIceGrowth.CheckedChanged += new System.EventHandler(this.cbMarkIceGrowth_CheckedChanged);
+			this.ckbFixupTiles.AutoSize = true;
+			this.ckbFixupTiles.Location = new System.Drawing.Point(13, 46);
+			this.ckbFixupTiles.Name = "ckbFixupTiles";
+			this.ckbFixupTiles.Size = new System.Drawing.Size(64, 17);
+			this.ckbFixupTiles.TabIndex = 31;
+			this.ckbFixupTiles.Text = "Fix Tiles";
+			this.toolTip.SetToolTip(this.ckbFixupTiles, "Remove undefined tiles and overwrite IsoMapPack5 section in map");
+			this.ckbFixupTiles.UseVisualStyleBackColor = true;
+			this.ckbFixupTiles.CheckedChanged += new System.EventHandler(this.UIChanged);
 			// 
 			// gbInputOutput
 			// 
@@ -507,59 +517,27 @@ namespace CNCMaps.GUI {
 			this.gbInputOutput.Controls.Add(this.btnBrowseInput);
 			this.gbInputOutput.Location = new System.Drawing.Point(6, 6);
 			this.gbInputOutput.Name = "gbInputOutput";
-			this.gbInputOutput.Size = new System.Drawing.Size(770, 359);
+			this.gbInputOutput.Size = new System.Drawing.Size(590, 364);
 			this.gbInputOutput.TabIndex = 0;
 			this.gbInputOutput.TabStop = false;
 			this.gbInputOutput.Text = "Input && output";
 			this.gbInputOutput.DragDrop += new System.Windows.Forms.DragEventHandler(this.InputDragDrop);
 			this.gbInputOutput.DragEnter += new System.Windows.Forms.DragEventHandler(this.InputDragEnter);
 			// 
-			// gbModConfig
+			// gbFileName
 			// 
-			this.gbModConfig.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+			this.gbFileName.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-			this.gbModConfig.Controls.Add(this.btnModEditor);
-			this.gbModConfig.Controls.Add(this.tbModConfig);
-			this.gbModConfig.Controls.Add(this.cbModConfig);
-			this.gbModConfig.Location = new System.Drawing.Point(13, 302);
-			this.gbModConfig.Name = "gbModConfig";
-			this.gbModConfig.Size = new System.Drawing.Size(746, 42);
-			this.gbModConfig.TabIndex = 44;
-			this.gbModConfig.TabStop = false;
-			// 
-			// btnModEditor
-			// 
-			this.btnModEditor.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-			this.btnModEditor.Location = new System.Drawing.Point(666, 13);
-			this.btnModEditor.Name = "btnModEditor";
-			this.btnModEditor.Size = new System.Drawing.Size(75, 20);
-			this.btnModEditor.TabIndex = 28;
-			this.btnModEditor.Text = "Open editor";
-			this.btnModEditor.UseVisualStyleBackColor = true;
-			this.btnModEditor.Click += new System.EventHandler(this.BtnModEditorClick);
-			// 
-			// tbModConfig
-			// 
-			this.tbModConfig.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-			this.tbModConfig.Location = new System.Drawing.Point(154, 13);
-			this.tbModConfig.Name = "tbModConfig";
-			this.tbModConfig.Size = new System.Drawing.Size(506, 20);
-			this.tbModConfig.TabIndex = 24;
-			this.tbModConfig.TextChanged += new System.EventHandler(this.UIChanged);
-			// 
-			// cbModConfig
-			// 
-			this.cbModConfig.AutoSize = true;
-			this.cbModConfig.Location = new System.Drawing.Point(8, 15);
-			this.cbModConfig.Name = "cbModConfig";
-			this.cbModConfig.Size = new System.Drawing.Size(141, 17);
-			this.cbModConfig.TabIndex = 26;
-			this.cbModConfig.Text = "Load special mod config";
-			this.toolTip.SetToolTip(this.cbModConfig, "Special mod configs allow you to specify precisely which extra directories, mixes" +
-        "\r\nand theater specific settings should be considered for your mod.");
-			this.cbModConfig.UseVisualStyleBackColor = true;
-			this.cbModConfig.CheckedChanged += new System.EventHandler(this.cbModConfig_CheckedChanged);
+			this.gbFileName.Controls.Add(this.rbUseFilename);
+			this.gbFileName.Controls.Add(this.tbCustomOutput);
+			this.gbFileName.Controls.Add(this.rbAutoFilename);
+			this.gbFileName.Controls.Add(this.rbCustomFilename);
+			this.gbFileName.Location = new System.Drawing.Point(13, 171);
+			this.gbFileName.Name = "gbFileName";
+			this.gbFileName.Size = new System.Drawing.Size(566, 53);
+			this.gbFileName.TabIndex = 46;
+			this.gbFileName.TabStop = false;
+			this.gbFileName.Text = "Output file naming";
 			// 
 			// rbUseFilename
 			// 
@@ -581,9 +559,22 @@ namespace CNCMaps.GUI {
             | System.Windows.Forms.AnchorStyles.Right)));
 			this.tbCustomOutput.Location = new System.Drawing.Point(342, 22);
 			this.tbCustomOutput.Name = "tbCustomOutput";
-			this.tbCustomOutput.Size = new System.Drawing.Size(396, 20);
+			this.tbCustomOutput.Size = new System.Drawing.Size(216, 20);
 			this.tbCustomOutput.TabIndex = 17;
 			this.tbCustomOutput.TextChanged += new System.EventHandler(this.UIChanged);
+			// 
+			// rbAutoFilename
+			// 
+			this.rbAutoFilename.AutoSize = true;
+			this.rbAutoFilename.Location = new System.Drawing.Point(110, 23);
+			this.rbAutoFilename.Name = "rbAutoFilename";
+			this.rbAutoFilename.Size = new System.Drawing.Size(121, 17);
+			this.rbAutoFilename.TabIndex = 15;
+			this.rbAutoFilename.TabStop = true;
+			this.rbAutoFilename.Text = "Automatic mapname";
+			this.toolTip.SetToolTip(this.rbAutoFilename, resources.GetString("rbAutoFilename.ToolTip"));
+			this.rbAutoFilename.UseVisualStyleBackColor = true;
+			this.rbAutoFilename.CheckedChanged += new System.EventHandler(this.OutputNameCheckedChanged);
 			// 
 			// rbCustomFilename
 			// 
@@ -599,21 +590,150 @@ namespace CNCMaps.GUI {
 			this.rbCustomFilename.UseVisualStyleBackColor = true;
 			this.rbCustomFilename.CheckedChanged += new System.EventHandler(this.OutputNameCheckedChanged);
 			// 
-			// rbAutoFilename
+			// groupBox1
 			// 
-			this.rbAutoFilename.AutoSize = true;
-			this.rbAutoFilename.Location = new System.Drawing.Point(110, 23);
-			this.rbAutoFilename.Name = "rbAutoFilename";
-			this.rbAutoFilename.Size = new System.Drawing.Size(121, 17);
-			this.rbAutoFilename.TabIndex = 15;
-			this.rbAutoFilename.TabStop = true;
-			this.rbAutoFilename.Text = "Automatic mapname";
-			this.toolTip.SetToolTip(this.rbAutoFilename, resources.GetString("rbAutoFilename.ToolTip"));
-			this.rbAutoFilename.UseVisualStyleBackColor = true;
-			this.rbAutoFilename.CheckedChanged += new System.EventHandler(this.OutputNameCheckedChanged);
+			this.groupBox1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+			this.groupBox1.Controls.Add(this.rbEngineFS);
+			this.groupBox1.Controls.Add(this.lbEngine);
+			this.groupBox1.Controls.Add(this.rbEngineTS);
+			this.groupBox1.Controls.Add(this.rbEngineAuto);
+			this.groupBox1.Controls.Add(this.rbEngineYR);
+			this.groupBox1.Controls.Add(this.rbEngineRA2);
+			this.groupBox1.Location = new System.Drawing.Point(13, 232);
+			this.groupBox1.Name = "groupBox1";
+			this.groupBox1.Size = new System.Drawing.Size(566, 68);
+			this.groupBox1.TabIndex = 45;
+			this.groupBox1.TabStop = false;
+			this.groupBox1.Text = "Engine mode";
+			// 
+			// rbEngineFS
+			// 
+			this.rbEngineFS.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+			this.rbEngineFS.AutoSize = true;
+			this.rbEngineFS.Location = new System.Drawing.Point(385, 40);
+			this.rbEngineFS.Name = "rbEngineFS";
+			this.rbEngineFS.Size = new System.Drawing.Size(68, 17);
+			this.rbEngineFS.TabIndex = 24;
+			this.rbEngineFS.TabStop = true;
+			this.rbEngineFS.Text = "Force FS";
+			this.rbEngineFS.UseVisualStyleBackColor = true;
+			this.rbEngineFS.CheckedChanged += new System.EventHandler(this.RbEngineCheckedChanged);
+			// 
+			// lbEngine
+			// 
+			this.lbEngine.Location = new System.Drawing.Point(12, 21);
+			this.lbEngine.Name = "lbEngine";
+			this.lbEngine.Size = new System.Drawing.Size(487, 16);
+			this.lbEngine.TabIndex = 40;
+			this.lbEngine.Text = "This instructs program which engine to mimic. Picking an incompatible one will ca" +
+    "use crashes.";
+			// 
+			// rbEngineTS
+			// 
+			this.rbEngineTS.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+			this.rbEngineTS.AutoSize = true;
+			this.rbEngineTS.Location = new System.Drawing.Point(294, 40);
+			this.rbEngineTS.Name = "rbEngineTS";
+			this.rbEngineTS.Size = new System.Drawing.Size(69, 17);
+			this.rbEngineTS.TabIndex = 22;
+			this.rbEngineTS.TabStop = true;
+			this.rbEngineTS.Text = "Force TS";
+			this.rbEngineTS.UseVisualStyleBackColor = true;
+			this.rbEngineTS.CheckedChanged += new System.EventHandler(this.RbEngineCheckedChanged);
+			// 
+			// rbEngineAuto
+			// 
+			this.rbEngineAuto.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+			this.rbEngineAuto.AutoSize = true;
+			this.rbEngineAuto.Checked = true;
+			this.rbEngineAuto.Location = new System.Drawing.Point(13, 40);
+			this.rbEngineAuto.Name = "rbEngineAuto";
+			this.rbEngineAuto.Size = new System.Drawing.Size(82, 17);
+			this.rbEngineAuto.TabIndex = 18;
+			this.rbEngineAuto.TabStop = true;
+			this.rbEngineAuto.Text = "Auto Detect";
+			this.toolTip.SetToolTip(this.rbEngineAuto, resources.GetString("rbEngineAuto.ToolTip"));
+			this.rbEngineAuto.UseVisualStyleBackColor = true;
+			this.rbEngineAuto.CheckedChanged += new System.EventHandler(this.RbEngineCheckedChanged);
+			// 
+			// rbEngineYR
+			// 
+			this.rbEngineYR.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+			this.rbEngineYR.AutoSize = true;
+			this.rbEngineYR.Location = new System.Drawing.Point(110, 40);
+			this.rbEngineYR.Name = "rbEngineYR";
+			this.rbEngineYR.Size = new System.Drawing.Size(70, 17);
+			this.rbEngineYR.TabIndex = 19;
+			this.rbEngineYR.TabStop = true;
+			this.rbEngineYR.Text = "Force YR";
+			this.rbEngineYR.UseVisualStyleBackColor = true;
+			this.rbEngineYR.CheckedChanged += new System.EventHandler(this.RbEngineCheckedChanged);
+			// 
+			// rbEngineRA2
+			// 
+			this.rbEngineRA2.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+			this.rbEngineRA2.AutoSize = true;
+			this.rbEngineRA2.Location = new System.Drawing.Point(200, 40);
+			this.rbEngineRA2.Name = "rbEngineRA2";
+			this.rbEngineRA2.Size = new System.Drawing.Size(76, 17);
+			this.rbEngineRA2.TabIndex = 20;
+			this.rbEngineRA2.TabStop = true;
+			this.rbEngineRA2.Text = "Force RA2";
+			this.rbEngineRA2.UseVisualStyleBackColor = true;
+			this.rbEngineRA2.CheckedChanged += new System.EventHandler(this.RbEngineCheckedChanged);
+			// 
+			// gbModConfig
+			// 
+			this.gbModConfig.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+			this.gbModConfig.Controls.Add(this.btnModEditor);
+			this.gbModConfig.Controls.Add(this.tbModConfig);
+			this.gbModConfig.Controls.Add(this.ckbModConfig);
+			this.gbModConfig.Location = new System.Drawing.Point(13, 302);
+			this.gbModConfig.Name = "gbModConfig";
+			this.gbModConfig.Size = new System.Drawing.Size(566, 42);
+			this.gbModConfig.TabIndex = 44;
+			this.gbModConfig.TabStop = false;
+			// 
+			// btnModEditor
+			// 
+			this.btnModEditor.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+			this.btnModEditor.Location = new System.Drawing.Point(486, 13);
+			this.btnModEditor.Name = "btnModEditor";
+			this.btnModEditor.Size = new System.Drawing.Size(75, 20);
+			this.btnModEditor.TabIndex = 28;
+			this.btnModEditor.Text = "Open editor";
+			this.btnModEditor.UseVisualStyleBackColor = true;
+			this.btnModEditor.Click += new System.EventHandler(this.BtnModEditorClick);
+			// 
+			// tbModConfig
+			// 
+			this.tbModConfig.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+			this.tbModConfig.Location = new System.Drawing.Point(154, 13);
+			this.tbModConfig.Name = "tbModConfig";
+			this.tbModConfig.Size = new System.Drawing.Size(326, 20);
+			this.tbModConfig.TabIndex = 24;
+			this.tbModConfig.TextChanged += new System.EventHandler(this.UIChanged);
+			// 
+			// cbModConfig
+			// 
+			this.ckbModConfig.AutoSize = true;
+			this.ckbModConfig.Location = new System.Drawing.Point(8, 15);
+			this.ckbModConfig.Name = "ckbModConfig";
+			this.ckbModConfig.Size = new System.Drawing.Size(141, 17);
+			this.ckbModConfig.TabIndex = 26;
+			this.ckbModConfig.Text = "Load special mod config";
+			this.toolTip.SetToolTip(this.ckbModConfig, "Special mod configs allow you to specify precisely which extra directories, mixes" +
+        "\r\nand theater specific settings should be considered for your mod.");
+			this.ckbModConfig.UseVisualStyleBackColor = true;
+			this.ckbModConfig.CheckedChanged += new System.EventHandler(this.cbModConfig_CheckedChanged);
 			// 
 			// gbImageFormat
 			// 
+			this.gbImageFormat.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
 			this.gbImageFormat.Controls.Add(this.lblThumbSize);
 			this.gbImageFormat.Controls.Add(this.cbThumbPNG);
 			this.gbImageFormat.Controls.Add(this.cbPreserveThumbAspect);
@@ -627,10 +747,19 @@ namespace CNCMaps.GUI {
 			this.gbImageFormat.Controls.Add(this.nudCompression);
 			this.gbImageFormat.Location = new System.Drawing.Point(13, 67);
 			this.gbImageFormat.Name = "gbImageFormat";
-			this.gbImageFormat.Size = new System.Drawing.Size(740, 98);
+			this.gbImageFormat.Size = new System.Drawing.Size(566, 98);
 			this.gbImageFormat.TabIndex = 42;
 			this.gbImageFormat.TabStop = false;
 			this.gbImageFormat.Text = "Image output formats";
+			// 
+			// lblThumbSize
+			// 
+			this.lblThumbSize.AutoSize = true;
+			this.lblThumbSize.Location = new System.Drawing.Point(243, 73);
+			this.lblThumbSize.Name = "lblThumbSize";
+			this.lblThumbSize.Size = new System.Drawing.Size(77, 13);
+			this.lblThumbSize.TabIndex = 14;
+			this.lblThumbSize.Text = "Thumbnail size";
 			// 
 			// cbThumbPNG
 			// 
@@ -651,7 +780,7 @@ namespace CNCMaps.GUI {
 			this.cbPreserveThumbAspect.AutoSize = true;
 			this.cbPreserveThumbAspect.Checked = true;
 			this.cbPreserveThumbAspect.CheckState = System.Windows.Forms.CheckState.Checked;
-			this.cbPreserveThumbAspect.Location = new System.Drawing.Point(422, 72);
+			this.cbPreserveThumbAspect.Location = new System.Drawing.Point(432, 72);
 			this.cbPreserveThumbAspect.Name = "cbPreserveThumbAspect";
 			this.cbPreserveThumbAspect.Size = new System.Drawing.Size(126, 17);
 			this.cbPreserveThumbAspect.TabIndex = 10;
@@ -662,11 +791,9 @@ namespace CNCMaps.GUI {
 			// 
 			// tbThumbDimensions
 			// 
-			this.tbThumbDimensions.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
 			this.tbThumbDimensions.Location = new System.Drawing.Point(326, 70);
 			this.tbThumbDimensions.Name = "tbThumbDimensions";
-			this.tbThumbDimensions.Size = new System.Drawing.Size(85, 20);
+			this.tbThumbDimensions.Size = new System.Drawing.Size(100, 20);
 			this.tbThumbDimensions.TabIndex = 9;
 			this.tbThumbDimensions.Text = "800,0";
 			// 
@@ -762,89 +889,13 @@ namespace CNCMaps.GUI {
             0});
 			this.nudCompression.ValueChanged += new System.EventHandler(this.UIChanged);
 			// 
-			// rbEngineFS
-			// 
-			this.rbEngineFS.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-			this.rbEngineFS.AutoSize = true;
-			this.rbEngineFS.Location = new System.Drawing.Point(385, 40);
-			this.rbEngineFS.Name = "rbEngineFS";
-			this.rbEngineFS.Size = new System.Drawing.Size(68, 17);
-			this.rbEngineFS.TabIndex = 24;
-			this.rbEngineFS.TabStop = true;
-			this.rbEngineFS.Text = "Force FS";
-			this.rbEngineFS.UseVisualStyleBackColor = true;
-			this.rbEngineFS.CheckedChanged += new System.EventHandler(this.RbEngineCheckedChanged);
-			// 
-			// rbEngineTS
-			// 
-			this.rbEngineTS.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-			this.rbEngineTS.AutoSize = true;
-			this.rbEngineTS.Location = new System.Drawing.Point(294, 40);
-			this.rbEngineTS.Name = "rbEngineTS";
-			this.rbEngineTS.Size = new System.Drawing.Size(69, 17);
-			this.rbEngineTS.TabIndex = 22;
-			this.rbEngineTS.TabStop = true;
-			this.rbEngineTS.Text = "Force TS";
-			this.rbEngineTS.UseVisualStyleBackColor = true;
-			this.rbEngineTS.CheckedChanged += new System.EventHandler(this.RbEngineCheckedChanged);
-			// 
-			// rbEngineAuto
-			// 
-			this.rbEngineAuto.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-			this.rbEngineAuto.AutoSize = true;
-			this.rbEngineAuto.Checked = true;
-			this.rbEngineAuto.Location = new System.Drawing.Point(13, 40);
-			this.rbEngineAuto.Name = "rbEngineAuto";
-			this.rbEngineAuto.Size = new System.Drawing.Size(82, 17);
-			this.rbEngineAuto.TabIndex = 18;
-			this.rbEngineAuto.TabStop = true;
-			this.rbEngineAuto.Text = "Auto Detect";
-			this.toolTip.SetToolTip(this.rbEngineAuto, resources.GetString("rbEngineAuto.ToolTip"));
-			this.rbEngineAuto.UseVisualStyleBackColor = true;
-			this.rbEngineAuto.CheckedChanged += new System.EventHandler(this.RbEngineCheckedChanged);
-			// 
-			// rbEngineRA2
-			// 
-			this.rbEngineRA2.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-			this.rbEngineRA2.AutoSize = true;
-			this.rbEngineRA2.Location = new System.Drawing.Point(200, 40);
-			this.rbEngineRA2.Name = "rbEngineRA2";
-			this.rbEngineRA2.Size = new System.Drawing.Size(76, 17);
-			this.rbEngineRA2.TabIndex = 20;
-			this.rbEngineRA2.TabStop = true;
-			this.rbEngineRA2.Text = "Force RA2";
-			this.rbEngineRA2.UseVisualStyleBackColor = true;
-			this.rbEngineRA2.CheckedChanged += new System.EventHandler(this.RbEngineCheckedChanged);
-			// 
-			// rbEngineYR
-			// 
-			this.rbEngineYR.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-			this.rbEngineYR.AutoSize = true;
-			this.rbEngineYR.Location = new System.Drawing.Point(110, 40);
-			this.rbEngineYR.Name = "rbEngineYR";
-			this.rbEngineYR.Size = new System.Drawing.Size(70, 17);
-			this.rbEngineYR.TabIndex = 19;
-			this.rbEngineYR.TabStop = true;
-			this.rbEngineYR.Text = "Force YR";
-			this.rbEngineYR.UseVisualStyleBackColor = true;
-			this.rbEngineYR.CheckedChanged += new System.EventHandler(this.RbEngineCheckedChanged);
-			// 
-			// lbEngine
-			// 
-			this.lbEngine.Location = new System.Drawing.Point(12, 21);
-			this.lbEngine.Name = "lbEngine";
-			this.lbEngine.Size = new System.Drawing.Size(487, 16);
-			this.lbEngine.TabIndex = 40;
-			this.lbEngine.Text = "This instructs program which engine to mimic. Picking an incompatible one will ca" +
-    "use crashes.";
-			// 
 			// tbMixDir
 			// 
 			this.tbMixDir.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
 			this.tbMixDir.Location = new System.Drawing.Point(94, 44);
 			this.tbMixDir.Name = "tbMixDir";
-			this.tbMixDir.Size = new System.Drawing.Size(579, 20);
+			this.tbMixDir.Size = new System.Drawing.Size(399, 20);
 			this.tbMixDir.TabIndex = 4;
 			this.tbMixDir.TextChanged += new System.EventHandler(this.UIChanged);
 			// 
@@ -863,7 +914,7 @@ namespace CNCMaps.GUI {
 			// btnBrowseMixDir
 			// 
 			this.btnBrowseMixDir.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-			this.btnBrowseMixDir.Location = new System.Drawing.Point(681, 44);
+			this.btnBrowseMixDir.Location = new System.Drawing.Point(501, 44);
 			this.btnBrowseMixDir.Name = "btnBrowseMixDir";
 			this.btnBrowseMixDir.Size = new System.Drawing.Size(75, 20);
 			this.btnBrowseMixDir.TabIndex = 5;
@@ -877,7 +928,7 @@ namespace CNCMaps.GUI {
             | System.Windows.Forms.AnchorStyles.Right)));
 			this.tbInput.Location = new System.Drawing.Point(94, 18);
 			this.tbInput.Name = "tbInput";
-			this.tbInput.Size = new System.Drawing.Size(579, 20);
+			this.tbInput.Size = new System.Drawing.Size(399, 20);
 			this.tbInput.TabIndex = 1;
 			this.tbInput.TextChanged += new System.EventHandler(this.UIChanged);
 			// 
@@ -895,7 +946,7 @@ namespace CNCMaps.GUI {
 			// btnBrowseInput
 			// 
 			this.btnBrowseInput.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-			this.btnBrowseInput.Location = new System.Drawing.Point(681, 17);
+			this.btnBrowseInput.Location = new System.Drawing.Point(501, 17);
 			this.btnBrowseInput.Name = "btnBrowseInput";
 			this.btnBrowseInput.Size = new System.Drawing.Size(75, 20);
 			this.btnBrowseInput.TabIndex = 2;
@@ -906,7 +957,7 @@ namespace CNCMaps.GUI {
 			// btnRenderExecute
 			// 
 			this.btnRenderExecute.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-			this.btnRenderExecute.Location = new System.Drawing.Point(690, 383);
+			this.btnRenderExecute.Location = new System.Drawing.Point(499, 405);
 			this.btnRenderExecute.Name = "btnRenderExecute";
 			this.btnRenderExecute.Size = new System.Drawing.Size(75, 23);
 			this.btnRenderExecute.TabIndex = 32;
@@ -919,11 +970,11 @@ namespace CNCMaps.GUI {
 			this.tbCommandPreview.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
 			this.tbCommandPreview.BackColor = System.Drawing.SystemColors.ControlLight;
-			this.tbCommandPreview.Location = new System.Drawing.Point(73, 371);
+			this.tbCommandPreview.Location = new System.Drawing.Point(73, 376);
 			this.tbCommandPreview.Multiline = true;
 			this.tbCommandPreview.Name = "tbCommandPreview";
 			this.tbCommandPreview.ReadOnly = true;
-			this.tbCommandPreview.Size = new System.Drawing.Size(612, 52);
+			this.tbCommandPreview.Size = new System.Drawing.Size(410, 52);
 			this.tbCommandPreview.TabIndex = 30;
 			this.toolTip.SetToolTip(this.tbCommandPreview, "For more fine-grained control you can invoke CNCMaps.Renderer.exe manually!");
 			// 
@@ -937,9 +988,9 @@ namespace CNCMaps.GUI {
             this.lblStatus,
             this.lblFill,
             this.pbProgress});
-			this.statusStrip.Location = new System.Drawing.Point(0, 473);
+			this.statusStrip.Location = new System.Drawing.Point(0, 478);
 			this.statusStrip.Name = "statusStrip";
-			this.statusStrip.Size = new System.Drawing.Size(795, 22);
+			this.statusStrip.Size = new System.Drawing.Size(615, 22);
 			this.statusStrip.TabIndex = 7;
 			this.statusStrip.Text = "statusStrip1";
 			// 
@@ -952,7 +1003,7 @@ namespace CNCMaps.GUI {
 			// lblFill
 			// 
 			this.lblFill.Name = "lblFill";
-			this.lblFill.Size = new System.Drawing.Size(636, 17);
+			this.lblFill.Size = new System.Drawing.Size(456, 17);
 			this.lblFill.Spring = true;
 			// 
 			// pbProgress
@@ -986,7 +1037,7 @@ namespace CNCMaps.GUI {
 			this.tabControl.Location = new System.Drawing.Point(3, 4);
 			this.tabControl.Name = "tabControl";
 			this.tabControl.SelectedIndex = 0;
-			this.tabControl.Size = new System.Drawing.Size(792, 455);
+			this.tabControl.Size = new System.Drawing.Size(612, 460);
 			this.tabControl.TabIndex = 8;
 			this.tabControl.DragDrop += new System.Windows.Forms.DragEventHandler(this.InputDragDrop);
 			this.tabControl.DragEnter += new System.Windows.Forms.DragEventHandler(this.InputDragEnter);
@@ -1000,7 +1051,7 @@ namespace CNCMaps.GUI {
 			this.tpMain.Location = new System.Drawing.Point(4, 22);
 			this.tpMain.Name = "tpMain";
 			this.tpMain.Padding = new System.Windows.Forms.Padding(3);
-			this.tpMain.Size = new System.Drawing.Size(784, 429);
+			this.tpMain.Size = new System.Drawing.Size(604, 434);
 			this.tpMain.TabIndex = 0;
 			this.tpMain.Text = "Main settings";
 			this.tpMain.UseVisualStyleBackColor = true;
@@ -1008,7 +1059,7 @@ namespace CNCMaps.GUI {
 			// lblCommand
 			// 
 			this.lblCommand.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-			this.lblCommand.Location = new System.Drawing.Point(13, 384);
+			this.lblCommand.Location = new System.Drawing.Point(13, 389);
 			this.lblCommand.Name = "lblCommand";
 			this.lblCommand.Size = new System.Drawing.Size(54, 21);
 			this.lblCommand.TabIndex = 0;
@@ -1020,7 +1071,7 @@ namespace CNCMaps.GUI {
 			this.tpMisc.Location = new System.Drawing.Point(4, 22);
 			this.tpMisc.Name = "tpMisc";
 			this.tpMisc.Padding = new System.Windows.Forms.Padding(3);
-			this.tpMisc.Size = new System.Drawing.Size(784, 429);
+			this.tpMisc.Size = new System.Drawing.Size(604, 434);
 			this.tpMisc.TabIndex = 1;
 			this.tpMisc.Text = "Misc settings";
 			this.tpMisc.UseVisualStyleBackColor = true;
@@ -1031,7 +1082,7 @@ namespace CNCMaps.GUI {
 			this.tpBatch.Location = new System.Drawing.Point(4, 22);
 			this.tpBatch.Name = "tpBatch";
 			this.tpBatch.Padding = new System.Windows.Forms.Padding(3);
-			this.tpBatch.Size = new System.Drawing.Size(784, 429);
+			this.tpBatch.Size = new System.Drawing.Size(604, 434);
 			this.tpBatch.TabIndex = 4;
 			this.tpBatch.Text = "Batch process";
 			this.tpBatch.UseVisualStyleBackColor = true;
@@ -1049,7 +1100,7 @@ namespace CNCMaps.GUI {
 			this.gbBatchRender.Controls.Add(this.btnBrowseMaps);
 			this.gbBatchRender.Location = new System.Drawing.Point(6, 6);
 			this.gbBatchRender.Name = "gbBatchRender";
-			this.gbBatchRender.Size = new System.Drawing.Size(771, 417);
+			this.gbBatchRender.Size = new System.Drawing.Size(592, 417);
 			this.gbBatchRender.TabIndex = 1;
 			this.gbBatchRender.TabStop = false;
 			this.gbBatchRender.Text = "Batch processing";
@@ -1059,7 +1110,7 @@ namespace CNCMaps.GUI {
 			// btnBatchRender
 			// 
 			this.btnBatchRender.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-			this.btnBatchRender.Location = new System.Drawing.Point(609, 388);
+			this.btnBatchRender.Location = new System.Drawing.Point(430, 388);
 			this.btnBatchRender.Name = "btnBatchRender";
 			this.btnBatchRender.Size = new System.Drawing.Size(156, 23);
 			this.btnBatchRender.TabIndex = 33;
@@ -1070,7 +1121,7 @@ namespace CNCMaps.GUI {
 			// btnClearList
 			// 
 			this.btnClearList.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-			this.btnClearList.Location = new System.Drawing.Point(690, 70);
+			this.btnClearList.Location = new System.Drawing.Point(511, 70);
 			this.btnClearList.Name = "btnClearList";
 			this.btnClearList.Size = new System.Drawing.Size(75, 21);
 			this.btnClearList.TabIndex = 4;
@@ -1095,13 +1146,13 @@ namespace CNCMaps.GUI {
 			this.tbBatchInput.Multiline = true;
 			this.tbBatchInput.Name = "tbBatchInput";
 			this.tbBatchInput.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-			this.tbBatchInput.Size = new System.Drawing.Size(752, 287);
+			this.tbBatchInput.Size = new System.Drawing.Size(566, 287);
 			this.tbBatchInput.TabIndex = 1;
 			// 
 			// btnBrowseMaps
 			// 
 			this.btnBrowseMaps.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-			this.btnBrowseMaps.Location = new System.Drawing.Point(609, 70);
+			this.btnBrowseMaps.Location = new System.Drawing.Point(430, 70);
 			this.btnBrowseMaps.Name = "btnBrowseMaps";
 			this.btnBrowseMaps.Size = new System.Drawing.Size(75, 21);
 			this.btnBrowseMaps.TabIndex = 2;
@@ -1111,11 +1162,10 @@ namespace CNCMaps.GUI {
 			// 
 			// tpLog
 			// 
-			this.tpLog.Controls.Add(this.btnClearLog);
 			this.tpLog.Controls.Add(this.gbLog);
 			this.tpLog.Location = new System.Drawing.Point(4, 22);
 			this.tpLog.Name = "tpLog";
-			this.tpLog.Size = new System.Drawing.Size(784, 429);
+			this.tpLog.Size = new System.Drawing.Size(604, 434);
 			this.tpLog.TabIndex = 2;
 			this.tpLog.Text = "Log";
 			this.tpLog.UseVisualStyleBackColor = true;
@@ -1123,7 +1173,7 @@ namespace CNCMaps.GUI {
 			// btnClearLog
 			// 
 			this.btnClearLog.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-			this.btnClearLog.Location = new System.Drawing.Point(706, 399);
+			this.btnClearLog.Location = new System.Drawing.Point(483, 392);
 			this.btnClearLog.Name = "btnClearLog";
 			this.btnClearLog.Size = new System.Drawing.Size(64, 22);
 			this.btnClearLog.TabIndex = 8;
@@ -1136,10 +1186,11 @@ namespace CNCMaps.GUI {
 			this.gbLog.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
+			this.gbLog.Controls.Add(this.btnClearLog);
 			this.gbLog.Controls.Add(this.rtbLog);
 			this.gbLog.Location = new System.Drawing.Point(6, 6);
 			this.gbLog.Name = "gbLog";
-			this.gbLog.Size = new System.Drawing.Size(770, 420);
+			this.gbLog.Size = new System.Drawing.Size(590, 420);
 			this.gbLog.TabIndex = 7;
 			this.gbLog.TabStop = false;
 			this.gbLog.Text = "Log";
@@ -1154,7 +1205,7 @@ namespace CNCMaps.GUI {
 			this.rtbLog.Name = "rtbLog";
 			this.rtbLog.ReadOnly = true;
 			this.rtbLog.ScrollBars = System.Windows.Forms.RichTextBoxScrollBars.ForcedVertical;
-			this.rtbLog.Size = new System.Drawing.Size(751, 364);
+			this.rtbLog.Size = new System.Drawing.Size(571, 364);
 			this.rtbLog.TabIndex = 0;
 			this.rtbLog.Text = "";
 			this.rtbLog.LinkClicked += new System.Windows.Forms.LinkClickedEventHandler(this.rtbLog_LinkClicked);
@@ -1168,7 +1219,7 @@ namespace CNCMaps.GUI {
 			this.tpAbout.Location = new System.Drawing.Point(4, 22);
 			this.tpAbout.Name = "tpAbout";
 			this.tpAbout.Padding = new System.Windows.Forms.Padding(3);
-			this.tpAbout.Size = new System.Drawing.Size(784, 429);
+			this.tpAbout.Size = new System.Drawing.Size(604, 434);
 			this.tpAbout.TabIndex = 3;
 			this.tpAbout.Text = "About";
 			this.tpAbout.UseVisualStyleBackColor = true;
@@ -1207,67 +1258,16 @@ namespace CNCMaps.GUI {
 			this.lblCopyright.Text = resources.GetString("lblCopyright.Text");
 			this.lblCopyright.UseCompatibleTextRendering = true;
 			// 
-			// groupBox1
-			// 
-			this.groupBox1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-			this.groupBox1.Controls.Add(this.rbEngineFS);
-			this.groupBox1.Controls.Add(this.lbEngine);
-			this.groupBox1.Controls.Add(this.rbEngineTS);
-			this.groupBox1.Controls.Add(this.rbEngineAuto);
-			this.groupBox1.Controls.Add(this.rbEngineYR);
-			this.groupBox1.Controls.Add(this.rbEngineRA2);
-			this.groupBox1.Location = new System.Drawing.Point(13, 232);
-			this.groupBox1.Name = "groupBox1";
-			this.groupBox1.Size = new System.Drawing.Size(746, 68);
-			this.groupBox1.TabIndex = 45;
-			this.groupBox1.TabStop = false;
-			this.groupBox1.Text = "Engine mode";
-			// 
-			// gbFileName
-			// 
-			this.gbFileName.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-			this.gbFileName.Controls.Add(this.rbUseFilename);
-			this.gbFileName.Controls.Add(this.tbCustomOutput);
-			this.gbFileName.Controls.Add(this.rbAutoFilename);
-			this.gbFileName.Controls.Add(this.rbCustomFilename);
-			this.gbFileName.Location = new System.Drawing.Point(13, 171);
-			this.gbFileName.Name = "gbFileName";
-			this.gbFileName.Size = new System.Drawing.Size(746, 53);
-			this.gbFileName.TabIndex = 46;
-			this.gbFileName.TabStop = false;
-			this.gbFileName.Text = "Output file naming";
-			// 
-			// lblThumbSize
-			// 
-			this.lblThumbSize.AutoSize = true;
-			this.lblThumbSize.Location = new System.Drawing.Point(243, 73);
-			this.lblThumbSize.Name = "lblThumbSize";
-			this.lblThumbSize.Size = new System.Drawing.Size(77, 13);
-			this.lblThumbSize.TabIndex = 14;
-			this.lblThumbSize.Text = "Thumbnail size";
-			// 
-			// lblMiscHeader
-			// 
-			this.lblMiscHeader.AutoSize = true;
-			this.lblMiscHeader.Location = new System.Drawing.Point(13, 23);
-			this.lblMiscHeader.Name = "lblMiscHeader";
-			this.lblMiscHeader.Size = new System.Drawing.Size(437, 26);
-			this.lblMiscHeader.TabIndex = 39;
-			this.lblMiscHeader.Text = "Switches that affect the rendering process and enable map modifications are detai" +
-    "led here. \r\nTooltips provide additional information when hovering over them.";
-			// 
 			// MainForm
 			// 
 			this.AllowDrop = true;
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-			this.ClientSize = new System.Drawing.Size(795, 495);
+			this.ClientSize = new System.Drawing.Size(615, 500);
 			this.Controls.Add(this.tabControl);
 			this.Controls.Add(this.statusStrip);
 			this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
-			this.MinimumSize = new System.Drawing.Size(811, 534);
+			this.MinimumSize = new System.Drawing.Size(631, 539);
 			this.Name = "MainForm";
 			this.Text = "Red Alert 2 and Tiberian Sun map renderer";
 			this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.MainFormClosing);
@@ -1286,6 +1286,10 @@ namespace CNCMaps.GUI {
 			this.gbThumbs.PerformLayout();
 			this.gbInputOutput.ResumeLayout(false);
 			this.gbInputOutput.PerformLayout();
+			this.gbFileName.ResumeLayout(false);
+			this.gbFileName.PerformLayout();
+			this.groupBox1.ResumeLayout(false);
+			this.groupBox1.PerformLayout();
 			this.gbModConfig.ResumeLayout(false);
 			this.gbModConfig.PerformLayout();
 			this.gbImageFormat.ResumeLayout(false);
@@ -1305,10 +1309,6 @@ namespace CNCMaps.GUI {
 			this.gbLog.ResumeLayout(false);
 			this.tpAbout.ResumeLayout(false);
 			this.tpAbout.PerformLayout();
-			this.groupBox1.ResumeLayout(false);
-			this.groupBox1.PerformLayout();
-			this.gbFileName.ResumeLayout(false);
-			this.gbFileName.PerformLayout();
 			this.ResumeLayout(false);
 			this.PerformLayout();
 
@@ -1346,7 +1346,7 @@ namespace CNCMaps.GUI {
 		private System.Windows.Forms.ToolStripProgressBar pbProgress;
 		private System.Windows.Forms.ToolStripStatusLabel lblStatus;
 		private System.Windows.Forms.TextBox tbModConfig;
-		private System.Windows.Forms.CheckBox cbModConfig;
+		private System.Windows.Forms.CheckBox ckbModConfig;
 		private System.Windows.Forms.ToolTip toolTip;
 		private System.Windows.Forms.Button btnModEditor;
 		private System.Windows.Forms.TabPage tpMisc;
