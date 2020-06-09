@@ -106,15 +106,11 @@ namespace CNCMaps.Engine {
 
 					vfs.LoadMixes(_settings.Engine);
 
-					double markerStartSize = 4.0;
-					if (double.TryParse(_settings.MarkStartSize, NumberStyles.Number,
-						CultureInfo.CreateSpecificCulture("en-US"), out markerStartSize))
-						markerStartSize = Math.Abs(markerStartSize);
 
 					var map = new Map.Map {
 						IgnoreLighting = _settings.IgnoreLighting,
 						StartPosMarking = _settings.StartPositionMarking,
-						StartMarkerSize = markerStartSize,
+						StartMarkerSize = _settings.MarkerStartSize,
 						MarkOreFields = _settings.MarkOreFields
 					};
 
@@ -135,7 +131,7 @@ namespace CNCMaps.Engine {
 						map.MarkOreAndGems();
 
 					if ((_settings.GeneratePreviewPack || _settings.FixupTiles || _settings.FixOverlays ||
-					     _settings.CompressTiles) && _settings.Backup) {
+						 _settings.CompressTiles) && _settings.Backup) {
 						if (mapFile.BaseStream is MixFile)
 							_logger.Error("Cannot generate a map file backup into an archive (.mmx/.yro/.mix)!");
 						else {
@@ -171,19 +167,19 @@ namespace CNCMaps.Engine {
 						map.PlotTunnels(_settings.TunnelPosition);
 
 					if (_settings.MarkStartPos && (_settings.StartPositionMarking == StartPositionMarking.Squared ||
-					                               _settings.StartPositionMarking == StartPositionMarking.Circled ||
-					                               _settings.StartPositionMarking == StartPositionMarking.Diamond ||
-					                               _settings.StartPositionMarking == StartPositionMarking.Ellipsed ||
-					                               _settings.StartPositionMarking == StartPositionMarking.Starred))
+												   _settings.StartPositionMarking == StartPositionMarking.Circled ||
+												   _settings.StartPositionMarking == StartPositionMarking.Diamond ||
+												   _settings.StartPositionMarking == StartPositionMarking.Ellipsed ||
+												   _settings.StartPositionMarking == StartPositionMarking.Starred))
 						map.DrawStartPositions();
 
-					if (_settings.DiagnosticWindow) {
-						using (var form = new DebugDrawingSurfaceWindow(map.GetDrawingSurface(), map.GetTiles(),
-							map.GetTheater(), map)) {
-							form.RequestTileEvaluate += map.DebugDrawTile;
-							form.ShowDialog();
-						}
+				if (_settings.DiagnosticWindow) {
+					using (var form = new DebugDrawingSurfaceWindow(map.GetDrawingSurface(), map.GetTiles(),
+						map.GetTheater(), map)) {
+						form.RequestTileEvaluate += map.DebugDrawTile;
+						form.ShowDialog();
 					}
+				}
 
 					if (_settings.OutputFile == "")
 						_settings.OutputFile = DetermineMapName(mapFile, _settings.Engine, vfs);
@@ -191,86 +187,85 @@ namespace CNCMaps.Engine {
 					if (_settings.OutputDir == "")
 						_settings.OutputDir = Path.GetDirectoryName(_settings.InputFile);
 
-					// free up as much memory as possible before saving the large images
-					Rectangle saveRect = map.GetSizePixels(_settings.SizeMode);
-					DrawingSurface ds = map.GetDrawingSurface();
-					saveRect.Intersect(new Rectangle(0, 0, ds.Width, ds.Height));
-					// if we don't need this data anymore, we can try to save some memory
-					if (!_settings.GeneratePreviewPack) {
-						ds.FreeNonBitmap();
-						map.FreeUseless();
-						GC.Collect();
-					}
+				// free up as much memory as possible before saving the large images
+				Rectangle saveRect = map.GetSizePixels(_settings.SizeMode);
+				DrawingSurface ds = map.GetDrawingSurface();
+				saveRect.Intersect(new Rectangle(0, 0, ds.Width, ds.Height));
+				// if we don't need this data anymore, we can try to save some memory
+				if (!_settings.GeneratePreviewPack) {
+					ds.FreeNonBitmap();
+					map.FreeUseless();
+					GC.Collect();
+				}
 
-					if (_settings.SaveJPEG)
-						ds.SaveJPEG(Path.Combine(_settings.OutputDir, _settings.OutputFile + ".jpg"),
-							_settings.JPEGCompression, saveRect);
+				if (_settings.SaveJPEG)
+					ds.SaveJPEG(Path.Combine(_settings.OutputDir, _settings.OutputFile + ".jpg"),
+						_settings.JPEGCompression, saveRect);
 
-					if (_settings.SavePNG)
-						ds.SavePNG(Path.Combine(_settings.OutputDir, _settings.OutputFile + ".png"),
-							_settings.PNGQuality, saveRect);
+				if (_settings.SavePNG)
+					ds.SavePNG(Path.Combine(_settings.OutputDir, _settings.OutputFile + ".png"),
+						_settings.PNGQuality, saveRect);
 
-					Regex reThumb = new Regex(@"(\+|)?\((\d+),(\d+)\)");
-					var match = reThumb.Match(_settings.ThumbnailConfig);
-					if (match.Success) {
-						Size dimensions = new Size(
+				Regex reThumb = new Regex(@"(\+|)?\((\d+),(\d+)\)");
+				var match = reThumb.Match(_settings.ThumbnailConfig);
+				if (match.Success) {
+					Size dimensions = new Size(
 							int.Parse(match.Groups[2].Captures[0].Value),
 							int.Parse(match.Groups[3].Captures[0].Value));
-						var cutRect = map.GetSizePixels(_settings.SizeMode);
+					var cutRect = map.GetSizePixels(_settings.SizeMode);
 
-						if (match.Groups[1].Captures[0].Value == "+") {
-							// + means maintain aspect ratio
+					if (match.Groups[1].Captures[0].Value == "+") {
+						// + means maintain aspect ratio
 
-							if (dimensions.Width > 0 && dimensions.Height > 0) {
-								float scaleHeight = (float)dimensions.Height / (float)cutRect.Height;
-								float scaleWidth = (float)dimensions.Width / (float)cutRect.Width;
-								float scale = Math.Min(scaleHeight, scaleWidth);
-								dimensions.Width = Math.Max((int)(cutRect.Width * scale), 1);
-								dimensions.Height = Math.Max((int)(cutRect.Height * scale), 1);
-							}
-							else {
-								double aspectRatio = cutRect.Width / (double)cutRect.Height;
-								if (dimensions.Width / (double)dimensions.Height > aspectRatio) {
-									dimensions.Height = (int)(dimensions.Width / aspectRatio);
-								}
-								else {
-									dimensions.Width = (int)(dimensions.Height * aspectRatio);
-								}
-							}
-						}
-
-						_logger.Info("Saving thumbnail with dimensions {0}x{1}", dimensions.Width, dimensions.Height);
-
-						if (!_settings.SavePNGThumbnails) {
-							ds.SaveThumb(dimensions, cutRect,
-								Path.Combine(_settings.OutputDir, "thumb_" + _settings.OutputFile + ".jpg"));
+						if (dimensions.Width > 0 && dimensions.Height > 0) {
+							float scaleHeight = (float)dimensions.Height / (float)cutRect.Height;
+							float scaleWidth = (float)dimensions.Width / (float)cutRect.Width;
+							float scale = Math.Min(scaleHeight, scaleWidth);
+							dimensions.Width = Math.Max((int)(cutRect.Width * scale), 1);
+							dimensions.Height = Math.Max((int)(cutRect.Height * scale), 1);
 						}
 						else {
-							ds.SaveThumb(dimensions, cutRect,
-								Path.Combine(_settings.OutputDir, "thumb_" + _settings.OutputFile + ".png"), true);
+							double aspectRatio = cutRect.Width / (double)cutRect.Height;
+							if (dimensions.Width / (double)dimensions.Height > aspectRatio) {
+								dimensions.Height = (int)(dimensions.Width / aspectRatio);
+							}
+							else {
+								dimensions.Width = (int)(dimensions.Height * aspectRatio);
+							}
 						}
 					}
 
-					if (_settings.GeneratePreviewPack || _settings.FixupTiles || _settings.FixOverlays ||
-					    _settings.CompressTiles) {
-						if (mapFile.BaseStream is MixFile)
-							_logger.Error(
-								"Cannot fix tile layer or inject thumbnail into an archive (.mmx/.yro/.mix)!");
-						else {
-							if (_settings.GeneratePreviewPack)
-								map.GeneratePreviewPack(_settings.PreviewMarkers, _settings.SizeMode, mapFile,
-									_settings.FixPreviewDimensions);
+					_logger.Info("Saving thumbnail with dimensions {0}x{1}", dimensions.Width, dimensions.Height);
 
-							if (_settings.FixOverlays)
-								map.FixupOverlays(); // fixing is done earlier, it now creates overlay and its data pack
+					if (!_settings.SavePNGThumbnails) {
+						ds.SaveThumb(dimensions, cutRect,
+							Path.Combine(_settings.OutputDir, "thumb_" + _settings.OutputFile + ".jpg"));
+					}
+					else {
+						ds.SaveThumb(dimensions, cutRect,
+							Path.Combine(_settings.OutputDir, "thumb_" + _settings.OutputFile + ".png"), true);
+					}
+				}
 
-							// Keep this last in tiles manipulation
-							if (_settings.CompressTiles)
-								map.CompressIsoMapPack5();
+				if (_settings.GeneratePreviewPack || _settings.FixupTiles || _settings.FixOverlays ||
+					_settings.CompressTiles) {
+					if (mapFile.BaseStream is MixFile)
+						_logger.Error(
+							"Cannot fix tile layer or inject thumbnail into an archive (.mmx/.yro/.mix)!");
+					else {
+						if (_settings.GeneratePreviewPack)
+							map.GeneratePreviewPack(_settings.PreviewMarkers, _settings.SizeMode, mapFile,
+								_settings.FixPreviewDimensions);
 
-							_logger.Info("Saving map to " + _settings.InputFile);
-							mapFile.Save(_settings.InputFile);
-						}
+						if (_settings.FixOverlays)
+							map.FixupOverlays(); // fixing is done earlier, it now creates overlay and its data pack
+
+						// Keep this last in tiles manipulation
+						if (_settings.CompressTiles)
+							map.CompressIsoMapPack5();
+
+						_logger.Info("Saving map to " + _settings.InputFile);
+						mapFile.Save(_settings.InputFile);
 					}
 				}
 			}

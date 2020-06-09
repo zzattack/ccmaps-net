@@ -39,7 +39,7 @@ namespace CNCMaps.GUI {
 			this.cbStartMarkers = new System.Windows.Forms.CheckBox();
 			this.lblMarkerSize = new System.Windows.Forms.Label();
 			this.lblStartMarkerType = new System.Windows.Forms.Label();
-			this.cmbMarkerSize = new System.Windows.Forms.ComboBox();
+			this.cbMarkerSize = new System.Windows.Forms.ComboBox();
 			this.cmbStartMarkers = new System.Windows.Forms.ComboBox();
 			this.lblSquaredStartPosDescription = new System.Windows.Forms.Label();
 			this.gbSizeMode = new System.Windows.Forms.GroupBox();
@@ -257,7 +257,7 @@ namespace CNCMaps.GUI {
 			this.gbStartMarkers.Controls.Add(this.cbStartMarkers);
 			this.gbStartMarkers.Controls.Add(this.lblMarkerSize);
 			this.gbStartMarkers.Controls.Add(this.lblStartMarkerType);
-			this.gbStartMarkers.Controls.Add(this.cmbMarkerSize);
+			this.gbStartMarkers.Controls.Add(this.cbMarkerSize);
 			this.gbStartMarkers.Controls.Add(this.cmbStartMarkers);
 			this.gbStartMarkers.Controls.Add(this.lblSquaredStartPosDescription);
 			this.gbStartMarkers.Location = new System.Drawing.Point(13, 58);
@@ -299,19 +299,19 @@ namespace CNCMaps.GUI {
 			// 
 			// cmbMarkerSize
 			// 
-			this.cmbMarkerSize.FormattingEnabled = true;
-			this.cmbMarkerSize.Items.AddRange(new object[] {
+			this.cbMarkerSize.FormattingEnabled = true;
+			this.cbMarkerSize.Items.AddRange(new object[] {
             "2",
             "3",
             "4",
             "5",
             "6"});
-			this.cmbMarkerSize.Location = new System.Drawing.Point(449, 58);
-			this.cmbMarkerSize.Name = "cmbMarkerSize";
-			this.cmbMarkerSize.Size = new System.Drawing.Size(59, 21);
-			this.cmbMarkerSize.TabIndex = 10;
-			this.cmbMarkerSize.Text = "4";
-			this.cmbMarkerSize.SelectedIndexChanged += new System.EventHandler(this.cmbMarkerSize_SelectedIndexChanged);
+			this.cbMarkerSize.Location = new System.Drawing.Point(449, 58);
+			this.cbMarkerSize.Name = "cbMarkerSize";
+			this.cbMarkerSize.Size = new System.Drawing.Size(59, 21);
+			this.cbMarkerSize.TabIndex = 10;
+			this.cbMarkerSize.Text = "4";
+			this.cbMarkerSize.SelectedIndexChanged += new System.EventHandler(this.cmbMarkerSize_SelectedIndexChanged);
 			// 
 			// cmbStartMarkers
 			// 
@@ -1388,7 +1388,7 @@ namespace CNCMaps.GUI {
 		private GroupBox gbStartMarkers;
 		private Label lblMarkerSize;
 		private Label lblStartMarkerType;
-		private ComboBox cmbMarkerSize;
+		private ComboBox cbMarkerSize;
 		private ComboBox cmbStartMarkers;
 		private Label lblSquaredStartPosDescription;
 		private CheckBox cbStartMarkers;

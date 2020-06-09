@@ -111,7 +111,7 @@ namespace CNCMaps.GUI {
 
 			cbStartMarkers.Checked = Settings.Default.startmarker;
 			cmbStartMarkers.Text = Settings.Default.startmarkertype;
-			cmbMarkerSize.Text = Settings.Default.startmarkersize;
+			cbMarkerSize.Text = Settings.Default.startmarkersize;
 			cbReplacePreview.Checked = Settings.Default.injectthumb;
 			cbMarkersType.Text = Settings.Default.markers;
 
@@ -167,7 +167,7 @@ namespace CNCMaps.GUI {
 
 			Settings.Default.startmarker = cbStartMarkers.Checked;
 			Settings.Default.startmarkertype = cmbStartMarkers.Text;
-			Settings.Default.startmarkersize = cmbMarkerSize.Text;
+			Settings.Default.startmarkersize = cbMarkerSize.Text;
 			Settings.Default.injectthumb = cbReplacePreview.Checked;
 			Settings.Default.markers = cbMarkersType.Text;
 
@@ -565,7 +565,7 @@ namespace CNCMaps.GUI {
 						cmd += "-s ";
 						break;
 				}
-				cmd += "--start-pos-size " + cmbMarkerSize.Text + " ";
+				cmd += "--start-pos-size " + cbMarkerSize.Text + " ";
 			}
 
 			if (cbReplacePreview.Checked) {
@@ -686,10 +686,12 @@ namespace CNCMaps.GUI {
 						rs.StartPositionMarking = StartPositionMarking.Tiled;
 						break;
 				}
-				try {
-					rs.MarkStartSize = cmbMarkerSize.Text;
-				}
-				catch (Exception) { }
+
+				if (double.TryParse(cbMarkerSize.Text, NumberStyles.Number, CultureInfo.InvariantCulture,
+					out double markerSize))
+					rs.MarkerStartSize = Math.Abs(markerSize);
+				else
+					rs.MarkerStartSize = 4.0;
 			}
 
 			if (cbReplacePreview.Checked) {
