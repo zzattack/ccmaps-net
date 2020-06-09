@@ -324,7 +324,7 @@ namespace CNCMaps.Engine.Game {
 					var offset = new Point(extraSection.ReadInt(n + "XOffset"), extraSection.ReadInt(n + "YOffset"));
 					drawableClone.Props.Offset.Offset(offset.X, offset.Y);
 					drawableClone.Props.ZAdjust = extraSection.ReadInt(n + "ZAdjust");
-					tileSet.Entries[a - 1].AddAnimation(attachTo, drawable);
+					tileSet.Entries[a - 1].AddAnimation(attachTo, drawableClone);
 				}
 			}
 		}
