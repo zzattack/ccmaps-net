@@ -85,9 +85,16 @@ namespace CNCMaps.Engine {
 					_logger.Info("Engine autodetect result: {0}", _settings.Engine);
 				}
 
-				// enginetype is now definitive, load mod config
+				// Engine type is now definitive, load mod config
 				if (modConfig == null)
 					modConfig = ModConfig.GetDefaultConfig(_settings.Engine);
+
+				var map = new Map.Map {
+					IgnoreLighting = _settings.IgnoreLighting,
+					StartPosMarking = _settings.StartPositionMarking,
+					StartMarkerSize = _settings.MarkerStartSize,
+					MarkOreFields = _settings.MarkOreFields
+				};
 
 				using (var vfs = new VirtualFileSystem()) {
 					// first add the dirs, then load the extra mixes, then scan the dirs
@@ -105,14 +112,6 @@ namespace CNCMaps.Engine {
 						vfs.Add(mixFile);
 
 					vfs.LoadMixes(_settings.Engine);
-
-
-					var map = new Map.Map {
-						IgnoreLighting = _settings.IgnoreLighting,
-						StartPosMarking = _settings.StartPositionMarking,
-						StartMarkerSize = _settings.MarkerStartSize,
-						MarkOreFields = _settings.MarkOreFields
-					};
 
 					if (!map.Initialize(mapFile, modConfig, vfs)) {
 						_logger.Error("Could not successfully load this map. Try specifying the engine type manually.");
@@ -173,6 +172,14 @@ namespace CNCMaps.Engine {
 												   _settings.StartPositionMarking == StartPositionMarking.Starred))
 						map.DrawStartPositions();
 
+					if (_settings.OutputFile == "")
+						_settings.OutputFile = DetermineMapName(mapFile, _settings.Engine, vfs);
+
+					if (_settings.OutputDir == "")
+						_settings.OutputDir = Path.GetDirectoryName(_settings.InputFile);
+
+				} // VFS resources can now be released
+
 				if (_settings.DiagnosticWindow) {
 					using (var form = new DebugDrawingSurfaceWindow(map.GetDrawingSurface(), map.GetTiles(),
 						map.GetTheater(), map)) {
@@ -180,12 +187,6 @@ namespace CNCMaps.Engine {
 						form.ShowDialog();
 					}
 				}
-
-					if (_settings.OutputFile == "")
-						_settings.OutputFile = DetermineMapName(mapFile, _settings.Engine, vfs);
-
-					if (_settings.OutputDir == "")
-						_settings.OutputDir = Path.GetDirectoryName(_settings.InputFile);
 
 				// free up as much memory as possible before saving the large images
 				Rectangle saveRect = map.GetSizePixels(_settings.SizeMode);
