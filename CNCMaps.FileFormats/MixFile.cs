@@ -114,12 +114,11 @@ namespace CNCMaps.FileFormats {
 			var reader = new BinaryReader(this);
 
 			uint signature = reader.ReadUInt32();
-			bool isCncMix = (signature >> 16) == 0;
+			bool isCncMix = (signature & 0xFFFF) != 0;
 			bool isEncrypted = !isCncMix && (signature & (uint)MixFileFlags.Encrypted) != 0;
 
 			VirtualFile header; // After next block this points to a decrypted header
 			if (!isCncMix) {
-
 				if (isEncrypted) {
 					header = new VirtualFile(DecryptHeader(this));
 				}
