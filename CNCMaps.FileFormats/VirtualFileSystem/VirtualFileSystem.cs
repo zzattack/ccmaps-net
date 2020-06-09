@@ -184,8 +184,8 @@ namespace CNCMaps.FileFormats.VirtualFileSystem {
 					foreach (string file in Directory.GetFiles(dir.Directory, "ecache*.mix"))
 						ecacheList.Add(Path.GetFileName(file));
 				}
-				ecacheList.Reverse();
-				foreach (string ecachefile in ecacheList)
+
+				foreach (string ecachefile in ecacheList.OrderByDescending(f => f))
 					AddItem(ecachefile);
 			}
 
