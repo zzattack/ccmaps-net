@@ -1,9 +1,11 @@
-﻿using System.IO;
+﻿using System.Collections.Generic;
+using System.IO;
 
 namespace CNCMaps.FileFormats.VirtualFileSystem {
 
 	public class DirArchive : IArchive {
 		public readonly string Directory;
+		private Dictionary<string, FileStream> _openedFiles = new Dictionary<string, FileStream>();
 
 		public DirArchive(string path) {
 			Directory = path;
@@ -14,10 +16,17 @@ namespace CNCMaps.FileFormats.VirtualFileSystem {
 		}
 
 		public VirtualFile OpenFile(string filename, FileFormat format = FileFormat.None, CacheMethod m = CacheMethod.Default) {
-			var fs = new FileStream(Path.Combine(Directory, filename), FileMode.Open, FileAccess.Read, FileShare.Read);
-			return FormatHelper.OpenAsFormat(fs, filename, 0, (int)fs.Length, format);
+			if (!_openedFiles.TryGetValue(filename, out FileStream file)) {
+				file = _openedFiles[filename] = new FileStream(Path.Combine(Directory, filename), FileMode.Open, FileAccess.Read, FileShare.Read);
+			}
+
+			return FormatHelper.OpenAsFormat(file, filename, 0, (int)file.Length, format);
 		}
 
-		public void Close() { }
+		public void Dispose() {
+			foreach (var file in _openedFiles.Values)
+				file.Dispose();
+			_openedFiles.Clear();
+		}
 	}
 }

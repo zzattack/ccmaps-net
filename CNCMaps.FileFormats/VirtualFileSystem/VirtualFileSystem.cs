@@ -8,7 +8,7 @@ using NLog;
 
 namespace CNCMaps.FileFormats.VirtualFileSystem {
 
-	public class VirtualFileSystem {
+	public class VirtualFileSystem : IDisposable {
 		public readonly List<IArchive> AllArchives = new List<IArchive>();
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
@@ -231,9 +231,13 @@ namespace CNCMaps.FileFormats.VirtualFileSystem {
 
 		public void Reset() {
 			foreach (var arch in AllArchives)
-				if (arch != null) arch.Close();
+				arch.Dispose();
 			AllArchives.Clear();
 		}
+		public void Dispose() {
+			Reset();
+		}
+
 
 		public static string RA2InstallPath {
 			get {
@@ -282,7 +286,6 @@ namespace CNCMaps.FileFormats.VirtualFileSystem {
 			}
 			return ret;
 		}
-
 	}
 
 	public enum CacheMethod {

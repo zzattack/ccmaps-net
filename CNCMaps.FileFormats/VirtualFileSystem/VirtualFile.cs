@@ -165,9 +165,9 @@ namespace CNCMaps.FileFormats.VirtualFileSystem {
 			throw new NotSupportedException();
 		}
 
-		public override void Close() {
+		public void Dispose() {
 			base.Close();
-			if (BaseStream != null) BaseStream.Close();
+			BaseStream?.Close();
 		}
 
 		public override void SetLength(long value) {
