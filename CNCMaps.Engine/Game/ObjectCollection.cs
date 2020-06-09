@@ -20,13 +20,13 @@ namespace CNCMaps.Engine.Game {
 
 		static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
-		public ObjectCollection(CollectionType type, TheaterType theater, EngineType engine, VirtualFileSystem vfs, IniFile rules, IniFile art,
+		public ObjectCollection(CollectionType type, TheaterType theater, ModConfig config, VirtualFileSystem vfs, IniFile rules, IniFile art,
 			IniFile.IniSection objectsList, PaletteCollection palettes)
-			: base(type, theater, engine, vfs, rules, art) {
+			: base(type, theater, config, vfs, rules, art) {
 
 			Palettes = palettes;
-			if (engine >= EngineType.RedAlert2) {
-				string fireNames = Rules.ReadString(Engine == EngineType.RedAlert2 ? "AudioVisual" : "General",
+			if (_config.Engine >= EngineType.RedAlert2) {
+				string fireNames = Rules.ReadString(_config.Engine == EngineType.RedAlert2 ? "AudioVisual" : "General",
 					"DamageFireTypes", "FIRE01,FIRE02,FIRE03");
 				FireNames = fireNames.Split(new[] { ',', '.' }, StringSplitOptions.RemoveEmptyEntries);
 			}
@@ -48,21 +48,21 @@ namespace CNCMaps.Engine.Game {
 			switch (Type) {
 				case CollectionType.Aircraft:
 				case CollectionType.Vehicle:
-					drawable = new UnitDrawable(_vfs, rulesSection, artSection);
+					drawable = new UnitDrawable(_config, _vfs, rulesSection, artSection);
 					break;
 				case CollectionType.Building:
-					drawable = new BuildingDrawable(_vfs, rulesSection, artSection);
+					drawable = new BuildingDrawable(_config, _vfs, rulesSection, artSection);
 					break;
 				case CollectionType.Infantry:
 				case CollectionType.Overlay:
 				case CollectionType.Smudge:
-					drawable = new ShpDrawable(_vfs, rulesSection, artSection);
+					drawable = new ShpDrawable(_config, _vfs, rulesSection, artSection);
 					break;
 				case CollectionType.Terrain:
-					drawable = new TerrainDrawable(_vfs, rulesSection, artSection);
+					drawable = new TerrainDrawable(_config, _vfs, rulesSection, artSection);
 					break;
 				case CollectionType.Animation:
-					drawable = new AnimDrawable(_vfs, rulesSection, artSection);
+					drawable = new AnimDrawable(_config, _vfs, rulesSection, artSection);
 					break;
 				default:
 					throw new InvalidEnumArgumentException();
@@ -95,7 +95,7 @@ namespace CNCMaps.Engine.Game {
 			}
 
 			// overrides from the modconfig
-			var cfgOverrides = ModConfig.ActiveConfig.ObjectOverrides.Where(ovr =>
+			var cfgOverrides = _config.ObjectOverrides.Where(ovr =>
                 // matches collection
                 (ovr.CollectionTypes & Type) == Type &&
                 // matches collection
@@ -125,9 +125,9 @@ namespace CNCMaps.Engine.Game {
 
 		private void InitDrawableDefaults(Drawable drawable) {
 			drawable.OwnerCollection = this;
-			drawable.Props.PaletteType = Defaults.GetDefaultPalette(Type, Engine);
+			drawable.Props.PaletteType = Defaults.GetDefaultPalette(Type, _config.Engine);
 			drawable.Props.LightingType = Defaults.GetDefaultLighting(Type);
-			drawable.IsRemapable = Defaults.GetDefaultRemappability(Type, Engine);
+			drawable.IsRemapable = Defaults.GetDefaultRemappability(Type, _config.Engine);
 			drawable.Props.FrameDecider = Defaults.GetDefaultFrameDecider(Type);
 
 			// apply collection-specific offsets
@@ -178,10 +178,10 @@ namespace CNCMaps.Engine.Game {
 
 		private void LoadOverlayDrawable(ShpDrawable drawable) {
 			var ovl = new OverlayObject((byte)drawable.Index, 0);
-			var tibType = SpecialOverlays.GetOverlayTibType(ovl, Engine);
+			var tibType = SpecialOverlays.GetOverlayTibType(ovl, _config.Engine);
 			DrawProperties props = drawable.Props;
 
-			if (Engine >= EngineType.RedAlert2) {
+			if (_config.Engine >= EngineType.RedAlert2) {
 				if (tibType != OverlayTibType.NotSpecial) {
 					props.FrameDecider = FrameDeciders.OverlayValueFrameDecider;
 					props.PaletteType = PaletteType.Overlay;
@@ -194,7 +194,7 @@ namespace CNCMaps.Engine.Game {
 					drawable.Foundation = new Size(3, 1); // ensures they're drawn later --> fixes overlap
 				}
 			}
-			else if (Engine <= EngineType.Firestorm) {
+			else if (_config.Engine <= EngineType.Firestorm) {
 				if (tibType != OverlayTibType.NotSpecial) {
 					props.FrameDecider = FrameDeciders.OverlayValueFrameDecider;
 					props.PaletteType = PaletteType.Unit;
@@ -211,12 +211,12 @@ namespace CNCMaps.Engine.Game {
 		}
 
 		public string ApplyNewTheaterIfNeeded(string artName, string imageFileName) {
-			if (Engine <= EngineType.Firestorm) {
+			if (_config.Engine <= EngineType.Firestorm) {
 				// the tag will only work if the ID for the object starts with either G, N or C and its second letter is A (for Arctic/Snow theater) or T (for Temperate theater)
 				if (new[] { 'G', 'N', 'C' }.Contains(artName[0]) && new[] { 'A', 'T' }.Contains(artName[1]))
 					ApplyNewTheater(ref imageFileName);
 			}
-			else if (Engine == EngineType.RedAlert2) {
+			else if (_config.Engine == EngineType.RedAlert2) {
 				// In RA2, for the tag to work, it must start with either G, N or C, and its second letter must be A, T or U (Urban theater). 
 				if (new[] { 'G', 'N', 'C' }.Contains(artName[0]) && new[] { 'A', 'T', 'U' }.Contains(artName[1]))
 					ApplyNewTheater(ref imageFileName);

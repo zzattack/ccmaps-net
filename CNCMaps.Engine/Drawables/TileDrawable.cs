@@ -4,13 +4,14 @@ using CNCMaps.Engine.Map;
 using CNCMaps.Engine.Rendering;
 using CNCMaps.FileFormats;
 using CNCMaps.FileFormats.VirtualFileSystem;
+using CNCMaps.Shared;
 
 namespace CNCMaps.Engine.Drawables {
 	public class TileDrawable : Drawable {
 		public TileCollection.TileSetEntry TsEntry;
 
-		public TileDrawable(VirtualFileSystem vfs, IniFile.IniSection rules, IniFile.IniSection art, TileCollection.TileSetEntry entry)
-			: base(vfs, rules, art) {
+		public TileDrawable(ModConfig config, VirtualFileSystem vfs, IniFile.IniSection rules, IniFile.IniSection art, TileCollection.TileSetEntry entry)
+			: base(config, vfs, rules, art) {
 			TsEntry = entry;
 			if (entry != null)
 				Name = entry.ToString();

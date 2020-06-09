@@ -14,9 +14,9 @@ namespace CNCMaps.Engine.Drawables {
 		public ShpFile Shp { get; set; }
 		protected readonly ShpRenderer _renderer;
 
-		public ShpDrawable(VirtualFileSystem vfs, IniFile.IniSection rules, IniFile.IniSection art, ShpFile shpFile = null)
-			: base(vfs, rules, art) {
-			_renderer =  new ShpRenderer(vfs);
+		public ShpDrawable(ModConfig config, VirtualFileSystem vfs, IniFile.IniSection rules, IniFile.IniSection art, ShpFile shpFile = null)
+			: base(config, vfs, rules, art) {
+			_renderer =  new ShpRenderer(config, vfs);
 			Shp = shpFile;
 		}
 
@@ -29,7 +29,7 @@ namespace CNCMaps.Engine.Drawables {
 			if (InvisibleInGame || Shp == null) return;
 			if (OwnerCollection != null && OwnerCollection.Type == CollectionType.Infantry) {
 				int randomDir = -1;
-				if (ModConfig.ActiveConfig.ExtraOptions.FirstOrDefault() != null && ModConfig.ActiveConfig.ExtraOptions.FirstOrDefault().EnableRandomInfantryFacing)
+				if (_config.ExtraOptions.FirstOrDefault() != null && _config.ExtraOptions.FirstOrDefault().EnableRandomInfantryFacing)
 					randomDir = Rand.Next(256);
 				Props.FrameDecider = FrameDeciders.InfantryFrameDecider(Ready_Start, Ready_Count, Ready_CountNext, randomDir);
 			}

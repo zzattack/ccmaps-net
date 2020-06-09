@@ -4,6 +4,7 @@ using CNCMaps.Engine.Map;
 using CNCMaps.Engine.Rendering;
 using CNCMaps.FileFormats;
 using CNCMaps.FileFormats.VirtualFileSystem;
+using CNCMaps.Shared;
 
 namespace CNCMaps.Engine.Drawables {
 	class AlphaDrawable : ShpDrawable {
@@ -12,8 +13,8 @@ namespace CNCMaps.Engine.Drawables {
 			Props.FrameDecider = FrameDeciders.AlphaImageFrameDecider(Shp);
 		}
 
-		public AlphaDrawable(VirtualFileSystem vfs, IniFile.IniSection rules, IniFile.IniSection art, ShpFile alphaShpFile)
-			: base(vfs, rules, art, alphaShpFile) {
+		public AlphaDrawable(ModConfig config, VirtualFileSystem vfs, IniFile.IniSection rules, IniFile.IniSection art, ShpFile alphaShpFile)
+			: base(config, vfs, rules, art, alphaShpFile) {
 			Props.Offset = new Point(0, 15);
 			Props.FrameDecider = FrameDeciders.AlphaImageFrameDecider(Shp);
 		}

@@ -19,7 +19,6 @@ using NLog;
 namespace CNCMaps.Engine.Map {
 	public class Map {
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
-		public EngineType Engine { get; private set; }
 		public TheaterType TheaterType { get; private set; }
 		public bool IgnoreLighting { get; set; }
 		public StartPositionMarking StartPosMarking { get; set; }
@@ -28,6 +27,7 @@ namespace CNCMaps.Engine.Map {
 
 		public Rectangle FullSize { get; private set; }
 		public Rectangle LocalSize { get; private set; }
+		private ModConfig _config;
 		private VirtualFileSystem _vfs;
 		private Theater _theater;
 		private IniFile _rules;
@@ -55,14 +55,10 @@ namespace CNCMaps.Engine.Map {
 		private MapFile _mapFile;
 
 		private bool _overlaysAltered;
-
-		public bool Initialize(MapFile mf, EngineType et, VirtualFileSystem vfs, List<string> customRulesININames, List<string> customArtININames) {
-			if (et == EngineType.AutoDetect) {
-				Logger.Fatal("Engine type needs to be known by now!");
-				return false;
-			}
-			this._mapFile = mf;
-			Engine = et;
+		
+		public bool Initialize(MapFile mf, ModConfig config, VirtualFileSystem vfs) {
+			_mapFile = mf;
+			_config = config;
 			_vfs = vfs;
 			TheaterType = Theater.TheaterTypeFromString(mf.ReadString("Map", "Theater"));
 			FullSize = mf.FullSize;
@@ -74,12 +70,12 @@ namespace CNCMaps.Engine.Map {
 
 			if (!IgnoreLighting) {
 				_lighting = mf.Lighting;
-				if (ModConfig.ActiveConfig.ExtraOptions.FirstOrDefault() != null) {
+				if (config.ExtraOptions.FirstOrDefault() != null) {
 					double ambient = 0;
 					double red = 0;
 					double green = 0;
 					double blue = 0;
-					string argb = ModConfig.ActiveConfig.ExtraOptions.FirstOrDefault().LightingAmbientRGBDelta;
+					string argb = config.ExtraOptions.FirstOrDefault().LightingAmbientRGBDelta;
 					string[] ambientParts = argb.Split(',');
 					if (ambientParts.Length > 0 && ambientParts[0] != null)
 						double.TryParse(ambientParts[0], NumberStyles.Number, CultureInfo.CreateSpecificCulture("en-US"), out ambient);
@@ -111,8 +107,7 @@ namespace CNCMaps.Engine.Map {
 				_lighting = new Lighting();
 
 			_wayPoints.AddRange(mf.Waypoints);
-
-			if (!LoadInis(customRulesININames, customArtININames)) {
+			if (!LoadInis()) {
 				Logger.Fatal("Ini files couldn't be loaded");
 				return false;
 			}
@@ -180,13 +175,12 @@ namespace CNCMaps.Engine.Map {
 			}
 		}
 
-		public bool LoadInis(List<string> customRulesIniFiles, List<string> customArtIniFiles) {
-
-			if (customRulesIniFiles.Count < 1) {
-				if (Engine == EngineType.YurisRevenge) {
+		public bool LoadInis() {
+			if (!_config.CustomRulesIniFiles.Any()) {
+				if (_config.Engine == EngineType.YurisRevenge) {
 					_rules = _vfs.Open<IniFile>("rulesmd.ini");
 				}
-				else if (Engine == EngineType.Firestorm) {
+				else if (_config.Engine == EngineType.Firestorm) {
 					_rules = _vfs.Open<IniFile>("rules.ini");
 					Logger.Info("Merging Firestorm rules with TS rules");
 					_rules.MergeWith(_vfs.Open<IniFile>("firestrm.ini"));
@@ -196,15 +190,15 @@ namespace CNCMaps.Engine.Map {
 				}
 			}
 			else {
-				_rules = LoadCustomInis(customRulesIniFiles);
+				_rules = LoadCustomInis(_config.CustomRulesIniFiles);
 
 			}
 
-			if (customArtIniFiles.Count < 1) {
-				if (Engine == EngineType.YurisRevenge) {
+			if (!_config.CustomArtIniFiles.Any()) {
+				if (_config.Engine == EngineType.YurisRevenge) {
 					_art = _vfs.Open<IniFile>("artmd.ini");
 				}
-				else if (Engine == EngineType.Firestorm) {
+				else if (_config.Engine == EngineType.Firestorm) {
 					_art = _vfs.Open<IniFile>("art.ini");
 					Logger.Info("Merging Firestorm art with TS art");
 					_art.MergeWith(_vfs.Open<IniFile>("artfs.ini"));
@@ -214,7 +208,7 @@ namespace CNCMaps.Engine.Map {
 				}
 			}
 			else {
-				_art = LoadCustomInis(customArtIniFiles);
+				_art = LoadCustomInis(_config.CustomArtIniFiles);
 			}
 
 			if (_rules == null || _art == null) {
@@ -239,27 +233,27 @@ namespace CNCMaps.Engine.Map {
 			Drawable.TileWidth = (ushort)TileWidth;
 			Drawable.TileHeight = (ushort)TileHeight;
 
-			_theater = new Theater(TheaterType, Engine, _vfs, _rules, _art);
+			_theater = new Theater(TheaterType, _config, _vfs, _rules, _art);
 			if (!_theater.Initialize())
 				return false;
 
 			// needs to be done before drawables are set
 			bool disableOreRandomizing = false;
-			if (ModConfig.ActiveConfig.ExtraOptions.FirstOrDefault() != null)
-				disableOreRandomizing = ModConfig.ActiveConfig.ExtraOptions.FirstOrDefault().DisableOreRandomization;
+			if (_config.ExtraOptions.FirstOrDefault() != null)
+				disableOreRandomizing = _config.ExtraOptions.FirstOrDefault().DisableOreRandomization;
 			if (!disableOreRandomizing)
-				Operations.RecalculateOreSpread(_overlayObjects, Engine);
+				Operations.RecalculateOreSpread(_overlayObjects, _config.Engine);
 
 			RemoveUnknownObjects();
 			SetDrawables();
 
 			LoadColors();
-			if (Engine >= EngineType.RedAlert2)
+			if (_config.Engine >= EngineType.RedAlert2)
 				LoadCountries();
 			LoadHouses();
 
 			Operations.FixTiles(_tiles, _theater.GetTileCollection());
-			if (Engine <= EngineType.Firestorm)
+			if (_config.Engine <= EngineType.Firestorm)
 				Operations.RecalculateVeinsSpread(_overlayObjects, _tiles);
 
 			RevisitWallBuildings();
@@ -529,19 +523,19 @@ namespace CNCMaps.Engine.Map {
 
 			// Original TS needs tiberium remapped
 			bool disableTibRemapping = false;
-			if (ModConfig.ActiveConfig.ExtraOptions.FirstOrDefault() != null)
-				disableTibRemapping = ModConfig.ActiveConfig.ExtraOptions.FirstOrDefault().DisableTibRemap;
-			if (Engine <= EngineType.Firestorm && !disableTibRemapping) {
+			if (_config.ExtraOptions.FirstOrDefault() != null)
+				disableTibRemapping = _config.ExtraOptions.FirstOrDefault().DisableTibRemap;
+			if (_config.Engine <= EngineType.Firestorm && !disableTibRemapping) {
 				var tiberiums = _rules.GetSection("Tiberiums").OrderedEntries.Select(tib => tib.Value.ToString());
 				var remaps = tiberiums.Select(tib => _rules.GetOrCreateSection(tib).ReadString("Color"));
 				var tibRemaps = tiberiums.Zip(remaps, (k, v) => new { k, v }).ToDictionary(x => x.k, x => x.v);
 
 				foreach (var ovl in _overlayObjects) {
 					if (ovl == null) continue;
-					var tibType = SpecialOverlays.GetOverlayTibType(ovl, Engine);
+					var tibType = SpecialOverlays.GetOverlayTibType(ovl, _config.Engine);
 					if (tibType != OverlayTibType.NotSpecial) {
 						ovl.Palette = ovl.Palette.Clone();
-						string tibName = SpecialOverlays.GetTibName(ovl, Engine);
+						string tibName = SpecialOverlays.GetTibName(ovl, _config.Engine);
 						if (tibRemaps.ContainsKey(tibName) && _namedColors.ContainsKey(tibRemaps[tibName]))
 							ovl.Palette.Remap(_namedColors[tibRemaps[tibName]]);
 						_palettesToBeRecalculated.Add(ovl.Palette);
@@ -767,7 +761,7 @@ namespace CNCMaps.Engine.Map {
 		private void LoadCountries() {
 			Logger.Info("Loading countries");
 
-			var countriesSection = _rules.GetSection(Engine >= EngineType.RedAlert2 ? "Countries" : "Houses");
+			var countriesSection = _rules.GetSection(_config.Engine >= EngineType.RedAlert2 ? "Countries" : "Houses");
 			foreach (var entry in countriesSection.OrderedEntries) {
 				IniFile.IniSection countrySection = _rules.GetSection(entry.Value);
 				if (countrySection == null) continue;
@@ -922,9 +916,9 @@ namespace CNCMaps.Engine.Map {
 			int right = (LocalSize.Left + LocalSize.Width) * TileWidth;
 
 			int bottom1 = 2 * (LocalSize.Top - 3 + LocalSize.Height + 5);
-			if (ModConfig.ActiveConfig.ExtraOptions.FirstOrDefault() != null) {
+			if (_config.ExtraOptions.FirstOrDefault() != null) {
 				int bottomCrop = 0;
-				if (int.TryParse(ModConfig.ActiveConfig.ExtraOptions.FirstOrDefault().MapLocalSizeBottomCropValue, out bottomCrop)) {
+				if (int.TryParse(_config.ExtraOptions.FirstOrDefault().MapLocalSizeBottomCropValue, out bottomCrop)) {
 					bottomCrop = Math.Abs(bottomCrop);
 					if (bottom1 > bottomCrop && bottomCrop >= 0 && bottomCrop < 17)
 						bottom1 -= bottomCrop;
@@ -941,7 +935,7 @@ namespace CNCMaps.Engine.Map {
 			var markerPalettes = new Dictionary<OverlayTibType, Palette>();
 
 			// init sensible defaults
-			if (Engine >= EngineType.RedAlert2) {
+			if (_config.Engine >= EngineType.RedAlert2) {
 				markerPalettes[OverlayTibType.Ore] = Palette.MakePalette(Color.Yellow);
 				markerPalettes[OverlayTibType.Ore2] = Palette.MakePalette(Color.Yellow);
 				markerPalettes[OverlayTibType.Ore3] = Palette.MakePalette(Color.Yellow);
@@ -953,7 +947,7 @@ namespace CNCMaps.Engine.Map {
 			// but made available for the renderer's preview functionality through a key "MapRendererColor"
 			var tiberiums = _rules.GetOrCreateSection("Tiberiums").OrderedEntries.Select(kvp => kvp.Value).ToList();
 			var remaps = tiberiums.Select(tib => _rules.GetOrCreateSection(tib)
-													.ReadString(Engine >= EngineType.RedAlert2 ? "MapRendererColor" : "Color")).ToList();
+													.ReadString(_config.Engine >= EngineType.RedAlert2 ? "MapRendererColor" : "Color")).ToList();
 
 			// override defaults if specified in rules
 			for (int i = 0; i < tiberiums.Count; i++) {
@@ -968,10 +962,10 @@ namespace CNCMaps.Engine.Map {
 			// the color of the tiberium kind stored on it
 			foreach (var o in _overlayObjects) {
 				if (o == null) continue;
-				var ovlType = SpecialOverlays.GetOverlayTibType(o, Engine);
+				var ovlType = SpecialOverlays.GetOverlayTibType(o, _config.Engine);
 				if (!markerPalettes.ContainsKey(ovlType)) continue;
 
-				double opacityBase = ((ovlType == OverlayTibType.Ore || ovlType == OverlayTibType.Ore2 || ovlType == OverlayTibType.Ore3) && Engine == EngineType.RedAlert2) ? 0.3 : 0.15;
+				double opacityBase = ((ovlType == OverlayTibType.Ore || ovlType == OverlayTibType.Ore2 || ovlType == OverlayTibType.Ore3) && _config.Engine == EngineType.RedAlert2) ? 0.3 : 0.15;
 				double opacity = Math.Max(0, 12 - o.OverlayValue) / 11.0 * 0.5 + opacityBase;
 				o.Tile.Palette = Palette.Merge(o.Tile.Palette, markerPalettes[ovlType], opacity);
 				o.Palette = Palette.Merge(o.Palette, markerPalettes[ovlType], opacity);
@@ -980,7 +974,7 @@ namespace CNCMaps.Engine.Map {
 
 		public void RedrawOreAndGems() {
 			var tileCollection = _theater.GetTileCollection();
-			var checkFunc = new Func<OverlayObject, bool>(delegate (OverlayObject ovl) { return SpecialOverlays.GetOverlayTibType(ovl, Engine) != OverlayTibType.NotSpecial; });
+			var checkFunc = new Func<OverlayObject, bool>(delegate (OverlayObject ovl) { return SpecialOverlays.GetOverlayTibType(ovl, _config.Engine) != OverlayTibType.NotSpecial; });
 
 			// first redraw all required tiles (zigzag method)
 			for (int y = 0; y < FullSize.Height; y++) {
@@ -1116,7 +1110,7 @@ namespace CNCMaps.Engine.Map {
 
 			// Number magic explained: http://modenc.renegadeprojects.com/Maps/PreviewPack
 			int pw, ph;
-			switch (Engine) {
+			switch (_config.Engine) {
 				case EngineType.TiberianSun:
 					pw = (int)Math.Ceiling((fixDimensions ? 1.975 : 2.000) * FullSize.Width);
 					ph = (int)Math.Ceiling((fixDimensions ? 0.995 : 1.000) * FullSize.Height);
@@ -1200,11 +1194,11 @@ namespace CNCMaps.Engine.Map {
 		}
 
 		public int TileWidth {
-			get { return Engine == EngineType.RedAlert2 || Engine == EngineType.YurisRevenge ? 60 : 48; }
+			get { return _config.Engine == EngineType.RedAlert2 || _config.Engine == EngineType.YurisRevenge ? 60 : 48; }
 		}
 
 		public int TileHeight {
-			get { return Engine == EngineType.RedAlert2 || Engine == EngineType.YurisRevenge ? 30 : 24; }
+			get { return _config.Engine == EngineType.RedAlert2 || _config.Engine == EngineType.YurisRevenge ? 30 : 24; }
 		}
 
 		public void FreeUseless() {

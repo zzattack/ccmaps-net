@@ -101,7 +101,7 @@ namespace CNCMaps.Engine.Game {
 
 		// SHP vehicles and infantry behave differently, so they require different frame decider logic.
 		// This is due to SHP vehicles not obeying the unwritten rule that infantry have standing frames coming first.
-		public static Func<GameObject, int> SHPVehicleFrameDecider(int StartStandFrame, int StandingFrames, int StartWalkFrame, int WalkFrames, int Facings) {
+		public static Func<GameObject, int> SHPVehicleFrameDecider(int StartStandFrame, int StandingFrames, int StartWalkFrame, int WalkFrames, int Facings, EngineType engine) {
 			return delegate (GameObject obj) {
 				int direction = 0;
 				int frameoffset = 0;
@@ -116,7 +116,7 @@ namespace CNCMaps.Engine.Game {
 				}
 
 				if (Facings == 32) {
-					if (ModConfig.ActiveConfig.Engine < EngineType.RedAlert2) {
+					if (engine < EngineType.RedAlert2) {
 						frameoffset = (direction / 8) + 1;
 						if (frameoffset >= 32) frameoffset -= 32;
 					}

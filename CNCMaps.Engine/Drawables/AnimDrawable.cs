@@ -12,11 +12,11 @@ namespace CNCMaps.Engine.Drawables {
 
 		private int _translucency;
 
-		public AnimDrawable(VirtualFileSystem vfs, IniFile.IniSection rules, IniFile.IniSection art)
-			: base(vfs, rules, art) {
+		public AnimDrawable(ModConfig config, VirtualFileSystem vfs, IniFile.IniSection rules, IniFile.IniSection art)
+			: base(config, vfs, rules, art) {
 		}
-		public AnimDrawable(VirtualFileSystem vfs, IniFile.IniSection rules, IniFile.IniSection art, ShpFile shp)
-			: base(vfs, rules, art, shp) {
+		public AnimDrawable(ModConfig config, VirtualFileSystem vfs, IniFile.IniSection rules, IniFile.IniSection art, ShpFile shp)
+			: base(config, vfs, rules, art, shp) {
 		}
 
 		public override void LoadFromRules() {

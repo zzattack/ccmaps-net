@@ -24,7 +24,8 @@ namespace CNCMaps.Engine.Drawables {
 
 		internal IniFile.IniSection Rules { get; private set; }
 		internal IniFile.IniSection Art { get; private set; }
-		protected VirtualFileSystem _vfs;
+		protected readonly ModConfig _config;
+		protected readonly VirtualFileSystem _vfs;
 		internal ObjectCollection OwnerCollection { get; set; }
 		public DrawProperties Props = new DrawProperties();
 		public readonly List<Drawable> SubDrawables = new List<Drawable>();
@@ -57,12 +58,12 @@ namespace CNCMaps.Engine.Drawables {
 		public bool NewTheater { get; set; }
 		public string Image { get; set; }
 		public bool TheaterExtension { get; set; }
-
 		public static ushort TileWidth { get; set; }
 		public static ushort TileHeight { get; set; }
 
 		protected Drawable() { }
-		protected Drawable(VirtualFileSystem vfs, IniFile.IniSection rules, IniFile.IniSection art) {
+		protected Drawable(ModConfig config, VirtualFileSystem vfs, IniFile.IniSection rules, IniFile.IniSection art) {
+			_config = config;
 			_vfs = vfs;
 			Rules = rules;
 			Art = art;
@@ -78,13 +79,13 @@ namespace CNCMaps.Engine.Drawables {
 			Image = Art.ReadString("Image", Art.Name);
 			IsVoxel = Art.ReadBool("Voxel");
 			TheaterExtension = Art.ReadBool("Theater");
-			NewTheater = OwnerCollection.Engine >= EngineType.RedAlert2 || Art.ReadBool("NewTheater");
+			NewTheater = _config.Engine >= EngineType.RedAlert2 || Art.ReadBool("NewTheater");
 		}
 
 		public virtual void LoadFromRulesFull() {
 			if (Art.ReadString("Remapable") != string.Empty) {
 				// does NOT work in RA2
-				if (OwnerCollection.Engine <= EngineType.Firestorm)
+				if (_config.Engine <= EngineType.Firestorm)
 					IsRemapable = Art.ReadBool("Remapable");
 			}
 
@@ -111,14 +112,14 @@ namespace CNCMaps.Engine.Drawables {
 			if (Rules.ReadString("AlphaImage") != "") {
 				string alphaImageFile = Rules.ReadString("AlphaImage") + ".shp";
 				if (_vfs.FileExists(alphaImageFile)) {
-					var ad = new AlphaDrawable(new ShpRenderer(_vfs), _vfs.Open<ShpFile>(alphaImageFile));
+					var ad = new AlphaDrawable(new ShpRenderer(_config, _vfs), _vfs.Open<ShpFile>(alphaImageFile));
 					ad.OwnerCollection = OwnerCollection;
 					SubDrawables.Add(ad);
 				}
 			}
 
 			Props.HasShadow = Art.ReadBool("Shadow", Defaults.GetShadowAssumption(OwnerCollection.Type));
-			Props.HasShadow = !Rules.ReadBool("NoShadow");
+			Props.HasShadow &= !Rules.ReadBool("NoShadow");
 			Props.Cloakable = Rules.ReadBool("Cloakable");
 			Flat = Rules.ReadBool("DrawFlat", Defaults.GetFlatnessAssumption(OwnerCollection.Type))
 				|| Rules.ReadBool("Flat");
@@ -136,7 +137,7 @@ namespace CNCMaps.Engine.Drawables {
 				Flat = false;
 				IsBuildingPart = true;
 				// RA2 walls appear a bit higher
-				if (OwnerCollection.Engine >= EngineType.RedAlert2) {
+				if (_config.Engine >= EngineType.RedAlert2) {
 					Props.Offset.Offset(0, 3); // seems walls are located 3 pixels lower
 				}
 				Props.PaletteType = PaletteType.Unit;
@@ -173,7 +174,7 @@ namespace CNCMaps.Engine.Drawables {
 					Props.ZAdjust += TileHeight;
 			}
 			else if (Rules.ReadString("Land") == "Railroad") {
-				if (OwnerCollection.Engine <= EngineType.Firestorm)
+				if (_config.Engine <= EngineType.Firestorm)
 					Props.Offset.Y = 11;
 				else
 					Props.Offset.Y = 14;

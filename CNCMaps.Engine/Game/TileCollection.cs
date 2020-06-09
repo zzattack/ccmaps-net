@@ -156,8 +156,8 @@ namespace CNCMaps.Engine.Game {
 
 		private int _animsSectionsStartIdx = -1;
 
-		public TileCollection(TheaterType theater, EngineType engine, VirtualFileSystem vfs, IniFile rules, IniFile art, TheaterSettings theaterSettings, IniFile theaterIni = null)
-			: base(CollectionType.Tiles, theater, engine, vfs, rules, art) {
+		public TileCollection(TheaterType theater, ModConfig config, VirtualFileSystem vfs, IniFile rules, IniFile art, TheaterSettings theaterSettings, IniFile theaterIni = null)
+			: base(CollectionType.Tiles, theater, config, vfs, rules, art) {
 			_theaterSettings = theaterSettings;
 			if (theaterIni == null) {
 				_theaterIni = _vfs.Open<IniFile>(theaterSettings.TheaterIni);
@@ -295,7 +295,7 @@ namespace CNCMaps.Engine.Game {
 		}
 
 		protected override Drawable MakeDrawable(string objName) {
-			return new TileDrawable(null, null, null, null) { Name = objName };
+			return new TileDrawable(null, null, null, null, null) { Name = objName };
 		}
 
 		public void InitAnimations(ObjectCollection animations) {

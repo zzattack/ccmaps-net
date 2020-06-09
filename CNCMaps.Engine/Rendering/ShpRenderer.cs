@@ -12,7 +12,14 @@ using NLog;
 namespace CNCMaps.Engine.Rendering {
 	class ShpRenderer {
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
-		public ShpRenderer(VirtualFileSystem vfs) {
+
+		private bool _noBuildingZAvailable = false;
+		private readonly ModConfig _config;
+		private readonly VirtualFileSystem _vfs;
+		private ShpFile BuildingZ;
+
+		public ShpRenderer(ModConfig config, VirtualFileSystem vfs) {
+			_config = config;
 			_vfs = vfs;
 		}
 
@@ -267,16 +274,12 @@ namespace CNCMaps.Engine.Rendering {
 			return frameIndex;
 		}
 
-		static ShpFile BuildingZ;
-		private bool _noBuildingZAvailable = false;
-		private readonly VirtualFileSystem _vfs;
-
 		private short GetBuildingZ(int x, int y, ShpFile shp, ShpFile.ShpImage img, GameObject obj) {
 			if (_noBuildingZAvailable)
 				return 0;
 
 			else if (BuildingZ == null) {
-				if (ModConfig.ActiveConfig.Engine < EngineType.YurisRevenge)
+				if (_config.Engine < EngineType.YurisRevenge)
 					BuildingZ = _vfs.Open<ShpFile>("buildngz.shp");
 				else // Yuri's Revenge uses .sha as a file extension for this
 					BuildingZ = _vfs.Open<ShpFile>("buildngz.sha");

@@ -57,19 +57,14 @@ namespace CNCMaps.Engine {
 				}
 				var mapFile = new MapFile(vmapFile, Path.GetFileName(_settings.InputFile));
 
+				ModConfig modConfig = null;
 				if (!string.IsNullOrEmpty(_settings.ModConfig)) {
 					if (File.Exists(_settings.ModConfig)) {
 						ModConfig cfg;
 						try {
 							using (FileStream f = File.OpenRead(_settings.ModConfig))
-								cfg = ModConfig.Deserialize(f);
-							ModConfig.ActiveConfig = cfg;
-							if (_settings.Engine != EngineType.AutoDetect) {
-								if (_settings.Engine != cfg.Engine)
-									_logger.Warn("Provided engine override does not match mod config.");
-							}
-							else
-								_settings.Engine = ModConfig.ActiveConfig.Engine;
+								modConfig = ModConfig.Deserialize(f);
+
 						}
 						catch (IOException) {
 							_logger.Fatal("IOException while loading mod config");
@@ -92,19 +87,19 @@ namespace CNCMaps.Engine {
 				}
 
 				// enginetype is now definitive, load mod config
-				if (ModConfig.ActiveConfig == null)
-					ModConfig.LoadDefaultConfig(_settings.Engine);
+				if (modConfig == null)
+					modConfig = ModConfig.GetDefaultConfig(_settings.Engine);
 
 				// first add the dirs, then load the extra mixes, then scan the dirs
-				foreach (string modDir in ModConfig.ActiveConfig.Directories)
+				foreach (string modDir in modConfig.Directories)
 					_vfs.Add(modDir);
 
 				// add mixdir to VFS (if it's not included in the mod config)
-				if (!ModConfig.ActiveConfig.Directories.Any()) {
+				if (!modConfig.Directories.Any()) {
 					string mixDir = VirtualFileSystem.DetermineMixDir(_settings.MixFilesDirectory, _settings.Engine);
 					_vfs.Add(mixDir);
 				}
-				foreach (string mixFile in ModConfig.ActiveConfig.ExtraMixes)
+				foreach (string mixFile in modConfig.ExtraMixes)
 					_vfs.Add(mixFile);
 
 				_vfs.LoadMixes(_settings.Engine);
@@ -120,7 +115,7 @@ namespace CNCMaps.Engine {
 					MarkOreFields = _settings.MarkOreFields
 				};
 
-				if (!map.Initialize(mapFile, _settings.Engine, _vfs, ModConfig.ActiveConfig.CustomRulesIniFiles, ModConfig.ActiveConfig.CustomArtIniFiles)) {
+				if (!map.Initialize(mapFile, modConfig, _vfs)) {
 					_logger.Error("Could not successfully load this map. Try specifying the engine type manually.");
 					return EngineResult.LoadRulesFailed;
 				}

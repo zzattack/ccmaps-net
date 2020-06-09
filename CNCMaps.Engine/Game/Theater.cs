@@ -11,7 +11,7 @@ using NLog;
 namespace CNCMaps.Engine.Game {
 	public class Theater {
 		readonly TheaterType _theaterType;
-		readonly EngineType _engine;
+		readonly ModConfig _config;
 		readonly VirtualFileSystem _vfs;
 		readonly IniFile _rules;
 		readonly IniFile _art;
@@ -29,9 +29,9 @@ namespace CNCMaps.Engine.Game {
 
 		static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
-		public Theater(TheaterType theaterType, EngineType engine, VirtualFileSystem vfs, IniFile rules, IniFile art) {
+		public Theater(TheaterType theaterType, ModConfig config, VirtualFileSystem vfs, IniFile rules, IniFile art) {
 			_theaterType = theaterType;
-			_engine = engine;
+			_config = config;
 			_vfs = vfs;
 			_rules = rules;
 			_art = art;
@@ -41,7 +41,6 @@ namespace CNCMaps.Engine.Game {
 
 		public Theater(TheaterType theaterType, EngineType engine, VirtualFileSystem vfs) {
 			_theaterType = theaterType;
-			_engine = engine;
 			_vfs = vfs;
 			if (engine == EngineType.RedAlert2 || engine == EngineType.TiberianSun) {
 				_rules = _vfs.Open<IniFile>("rules.ini");
@@ -65,7 +64,7 @@ namespace CNCMaps.Engine.Game {
 		public bool Initialize() {
 			Logger.Info("Initializing theater of type {0}", _theaterType);
 
-			if (!ModConfig.SetActiveTheater(_theaterType))
+			if (!_config.SetActiveTheater(_theaterType))
 				return false;
 			Active = this;
 
@@ -80,30 +79,30 @@ namespace CNCMaps.Engine.Game {
 
 			_palettes.AnimPalette = new Palette(_vfs.Open<PalFile>("anim.pal"));
 
-			_animations = new ObjectCollection(CollectionType.Animation, _theaterType, _engine, _vfs, _rules, _art,
+			_animations = new ObjectCollection(CollectionType.Animation, _theaterType, _config, _vfs, _rules, _art,
 				_rules.GetSection("Animations"), _palettes);
 
-			_tileTypes = new TileCollection(_theaterType, _engine, _vfs, _rules, _art, ModConfig.ActiveTheater);
+			_tileTypes = new TileCollection(_theaterType, _config, _vfs, _rules, _art, ModConfig.ActiveTheater);
 
-			_buildingTypes = new ObjectCollection(CollectionType.Building, _theaterType, _engine, _vfs, _rules, _art,
+			_buildingTypes = new ObjectCollection(CollectionType.Building, _theaterType, _config, _vfs, _rules, _art,
 				_rules.GetSection("BuildingTypes"), _palettes);
 
-			_aircraftTypes = new ObjectCollection(CollectionType.Aircraft, _theaterType, _engine, _vfs, _rules, _art,
+			_aircraftTypes = new ObjectCollection(CollectionType.Aircraft, _theaterType, _config, _vfs, _rules, _art,
 				_rules.GetSection("AircraftTypes"), _palettes);
 
-			_infantryTypes = new ObjectCollection(CollectionType.Infantry, _theaterType, _engine, _vfs, _rules, _art,
+			_infantryTypes = new ObjectCollection(CollectionType.Infantry, _theaterType, _config, _vfs, _rules, _art,
 				_rules.GetSection("InfantryTypes"), _palettes);
 
-			_overlayTypes = new ObjectCollection(CollectionType.Overlay, _theaterType, _engine, _vfs, _rules, _art,
+			_overlayTypes = new ObjectCollection(CollectionType.Overlay, _theaterType, _config, _vfs, _rules, _art,
 				_rules.GetSection("OverlayTypes"), _palettes);
 
-			_terrainTypes = new ObjectCollection(CollectionType.Terrain, _theaterType, _engine, _vfs, _rules, _art,
+			_terrainTypes = new ObjectCollection(CollectionType.Terrain, _theaterType, _config, _vfs, _rules, _art,
 				_rules.GetSection("TerrainTypes"), _palettes);
 
-			_smudgeTypes = new ObjectCollection(CollectionType.Smudge, _theaterType, _engine, _vfs, _rules, _art,
+			_smudgeTypes = new ObjectCollection(CollectionType.Smudge, _theaterType, _config, _vfs, _rules, _art,
 				_rules.GetSection("SmudgeTypes"), _palettes);
 
-			_vehicleTypes = new ObjectCollection(CollectionType.Vehicle, _theaterType, _engine, _vfs, _rules, _art,
+			_vehicleTypes = new ObjectCollection(CollectionType.Vehicle, _theaterType, _config, _vfs, _rules, _art,
 				_rules.GetSection("VehicleTypes"), _palettes);
 
 			_tileTypes.InitTilesets();

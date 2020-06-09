@@ -48,8 +48,8 @@ namespace CNCMaps.Engine.Drawables {
 		private int _conditionYellowHealth;
 		private int _conditionRedHealth;
 
-		public BuildingDrawable(VirtualFileSystem vfs, IniFile.IniSection rules, IniFile.IniSection art)
-			: base(vfs, rules, art) {
+		public BuildingDrawable(ModConfig config, VirtualFileSystem vfs, IniFile.IniSection rules, IniFile.IniSection art)
+			: base(config, vfs, rules, art) {
 		}
 
 		public override void LoadFromRules() {
@@ -86,7 +86,7 @@ namespace CNCMaps.Engine.Drawables {
 					_conditionRedHealth = (int)(256 * (double)conditionRed / 100);
 				}
 			}
-			_baseShp = new ShpDrawable(_vfs, Rules, Art);
+			_baseShp = new ShpDrawable(_config, _vfs, Rules, Art);
 			_baseShp.OwnerCollection = OwnerCollection;
 			_baseShp.LoadFromArtEssential();
 			_baseShp.Props = Props;
@@ -109,7 +109,7 @@ namespace CNCMaps.Engine.Drawables {
 			}
 
 			// RA2 and later support adding fire animations to buildings, supports custom-paletted animations.
-			if (OwnerCollection.Engine >= EngineType.RedAlert2)
+			if (_config.Engine >= EngineType.RedAlert2)
 				LoadFireAnimations();
 
 			// Add turrets
@@ -122,7 +122,7 @@ namespace CNCMaps.Engine.Drawables {
 				string turretNameShp = NewTheater ? OwnerCollection.ApplyNewTheaterIfNeeded(turretName, turretName + ".shp") : turretName + ".shp";
 				Drawable turret = Rules.ReadBool("TurretAnimIsVoxel")
 					? (Drawable)new VoxelDrawable(_vfs.Open<VxlFile>(turretName + ".vxl"), _vfs.Open<HvaFile>(turretName + ".hva"))
-					: (Drawable)new ShpDrawable(new ShpRenderer(_vfs), _vfs.Open<ShpFile>(turretNameShp));
+					: (Drawable)new ShpDrawable(new ShpRenderer(_config, _vfs), _vfs.Open<ShpFile>(turretNameShp));
 				turret.Props.Offset = Props.Offset + new Size(Rules.ReadInt("TurretAnimX"), Rules.ReadInt("TurretAnimY"));
 				turret.Props.HasShadow = Rules.ReadBool("UseTurretShadow");
 				turret.Props.FrameDecider = FrameDeciders.TurretFrameDecider;
@@ -147,7 +147,7 @@ namespace CNCMaps.Engine.Drawables {
 					bibImg = OwnerCollection.ApplyNewTheaterIfNeeded(bibImg, bibImg);
 				var bibShp = _vfs.Open<ShpFile>(bibImg);
 				if (bibShp != null) {
-					var bib = new ShpDrawable(new ShpRenderer(_vfs), bibShp);
+					var bib = new ShpDrawable(new ShpRenderer(_config, _vfs), bibShp);
 					bib.Props = this.Props.Clone();
 					bib.Flat = true;
 					SubDrawables.Add(bib);
@@ -176,7 +176,7 @@ namespace CNCMaps.Engine.Drawables {
 
 			IniFile.IniSection extraRules = OwnerCollection.Rules.GetOrCreateSection(animSection);
 			IniFile.IniSection extraArt = OwnerCollection.Art.GetOrCreateSection(animSection);
-			var anim = new AnimDrawable(_vfs, extraRules, extraArt);
+			var anim = new AnimDrawable(_config, _vfs, extraRules, extraArt);
 			anim.OwnerCollection = OwnerCollection;
 			anim.LoadFromRules();
 
@@ -217,7 +217,7 @@ namespace CNCMaps.Engine.Drawables {
 
 			IniFile.IniSection upgRules = OwnerCollection.Rules.GetOrCreateSection(upgradeName);
 			IniFile.IniSection upgArt = OwnerCollection.Art.GetOrCreateSection(upgradeName);
-			AnimDrawable upgrade = new AnimDrawable(_vfs, upgRules, upgArt);
+			AnimDrawable upgrade = new AnimDrawable(_config, _vfs, upgRules, upgArt);
 			upgrade.OwnerCollection = OwnerCollection;
 			upgrade.Props = inheritProps;
 			upgrade.LoadFromRules();
@@ -243,7 +243,7 @@ namespace CNCMaps.Engine.Drawables {
 				string fireAnim = OwnerCollection.FireNames[Rand.Next(OwnerCollection.FireNames.Length)];
 				IniFile.IniSection fireArt = OwnerCollection.Art.GetOrCreateSection(fireAnim);
 
-				var fire = new AnimDrawable(_vfs, Rules, Art, _vfs.Open<ShpFile>(fireAnim + ".shp"));
+				var fire = new AnimDrawable(_config, _vfs, Rules, Art, _vfs.Open<ShpFile>(fireAnim + ".shp"));
 				fire.Props.PaletteOverride = GetFireAnimPalette(fireArt);
 				fire.Props.Offset = new Point(Int32.Parse(coords[0]) + (TileWidth / 2), Int32.Parse(coords[1]));
 				fire.Props.FrameDecider = FrameDeciders.RandomFrameDecider;
@@ -278,7 +278,7 @@ namespace CNCMaps.Engine.Drawables {
 				return;
 
 			// RA2/YR building rubble
-			if (obj is StructureObject && (obj as StructureObject).Health == 0 && OwnerCollection.Engine >= EngineType.RedAlert2 && _baseShp.Shp != null) {
+			if (obj is StructureObject && (obj as StructureObject).Health == 0 && _config.Engine >= EngineType.RedAlert2 && _baseShp.Shp != null) {
 				ShpDrawable rubble = (ShpDrawable)_baseShp.Clone();
 				rubble.Props = _baseShp.Props.Clone();
 				rubble.Shp.Initialize();
@@ -303,7 +303,7 @@ namespace CNCMaps.Engine.Drawables {
 				}
 				_baseShp.Props.FrameDecider = FrameDeciders.BaseBuildingFrameDecider(isDamaged);
 
-				if (OwnerCollection.Engine >= EngineType.RedAlert2) {
+				if (_config.Engine >= EngineType.RedAlert2) {
 					if (isDamaged) isOnFire = true;
 					if (health > _conditionRedHealth && _canBeOccupied) isOnFire = false;
 				}

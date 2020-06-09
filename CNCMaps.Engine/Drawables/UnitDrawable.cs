@@ -5,12 +5,13 @@ using CNCMaps.Engine.Map;
 using CNCMaps.Engine.Rendering;
 using CNCMaps.FileFormats;
 using CNCMaps.FileFormats.VirtualFileSystem;
+using CNCMaps.Shared;
 
 namespace CNCMaps.Engine.Drawables {
 	internal class UnitDrawable : Drawable {
 
-		public UnitDrawable(VirtualFileSystem vfs, IniFile.IniSection rules, IniFile.IniSection art)
-			: base(vfs, rules, art) { }
+		public UnitDrawable(ModConfig config, VirtualFileSystem vfs, IniFile.IniSection rules, IniFile.IniSection art)
+			: base(config, vfs, rules, art) { }
 
 		public override void LoadFromRules() {
 			base.LoadFromArtEssential();
@@ -19,7 +20,7 @@ namespace CNCMaps.Engine.Drawables {
 			VoxelDrawable vxl = null;
 
 			if (IsVoxel) {
-				vxl = new VoxelDrawable(_vfs, Rules, Art);
+				vxl = new VoxelDrawable(_config, _vfs, Rules, Art);
 				vxl.OwnerCollection = OwnerCollection;
 				vxl.Props = Props;
 				vxl.LoadFromRules();
@@ -28,12 +29,12 @@ namespace CNCMaps.Engine.Drawables {
 				SubDrawables.Add(vxl);
 			}
 			else {
-				shp = new ShpDrawable(_vfs, Rules, Art);
+				shp = new ShpDrawable(_config, _vfs, Rules, Art);
 				shp.Props = Props;
 				shp.OwnerCollection = OwnerCollection;
 				shp.LoadFromRules();
 				shp.Shp = _vfs.Open<ShpFile>(shp.GetFilename());
-				shp.Props.FrameDecider = FrameDeciders.SHPVehicleFrameDecider(shp.StartStandFrame, shp.StandingFrames, shp.StartWalkFrame, shp.WalkFrames, shp.Facings);
+				shp.Props.FrameDecider = FrameDeciders.SHPVehicleFrameDecider(shp.StartStandFrame, shp.StandingFrames, shp.StartWalkFrame, shp.WalkFrames, shp.Facings, _config.Engine);
 				SubDrawables.Add(shp);
 			}
 
@@ -55,7 +56,7 @@ namespace CNCMaps.Engine.Drawables {
 					}
 
 					if (vxlturret == null && shp != null) {
-						shpturret = new ShpDrawable(_vfs, Rules, Art);
+						shpturret = new ShpDrawable(_config, _vfs, Rules, Art);
 						shpturret.Props = (DrawProperties)shp.Props.Clone();
 						shpturret.OwnerCollection = OwnerCollection;
 						shpturret.LoadFromRules();

@@ -14,27 +14,27 @@ namespace CNCMaps.Shared {
 
 		[NonSerialized]
 		private DynamicCustomTypeDescriptor _dctd = null;
-
-		public static ModConfig ActiveConfig { get; set; }
 		public static TheaterSettings ActiveTheater { get; private set; }
 
 		static ModConfig() {
 			DefaultsFS.Engine = EngineType.Firestorm;
 		}
 
-		public static void LoadDefaultConfig(EngineType engine) {
+		public static ModConfig GetDefaultConfig(EngineType engine) {
 			if (engine == EngineType.TiberianSun)
-				ActiveConfig = DefaultsTS;
+				return DefaultsTS;
 			else if (engine == EngineType.Firestorm)
-				ActiveConfig = DefaultsFS;
+				return DefaultsFS;
 			else if (engine == EngineType.RedAlert2)
-				ActiveConfig = DefaultsRA2;
+				return DefaultsRA2;
 			else if (engine == EngineType.YurisRevenge)
-				ActiveConfig = DefaultsYR;
+				return DefaultsYR;
+			else
+				throw new InvalidEnumArgumentException(nameof(engine));
 		}
 
-		public static bool SetActiveTheater(TheaterType theater) {
-			ActiveTheater = ActiveConfig.Theaters.First(t => t.Type == theater);
+		public bool SetActiveTheater(TheaterType theater) {
+			ActiveTheater = Theaters.First(t => t.Type == theater);
 			return ActiveTheater != null;
 		}
 
