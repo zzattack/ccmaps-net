@@ -58,8 +58,6 @@ namespace CNCMaps.Engine.Drawables {
 		public bool NewTheater { get; set; }
 		public string Image { get; set; }
 		public bool TheaterExtension { get; set; }
-		public static ushort TileWidth { get; set; }
-		public static ushort TileHeight { get; set; }
 
 		protected Drawable() { }
 		protected Drawable(ModConfig config, VirtualFileSystem vfs, IniFile.IniSection rules, IniFile.IniSection art) {
@@ -164,14 +162,14 @@ namespace CNCMaps.Engine.Drawables {
 			}
 
 			if (Rules.ReadString("Land") == "Rock") {
-				Props.Offset.Y += TileHeight / 2;
+				Props.Offset.Y += _config.TileHeight / 2;
 				//mainProps.ZBufferAdjust += Drawable.TileHeight / 2;
 			}
 			else if (Rules.ReadString("Land") == "Road") {
-				Props.Offset.Y += TileHeight / 2;
+				Props.Offset.Y += _config.TileHeight / 2;
 				// Some silly crap with low bridges not rendering.
 				if (Name.ToUpper().Contains("LOBRDG") || Name.ToUpper().Contains("LOBRDB")) 
-					Props.ZAdjust += TileHeight;
+					Props.ZAdjust += _config.TileHeight;
 			}
 			else if (Rules.ReadString("Land") == "Railroad") {
 				if (_config.Engine <= EngineType.Firestorm)
@@ -230,11 +228,11 @@ namespace CNCMaps.Engine.Drawables {
 
 			List<Point> verts = new List<Point>();
 			// Fail-safe because these don't always seem to get initialized properly with buildings places near edges of the map for some reason.
-			if (top != null) verts.Add(new Point(top.Dx * TileWidth / 2, top.Dy * TileHeight / 2));
-			if (left != null) verts.Add(new Point(left.Dx * TileWidth / 2 - TileWidth / 4, left.Dy * TileHeight / 2 + TileHeight / 4));
-			if (bottom!= null) verts.Add(new Point(bottom.Dx * TileWidth / 2, bottom.Dy * TileHeight / 2 + TileHeight / 2));
-			if (right != null) verts.Add(new Point(right.Dx * TileWidth / 2 + TileHeight / 2, right.Dy * TileHeight / 2 + TileHeight / 4));
-			if (top != null) verts.Add(new Point(top.Dx * TileWidth / 2, top.Dy * TileHeight / 2));
+			if (top != null) verts.Add(new Point(top.Dx * _config.TileWidth / 2, top.Dy * _config.TileHeight / 2));
+			if (left != null) verts.Add(new Point(left.Dx * _config.TileWidth / 2 - _config.TileWidth / 4, left.Dy * _config.TileHeight / 2 + _config.TileHeight / 4));
+			if (bottom!= null) verts.Add(new Point(bottom.Dx * _config.TileWidth / 2, bottom.Dy * _config.TileHeight / 2 + _config.TileHeight / 2));
+			if (right != null) verts.Add(new Point(right.Dx * _config.TileWidth / 2 + _config.TileHeight / 2, right.Dy * _config.TileHeight / 2 + _config.TileHeight / 4));
+			if (top != null) verts.Add(new Point(top.Dx * _config.TileWidth / 2, top.Dy * _config.TileHeight / 2));
 
 			List<Point> verts2 = new List<Point>();
 			foreach (var p in verts) {

@@ -135,14 +135,14 @@ namespace CNCMaps.Engine.Game {
 				case CollectionType.Building:
 				case CollectionType.Overlay:
 				case CollectionType.Smudge:
-					drawable.Props.Offset.Offset(Drawable.TileWidth / 2, 0);
+					drawable.Props.Offset.Offset(_config.TileWidth / 2, 0);
 					break;
 				case CollectionType.Terrain:
 				case CollectionType.Vehicle:
 				case CollectionType.Infantry:
 				case CollectionType.Aircraft:
 				case CollectionType.Animation:
-					drawable.Props.Offset.Offset(Drawable.TileWidth / 2, Drawable.TileHeight / 2);
+					drawable.Props.Offset.Offset(_config.TileWidth / 2, _config.TileHeight / 2);
 					break;
 			}
 		}

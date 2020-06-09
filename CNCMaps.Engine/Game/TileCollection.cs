@@ -295,7 +295,7 @@ namespace CNCMaps.Engine.Game {
 		}
 
 		protected override Drawable MakeDrawable(string objName) {
-			return new TileDrawable(null, null, null, null, null) { Name = objName };
+			return new TileDrawable(_config, _vfs, null, null, null) { Name = objName };
 		}
 
 		public void InitAnimations(ObjectCollection animations) {

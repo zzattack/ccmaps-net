@@ -14,7 +14,7 @@ namespace CNCMaps.Engine.Drawables {
 		public HvaFile Hva;
 
 		public VoxelDrawable(ModConfig config, VirtualFileSystem vfs, IniFile.IniSection rules, IniFile.IniSection art) : base(config, vfs, rules, art) { }
-		public VoxelDrawable(VxlFile vxl, HvaFile hva) {
+		public VoxelDrawable(ModConfig config, VxlFile vxl, HvaFile hva) : base(config, null, null, null) {
 			Vxl = vxl;
 			Hva = hva;
 		}
@@ -29,13 +29,13 @@ namespace CNCMaps.Engine.Drawables {
 		public override Rectangle GetBounds(GameObject obj) {
 			if (Vxl == null || Hva == null) return Rectangle.Empty;
 			var bounds = VxlRenderer.GetBounds(obj, Vxl, Hva, Props);
-			bounds.Offset(obj.Tile.Dx * TileWidth / 2, (obj.Tile.Dy - obj.Tile.Z) * TileHeight / 2);
+			bounds.Offset(obj.Tile.Dx * _config.TileWidth / 2, (obj.Tile.Dy - obj.Tile.Z) * _config.TileHeight / 2);
 			bounds.Offset(Props.GetOffset(obj));
 			return bounds;
 		}
 
 		private unsafe void BlitVoxelToSurface(DrawingSurface ds, DrawingSurface vxl_ds, GameObject obj, DrawProperties props, int transLucency = 0) {
-			Point d = new Point(obj.Tile.Dx * TileWidth / 2, (obj.Tile.Dy - obj.Tile.Z) * TileHeight / 2);
+			Point d = new Point(obj.Tile.Dx * _config.TileWidth / 2, (obj.Tile.Dy - obj.Tile.Z) * _config.TileHeight / 2);
 			d.Offset(props.GetOffset(obj));
 			d.Offset(-vxl_ds.BitmapData.Width / 2, -vxl_ds.BitmapData.Height / 2);
 
@@ -76,7 +76,7 @@ namespace CNCMaps.Engine.Drawables {
 						// if (y < firstRowTouched)
 						// 	firstRowTouched = (short)y;
 
-						short zBufVal = (short)((obj.Tile.Rx + obj.Tile.Ry + obj.Tile.Z) * TileHeight / 2);
+						short zBufVal = (short)((obj.Tile.Rx + obj.Tile.Ry + obj.Tile.Z) * _config.TileHeight / 2);
 						if (zBufVal >= zBuffer[zIdx])
 							zBuffer[zIdx] = zBufVal;
 					}

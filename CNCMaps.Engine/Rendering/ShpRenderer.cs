@@ -52,8 +52,8 @@ namespace CNCMaps.Engine.Rendering {
 				return;
 
 			Point offset = props.GetOffset(obj);
-			offset.X += obj.Tile.Dx * Drawable.TileWidth / 2 - shp.Width / 2 + img.X;
-			offset.Y += (obj.Tile.Dy - obj.Tile.Z) * Drawable.TileHeight / 2 - shp.Height / 2 + img.Y;
+			offset.X += obj.Tile.Dx * _config.TileWidth / 2 - shp.Width / 2 + img.X;
+			offset.Y += (obj.Tile.Dy - obj.Tile.Z) * _config.TileHeight / 2 - shp.Height / 2 + img.Y;
 			Logger.Trace("Drawing SHP file {0} (Frame {1}) at ({2},{3})", shp.FileName, frameIndex, offset.X, offset.Y);
 
 			int stride = ds.BitmapData.Stride;
@@ -71,8 +71,8 @@ namespace CNCMaps.Engine.Rendering {
 
 			int rIdx = 0; // image pixel index
 			int zIdx = offset.X + offset.Y * ds.Width; // z-buffer pixel index
-			short hBufVal = (short)(obj.Tile.Z * Drawable.TileHeight / 2);
-			short zOffset = (short)((obj.BottomTile.Rx + obj.BottomTile.Ry) * Drawable.TileHeight / 2 + props.ZAdjust);
+			short hBufVal = (short)(obj.Tile.Z * _config.TileHeight / 2);
+			short zOffset = (short)((obj.BottomTile.Rx + obj.BottomTile.Ry) * _config.TileHeight / 2 + props.ZAdjust);
 
 			if (!dr.Flat)
 				hBufVal += shp.Height;
@@ -153,8 +153,8 @@ namespace CNCMaps.Engine.Rendering {
 				return;
 
 			Point offset = props.GetShadowOffset(obj);
-			offset.X += obj.Tile.Dx * Drawable.TileWidth / 2 - shp.Width / 2 + img.X;
-			offset.Y += (obj.Tile.Dy - obj.Tile.Z) * Drawable.TileHeight / 2 - shp.Height / 2 + img.Y;
+			offset.X += obj.Tile.Dx * _config.TileWidth / 2 - shp.Width / 2 + img.X;
+			offset.Y += (obj.Tile.Dy - obj.Tile.Z) * _config.TileHeight / 2 - shp.Height / 2 + img.Y;
 			Logger.Trace("Drawing SHP shadow {0} (frame {1}) at ({2},{3})", shp.FileName, frameIndex, offset.X, offset.Y);
 
 			int stride = ds.BitmapData.Stride;
@@ -168,11 +168,11 @@ namespace CNCMaps.Engine.Rendering {
 			byte* w = (byte*)ds.BitmapData.Scan0 + offset.X * 3 + stride * offset.Y;
 			int zIdx = offset.X + offset.Y * ds.Width;
 			int rIdx = 0;
-			short zOffset = (short)((obj.Tile.Rx + obj.Tile.Ry) * Drawable.TileHeight / 2 - shp.Height / 2 + img.Y);
-			int castHeight = obj.Tile.Z * Drawable.TileHeight / 2;
+			short zOffset = (short)((obj.Tile.Rx + obj.Tile.Ry) * _config.TileHeight / 2 - shp.Height / 2 + img.Y);
+			int castHeight = obj.Tile.Z * _config.TileHeight / 2;
 			if (obj.Drawable != null && !obj.Drawable.Flat) {
 				castHeight += shp.Height;
-				castHeight += obj.Drawable.TileElevation * Drawable.TileHeight / 2;
+				castHeight += obj.Drawable.TileElevation * _config.TileHeight / 2;
 			}
 
 			for (int y = 0; y < img.Height; y++) {
@@ -224,18 +224,18 @@ namespace CNCMaps.Engine.Rendering {
 				return;
 
 			Point offset = props.GetOffset(obj);
-			offset.X += obj.Tile.Dx * Drawable.TileWidth / 2;
-			offset.Y += (obj.Tile.Dy - obj.Tile.Z) * Drawable.TileHeight / 2;
+			offset.X += obj.Tile.Dx * _config.TileWidth / 2;
+			offset.Y += (obj.Tile.Dy - obj.Tile.Z) * _config.TileHeight / 2;
 			Logger.Trace("Drawing AlphaImage SHP file {0} (frame {1}) at ({2},{3})", shp.FileName, frameIndex, offset.X, offset.Y);
 
 			int stride = ds.BitmapData.Stride;
 			var w_low = (byte*)ds.BitmapData.Scan0;
 			byte* w_high = (byte*)ds.BitmapData.Scan0 + stride * ds.BitmapData.Height;
 
-			int dx = offset.X + Drawable.TileWidth / 2 - shp.Width / 2 + img.X,
+			int dx = offset.X + _config.TileWidth / 2 - shp.Width / 2 + img.X,
 				dy = offset.Y - shp.Height / 2 + img.Y;
 			byte* w = (byte*)ds.BitmapData.Scan0 + dx * 3 + stride * dy;
-			short zOffset = (short)((obj.Tile.Rx + obj.Tile.Ry) * Drawable.TileHeight / 2 - shp.Height / 2 + img.Y + props.ZAdjust);
+			short zOffset = (short)((obj.Tile.Rx + obj.Tile.Ry) * _config.TileHeight / 2 - shp.Height / 2 + img.Y + props.ZAdjust);
 			int rIdx = 0;
 
 			for (int y = 0; y < img.Height; y++) {

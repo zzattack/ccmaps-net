@@ -163,6 +163,13 @@ namespace CNCMaps.Shared {
 			return ret;
 		}
 
+		public int TileWidth {
+			get { return Engine == EngineType.RedAlert2 || Engine == EngineType.YurisRevenge ? 60 : 48; }
+		}
+
+		public int TileHeight {
+			get { return Engine == EngineType.RedAlert2 || Engine == EngineType.YurisRevenge ? 30 : 24; }
+		}
 
 		#region Defaults per game
 

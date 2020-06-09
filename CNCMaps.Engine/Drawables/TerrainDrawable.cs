@@ -34,7 +34,7 @@ namespace CNCMaps.Engine.Drawables {
 			if (InvisibleInGame || terrainShp?.Shp == null) return Rectangle.Empty;
 			var renderer = new ShpRenderer(_config, _vfs);
 			var bounds = renderer.GetBounds(obj, terrainShp.Shp, Props);
-			bounds.Offset(obj.Tile.Dx * TileWidth / 2, (obj.Tile.Dy - obj.Tile.Z) * TileHeight / 2);
+			bounds.Offset(obj.Tile.Dx * _config.TileWidth / 2, (obj.Tile.Dy - obj.Tile.Z) * _config.TileHeight / 2);
 			bounds.Offset(Props.GetOffset(obj));
 			return bounds;
 		}

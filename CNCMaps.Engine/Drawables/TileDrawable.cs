@@ -22,7 +22,8 @@ namespace CNCMaps.Engine.Drawables {
 
 			var tmpFile = TsEntry.GetTmpFile(obj as MapTile);
 			if (tmpFile != null) { 
-				TmpRenderer.Draw((MapTile)obj, tmpFile, ds);
+				var renderer = new TmpRenderer(_config);
+				renderer.Draw((MapTile)obj, tmpFile, ds);
 
 				if (TsEntry.AnimationDrawable != null && TsEntry.AnimationSubtile == (obj as MapTile).SubTile) {
 					TsEntry.AnimationDrawable.Draw(obj, ds, false);

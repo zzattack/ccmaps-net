@@ -121,7 +121,7 @@ namespace CNCMaps.Engine.Drawables {
 				// NewTheater/generic image fallback support for turrets.
 				string turretNameShp = NewTheater ? OwnerCollection.ApplyNewTheaterIfNeeded(turretName, turretName + ".shp") : turretName + ".shp";
 				Drawable turret = Rules.ReadBool("TurretAnimIsVoxel")
-					? (Drawable)new VoxelDrawable(_vfs.Open<VxlFile>(turretName + ".vxl"), _vfs.Open<HvaFile>(turretName + ".hva"))
+					? (Drawable)new VoxelDrawable(_config, _vfs.Open<VxlFile>(turretName + ".vxl"), _vfs.Open<HvaFile>(turretName + ".hva"))
 					: (Drawable)new ShpDrawable(new ShpRenderer(_config, _vfs), _vfs.Open<ShpFile>(turretNameShp));
 				turret.Props.Offset = Props.Offset + new Size(Rules.ReadInt("TurretAnimX"), Rules.ReadInt("TurretAnimY"));
 				turret.Props.HasShadow = Rules.ReadBool("UseTurretShadow");
@@ -133,7 +133,7 @@ namespace CNCMaps.Engine.Drawables {
 				if (turret is VoxelDrawable && turretName.ToUpper().Contains("TUR")) {
 					string barrelName = turretName.Replace("TUR", "BARL");
 					if (_vfs.FileExists(barrelName + ".vxl")) {
-						var barrel = new VoxelDrawable(_vfs.Open<VxlFile>(barrelName + ".vxl"), _vfs.Open<HvaFile>(barrelName + ".hva"));
+						var barrel = new VoxelDrawable(_config, _vfs.Open<VxlFile>(barrelName + ".vxl"), _vfs.Open<HvaFile>(barrelName + ".hva"));
 						SubDrawables.Add(barrel);
 						barrel.Props = turret.Props;
 					}
@@ -245,7 +245,7 @@ namespace CNCMaps.Engine.Drawables {
 
 				var fire = new AnimDrawable(_config, _vfs, Rules, Art, _vfs.Open<ShpFile>(fireAnim + ".shp"));
 				fire.Props.PaletteOverride = GetFireAnimPalette(fireArt);
-				fire.Props.Offset = new Point(Int32.Parse(coords[0]) + (TileWidth / 2), Int32.Parse(coords[1]));
+				fire.Props.Offset = new Point(Int32.Parse(coords[0]) + (_config.TileWidth / 2), Int32.Parse(coords[1]));
 				fire.Props.FrameDecider = FrameDeciders.RandomFrameDecider;
 				_fires.Add(fire);
 			}

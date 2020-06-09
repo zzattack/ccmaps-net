@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.Drawing;
 using CNCMaps.Engine.Drawables;
 using CNCMaps.FileFormats.Map;
+using CNCMaps.Shared;
 using CNCMaps.Shared.Utility;
 using NLog;
 
@@ -25,13 +26,15 @@ namespace CNCMaps.Engine.Map {
 		public MapTile[,] GridTouchedBy { get; private set; }
 		MapTile[,] tiles;
 		private Size fullSize;
+		private readonly ModConfig _config;
 
-		public TileLayer(int w, int h)
-			: this(new Size(w, h)) {
+		public TileLayer(int w, int h, ModConfig config)
+			: this(new Size(w, h), config) {
 		}
 
-		public TileLayer(Size fullSize) {
+		public TileLayer(Size fullSize, ModConfig config) {
 			this.fullSize = fullSize;
+			_config = config;
 			tiles = new MapTile[fullSize.Width * 2 - 1, fullSize.Height];
 			GridTouched = new TouchType[fullSize.Width * 2 - 1, fullSize.Height];
 			GridTouchedBy = new MapTile[fullSize.Width * 2 - 1, fullSize.Height];
@@ -81,16 +84,16 @@ namespace CNCMaps.Engine.Map {
 				return GetTile(dx, dy / 2);
 		}
 
-		public static Point GetTilePixelCenter(IsoTile t) {
-			var ret = new Point(t.Dx * Drawable.TileWidth / 2, (t.Dy - t.Z) * Drawable.TileHeight);
-			ret.Offset(Drawable.TileWidth / 2, Drawable.TileHeight / 2);
+		public Point GetTilePixelCenter(IsoTile t) {
+			var ret = new Point(t.Dx * _config.TileWidth / 2, (t.Dy - t.Z) * _config.TileHeight);
+			ret.Offset(_config.TileWidth / 2, _config.TileHeight / 2);
 			return ret;
 		}
 
 		public MapTile GetTileScreen(Point p, bool fixOOB = true, bool omitHeight = false) {
 			// use inverse matrix of world projection for screen to world
-			int w = Drawable.TileWidth / 2;
-			int h = Drawable.TileHeight / 2;
+			int w = _config.TileWidth / 2;
+			int h = _config.TileHeight / 2;
 			int fx = w * Width;
 			int fy = h * (-1 - Width);
 			int rx = (p.X * h + p.Y * w - fx * h - fy * w) / (2 * w * h);

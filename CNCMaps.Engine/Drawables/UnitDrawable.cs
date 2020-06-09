@@ -47,7 +47,7 @@ namespace CNCMaps.Engine.Drawables {
 					var turretHva = _vfs.Open<HvaFile>(Image + "TUR.hva");
 
 					if (turretVxl != null && turretHva != null) {
-						vxlturret = new VoxelDrawable(turretVxl, turretHva);
+						vxlturret = new VoxelDrawable(_config, turretVxl, turretHva);
 						vxlturret.Props.Offset = Props.Offset;
 						vxlturret.Props.Offset += new Size(Rules.ReadInt("TurretAnimX"), Rules.ReadInt("TurretAnimY"));
 						vxlturret.Props.TurretVoxelOffset = Art.ReadFloat("TurretOffset");
@@ -69,7 +69,7 @@ namespace CNCMaps.Engine.Drawables {
 					var barrelVxl = _vfs.Open<VxlFile>(Image + "BARL.vxl");
 					var barrelHva = _vfs.Open<HvaFile>(Image + "BARL.hva");
 					if (barrelVxl != null && barrelHva != null) {
-						var barrel = new VoxelDrawable(barrelVxl, barrelHva);
+						var barrel = new VoxelDrawable(_config, barrelVxl, barrelHva);
 						if (vxlturret != null)
 							barrel.Props = vxlturret.Props;
 						else if (shp != null) {
@@ -87,7 +87,7 @@ namespace CNCMaps.Engine.Drawables {
 		public override void Draw(GameObject obj, DrawingSurface ds, bool shadows = true) {
 			Size onBridgeOffset = Size.Empty;
 			if (obj is OwnableObject && (obj as OwnableObject).OnBridge)
-				onBridgeOffset = new Size(0, -4 * TileHeight / 2);
+				onBridgeOffset = new Size(0, -4 * _config.TileHeight / 2);
 
 			foreach (var drawable in SubDrawables) {
 				drawable.Props.Offset += onBridgeOffset;
@@ -110,7 +110,7 @@ namespace CNCMaps.Engine.Drawables {
 
 			Point onBridgeOffset = Point.Empty;
 			if (obj is OwnableObject && (obj as OwnableObject).OnBridge)
-				onBridgeOffset = new Point(0, -4 * TileHeight / 2);
+				onBridgeOffset = new Point(0, -4 * _config.TileHeight / 2);
 			bounds.Offset(onBridgeOffset);
 
 			return bounds;

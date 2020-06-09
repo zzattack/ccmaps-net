@@ -64,7 +64,7 @@ namespace CNCMaps.Engine.Map {
 			FullSize = mf.FullSize;
 			LocalSize = mf.LocalSize;
 
-			_tiles = new TileLayer(FullSize.Size);
+			_tiles = new TileLayer(FullSize.Size, config);
 
 			LoadAllObjects(mf);
 
@@ -230,9 +230,6 @@ namespace CNCMaps.Engine.Map {
 
 		// between LoadMap and LoadTheater, the VFS should be initialized
 		public bool LoadTheater() {
-			Drawable.TileWidth = (ushort)TileWidth;
-			Drawable.TileHeight = (ushort)TileHeight;
-
 			_theater = new Theater(TheaterType, _config, _vfs, _rules, _art);
 			if (!_theater.Initialize())
 				return false;
@@ -350,8 +347,8 @@ namespace CNCMaps.Engine.Map {
 				var bounds = obj.GetBounds();
 				// bounds to foundation
 				Size occupy = new Size(
-					(int)Math.Max(1, Math.Ceiling(bounds.Width / (double)Drawable.TileWidth)),
-					(int)Math.Max(1, Math.Ceiling(bounds.Height / (double)Drawable.TileHeight)));
+					(int)Math.Max(1, Math.Ceiling(bounds.Width / (double)_config.TileWidth)),
+					(int)Math.Max(1, Math.Ceiling(bounds.Height / (double)_config.TileHeight)));
 
 				int bridge = (obj as OwnableObject).OnBridge ? -2 : 0;
 				var top = _tiles.GetTileR(obj.Tile.Rx + bridge - 1 + occupy.Width, obj.Tile.Ry + bridge - 1 + occupy.Height);
@@ -598,15 +595,15 @@ namespace CNCMaps.Engine.Map {
 
 				try {
 					if (t != null && tile != null && t.IceGrowth > 0) {
-						int destX = tile.Dx * TileWidth / 2;
-						int destY = (tile.Dy - tile.Z) * TileHeight / 2;
+						int destX = tile.Dx * _config.TileWidth / 2;
+						int destY = (tile.Dy - tile.Z) * _config.TileHeight / 2;
 						bool vert = FullSize.Height * 2 > FullSize.Width;
 
 						int radius;
 						if (vert)
-							radius = FullSize.Height * TileHeight / 2 / 144 / 3;
+							radius = FullSize.Height * _config.TileHeight / 2 / 144 / 3;
 						else
-							radius = FullSize.Width * TileWidth / 2 / 133 / 3;
+							radius = FullSize.Width * _config.TileWidth / 2 / 133 / 3;
 
 						int h = radius, w = radius;
 						for (int drawY = destY - h / 2; drawY < destY + h; drawY++) {
@@ -691,7 +688,7 @@ namespace CNCMaps.Engine.Map {
 		private void DrawStartMarkersBittah(Graphics gfx, Rectangle fullImage, Rectangle previewImage) {
 			foreach (var w in _wayPoints.Where(w => w.Number < 8)) {
 				var t = _tiles.GetTile(w.Tile);
-				var center = new Point(t.Dx * Drawable.TileWidth / 2, (t.Dy - t.Z) * Drawable.TileHeight / 2);
+				var center = new Point(t.Dx * _config.TileWidth / 2, (t.Dy - t.Z) * _config.TileHeight / 2);
 				// project to preview dimensions
 				double pctFullX = (center.X - fullImage.Left) / (double)fullImage.Width;
 				double pctFullY = (center.Y - fullImage.Top) / (double)fullImage.Height;
@@ -709,7 +706,7 @@ namespace CNCMaps.Engine.Map {
 		private void DrawStartMarkersAro(Graphics gfx, Rectangle fullImage, Rectangle previewImage) {
 			foreach (var w in _wayPoints.Where(w => w.Number < 8)) {
 				var t = _tiles.GetTile(w.Tile);
-				var center = new Point(t.Dx * Drawable.TileWidth / 2, (t.Dy - t.Z) * Drawable.TileHeight / 2);// TileLayer.GetTilePixelCenter(w.Tile);
+				var center = new Point(t.Dx * _config.TileWidth / 2, (t.Dy - t.Z) * _config.TileHeight / 2);// TileLayer.GetTilePixelCenter(w.Tile);
 																											  // project to preview dimensions
 				double pctFullX = (center.X - fullImage.Left) / (double)fullImage.Width;
 				double pctFullY = (center.Y - fullImage.Top) / (double)fullImage.Height;
@@ -782,10 +779,10 @@ namespace CNCMaps.Engine.Map {
 						try {
 							MapTile t = _tiles.GetTile(entry.Tile);
 							if (t == null) continue;
-							int centerX = (t.Dx + 1) * TileWidth / 2;
-							int centerY = (t.Dy - t.Z + 1) * TileHeight / 2;
-							int halfWidth = (int)((double)TileWidth * (markerSize / 2.0));
-							int halfHeight = (int)((double)TileHeight * (markerSize / 2.0));
+							int centerX = (t.Dx + 1) * _config.TileWidth / 2;
+							int centerY = (t.Dy - t.Z + 1) * _config.TileHeight / 2;
+							int halfWidth = (int)((double)_config.TileWidth * (markerSize / 2.0));
+							int halfHeight = (int)((double)_config.TileHeight * (markerSize / 2.0));
 							int opacity = 155 + (int)((7.2 - StartMarkerSize) * 18);
 							if (opacity < 145) opacity = 145;
 							if (opacity > 255) opacity = 255;
@@ -794,8 +791,8 @@ namespace CNCMaps.Engine.Map {
 								StartPosMarking == StartPositionMarking.Circled) {
 								int startX = centerX - halfWidth;
 								int startY = centerY - halfHeight;
-								int width = (int)((double)TileWidth * markerSize);
-								int height = (int)((double)TileHeight * markerSize);
+								int width = (int)((double)_config.TileWidth * markerSize);
+								int height = (int)((double)_config.TileHeight * markerSize);
 
 								if (StartPosMarking == StartPositionMarking.Ellipsed)
 									g.FillEllipse(new SolidBrush(Color.FromArgb(opacity, Color.Red)), startX, startY, width, height);
@@ -902,18 +899,18 @@ namespace CNCMaps.Engine.Map {
 		}
 
 		public Rectangle GetFullMapSizePixels() {
-			int left = TileWidth / 2,
-				top = TileHeight / 2;
-			int right = (FullSize.Width - 1) * TileWidth;
+			int left = _config.TileWidth / 2,
+				top = _config.TileHeight / 2;
+			int right = (FullSize.Width - 1) * _config.TileWidth;
 			int cutoff = FindCutoffHeight();
-			int bottom = cutoff * TileHeight + (1 + (cutoff % 2)) * (TileHeight / 2);
+			int bottom = cutoff * _config.TileHeight + (1 + (cutoff % 2)) * (_config.TileHeight / 2);
 			return Rectangle.FromLTRB(left, top, right, bottom);
 		}
 
 		public Rectangle GetLocalSizePixels() {
-			int left = Math.Max(LocalSize.Left * TileWidth, 0),
-				top = Math.Max(LocalSize.Top - 3, 0) * TileHeight + TileHeight / 2;
-			int right = (LocalSize.Left + LocalSize.Width) * TileWidth;
+			int left = Math.Max(LocalSize.Left * _config.TileWidth, 0),
+				top = Math.Max(LocalSize.Top - 3, 0) * _config.TileHeight + _config.TileHeight / 2;
+			int right = (LocalSize.Left + LocalSize.Width) * _config.TileWidth;
 
 			int bottom1 = 2 * (LocalSize.Top - 3 + LocalSize.Height + 5);
 			if (_config.ExtraOptions.FirstOrDefault() != null) {
@@ -926,7 +923,7 @@ namespace CNCMaps.Engine.Map {
 			}
 			int cutoff = FindCutoffHeight() * 2;
 			int bottom2 = (cutoff + 1 + (cutoff % 2));
-			int bottom = Math.Min(bottom1, bottom2) * (TileHeight / 2);
+			int bottom = Math.Min(bottom1, bottom2) * (_config.TileHeight / 2);
 			return Rectangle.FromLTRB(left, top, right, bottom);
 		}
 
@@ -1005,7 +1002,7 @@ namespace CNCMaps.Engine.Map {
 			}
 		}
 		public void Draw() {
-			_drawingSurface = new DrawingSurface(FullSize.Width * TileWidth, FullSize.Height * TileHeight, PixelFormat.Format24bppRgb);
+			_drawingSurface = new DrawingSurface(FullSize.Width * _config.TileWidth, FullSize.Height * _config.TileHeight, PixelFormat.Format24bppRgb);
 
 #if SORT
 			Logger.Info("Sorting objects map");
@@ -1193,14 +1190,6 @@ namespace CNCMaps.Engine.Map {
 			return _theater;
 		}
 
-		public int TileWidth {
-			get { return _config.Engine == EngineType.RedAlert2 || _config.Engine == EngineType.YurisRevenge ? 60 : 48; }
-		}
-
-		public int TileHeight {
-			get { return _config.Engine == EngineType.RedAlert2 || _config.Engine == EngineType.YurisRevenge ? 30 : 24; }
-		}
-
 		public void FreeUseless() {
 			_rules.Dispose();
 			_art.Dispose();
@@ -1338,8 +1327,8 @@ namespace CNCMaps.Engine.Map {
 					MapTile endTile = _tiles.GetTileR(tunnelLine.EndX, tunnelLine.EndY);
 
 					// Current adjustment makes it look correct but the back facing tunnel coordinates are shown inaccurately
-					Point startTileCenter = new Point((startTile.Dx + 1) * Drawable.TileWidth / 2, (startTile.Dy - startTile.Z + 1 - (adjustPosition ? 4 : 0)) * Drawable.TileHeight / 2);
-					Point endTileCenter = new Point((endTile.Dx + 1) * Drawable.TileWidth / 2, (endTile.Dy - endTile.Z + 1 - (adjustPosition ? 4 : 0)) * Drawable.TileHeight / 2);
+					Point startTileCenter = new Point((startTile.Dx + 1) * _config.TileWidth / 2, (startTile.Dy - startTile.Z + 1 - (adjustPosition ? 4 : 0)) * _config.TileHeight / 2);
+					Point endTileCenter = new Point((endTile.Dx + 1) * _config.TileWidth / 2, (endTile.Dy - endTile.Z + 1 - (adjustPosition ? 4 : 0)) * _config.TileHeight / 2);
 
 					endCells.Add(tunnelLine.EndX + 1000 * tunnelLine.EndY);
 					if (endCells.Contains(tunnelLine.StartX + 1000 * tunnelLine.StartY)) {
@@ -1367,44 +1356,44 @@ namespace CNCMaps.Engine.Map {
 							switch (d) {
 								case 0:
 									nextTile = currentTile.Layer.GetNeighbourTile(currentTile, TileLayer.TileDirection.TopRight);
-									addWidth = Drawable.TileWidth / 2;
-									addHeight = -Drawable.TileHeight / 2;
+									addWidth = _config.TileWidth / 2;
+									addHeight = -_config.TileHeight / 2;
 									break;
 								case 1:
 									nextTile = currentTile.Layer.GetNeighbourTile(currentTile, TileLayer.TileDirection.Right);
-									addWidth = Drawable.TileWidth;
+									addWidth = _config.TileWidth;
 									addHeight = 0;
 									break;
 								case 2:
 									nextTile = currentTile.Layer.GetNeighbourTile(currentTile, TileLayer.TileDirection.BottomRight);
-									addWidth = Drawable.TileWidth / 2;
-									addHeight = Drawable.TileHeight / 2;
+									addWidth = _config.TileWidth / 2;
+									addHeight = _config.TileHeight / 2;
 									break;
 								case 3:
 									nextTile = currentTile.Layer.GetNeighbourTile(currentTile, TileLayer.TileDirection.Bottom);
 									addWidth = 0;
-									addHeight = Drawable.TileHeight;
+									addHeight = _config.TileHeight;
 									deltaFromCenterX = deltaFromCenterY - 6;
 									break;
 								case 4:
 									nextTile = currentTile.Layer.GetNeighbourTile(currentTile, TileLayer.TileDirection.BottomLeft);
-									addWidth = -Drawable.TileWidth / 2;
-									addHeight = Drawable.TileHeight / 2;
+									addWidth = -_config.TileWidth / 2;
+									addHeight = _config.TileHeight / 2;
 									break;
 								case 5:
 									nextTile = currentTile.Layer.GetNeighbourTile(currentTile, TileLayer.TileDirection.Left);
-									addWidth = -Drawable.TileWidth;
+									addWidth = -_config.TileWidth;
 									addHeight = 0;
 									break;
 								case 6:
 									nextTile = currentTile.Layer.GetNeighbourTile(currentTile, TileLayer.TileDirection.TopLeft);
-									addWidth = -Drawable.TileWidth / 2;
-									addHeight = -Drawable.TileHeight / 2;
+									addWidth = -_config.TileWidth / 2;
+									addHeight = -_config.TileHeight / 2;
 									break;
 								case 7:
 									nextTile = currentTile.Layer.GetNeighbourTile(currentTile, TileLayer.TileDirection.Top);
 									addWidth = 0;
-									addHeight = -Drawable.TileHeight;
+									addHeight = -_config.TileHeight;
 									deltaFromCenterX = deltaFromCenterY + 6;
 									break;
 							}
