@@ -201,10 +201,16 @@ namespace CNCMaps.Engine.Rendering {
 			// formula follows p' = m-((f-p)/z)*z' where (p=pan pre, p'=pan after, f=focus pixel, z=zoom pre, z'=zoom after)
 			_panningPos.X = (float)(focus.X - (focus.X - _panningPos.X) / zoomPre * zoomPost);
 			_panningPos.Y = (float)(focus.Y - (focus.Y - _panningPos.Y) / zoomPre * zoomPost);
+
+			Invalidate();
 		}
 
 		public void ZoomToFit() {
 			ZoomToRegion(new Rectangle(Point.Empty, ImageSize));
+		}
+
+		public void ZoomToLevel(int zoomLevel, PointF focus) {
+			ZoomStep(zoomLevel - _zoomStep, focus);
 		}
 
 		private void ZoomToRegion(Rectangle region) {

@@ -3,6 +3,7 @@ using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 using System.Drawing;
+using System.Drawing.Imaging;
 using CNCMaps.Engine.Drawables;
 using CNCMaps.Engine.Game;
 using CNCMaps.Engine.Map;
@@ -15,6 +16,8 @@ namespace CNCMaps.Engine.Rendering {
 		private Map.Map _map;
 		private int _cells;
 		private Point _oldPoint;
+		private Bitmap _heightMap;
+		private Bitmap _shadowMap;
 
 		public DebugDrawingSurfaceWindow() {
 			InitializeComponent();
@@ -30,14 +33,17 @@ namespace CNCMaps.Engine.Rendering {
 			_cells = (_map.FullSize.Width * 2 - 1) * _map.FullSize.Height;
 
 			ds.Unlock();
-			canvas.Image = ds.Bitmap;
+
+			// map is pre-rendered bitmap, shadow/heightmap are rendered on demand
+			canvasMap.Image = ds.Bitmap;
 		}
 
 		private void canvas_MouseMove(object sender, MouseEventArgs e) {
 			StringBuilder sb = new StringBuilder();
+			var canvas = sender as ZoomableCanvas;
 			var pixelLocationF = canvas.PointToImagePixel(e.Location);
 			var location = new Point((int)Math.Round(pixelLocationF.X, 0), (int)Math.Round(pixelLocationF.Y, 0));
-			if (location.X < 0 || location.Y < 0 || location.X >= canvas.Image.Width || location.Y >= canvas.Image.Height)
+			if (location.X < 0 || location.Y < 0 || location.X >= canvas.ImageSize.Width || location.Y >= canvas.ImageSize.Height)
 				return;
 
 			int rIdx = location.X + location.Y * _drawingSurface.Width;
@@ -104,9 +110,10 @@ namespace CNCMaps.Engine.Rendering {
 		public event TileEvaluationDelegate RequestTileEvaluate;
 		private void canvas_MouseDown(object sender, MouseEventArgs e) {
 			if (e.Button == MouseButtons.Left) {
+				var canvas = sender as ZoomableCanvas;
 				var pixelLocationF = canvas.PointToImagePixel(e.Location);
 				var location = new Point((int)Math.Round(pixelLocationF.X, 0), (int)Math.Round(pixelLocationF.Y, 0));
-				if (location.X < 0 || location.Y < 0 || location.X >= canvas.Image.Width || location.Y >= canvas.Image.Height)
+				if (location.X < 0 || location.Y < 0 || location.X >= canvas.ImageSize.Width || location.Y >= canvas.ImageSize.Height)
 					return;
 
 				var tile = _tiles.GetTileScreen(location);
@@ -117,6 +124,78 @@ namespace CNCMaps.Engine.Rendering {
 			}
 			if (e.Button == MouseButtons.Right) {
 				_oldPoint = e.Location;
+			}
+		}
+
+		private void tabs_SelectedIndexChanges(object sender, EventArgs e) {
+			if (tabs.SelectedTab == tpHeightmap && _heightMap == null) {
+				_heightMap = new Bitmap(_drawingSurface.Width, _drawingSurface.Height, PixelFormat.Format8bppIndexed);
+
+				// Create grayscale palette
+				ColorPalette pal = _heightMap.Palette;
+				for (int i = 0; i <= 255; i++) {
+					pal.Entries[i] = Color.FromArgb(i, i, i);
+				}
+				_heightMap.Palette = pal; // re-setting activates palette
+
+				// Draw map
+				var heightBuffer = _drawingSurface.GetHeightBuffer();
+				var bmd = _heightMap.LockBits(new Rectangle(0, 0, _drawingSurface.Width, _drawingSurface.Height), ImageLockMode.WriteOnly, PixelFormat.Format8bppIndexed);
+				uint idx = 0;
+				unsafe {
+					for (int row = 0; row < _drawingSurface.Height; row++) {
+						byte* w = (byte*)bmd.Scan0.ToPointer() + bmd.Stride * row;
+						for (int col = 0; col < _drawingSurface.Width; col++) {
+							*w++ = (byte)(heightBuffer[idx++] & 0xFF);
+						}
+					}
+				}
+
+				_heightMap.UnlockBits(bmd);
+				canvasHeight.Image = _heightMap;
+			}
+			else if (tabs.SelectedTab == tpShadowMap && _shadowMap == null) {
+				_shadowMap = new Bitmap(_drawingSurface.Width, _drawingSurface.Height, PixelFormat.Format8bppIndexed);
+
+				// Create palette with index 0 blue, all others red
+				ColorPalette pal = _heightMap.Palette;
+				for (int i = 0; i <= 255; i++) {
+					// create greyscale color table
+					pal.Entries[i] = i == 0 ? Color.Blue : Color.Red;
+				}
+				_shadowMap.Palette = pal; // re-setting activates palette
+
+				// Draw map
+				var bmd = _shadowMap.LockBits(new Rectangle(0, 0, _drawingSurface.Width, _drawingSurface.Height), ImageLockMode.WriteOnly, PixelFormat.Format8bppIndexed);
+				uint idx = 0;
+				unsafe {
+					for (int row = 0; row < _drawingSurface.Height; row++) {
+						byte* w = (byte*)bmd.Scan0.ToPointer() + bmd.Stride * row;
+						for (int col = 0; col < _drawingSurface.Width; col++) {
+							*w++ = (byte)(_drawingSurface.IsShadow(col, row) ? 1 : 0);
+						}
+					}
+				}
+
+				_shadowMap.UnlockBits(bmd);
+				canvasShadows.Image = _shadowMap;
+			}
+		}
+
+		private void DebugDrawingSurfaceWindow_FormClosed(object sender, FormClosedEventArgs e) {
+			_heightMap?.Dispose();
+			_shadowMap?.Dispose();
+		}
+
+		private void form_KeyDown(object sender, KeyEventArgs e) {
+			if (tabs.SelectedTab.Controls[0] is ZoomableCanvas canvas) {
+				if (e.Control && e.KeyCode == Keys.NumPad0) {
+					var focus = new PointF(canvas.Width / 2f, canvas.Height / 2f); // center of currently visible area
+					canvas.ZoomToLevel(0, focus);
+				}
+				else if (e.Control && e.KeyCode == Keys.NumPad1) {
+					canvas.ZoomToFit();
+				} 
 			}
 		}
 	}
