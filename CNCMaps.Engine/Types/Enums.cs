@@ -113,7 +113,11 @@ namespace CNCMaps.Engine.Types {
 	}
 
 	public enum Layer {
-		Ground, // ??
+		Underground, 
+		Surface, 
+		Ground, 
+		Air, 
+		TopGround
 	}
 
 	public enum Behaviour2 {

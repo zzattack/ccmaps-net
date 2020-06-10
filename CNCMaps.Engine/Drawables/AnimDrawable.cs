@@ -1,6 +1,7 @@
 ﻿using CNCMaps.Engine.Game;
 using CNCMaps.Engine.Map;
 using CNCMaps.Engine.Rendering;
+using CNCMaps.Engine.Types;
 using CNCMaps.FileFormats;
 using CNCMaps.FileFormats.VirtualFileSystem;
 using CNCMaps.Shared;
@@ -10,17 +11,18 @@ namespace CNCMaps.Engine.Drawables {
 	class AnimDrawable : ShpDrawable {
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
+		private Animation _animProps;
 		private int _translucency;
 
-		public AnimDrawable(ModConfig config, VirtualFileSystem vfs, IniFile.IniSection rules, IniFile.IniSection art)
-			: base(config, vfs, rules, art) {
-		}
-		public AnimDrawable(ModConfig config, VirtualFileSystem vfs, IniFile.IniSection rules, IniFile.IniSection art, ShpFile shp)
-			: base(config, vfs, rules, art, shp) {
+		public AnimDrawable(ModConfig config, VirtualFileSystem vfs, IniFile.IniSection rules, IniFile.IniSection art, ShpFile shpFile = null)
+			: base(config, vfs, rules, art, shpFile) {
 		}
 
 		public override void LoadFromRules() {
 			base.LoadFromArtEssential();
+
+			_animProps = new Animation(Name);
+			_animProps.LoadArt(Art);
 
 			_translucency = Art.ReadBool("Translucent") ? 50 : Art.ReadInt("Translucency", 0);
 
@@ -32,6 +34,9 @@ namespace CNCMaps.Engine.Drawables {
 
 			Flat = Art.ReadBool("DrawFlat", Defaults.GetFlatnessAssumption(OwnerCollection.Type))
 				|| Art.ReadBool("Flat");
+
+			if (!_animProps.ShouldUseCellDrawer)
+				Props.PaletteType = PaletteType.Anim;
 		}
 
 		public override void Draw(GameObject obj, DrawingSurface ds, bool omitShadow = false) {
