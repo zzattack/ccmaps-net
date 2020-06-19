@@ -27,15 +27,21 @@ namespace CNCMaps.Engine.Drawables {
 
 		public override void Draw(GameObject obj, DrawingSurface ds, bool shadow = true) {
 			if (InvisibleInGame || Shp == null) return;
+			Size onBridgeOffset = Size.Empty;
 			if (OwnerCollection != null && OwnerCollection.Type == CollectionType.Infantry) {
 				int randomDir = -1;
 				if (_config.ExtraOptions.FirstOrDefault() != null && _config.ExtraOptions.FirstOrDefault().EnableRandomInfantryFacing)
 					randomDir = Rand.Next(256);
 				Props.FrameDecider = FrameDeciders.InfantryFrameDecider(Ready_Start, Ready_Count, Ready_CountNext, randomDir);
+				if (obj is OwnableObject && (obj as OwnableObject).OnBridge)
+					onBridgeOffset = new Size(0, -4 * _config.TileHeight / 2);
 			}
+
+			Props.Offset += onBridgeOffset;
 			if (Props.HasShadow && shadow && !Props.Cloakable)
 				_renderer.DrawShadow(obj, Shp, Props, ds);
 			_renderer.Draw(Shp, obj, this, Props, ds, Props.Cloakable ? 50 : 0);
+			Props.Offset -= onBridgeOffset;
 		}
 
 		public override void DrawShadow(GameObject obj, DrawingSurface ds) {

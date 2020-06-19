@@ -59,7 +59,6 @@ namespace CNCMaps.Engine {
 				ModConfig modConfig = null;
 				if (!string.IsNullOrEmpty(_settings.ModConfig)) {
 					if (File.Exists(_settings.ModConfig)) {
-						ModConfig cfg;
 						try {
 							using (FileStream f = File.OpenRead(_settings.ModConfig))
 								modConfig = ModConfig.Deserialize(f);

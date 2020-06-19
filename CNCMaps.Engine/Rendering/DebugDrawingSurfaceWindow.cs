@@ -167,7 +167,6 @@ namespace CNCMaps.Engine.Rendering {
 
 				// Draw map
 				var bmd = _shadowMap.LockBits(new Rectangle(0, 0, _drawingSurface.Width, _drawingSurface.Height), ImageLockMode.WriteOnly, PixelFormat.Format8bppIndexed);
-				uint idx = 0;
 				unsafe {
 					for (int row = 0; row < _drawingSurface.Height; row++) {
 						byte* w = (byte*)bmd.Scan0.ToPointer() + bmd.Stride * row;
