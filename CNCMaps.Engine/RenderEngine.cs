@@ -177,15 +177,14 @@ namespace CNCMaps.Engine {
 					if (_settings.OutputDir == "")
 						_settings.OutputDir = Path.GetDirectoryName(_settings.InputFile);
 
-				} // VFS resources can now be released
-
-				if (_settings.DiagnosticWindow) {
-					using (var form = new DebugDrawingSurfaceWindow(map.GetDrawingSurface(), map.GetTiles(),
-						map.GetTheater(), map)) {
-						form.RequestTileEvaluate += map.DebugDrawTile;
-						form.ShowDialog();
+					if (_settings.DiagnosticWindow) {
+						using (var form = new DebugDrawingSurfaceWindow(map.GetDrawingSurface(), map.GetTiles(),
+							map.GetTheater(), map)) {
+							form.RequestTileEvaluate += map.DebugDrawTile;
+							form.ShowDialog();
+						}
 					}
-				}
+				} // VFS resources can now be released
 
 				// free up as much memory as possible before saving the large images
 				Rectangle saveRect = map.GetSizePixels(_settings.SizeMode);
