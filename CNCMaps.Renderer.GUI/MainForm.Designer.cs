@@ -1249,7 +1249,7 @@ namespace CNCMaps.GUI {
 			// lblCopyright
 			// 
 			this.lblCopyright.AutoSize = true;
-			this.lblCopyright.LinkArea = new System.Windows.Forms.LinkArea(133, 58);
+			this.lblCopyright.LinkArea = new System.Windows.Forms.LinkArea(131, 58);
 			this.lblCopyright.Location = new System.Drawing.Point(20, 24);
 			this.lblCopyright.Name = "lblCopyright";
 			this.lblCopyright.Size = new System.Drawing.Size(359, 129);
@@ -1257,6 +1257,7 @@ namespace CNCMaps.GUI {
 			this.lblCopyright.TabStop = true;
 			this.lblCopyright.Text = resources.GetString("lblCopyright.Text");
 			this.lblCopyright.UseCompatibleTextRendering = true;
+			this.lblCopyright.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.lblCopyright_LinkClicked);
 			// 
 			// MainForm
 			// 

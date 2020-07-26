@@ -120,9 +120,6 @@
   <metadata name="toolTip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>365, 17</value>
   </metadata>
-  <metadata name="toolTip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>365, 17</value>
-  </metadata>
   <data name="cbEmphasizeOre.ToolTip" xml:space="preserve">
     <value>Setting this will result in a yellow glow to be placed behind ore, and a purple glow behind gems. When scaling images down, for example to use them as small preview image of a map, this looks pretty good.</value>
   </data>
@@ -169,10 +166,10 @@ for the non-zero component.</value>
   <data name="lblCopyright.Text" xml:space="preserve">
     <value>Original program © 2005-2020 by Frank Razenberg 
 
-Includes contributions from
-   Starkku
-   E1 Elite
-   Metadorius
+Includes contributions from:
+• Starkku
+• E1 Elite
+• Metadorius
 Full list @ https://github.com/zzattack/ccmaps-net/graphs/contributors
 
 Special thanks to Olaf van der Spek for XCC.

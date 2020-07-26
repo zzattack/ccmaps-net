@@ -914,5 +914,10 @@ namespace CNCMaps.GUI {
 		private void btnCheckForUpdate_Click(object sender, EventArgs e) {
 			PerformUpdateCheck();
 		}
+
+		private void lblCopyright_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e) {
+			Process.Start(lblCopyright.Text.Substring(e.Link.Start, e.Link.Length));
+			lblCopyright.LinkVisited = true;
+		}
 	}
 }
