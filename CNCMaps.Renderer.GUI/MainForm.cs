@@ -480,7 +480,7 @@ namespace CNCMaps.GUI {
 			tpLog.Update();
 
 			foreach (string mapname in mapNames)
-				if (!ExecuteRenderer(mapname))
+				if (!ExecuteRenderer(mapname, false))
 					errorMapNames.Add(mapname);
 
 			if (errorMapNames.Count() > 0) {
@@ -488,6 +488,7 @@ namespace CNCMaps.GUI {
 				foreach (string mapFilename in errorMapNames)
 					Log(mapFilename);
 				Log("------------------------------\r\n");
+				AskBugReport(null);
 			}
 			else
 				Log("Batch processing succeeded.\r\n------------------------------\r\n");
@@ -741,7 +742,7 @@ namespace CNCMaps.GUI {
 
 			tabControl.SelectTab(tpLog);
 			tpLog.Update();
-			ExecuteRenderer(tbInput.Text);
+			ExecuteRenderer(tbInput.Text, true);
 		}
 
 		private bool ValidUIOptions() {
@@ -757,7 +758,7 @@ namespace CNCMaps.GUI {
 				return true;
 		}
 
-		private bool ExecuteRenderer(string inputFilename) {
+		private bool ExecuteRenderer(string inputFilename, bool askBugReport = true) {
 			var engineCfg = GetRenderSettings(inputFilename);
 			bool success = false;
 
@@ -769,7 +770,8 @@ namespace CNCMaps.GUI {
 				switch (result) {
 					case EngineResult.Exception:
 						Log("\r\nUnknown exception.\r\n");
-						AskBugReport(null);
+						if (askBugReport)
+							AskBugReport(null);
 						break;
 					case EngineResult.RenderedOk:
 						Log("\r\nSpecified action(s) completed.\r\n------------------------------\r\n");
@@ -779,17 +781,20 @@ namespace CNCMaps.GUI {
 					case EngineResult.LoadTheaterFailed:
 						Log("\r\nTheater loading failed. Please make sure the mix directory is correct and that the required expansion packs are installed "
 							+ "if they are required for the map you want to render.\r\n");
-						AskBugReport(null);
+						if (askBugReport)
+							AskBugReport(null);
 						break;
 					case EngineResult.LoadRulesFailed:
 						Log("\r\nRules loading failed. Please make sure the mix directory is correct and that the required expansion packs are installed "
 							+ "if they are required for the map you want to render.\r\n");
-						AskBugReport(null);
+						if (askBugReport)
+							AskBugReport(null);
 						break;
 				}
 			}
 			catch (Exception exc) {
-				AskBugReport(exc);
+				if (askBugReport)
+					AskBugReport(exc);
 			}
 			return success;
 		}
