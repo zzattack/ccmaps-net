@@ -1064,6 +1064,7 @@ namespace CNCMaps.GUI {
 			this.lblCommand.Size = new System.Drawing.Size(54, 21);
 			this.lblCommand.TabIndex = 1;
 			this.lblCommand.Text = "Command";
+			this.lblCommand.AutoSize = true;
 			// 
 			// tpMisc
 			// 
