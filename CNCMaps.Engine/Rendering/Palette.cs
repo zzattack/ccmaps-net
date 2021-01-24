@@ -54,7 +54,7 @@ namespace CNCMaps.Engine.Rendering {
 		}
 
 		public void ApplyLighting(Lighting l, int level = 0, bool applyTints = true) {
-			_ambientMult = (l.Ambient + l.Ground) + l.Level * level;
+			_ambientMult = l.Ambient - l.Ground + l.Level * level;
 			if (applyTints) {
 				_redMult = l.Red;
 				_greenMult = l.Green;
@@ -99,9 +99,9 @@ namespace CNCMaps.Engine.Rendering {
 				if (i >= 240 && i <= 254 && _isObjectPalette) {
 					rmult = gmult = bmult = 1.0;
 				}
-				var r = (byte)Math.Min(255, _origColors[i * 3 + 0] * (rmult) / 63.0 * 255.0);
-				var g = (byte)Math.Min(255, _origColors[i * 3 + 1] * (gmult) / 63.0 * 255.0);
-				var b = (byte)Math.Min(255, _origColors[i * 3 + 2] * (bmult) / 63.0 * 255.0);
+				var r = (byte)Math.Min(255, _origColors[i * 3 + 0] * rmult / 63.0 * 255.0);
+				var g = (byte)Math.Min(255, _origColors[i * 3 + 1] * gmult / 63.0 * 255.0);
+				var b = (byte)Math.Min(255, _origColors[i * 3 + 2] * bmult / 63.0 * 255.0);
 				Colors[i] = Color.FromArgb(r, g, b);
 			}
 		}
