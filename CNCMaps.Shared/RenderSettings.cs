@@ -60,7 +60,7 @@ namespace CNCMaps.Shared {
 			Debug = false;
 			MarkIceGrowth = false;
 			DiagnosticWindow = false;
-			Backup = true;
+			Backup = false;
 			FixOverlays = false;
 			CompressTiles = false;
 			TunnelPaths = false;

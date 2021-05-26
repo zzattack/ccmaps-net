@@ -1,4 +1,4 @@
-set VER=2.4.0
+set VER=2.4.1
 set MAKENSIS="%PROGRAMFILES(X86)%\nsis\makensis.exe"
 
 del CNCMaps_release_*.exe
