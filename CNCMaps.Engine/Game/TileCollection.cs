@@ -53,6 +53,7 @@ namespace CNCMaps.Engine.Game {
 			}
 
 			public void AddTile(TmpFile tmpFile) {
+				tmpFile.Initialize();
 				TmpFiles.Add(tmpFile);
 			}
 
@@ -67,7 +68,7 @@ namespace CNCMaps.Engine.Game {
 				var randomChosen = TmpFiles[Rand.Next(TmpFiles.Count)];
 				// if this is not a randomizing tileset, but instead one with damaged data,
 				// then return the "undamaged" version
-				randomChosen.Initialize();
+				//randomChosen.Initialize();
 				if (randomChosen.Images[Math.Min(t.SubTile, randomChosen.Images.Count - 1)].HasDamagedData)
 					return TmpFiles[Math.Min(damaged ? 1 : 0, TmpFiles.Count - 1)];
 				else
