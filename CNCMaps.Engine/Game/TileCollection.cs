@@ -428,6 +428,10 @@ namespace CNCMaps.Engine.Game {
 			return (setNum == CrystalCliff);
 		}
 
+		public bool IsSwampLAT(int setNum) {
+			return (setNum == SwampTile);
+		}
+
 		public int GetSetNum(int tileNum) {
 			if (tileNum < 0 || tileNum >= _tileNumToSet.Count) return 0;
 			return _tileNumToSet[tileNum];

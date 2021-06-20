@@ -263,6 +263,12 @@ namespace CNCMaps.Engine.Map {
 							transitionTile = 0;
 					}
 
+					// Swamp has TilesInSet=9 instead of 1 for LAT tilesets
+					// which doubles as a normal set for remaining tiles.
+					if (collection.IsSwampLAT(t.SetNum) && t.TileNum > collection.GetTileNumFromSet(t.SetNum, 0)) {
+						transitionTile = 0;
+					}
+
 					if (transitionTile > 0) {
 						// Find Tileset that contains the connecting pieces
 						short clatSet = collection.GetCLATSet(t.SetNum);
