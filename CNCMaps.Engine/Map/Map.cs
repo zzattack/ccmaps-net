@@ -590,35 +590,30 @@ namespace CNCMaps.Engine.Map {
 
 		public unsafe void MarkIceGrowth() {
 			Logger.Info("Marking ice growth cells");
-			foreach (var tile in _tiles.Where(t => t != null).ToList()) {
-				var t = _mapFile.Tiles.GetTileR(tile.Rx, tile.Ry);
 
-				try {
-					if (t != null && tile != null && t.IceGrowth > 0) {
-						int destX = tile.Dx * _config.TileWidth / 2;
-						int destY = (tile.Dy - tile.Z) * _config.TileHeight / 2;
-						bool vert = FullSize.Height * 2 > FullSize.Width;
-
-						int radius;
-						if (vert)
-							radius = FullSize.Height * _config.TileHeight / 2 / 144 / 3;
-						else
-							radius = FullSize.Width * _config.TileWidth / 2 / 133 / 3;
-
-						int h = radius, w = radius;
-						for (int drawY = destY - h / 2; drawY < destY + h; drawY++) {
-							for (int drawX = destX - w / 2; drawX < destX + w; drawX++) {
-								byte* p = (byte*)_drawingSurface.BitmapData.Scan0 + drawY * _drawingSurface.BitmapData.Stride + 3 * drawX;
-								*p++ = 0x88;
-								*p++ = 0xFF;
-								*p++ = 0x00;
-							}
+			_drawingSurface.Unlock();
+			using (Graphics g = Graphics.FromImage(_drawingSurface.Bitmap)) {
+				int quarterWidth = (int)((double)_config.TileWidth / 4.0) - 4;
+				int halfHeight = (int)((double)_config.TileHeight / 2.0) - 3;
+				int quarterHeight = (int)((double)_config.TileHeight / 4.0) - 3;
+				foreach (var tile in _tiles.Where(t => t != null).ToList()) {
+					var t = _mapFile.Tiles.GetTileR(tile.Rx, tile.Ry);
+					try {
+						if (t != null && tile != null && t.IceGrowth > 0) {
+							int centerX = tile.Dx * _config.TileWidth / 2;
+							int centerY = (tile.Dy - tile.Z) * _config.TileHeight / 2;
+							Point[] triangle = new Point[] {
+								new Point(centerX, centerY - halfHeight),
+								new Point(centerX + quarterWidth, centerY + quarterHeight),
+								new Point(centerX - quarterWidth, centerY + quarterHeight)
+							};
+							g.FillPolygon(new SolidBrush(Color.FromArgb(230, Color.Cyan)), triangle);
 						}
 					}
+					catch (Exception) { }
 				}
-				catch (FormatException) { }
-				catch (IndexOutOfRangeException) { }
 			}
+			_drawingSurface.Lock();
 		}
 
 		public void MarkTiledStartPositions() {
