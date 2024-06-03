@@ -572,7 +572,7 @@ namespace CNCMaps.GUI {
 			if (cbReplacePreview.Checked) {
 				if (!cmd.EndsWith(" ")) cmd += " ";
 				if (cbMarkersType.Text == "None")
-					cmd += "--preview-markers-none ";
+					cmd += "--replace-preview-nomarkers ";
 				else if (cbMarkersType.Text == "SelectedAsAbove")
 					cmd += "--preview-markers-selected ";
 				else if (cbMarkersType.Text == "Aro")
