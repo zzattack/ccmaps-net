@@ -23,6 +23,13 @@ namespace CNCMaps.Engine {
 		static Logger _logger = LogManager.GetCurrentClassLogger();
 		private RenderSettings _settings = new RenderSettings();
 
+		/// <summary>
+		/// Optional interactive preview, shown after drawing but before the output files are
+		/// saved, while game resources are still loaded (required for tile re-evaluation).
+		/// Takes precedence over the built-in diagnostic window.
+		/// </summary>
+		public Rendering.IMapPreviewWindow PreviewWindow { get; set; }
+
 		public bool ConfigureFromArgs(string[] args) {
 			InitLoggerConfig();
 			_settings.ConfigureFromArgs(args);
@@ -181,7 +188,10 @@ namespace CNCMaps.Engine {
 					if (_settings.OutputDir == "")
 						_settings.OutputDir = Path.GetDirectoryName(_settings.InputFile);
 
-					if (_settings.DiagnosticWindow) {
+					if (PreviewWindow != null) {
+						PreviewWindow.Show(map);
+					}
+					else if (_settings.DiagnosticWindow) {
 #if WINDOWS
 						using (var form = new DebugDrawingSurfaceWindow(map.GetDrawingSurface(), map.GetTiles(),
 							map.GetTheater(), map)) {

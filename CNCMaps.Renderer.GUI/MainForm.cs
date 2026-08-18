@@ -480,7 +480,7 @@ namespace CNCMaps.GUI {
 			tpLog.Update();
 
 			foreach (string mapname in mapNames)
-				if (!ExecuteRenderer(mapname, false))
+				if (!ExecuteRenderer(mapname, false, showPreview: false))
 					errorMapNames.Add(mapname);
 
 			if (errorMapNames.Count() > 0) {
@@ -758,13 +758,15 @@ namespace CNCMaps.GUI {
 				return true;
 		}
 
-		private bool ExecuteRenderer(string inputFilename, bool askBugReport = true) {
+		private bool ExecuteRenderer(string inputFilename, bool askBugReport = true, bool showPreview = true) {
 			var engineCfg = GetRenderSettings(inputFilename);
 			bool success = false;
 
 			try {
 				var engine = new RenderEngine();
 				engine.ConfigureFromSettings(engineCfg);
+				if (showPreview)
+					engine.PreviewWindow = PreviewPlugin.TryCreate();
 				var result = engine.Execute();
 
 				switch (result) {
