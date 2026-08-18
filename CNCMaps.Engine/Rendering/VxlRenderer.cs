@@ -5,18 +5,18 @@ using CNCMaps.Engine.Game;
 using CNCMaps.Engine.Map;
 using CNCMaps.FileFormats;
 using NLog;
-using OpenTK.Graphics.OpenGL;
 using OpenTK.Mathematics;
-using OpenTK.Windowing.Common;
-using OpenTK.Windowing.Desktop;
 using PixelFormat = System.Drawing.Imaging.PixelFormat;
 
 namespace CNCMaps.Engine.Rendering {
+	/// <summary>
+	/// Renders voxel models to an offscreen surface using a small software rasterizer.
+	/// This replaces the former OpenGL implementation with equivalent semantics
+	/// (fixed-function pipeline, flat-shaded quads, depth-test less), so no GPU or
+	/// OpenGL driver is required and output is identical on every machine.
+	/// </summary>
 	public class VxlRenderer : IDisposable {
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
-		// GraphicsContext _ctx;
-		GameWindow _gw;
-		bool _canRender;
 		bool _isInit;
 
 		// color contributors; the standard voxels.vpl already adds a lot of ambient,
@@ -25,99 +25,43 @@ namespace CNCMaps.Engine.Rendering {
 		private static readonly Vector3 Ambient = new Vector3(0.8f);
 
 		DrawingSurface _surface;
-		// VplFile _vplFile;
+		float[] _zBuffer; // window-space depth in [-1,1] (ndc z), depth-test "less"
 
 		public void Initialize() {
 			Logger.Info("Initializing voxel renderer");
 			_isInit = true;
-
 			_surface = new DrawingSurface(400, 400, PixelFormat.Format32bppArgb);
-			if (!CreateGameWindow()) {
-				Logger.Error("No graphics context could not be initialized, voxel rendering will be unavailable");
-				return;
-			}
-
-			Logger.Debug("GL context created");
-			try {
-
-				Logger.Debug("GL functions loaded");
-
-				GL.Enable(EnableCap.DepthTest);
-				GL.Enable(EnableCap.ColorMaterial);
-
-				//_vplFile = VFS.Open<VplFile>("voxels.vpl"); 
-				_canRender = SetupFramebuffer();
-				//_canRender = true;
-
-			}
-
-			catch (Exception exc) {
-				Logger.Error("Voxel rendering will not be available because an exception occurred while initializing OpenGL: {0}", exc.ToString());
-			}
-		}
-
-		private bool CreateGameWindow() {
-			try {
-				var nws = new NativeWindowSettings {
-					ClientSize = new Vector2i(_surface.Width, _surface.Height),
-					StartVisible = false,
-					API = ContextAPI.OpenGL,
-					Profile = ContextProfile.Compatability,
-					APIVersion = new Version(3, 3),
-					Title = "",
-				};
-				_gw = new GameWindow(GameWindowSettings.Default, nws);
-				_gw.MakeCurrent();
-				return true;
-			}
-			catch (Exception exc) {
-				Logger.Warn("GameWindow could not be created: {0}", exc.Message);
-				return false;
-			}
+			_zBuffer = new float[_surface.Width * _surface.Height];
 		}
 
 		public void Dispose() {
-			_surface.Dispose();
-			// if (_ctx != null) _ctx.Dispose();
-			if (_gw != null) _gw.Dispose();
+			_surface?.Dispose();
 		}
 
 		public DrawingSurface Render(VxlFile vxl, HvaFile hva, GameObject obj, DrawProperties props) {
 			if (!_isInit) Initialize();
-			if (!_canRender) {
-				Logger.Warn("Not rendering {0} because no OpenGL context could be obtained", vxl.FileName);
-				return null;
-			}
 
 			Logger.Debug("Rendering voxel {0}", vxl.FileName);
 			vxl.Initialize();
 			hva.Initialize();
 
-			GL.Viewport(0, 0, _surface.BitmapData.Width, _surface.BitmapData.Height);
-			GL.Clear(ClearBufferMask.DepthBufferBit | ClearBufferMask.ColorBufferBit);
+			Clear();
 
-			// RA2 uses dimetric projection with camera elevated 30° off the ground
-			GL.MatrixMode(MatrixMode.Projection);
-			var persp = Matrix4.CreatePerspectiveFieldOfView(MathHelper.DegreesToRadians(30), _surface.BitmapData.Width / (float)_surface.BitmapData.Height, 1, _surface.BitmapData.Height);
-			GL.LoadMatrix(ref persp);
-
-			GL.MatrixMode(MatrixMode.Modelview);
-			GL.LoadIdentity();
+			// RA2 uses dimetric projection with camera elevated 30° off the ground.
+			// The game projects orthographically (the world is axonometric); the ortho
+			// volume is sized to the scale the historical perspective camera (fov 30°,
+			// eye distance 20) had at the model's depth: 2*tan(15°)*20 world units.
+			const float orthoDiameter = 10.7157f;
+			var persp = Matrix4.CreateOrthographic(orthoDiameter, orthoDiameter * _surface.Height / _surface.Width, 1, _surface.Height);
 
 			var lookat = Matrix4.LookAt(0, 0, -10, 0, 0, 0, 0, 1, 0);
-			GL.MultMatrix(ref lookat);
-
 			var trans = Matrix4.CreateTranslation(0, 0, 10);
-			GL.MultMatrix(ref trans);
 
 			// align and zoom
 			var world = Matrix4.CreateRotationX(MathHelper.DegreesToRadians(60));
 			world = Matrix4.CreateRotationY(MathHelper.DegreesToRadians(180)) * world;
 			world = Matrix4.CreateRotationZ(MathHelper.DegreesToRadians(-45)) * world;
 			world = Matrix4.CreateScale(0.028f, 0.028f, 0.028f) * world;
-			GL.MultMatrix(ref world);
-
-			// DrawAxes();
 
 			// determine tilt vectors
 			Matrix4 tilt = Matrix4.Identity;
@@ -140,35 +84,7 @@ namespace CNCMaps.Engine.Rendering {
 				}
 				tilt *= Matrix4.CreateRotationX(MathHelper.DegreesToRadians(tiltPitch));
 				tilt *= Matrix4.CreateRotationZ(MathHelper.DegreesToRadians(tiltYaw));
-
-				/*// show tilt direction
-				GL.Color3(Color.Black);
-				GL.Begin(BeginMode.Lines);
-				GL.Vertex3(Vector3.Zero);
-				var tiltVec = Vector3.UnitZ;
-				tiltVec = Vector3.Transform(tiltVec, tilt);
-				tiltVec = Vector3.Multiply(tiltVec, 1000f);
-				GL.Vertex3(tiltVec);
-				GL.End();*/
 			}
-
-			/*// draw slope normals
-			GL.LineWidth(2);
-			var colors = new[] { Color.Red, Color.Green, Color.Blue, Color.Yellow, Color.Orange, Color.Black, Color.Purple, Color.SlateBlue, Color.DimGray, Color.White, Color.Teal, Color.Tan };
-			for (int i = 0; i < 8; i++) {
-				GL.Color3(colors[i]);
-
-				const float roll = 25f;
-				float syaw = 45f * i;
-				var slopeNormal = Vector3.UnitZ;
-				slopeNormal = Vector3.Transform(slopeNormal, Matrix4.CreateRotationX(MathHelper.DegreesToRadians(roll)));
-				slopeNormal = Vector3.Transform(slopeNormal, Matrix4.CreateRotationZ(MathHelper.DegreesToRadians(syaw)));
-				GL.Begin(BeginMode.Lines);
-				GL.Vertex3(0, 0, 0);
-				GL.Vertex3(Vector3.Multiply(slopeNormal, 1000f));
-				GL.End();
-			}*/
-
 
 			// object rotation around Z
 			float direction = (obj is OwnableObject) ? (obj as OwnableObject).Direction : 0;
@@ -176,36 +92,15 @@ namespace CNCMaps.Engine.Rendering {
 			Matrix4 @object = Matrix4.CreateRotationZ(MathHelper.DegreesToRadians(objectRotation)) * tilt; // object facing
 																										   // art.ini TurretOffset value positions some voxel parts over our x-axis
 			@object = Matrix4.CreateTranslation(0.18f * props.TurretVoxelOffset, 0, 0) * @object;
-			GL.MultMatrix(ref @object);
-
-			// DrawAxes();
 
 			float pitch = MathHelper.DegreesToRadians(210);
 			float yaw = MathHelper.DegreesToRadians(120);
-			/*// helps to find good pitch/yaw
-			// direction of light vector given by pitch & yaw
-			for (int i = 0; i < 360; i += 30) {
-				for (int j = 0; j < 360; j += 30) {
-					GL.Color3(colors[i / 30]);
-					var shadowTransform2 =
-						Matrix4.CreateRotationZ(MathHelper.DegreesToRadians(i))
-						* Matrix4.CreateRotationY(MathHelper.DegreesToRadians(j));
-					GL.LineWidth(2);
-					GL.Begin(BeginMode.Lines);
-					GL.Vertex3(0, 0, 0);
-					GL.Vertex3(Vector3.Multiply(ExtractRotationVector(ToOpenGL(Matrix4.Invert(world * shadowTransform2))), 100f));
-					GL.End();
-				}
-			}*/
-
 			var shadowTransform = Matrix4.CreateRotationZ(pitch) * Matrix4.CreateRotationY(yaw);
 			// clear shadowbuf
 			var shadBuf = _surface.GetShadows();
 			Array.Clear(shadBuf, 0, shadBuf.Length);
 
 			foreach (var section in vxl.Sections) {
-				GL.PushMatrix();
-
 				var frameRot = hva.LoadGLMatrix(section.Index);
 				frameRot.M41 *= section.HVAMultiplier * section.ScaleX;
 				frameRot.M42 *= section.HVAMultiplier * section.ScaleY;
@@ -213,10 +108,12 @@ namespace CNCMaps.Engine.Rendering {
 
 				var frameTransl = Matrix4.CreateTranslation(section.MinBounds);
 				var frame = frameTransl * frameRot;
-				GL.MultMatrix(ref frame);
+
+				// full modelview-projection for this section, mirroring the former GL
+				// matrix stack (row-vector convention: leftmost matrix applies first)
+				var mvp = frame * @object * world * trans * lookat * persp;
 
 				var shadowScale = Matrix4.CreateScale(0.5f);
-				//var shadowTilt = null;
 				var shadowToScreen = frameTransl * shadowScale * frameRot * (@object * world) * trans * lookat;
 
 				// undo world transformations on light direction
@@ -224,15 +121,6 @@ namespace CNCMaps.Engine.Rendering {
 
 				var lightDirection = (v.Determinant != 0.0) ? ExtractRotationVector(ToOpenGL(Matrix4.Invert(v))) : Vector3.Zero;
 
-				// draw line in direction light comes from
-				/*GL.Color3(Color.Red);
-				GL.LineWidth(4f);
-				GL.Begin(BeginMode.Lines);
-				GL.Vertex3(0, 0, 0);
-				GL.Vertex3(Vector3.Multiply(lightDirection, 100f));
-				GL.End();*/
-
-				GL.Begin(PrimitiveType.Quads);
 				for (uint x = 0; x != section.SizeX; x++) {
 					for (uint y = 0; y != section.SizeY; y++) {
 						foreach (VxlFile.Voxel vx in section.Spans[x, y].Voxels) {
@@ -242,67 +130,28 @@ namespace CNCMaps.Engine.Rendering {
 							// shader function taken from https://github.com/OpenRA/OpenRA/blob/bleed/cg/vxl.fx
 							// thanks to pchote for a LOT of help getting it right
 							Vector3 colorMult = Vector3.Add(Ambient, Diffuse * Math.Max(Vector3.Dot(normal, lightDirection), 0f));
-							GL.Color3(
-								(byte)Math.Min(255, color.R * colorMult.X),
-								(byte)Math.Min(255, color.G * colorMult.Y),
-								(byte)Math.Min(255, color.B * colorMult.Z));
+							byte cr = (byte)Math.Min(255, color.R * colorMult.X);
+							byte cg = (byte)Math.Min(255, color.G * colorMult.Y);
+							byte cb = (byte)Math.Min(255, color.B * colorMult.Z);
 
 							Vector3 vxlPos = Vector3.Multiply(new Vector3(x, y, vx.Z), section.Scale);
-							RenderVoxel(vxlPos);
+							RenderVoxel(vxlPos, ref mvp, cr, cg, cb);
 
 							var shadpos = new Vector3(x, y, 0);
 							var screenPos = Vector3.TransformVector(shadpos, shadowToScreen);
+							// orthographic projection: no perspective divide
 							screenPos = Vector3.TransformVector(screenPos, persp);
-							screenPos.X /= screenPos.Z;
-							screenPos.Y /= screenPos.Z;
 							screenPos.X = (screenPos.X + 1) * _surface.Width / 2;
 							screenPos.Y = (screenPos.Y + 1) * _surface.Height / 2;
 
 							if (0 <= screenPos.X && screenPos.X < _surface.Width && 0 <= screenPos.Y && screenPos.Y < _surface.Height)
 								shadBuf[(int)screenPos.X + (_surface.Height - 1 - (int)screenPos.Y) * _surface.Width] = true;
-
-							/* draw line in normal direction
-							if (r.Next(100) == 4) {
-								float m = Math.Max(Vector3.Dot(normal, lightDirection), 0f);
-								GL.Color3(m, m, m);
-								GL.LineWidth(1);
-								GL.Begin(BeginMode.Lines);
-								GL.Vertex3(new Vector3(x, y, vx.Z));
-								GL.Vertex3(new Vector3(x, y, vx.Z) + Vector3.Multiply(normal, 100f));
-								GL.End();
-							}*/
-
 						}
 					}
 				}
-				GL.End();
-				GL.PopMatrix();
 			}
 
-			// read pixels back to surface
-			GL.ReadPixels(0, 0, _surface.BitmapData.Width, _surface.BitmapData.Height, OpenTK.Graphics.OpenGL.PixelFormat.Bgra, PixelType.UnsignedByte, _surface.BitmapData.Scan0);
 			return _surface;
-		}
-		private static void DrawAxes() { // draw x,y,z axis
-			GL.PushMatrix();
-			GL.Scale(1000f, 1000f, 1000f);
-			GL.LineWidth(5);
-			GL.Color3(Color.Red);
-			GL.Begin(PrimitiveType.Lines);
-			GL.Vertex3(-100, 0, 0);
-			GL.Vertex3(100, 0, 0);
-			GL.End();
-			GL.Color3(Color.Green);
-			GL.Begin(PrimitiveType.Lines);
-			GL.Vertex3(0, -100, 0);
-			GL.Vertex3(0, 100, 0);
-			GL.End();
-			GL.Color3(Color.White);
-			GL.Begin(PrimitiveType.Lines);
-			GL.Vertex3(0, 0, -100);
-			GL.Vertex3(0, 0, 100);
-			GL.End();
-			GL.PopMatrix();
 		}
 
 		public static Rectangle GetBounds(GameObject obj, VxlFile vxl, HvaFile hva, DrawProperties props) {
@@ -376,36 +225,7 @@ namespace CNCMaps.Engine.Rendering {
 				ret = Rectangle.Union(ret, Rectangle.FromLTRB(minX, minY, maxX, maxY));
 			}
 
-			// return new Rectangle(-ret.Width / 2, -ret.Height / 2, ret.Width, ret.Height);
 			return ret;
-		}
-
-		bool SetupFramebuffer() {
-			try {
-				int fbo;
-				GL.GenFramebuffers(1, out fbo);
-				GL.BindFramebuffer(FramebufferTarget.Framebuffer, fbo);
-				GL.DrawBuffer(DrawBufferMode.ColorAttachment0);
-				GL.ReadBuffer(ReadBufferMode.ColorAttachment0);
-			}
-			catch (Exception exc) {
-				Logger.Error("Failed to initialize framebuffers. Voxels will not be rendered. Exception: " + exc);
-				return false;
-			}
-			int depthbuffer;
-
-			GL.GenRenderbuffers(1, out depthbuffer);
-			GL.BindRenderbuffer(RenderbufferTarget.Renderbuffer, depthbuffer);
-			GL.RenderbufferStorage(RenderbufferTarget.Renderbuffer, RenderbufferStorage.DepthComponent32, _surface.BitmapData.Width, _surface.BitmapData.Height);
-			GL.FramebufferRenderbuffer(FramebufferTarget.Framebuffer, FramebufferAttachment.DepthAttachment, RenderbufferTarget.Renderbuffer, depthbuffer);
-
-			int rgb_rb;
-			GL.GenRenderbuffers(1, out rgb_rb);
-			GL.BindRenderbuffer(RenderbufferTarget.Renderbuffer, rgb_rb);
-			GL.RenderbufferStorage(RenderbufferTarget.Renderbuffer, RenderbufferStorage.Rgba8, _surface.BitmapData.Width, _surface.BitmapData.Height);
-			GL.FramebufferRenderbuffer(FramebufferTarget.Framebuffer, FramebufferAttachment.ColorAttachment0, RenderbufferTarget.Renderbuffer, rgb_rb);
-
-			return GL.CheckFramebufferStatus(FramebufferTarget.Framebuffer) == FramebufferErrorCode.FramebufferComplete;
 		}
 
 		static readonly float[] zeroVector = { 0, 0, 0, 1 };
@@ -459,51 +279,111 @@ namespace CNCMaps.Engine.Rendering {
 			return ret;
 		}
 
-		public void RenderVoxel(Vector3 v) {
-			float r = 0.5f;
-			float left = v.X - r;
-			float right = v.X + r;
-			float fbase = v.Y - r;
-			float top = v.Y + r;
-			float front = v.Z - r;
-			float back = v.Z + r;
+		#region software rasterizer
 
-			// Base
-			GL.Vertex3(left, fbase, front);
-			GL.Vertex3(right, fbase, front);
-			GL.Vertex3(right, fbase, back);
-			GL.Vertex3(left, fbase, back);
-
-			// Back
-			GL.Vertex3(left, fbase, back);
-			GL.Vertex3(right, fbase, back);
-			GL.Vertex3(right, top, back);
-			GL.Vertex3(left, top, back);
-
-			// Top
-			GL.Vertex3(left, top, front);
-			GL.Vertex3(right, top, front);
-			GL.Vertex3(right, top, back);
-			GL.Vertex3(left, top, back);
-
-			// Right
-			GL.Vertex3(right, fbase, front);
-			GL.Vertex3(right, fbase, back);
-			GL.Vertex3(right, top, back);
-			GL.Vertex3(right, top, front);
-
-			// Front
-			GL.Vertex3(left, fbase, front);
-			GL.Vertex3(right, fbase, front);
-			GL.Vertex3(right, top, front);
-			GL.Vertex3(left, top, front);
-
-			// Left
-			GL.Vertex3(left, fbase, front);
-			GL.Vertex3(left, fbase, back);
-			GL.Vertex3(left, top, back);
-			GL.Vertex3(left, top, front);
+		struct ScreenVertex {
+			public float X, Y, Z; // window coordinates (GL convention, y up) + ndc z
 		}
 
+		unsafe void Clear() {
+			// clear color to transparent black, depth to far plane
+			byte* p = (byte*)_surface.BitmapData.Scan0;
+			for (int y = 0; y < _surface.Height; y++)
+				new Span<byte>(p + y * _surface.BitmapData.Stride, _surface.Width * 4).Clear();
+			for (int i = 0; i < _zBuffer.Length; i++)
+				_zBuffer[i] = float.MaxValue;
+		}
+
+		// cube corner offsets, index = x + y*2 + z*4 (x: left/right, y: base/top, z: front/back)
+		static readonly int[][] CubeFaces = {
+			new[] { 0, 1, 5, 4 }, // base   (y = base)
+			new[] { 4, 5, 7, 6 }, // back   (z = back)
+			new[] { 2, 3, 7, 6 }, // top    (y = top)
+			new[] { 1, 5, 7, 3 }, // right  (x = right)
+			new[] { 0, 1, 3, 2 }, // front  (z = front)
+			new[] { 0, 4, 6, 2 }, // left   (x = left)
+		};
+
+		readonly ScreenVertex[] _corners = new ScreenVertex[8];
+
+		void RenderVoxel(Vector3 v, ref Matrix4 mvp, byte r, byte g, byte b) {
+			const float rad = 0.5f;
+			// transform the 8 cube corners to window coordinates
+			bool valid = true;
+			for (int i = 0; i < 8; i++) {
+				var corner = new Vector4(
+					v.X + (((i & 1) != 0) ? rad : -rad),
+					v.Y + (((i & 2) != 0) ? rad : -rad),
+					v.Z + (((i & 4) != 0) ? rad : -rad), 1f);
+				var clip = Vector4.TransformRow(corner, mvp);
+				if (clip.W <= 1e-6f) {
+					valid = false; // behind the camera; the fixed camera setup never hits this
+					break;
+				}
+				float invW = 1f / clip.W;
+				_corners[i].X = (clip.X * invW + 1f) * _surface.Width / 2f;
+				_corners[i].Y = (clip.Y * invW + 1f) * _surface.Height / 2f;
+				_corners[i].Z = clip.Z * invW;
+			}
+			if (!valid)
+				return;
+
+			foreach (var f in CubeFaces) {
+				RasterizeTriangle(_corners[f[0]], _corners[f[1]], _corners[f[2]], r, g, b);
+				RasterizeTriangle(_corners[f[0]], _corners[f[2]], _corners[f[3]], r, g, b);
+			}
+		}
+
+		unsafe void RasterizeTriangle(ScreenVertex v0, ScreenVertex v1, ScreenVertex v2, byte r, byte g, byte b) {
+			// bounding box, clipped to viewport; samples at pixel centers (x+0.5, y+0.5)
+			int minX = Math.Max(0, (int)MathF.Floor(MathF.Min(v0.X, MathF.Min(v1.X, v2.X)) - 0.5f));
+			int maxX = Math.Min(_surface.Width - 1, (int)MathF.Ceiling(MathF.Max(v0.X, MathF.Max(v1.X, v2.X)) - 0.5f));
+			int minY = Math.Max(0, (int)MathF.Floor(MathF.Min(v0.Y, MathF.Min(v1.Y, v2.Y)) - 0.5f));
+			int maxY = Math.Min(_surface.Height - 1, (int)MathF.Ceiling(MathF.Max(v0.Y, MathF.Max(v1.Y, v2.Y)) - 0.5f));
+			if (minX > maxX || minY > maxY)
+				return;
+
+			float area = (v1.X - v0.X) * (v2.Y - v0.Y) - (v1.Y - v0.Y) * (v2.X - v0.X);
+			if (area == 0f)
+				return;
+			float invArea = 1f / area;
+
+			byte* scan0 = (byte*)_surface.BitmapData.Scan0;
+			int stride = _surface.BitmapData.Stride;
+
+			for (int py = minY; py <= maxY; py++) {
+				float sy = py + 0.5f;
+				// store rows bottom-up like GL.ReadPixels used to; BlitVoxelToSurface
+				// compensates for that when copying to the map surface
+				byte* row = scan0 + py * stride;
+				int zRow = py * _surface.Width;
+				for (int px = minX; px <= maxX; px++) {
+					float sx = px + 0.5f;
+					// barycentric coordinates (signed areas); accept both windings since
+					// the former GL pipeline did not cull faces
+					float w0 = ((v1.X - v0.X) * (sy - v0.Y) - (v1.Y - v0.Y) * (sx - v0.X)) * invArea;
+					float w1 = ((v2.X - v1.X) * (sy - v1.Y) - (v2.Y - v1.Y) * (sx - v1.X)) * invArea;
+					float w2 = 1f - w0 - w1;
+					if (w0 < 0f || w1 < 0f || w2 < 0f)
+						continue;
+
+					// window-space z interpolates linearly in screen space
+					// (w1 weighs v0, w2 weighs v1, w0 weighs v2, from the opposing edges)
+					float z = w1 * v0.Z + w2 * v1.Z + w0 * v2.Z;
+					int zIdx = zRow + px;
+					if (z >= _zBuffer[zIdx])
+						continue; // depth-test "less", like the GL default
+					_zBuffer[zIdx] = z;
+
+					byte* pix = row + px * 4;
+					pix[0] = b;
+					pix[1] = g;
+					pix[2] = r;
+					pix[3] = 255;
+				}
+			}
+		}
+
+		#endregion
 	}
 }
