@@ -4,7 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using CNCMaps.FileFormats.VirtualFileSystem;
 using NLog;
-using OpenTK.Mathematics;
+using System.Numerics;
 
 namespace CNCMaps.FileFormats {
 	/// <summary>

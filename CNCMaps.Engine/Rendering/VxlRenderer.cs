@@ -6,7 +6,7 @@ using CNCMaps.Engine.Map;
 using CNCMaps.FileFormats;
 using CNCMaps.Shared;
 using NLog;
-using OpenTK.Mathematics;
+using System.Numerics;
 
 namespace CNCMaps.Engine.Rendering {
 	/// <summary>
@@ -26,7 +26,7 @@ namespace CNCMaps.Engine.Rendering {
 
 		// game light directions for the vpl page selection (from WorldAlteringEditor)
 		private static readonly Vector3 TSLight = -Vector3.UnitX;
-		private static readonly Vector3 YRLight = Vector3.TransformVector(-Vector3.UnitX, Matrix4.CreateRotationZ(MathHelper.DegreesToRadians(45f)));
+		private static readonly Vector3 YRLight = MatrixMath.TransformNormal(-Vector3.UnitX, Matrix4x4.CreateRotationZ(float.DegreesToRadians(45f)));
 
 		VplFile _vpl;
 		EngineType _engine = EngineType.YurisRevenge;
@@ -66,19 +66,19 @@ namespace CNCMaps.Engine.Rendering {
 			// volume is sized to the scale the historical perspective camera (fov 30°,
 			// eye distance 20) had at the model's depth: 2*tan(15°)*20 world units.
 			const float orthoDiameter = 10.7157f;
-			var persp = Matrix4.CreateOrthographic(orthoDiameter, orthoDiameter * _surface.Height / _surface.Width, 1, _surface.Height);
+			var persp = MatrixMath.CreateOrthographicGL(orthoDiameter, orthoDiameter * _surface.Height / _surface.Width, 1, _surface.Height);
 
-			var lookat = Matrix4.LookAt(0, 0, -10, 0, 0, 0, 0, 1, 0);
-			var trans = Matrix4.CreateTranslation(0, 0, 10);
+			var lookat = Matrix4x4.CreateLookAt(new Vector3(0, 0, -10), Vector3.Zero, Vector3.UnitY);
+			var trans = Matrix4x4.CreateTranslation(0, 0, 10);
 
 			// align and zoom
-			var world = Matrix4.CreateRotationX(MathHelper.DegreesToRadians(60));
-			world = Matrix4.CreateRotationY(MathHelper.DegreesToRadians(180)) * world;
-			world = Matrix4.CreateRotationZ(MathHelper.DegreesToRadians(-45)) * world;
-			world = Matrix4.CreateScale(0.028f, 0.028f, 0.028f) * world;
+			var world = Matrix4x4.CreateRotationX(float.DegreesToRadians(60));
+			world = MatrixMath.Mul(Matrix4x4.CreateRotationY(float.DegreesToRadians(180)), world);
+			world = MatrixMath.Mul(Matrix4x4.CreateRotationZ(float.DegreesToRadians(-45)), world);
+			world = MatrixMath.Mul(Matrix4x4.CreateScale(0.028f, 0.028f, 0.028f), world);
 
 			// determine tilt vectors
-			Matrix4 tilt = Matrix4.Identity;
+			Matrix4x4 tilt = Matrix4x4.Identity;
 			int tiltPitch = 0, tiltYaw = 0;
 			if (obj.Tile.Drawable != null) {
 				var img = (obj.Tile.Drawable as TileDrawable).GetTileImage(obj.Tile);
@@ -96,20 +96,20 @@ namespace CNCMaps.Engine.Rendering {
 					tiltPitch = 25;
 					tiltYaw = 225 - 90 * ((ramp - 1) % 4);
 				}
-				tilt *= Matrix4.CreateRotationX(MathHelper.DegreesToRadians(tiltPitch));
-				tilt *= Matrix4.CreateRotationZ(MathHelper.DegreesToRadians(tiltYaw));
+				tilt = MatrixMath.Mul(tilt, Matrix4x4.CreateRotationX(float.DegreesToRadians(tiltPitch)));
+				tilt = MatrixMath.Mul(tilt, Matrix4x4.CreateRotationZ(float.DegreesToRadians(tiltYaw)));
 			}
 
 			// object rotation around Z
 			float direction = (obj is OwnableObject) ? (obj as OwnableObject).Direction : 0;
 			float objectRotation = 90 - direction / 256f * 360f - tiltYaw; // convert game rotation to world degrees
-			Matrix4 @object = Matrix4.CreateRotationZ(MathHelper.DegreesToRadians(objectRotation)) * tilt; // object facing
+			Matrix4x4 @object = MatrixMath.Mul(Matrix4x4.CreateRotationZ(float.DegreesToRadians(objectRotation)), tilt); // object facing
 																										   // art.ini TurretOffset value positions some voxel parts over our x-axis
-			@object = Matrix4.CreateTranslation(0.18f * props.TurretVoxelOffset, 0, 0) * @object;
+			@object = MatrixMath.Mul(Matrix4x4.CreateTranslation(0.18f * props.TurretVoxelOffset, 0, 0), @object);
 
-			float pitch = MathHelper.DegreesToRadians(210);
-			float yaw = MathHelper.DegreesToRadians(120);
-			var shadowTransform = Matrix4.CreateRotationZ(pitch) * Matrix4.CreateRotationY(yaw);
+			float pitch = float.DegreesToRadians(210);
+			float yaw = float.DegreesToRadians(120);
+			var shadowTransform = MatrixMath.Mul(Matrix4x4.CreateRotationZ(pitch), Matrix4x4.CreateRotationY(yaw));
 			// clear shadowbuf
 			var shadBuf = _surface.GetShadows();
 			Array.Clear(shadBuf, 0, shadBuf.Length);
@@ -120,25 +120,25 @@ namespace CNCMaps.Engine.Rendering {
 				frameRot.M42 *= section.HVAMultiplier * section.ScaleY;
 				frameRot.M43 *= section.HVAMultiplier * section.ScaleZ;
 
-				var frameTransl = Matrix4.CreateTranslation(section.MinBounds);
-				var frame = frameTransl * frameRot;
+				var frameTransl = Matrix4x4.CreateTranslation(section.MinBounds);
+				var frame = MatrixMath.Mul(frameTransl, frameRot);
 
 				// full modelview-projection for this section, mirroring the former GL
 				// matrix stack (row-vector convention: leftmost matrix applies first)
-				var mvp = frame * @object * world * trans * lookat * persp;
+				var mvp = MatrixMath.Mul(frame, @object, world, trans, lookat, persp);
 
 				// shadow: flatten the model onto the ground plane (z=0 in upright world
 				// space, i.e. after the model/facing/tilt transforms but before the
 				// camera transforms), then project to screen like regular geometry.
 				// This projects the actual voxel volume straight down, like the game.
-				var flatten = Matrix4.Identity;
+				var flatten = Matrix4x4.Identity;
 				flatten.M33 = 0f;
-				var shadowMvp = frame * @object * flatten * world * trans * lookat * persp;
+				var shadowMvp = MatrixMath.Mul(frame, @object, flatten, world, trans, lookat, persp);
 
 				// undo world transformations on light direction
-				var v = @object * world * frame * shadowTransform;
+				var v = MatrixMath.Mul(@object, world, frame, shadowTransform);
 
-				var lightDirection = (v.Determinant != 0.0) ? ExtractRotationVector(ToOpenGL(Matrix4.Invert(v))) : Vector3.Zero;
+				var lightDirection = Matrix4x4.Invert(v, out var vInv) ? ExtractRotationVector(ToOpenGL(vInv)) : Vector3.Zero;
 
 				// game-accurate lighting: precompute which vpl page every normal maps to
 				byte[] vplPages = _vpl != null ? PreCalculateVplLighting(section.GetNormals(), direction) : null;
@@ -186,14 +186,14 @@ namespace CNCMaps.Engine.Rendering {
 			float direction = (obj is OwnableObject) ? (obj as OwnableObject).Direction : 0;
 			float objectRotation = 45f - direction / 256f * 360f; // convert game rotation to world degrees
 
-			var world = Matrix4.CreateRotationX(MathHelper.DegreesToRadians(60));
-			world = Matrix4.CreateRotationZ(MathHelper.DegreesToRadians(objectRotation)) * world; // object facing
-			world = Matrix4.CreateScale(0.25f, 0.25f, 0.25f) * world;
+			var world = Matrix4x4.CreateRotationX(float.DegreesToRadians(60));
+			world = MatrixMath.Mul(Matrix4x4.CreateRotationZ(float.DegreesToRadians(objectRotation)), world); // object facing
+			world = MatrixMath.Mul(Matrix4x4.CreateScale(0.25f, 0.25f, 0.25f), world);
 
 			// art.ini TurretOffset value positions some voxel parts over our x-axis
-			world = Matrix4.CreateTranslation(0.18f * props.TurretVoxelOffset, 0, 0) * world;
-			var camera = Matrix4.CreatePerspectiveFieldOfView(MathHelper.DegreesToRadians(30), 1f, 1, 100);
-			world = world * camera;
+			world = MatrixMath.Mul(Matrix4x4.CreateTranslation(0.18f * props.TurretVoxelOffset, 0, 0), world);
+			var camera = MatrixMath.CreatePerspectiveFieldOfViewGL(float.DegreesToRadians(30), 1f, 1, 100);
+			world = MatrixMath.Mul(world, camera);
 
 			Rectangle ret = Rectangle.Empty;
 			foreach (var section in vxl.Sections) {
@@ -202,12 +202,12 @@ namespace CNCMaps.Engine.Rendering {
 				frameRot.M42 *= section.HVAMultiplier * section.ScaleY;
 				frameRot.M43 *= section.HVAMultiplier * section.ScaleZ;
 
-				var minbounds = new Vector3(section.MinBounds);
+				var minbounds = section.MinBounds;
 				if (props.HasShadow)
 					minbounds.Z = -100;
 
-				var frameTransl = Matrix4.CreateTranslation(minbounds);
-				var frame = frameTransl * frameRot * world;
+				var frameTransl = Matrix4x4.CreateTranslation(minbounds);
+				var frame = MatrixMath.Mul(frameTransl, frameRot, world);
 
 				// floor rect of the bounding box
 				Vector3 floorTopLeft = new Vector3(0, 0, 0);
@@ -222,15 +222,15 @@ namespace CNCMaps.Engine.Rendering {
 				Vector3 ceilBottomLeft = new Vector3(0, section.SpanY, section.SpanZ);
 
 				// apply transformations
-				floorTopLeft = Vector3.TransformVector(floorTopLeft, frame);
-				floorTopRight = Vector3.TransformVector(floorTopRight, frame);
-				floorBottomRight = Vector3.TransformVector(floorBottomRight, frame);
-				floorBottomLeft = Vector3.TransformVector(floorBottomLeft, frame);
+				floorTopLeft = MatrixMath.TransformNormal(floorTopLeft, frame);
+				floorTopRight = MatrixMath.TransformNormal(floorTopRight, frame);
+				floorBottomRight = MatrixMath.TransformNormal(floorBottomRight, frame);
+				floorBottomLeft = MatrixMath.TransformNormal(floorBottomLeft, frame);
 
-				ceilTopLeft = Vector3.TransformVector(ceilTopLeft, frame);
-				ceilTopRight = Vector3.TransformVector(ceilTopRight, frame);
-				ceilBottomRight = Vector3.TransformVector(ceilBottomRight, frame);
-				ceilBottomLeft = Vector3.TransformVector(ceilBottomLeft, frame);
+				ceilTopLeft = MatrixMath.TransformNormal(ceilTopLeft, frame);
+				ceilTopRight = MatrixMath.TransformNormal(ceilTopRight, frame);
+				ceilBottomRight = MatrixMath.TransformNormal(ceilBottomRight, frame);
+				ceilBottomLeft = MatrixMath.TransformNormal(ceilBottomLeft, frame);
 
 				int FminX = (int)Math.Floor(Math.Min(Math.Min(Math.Min(floorTopLeft.X, floorTopRight.X), floorBottomRight.X), floorBottomLeft.X));
 				int FmaxX = (int)Math.Ceiling(Math.Max(Math.Max(Math.Max(floorTopLeft.X, floorTopRight.X), floorBottomRight.X), floorBottomLeft.X));
@@ -259,9 +259,9 @@ namespace CNCMaps.Engine.Rendering {
 		/// by the WorldAlteringEditor project.
 		/// </summary>
 		byte[] PreCalculateVplLighting(Vector3[] normalsTable, float direction) {
-			float rotationFromFacing = MathHelper.TwoPi * direction / 256f;
+			float rotationFromFacing = MathF.Tau * direction / 256f;
 			Vector3 baseLight = _engine >= EngineType.RedAlert2 ? YRLight : TSLight;
-			Vector3 light = Vector3.TransformVector(baseLight, Matrix4.CreateRotationZ(rotationFromFacing - MathHelper.DegreesToRadians(45f)));
+			Vector3 light = MatrixMath.TransformNormal(baseLight, Matrix4x4.CreateRotationZ(rotationFromFacing - float.DegreesToRadians(45f)));
 
 			// halfway vector between light direction and view direction (Blinn-Phong)
 			Vector3 viewer = Vector3.UnitZ;
@@ -306,25 +306,13 @@ namespace CNCMaps.Engine.Rendering {
 			return new Vector3(tVec[0], tVec[1], tVec[2]);
 		}
 
-		static float[] ToOpenGL(Matrix4 source) {
-			var destination = new float[16];
-			destination[00] = source.Column0.X;
-			destination[01] = source.Column1.X;
-			destination[02] = source.Column2.X;
-			destination[03] = source.Column3.X;
-			destination[04] = source.Column0.Y;
-			destination[05] = source.Column1.Y;
-			destination[06] = source.Column2.Y;
-			destination[07] = source.Column3.Y;
-			destination[08] = source.Column0.Z;
-			destination[09] = source.Column1.Z;
-			destination[10] = source.Column2.Z;
-			destination[11] = source.Column3.Z;
-			destination[12] = source.Column0.W;
-			destination[13] = source.Column1.W;
-			destination[14] = source.Column2.W;
-			destination[15] = source.Column3.W;
-			return destination;
+		static float[] ToOpenGL(Matrix4x4 source) {
+			return new[] {
+				source.M11, source.M12, source.M13, source.M14,
+				source.M21, source.M22, source.M23, source.M24,
+				source.M31, source.M32, source.M33, source.M34,
+				source.M41, source.M42, source.M43, source.M44,
+			};
 		}
 
 		static float[] MatrixVectorMultiply(float[] mtx, float[] vec) {
@@ -365,7 +353,7 @@ namespace CNCMaps.Engine.Rendering {
 
 		readonly ScreenVertex[] _corners = new ScreenVertex[8];
 
-		void RenderVoxel(Vector3 v, ref Matrix4 mvp, byte r, byte g, byte b) {
+		void RenderVoxel(Vector3 v, ref Matrix4x4 mvp, byte r, byte g, byte b) {
 			const float rad = 0.5f;
 			// transform the 8 cube corners to window coordinates
 			bool valid = true;
@@ -374,7 +362,7 @@ namespace CNCMaps.Engine.Rendering {
 					v.X + (((i & 1) != 0) ? rad : -rad),
 					v.Y + (((i & 2) != 0) ? rad : -rad),
 					v.Z + (((i & 4) != 0) ? rad : -rad), 1f);
-				var clip = Vector4.TransformRow(corner, mvp);
+				var clip = MatrixMath.TransformRow(corner, mvp);
 				if (clip.W <= 1e-6f) {
 					valid = false; // behind the camera; the fixed camera setup never hits this
 					break;
@@ -395,14 +383,14 @@ namespace CNCMaps.Engine.Rendering {
 
 		readonly ScreenVertex[] _shadowCorners = new ScreenVertex[8];
 
-		void RenderVoxelShadow(Vector3 v, ref Matrix4 shadowMvp, bool[] shadBuf) {
+		void RenderVoxelShadow(Vector3 v, ref Matrix4x4 shadowMvp, bool[] shadBuf) {
 			const float rad = 0.5f;
 			for (int i = 0; i < 8; i++) {
 				var corner = new Vector4(
 					v.X + (((i & 1) != 0) ? rad : -rad),
 					v.Y + (((i & 2) != 0) ? rad : -rad),
 					v.Z + (((i & 4) != 0) ? rad : -rad), 1f);
-				var clip = Vector4.TransformRow(corner, shadowMvp);
+				var clip = MatrixMath.TransformRow(corner, shadowMvp);
 				if (clip.W <= 1e-6f)
 					return;
 				float invW = 1f / clip.W;

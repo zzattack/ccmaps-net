@@ -2,7 +2,7 @@
 using System.IO;
 using CNCMaps.FileFormats.VirtualFileSystem;
 using NLog;
-using OpenTK.Mathematics;
+using System.Numerics;
 
 namespace CNCMaps.FileFormats {
 
@@ -58,24 +58,24 @@ namespace CNCMaps.FileFormats {
 			return ret;
 		}
 
-		public Matrix4 LoadGLMatrix(string section, int frame = 0) {
+		public Matrix4x4 LoadGLMatrix(string section, int frame = 0) {
 			return ToGLMatrix(Sections.Find(s => s.Name == section).Matrices[frame]);
 		}
 
-		public Matrix4 LoadGLMatrix(int section, int frame = 0) {
+		public Matrix4x4 LoadGLMatrix(int section, int frame = 0) {
 			Initialize();
 			var hvaMatrix = Sections[section].Matrices[frame];
 			return ToGLMatrix(hvaMatrix);
 		}
 
-		private static Matrix4 ToGLMatrix(float[] hvaMatrix) {
-			//return new Matrix4(
+		private static Matrix4x4 ToGLMatrix(float[] hvaMatrix) {
+			//return new Matrix4x4(
 			//	hvaMatrix[0], hvaMatrix[1], hvaMatrix[2], 0,
 			//	hvaMatrix[3], hvaMatrix[4], hvaMatrix[5], 0,
 			//	hvaMatrix[6], hvaMatrix[7], hvaMatrix[8], 0,
 			//	hvaMatrix[9], hvaMatrix[10], hvaMatrix[11], 1);
 
-			return new Matrix4(
+			return new Matrix4x4(
 				hvaMatrix[0], hvaMatrix[4], hvaMatrix[8], 0,
 				hvaMatrix[1], hvaMatrix[5], hvaMatrix[9], 0,
 				hvaMatrix[2], hvaMatrix[6], hvaMatrix[10], 0,

@@ -7,7 +7,7 @@ using System.Linq;
 using System.Text;
 using CNCMaps.FileFormats.VirtualFileSystem;
 using NLog;
-using OpenTK.Mathematics;
+using System.Numerics;
 
 namespace CNCMaps.FileFormats {
 

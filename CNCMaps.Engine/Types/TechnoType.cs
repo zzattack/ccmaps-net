@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using OpenTK.Mathematics;
+using System.Numerics;
 
 namespace CNCMaps.Engine.Types {
 	public class TechnoType : ObjectType {

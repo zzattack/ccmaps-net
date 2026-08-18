@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Drawing;
-using OpenTK.Mathematics;
+using System.Numerics;
 
 namespace CNCMaps.Engine.Types {
 	public class ParticleType : ObjectType {

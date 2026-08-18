@@ -1,4 +1,4 @@
-﻿using OpenTK.Mathematics;
+﻿using System.Numerics;
 
 namespace CNCMaps.Engine.Types {
 	public class VehicleType : TechnoType {

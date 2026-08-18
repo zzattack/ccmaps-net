@@ -5,7 +5,6 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="NLog" Version="6.2.0" />
-    <PackageReference Include="OpenTK.Mathematics" Version="4.9.4" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\CNCMaps.Shared\CNCMaps.Shared.csproj" />
