@@ -84,7 +84,7 @@ namespace CNCMaps.Engine {
 				}
 
 				if (_settings.Engine == EngineType.AutoDetect) {
-					_settings.Engine = EngineDetector.DetectEngineType(mapFile, _settings.MixFilesDirectory);
+					_settings.Engine = EngineDetector.DetectEngineType(mapFile, _settings.MixFilesDirectory, _settings.InputFile);
 					_logger.Info("Engine autodetect result: {0}", _settings.Engine);
 				}
 

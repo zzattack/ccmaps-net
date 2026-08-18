@@ -32,10 +32,24 @@ namespace CNCMaps.Tests {
 			}
 		}
 
+		public static string TsMixDir {
+			get {
+				var dir = Environment.GetEnvironmentVariable("CNCMAPS_TS_MIX_DIR");
+				return !string.IsNullOrEmpty(dir) && Directory.Exists(dir) ? dir : null;
+			}
+		}
+
 		public sealed class GoldenFactAttribute : FactAttribute {
 			public GoldenFactAttribute() {
 				if (MixDir == null)
 					Skip = "CNCMAPS_MIX_DIR is not set or does not exist";
+			}
+		}
+
+		public sealed class TsGoldenFactAttribute : FactAttribute {
+			public TsGoldenFactAttribute() {
+				if (TsMixDir == null)
+					Skip = "CNCMAPS_TS_MIX_DIR is not set or does not exist";
 			}
 		}
 
@@ -143,6 +157,19 @@ namespace CNCMaps.Tests {
 		}
 
 		[GoldenFact]
+		public void RepeatedInProcessRenders_StayGolden() {
+			// a long-running service worker renders many maps in one process; verify
+			// renders are not contaminated by earlier renders (shared caches, statics)
+			var goldens = LoadGoldens();
+			var first = Render("hillbtwn.map");
+			AssertGolden("hillbtwn-png", PixelHash(Path.Combine(first, "render.png")), first);
+			var other = Render("mp22s8.map");
+			AssertGolden("mp22s8-png", PixelHash(Path.Combine(other, "render.png")), other);
+			var again = Render("hillbtwn.map");
+			AssertGolden("hillbtwn-png", PixelHash(Path.Combine(again, "render.png")), again);
+		}
+
+		[GoldenFact]
 		public void MapIniRuleOverrides_AffectTheRender() {
 			// maps can override rules/art entries in their own ini; verify the merge
 			// still takes effect: swapping the ambulance image must change the output
@@ -174,12 +201,31 @@ namespace CNCMaps.Tests {
 		[GoldenFact]
 		public void EngineDetection_DetectsCorrectEngines() {
 			foreach (var (map, expected) in new[] { ("mp22s8.map", EngineType.RedAlert2), ("hillbtwn.map", EngineType.YurisRevenge), ("austintx.map", EngineType.YurisRevenge) }) {
-				using var stream = File.OpenRead(AssetPath(Path.Combine("maps", map)));
-				var vmapFile = new VirtualFile(stream, map, true);
-				var mapFile = new MapFile(vmapFile, map);
-				var detected = CNCMaps.Engine.Map.EngineDetector.DetectEngineType(mapFile, MixDir);
+				var detected = Detect(map, MixDir);
 				Assert.Equal(expected, detected);
 			}
+		}
+
+		[GoldenFact]
+		public void EngineDetection_YrmExtensionBreaksTie() {
+			// mp22s8 uses only RA2-era objects, so RA2 and YR both score a perfect 1.0 and probe
+			// order decides. The FinalAlert2 YR extension must hand the tie to YR.
+			Assert.Equal(EngineType.RedAlert2, Detect("mp22s8.map", MixDir));
+			Assert.Equal(EngineType.YurisRevenge, Detect("mp22s8.map", MixDir, mapName: "mp22s8.yrm"));
+		}
+
+		[TsGoldenFact]
+		public void EngineDetection_TsMapAgainstTsDirIsNotRa2() {
+			// The TS and RA2 games share the cache.mix/local.mix names, so an unguarded RA2 probe
+			// on a TS-only directory reads TS's own rules and scores 1.0.
+			Assert.Equal(EngineType.TiberianSun, Detect("arivruns.map", TsMixDir));
+		}
+
+		static EngineType Detect(string map, string mixDir, string mapName = null) {
+			using var stream = File.OpenRead(AssetPath(Path.Combine("maps", map)));
+			var vmapFile = new VirtualFile(stream, mapName ?? map, true);
+			var mapFile = new MapFile(vmapFile, mapName ?? map);
+			return CNCMaps.Engine.Map.EngineDetector.DetectEngineType(mapFile, mixDir);
 		}
 	}
 }
