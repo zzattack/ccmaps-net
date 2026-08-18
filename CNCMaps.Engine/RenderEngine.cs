@@ -40,6 +40,10 @@ namespace CNCMaps.Engine {
 
 		public EngineResult Execute() {
 			try {
+				// make each render deterministic regardless of how many renders ran
+				// earlier in this process
+				CNCMaps.Shared.Utility.Rand.Reset();
+
 				_logger.Info("Initializing virtual filesystem");
 
 				var mapStream = File.Open(_settings.InputFile, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
