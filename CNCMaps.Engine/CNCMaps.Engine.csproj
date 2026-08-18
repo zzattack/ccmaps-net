@@ -1,19 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <RootNamespace>CNCMaps.Engine</RootNamespace>
-    <TargetFrameworks>net10.0-windows;net10.0</TargetFrameworks>
+    <TargetFramework>net10.0</TargetFramework>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(TargetFramework)' == 'net10.0-windows'">
-    <UseWindowsForms>true</UseWindowsForms>
-  </PropertyGroup>
-  <ItemGroup Condition="'$(TargetFramework)' != 'net10.0-windows'">
-    <!-- the interactive tile debugging window is WinForms-based -->
-    <Compile Remove="Rendering\DebugDrawingSurfaceWindow.cs" />
-    <Compile Remove="Rendering\DebugDrawingSurfaceWindow.Designer.cs" />
-    <Compile Remove="Rendering\ZoomableCanvas.cs" />
-    <Compile Remove="Rendering\Gdi32.cs" Condition="Exists('Rendering\Gdi32.cs')" />
-    <EmbeddedResource Remove="Rendering\DebugDrawingSurfaceWindow.resx" />
-  </ItemGroup>
   <ItemGroup>
     <!-- start position marker images, loaded through MarkerResources -->
     <EmbeddedResource Include="Resources\*.png" />

@@ -15,6 +15,8 @@ namespace CNCMaps.GUI {
 		private static bool _probed;
 		private static Type _windowType;
 
+		public static bool IsAvailable => File.Exists(Path.Combine(AppContext.BaseDirectory, "CNCMaps.Preview.dll"));
+
 		public static IMapPreviewWindow TryCreate() {
 			if (!_probed) {
 				_probed = true;

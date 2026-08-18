@@ -32,7 +32,6 @@ namespace CNCMaps.Shared {
 		public bool FixPreviewDimensions { get; set; }
 		public bool Debug { get; set; }
 		public bool MarkIceGrowth { get; set; }
-		public bool DiagnosticWindow { get; set; }
 		public bool Backup { get; set; }
 		public bool FixOverlays { get; set; }
 		public bool CompressTiles { get; set; }
@@ -59,7 +58,6 @@ namespace CNCMaps.Shared {
 			FixPreviewDimensions = true;
 			Debug = false;
 			MarkIceGrowth = false;
-			DiagnosticWindow = false;
 			Backup = true;
 			FixOverlays = false;
 			CompressTiles = false;
@@ -137,7 +135,6 @@ namespace CNCMaps.Shared {
 				{"thumb-png", "Save thumbnails as PNG instead of JPEG.", v => SavePNGThumbnails = true },
 				{"fixup-tiles", "Remove undefined tiles and overwrite IsoMapPack5 section in map", v => FixupTiles = true },
 				{"g|icegrowth", "Mark cells with ice growth set, used in TS snow maps", v => MarkIceGrowth = true},
-				{"e|diagwindow", "Show the diagnostic window", v => DiagnosticWindow = true},
 				{"b|bkp", "Create map file backup when modifying", v => Backup = true},
 				{"fix-overlays", "Remove undefined overlays and update overlay packs in map", v => FixOverlays = true},
 				{"cmprs-tiles", "Compress and update IsoMapPack5 in map", v => CompressTiles = true},

@@ -30,7 +30,7 @@ namespace CNCMaps.GUI {
 			this.gbMiscOptions = new System.Windows.Forms.GroupBox();
 			this.lblMiscHeader = new System.Windows.Forms.Label();
 			this.gbMarkings = new System.Windows.Forms.GroupBox();
-			this.cbDiagnosticWindow = new System.Windows.Forms.CheckBox();
+			this.cbPreviewWindow = new System.Windows.Forms.CheckBox();
 			this.cbTunnelPosition = new System.Windows.Forms.CheckBox();
 			this.cbMarkIceGrowth = new System.Windows.Forms.CheckBox();
 			this.cbEmphasizeOre = new System.Windows.Forms.CheckBox();
@@ -174,7 +174,7 @@ namespace CNCMaps.GUI {
 			// 
 			this.gbMarkings.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-			this.gbMarkings.Controls.Add(this.cbDiagnosticWindow);
+			this.gbMarkings.Controls.Add(this.cbPreviewWindow);
 			this.gbMarkings.Controls.Add(this.cbTunnelPosition);
 			this.gbMarkings.Controls.Add(this.cbMarkIceGrowth);
 			this.gbMarkings.Controls.Add(this.cbEmphasizeOre);
@@ -186,17 +186,17 @@ namespace CNCMaps.GUI {
 			this.gbMarkings.TabStop = false;
 			this.gbMarkings.Text = "Additional markings";
 			// 
-			// cbDiagnosticWindow
+			// cbPreviewWindow
 			// 
-			this.cbDiagnosticWindow.AutoSize = true;
-			this.cbDiagnosticWindow.Location = new System.Drawing.Point(13, 69);
-			this.cbDiagnosticWindow.Name = "cbDiagnosticWindow";
-			this.cbDiagnosticWindow.Size = new System.Drawing.Size(132, 17);
-			this.cbDiagnosticWindow.TabIndex = 4;
-			this.cbDiagnosticWindow.Text = "Show preview window";
-			this.toolTip.SetToolTip(this.cbDiagnosticWindow, "Show diagnostic window");
-			this.cbDiagnosticWindow.UseVisualStyleBackColor = true;
-			this.cbDiagnosticWindow.CheckedChanged += new System.EventHandler(this.cbDiagnosticWindow_CheckedChanged);
+			this.cbPreviewWindow.AutoSize = true;
+			this.cbPreviewWindow.Location = new System.Drawing.Point(13, 69);
+			this.cbPreviewWindow.Name = "cbPreviewWindow";
+			this.cbPreviewWindow.Size = new System.Drawing.Size(132, 17);
+			this.cbPreviewWindow.TabIndex = 4;
+			this.cbPreviewWindow.Text = "Show preview window";
+			this.toolTip.SetToolTip(this.cbPreviewWindow, "Show an interactive preview of the rendered map (requires the preview plugin)");
+			this.cbPreviewWindow.UseVisualStyleBackColor = true;
+			this.cbPreviewWindow.CheckedChanged += new System.EventHandler(this.cbPreviewWindow_CheckedChanged);
 			// 
 			// cbTunnelPosition
 			// 
@@ -1371,7 +1371,7 @@ namespace CNCMaps.GUI {
 		private GroupBox gbSizeMode;
 		private CheckBox cbThumbPNG;
 		private RadioButton rbUseFilename;
-		private CheckBox cbDiagnosticWindow;
+		private CheckBox cbPreviewWindow;
 		private CheckBox cbMarkIceGrowth;
 		private CheckBox cbBackup;
 		private CheckBox cbCompressTiles;

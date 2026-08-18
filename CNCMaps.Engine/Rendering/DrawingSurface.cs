@@ -166,17 +166,6 @@ namespace CNCMaps.Engine.Rendering {
 			}
 		}
 
-#if WINDOWS
-		/// <summary>
-		/// A zero-copy GDI+ view over the pixel buffer for the WinForms debug window.
-		/// Valid as long as this surface is not disposed. Bgr24 surfaces only.
-		/// </summary>
-		public System.Drawing.Bitmap GetGdiBitmap() {
-			return new System.Drawing.Bitmap(Width, Height, BitmapData.Stride,
-				System.Drawing.Imaging.PixelFormat.Format24bppRgb, BitmapData.Scan0);
-		}
-#endif
-
 		public void FreeNonBitmap() {
 			zBuffer = null;
 			_shadowBuffer = null;

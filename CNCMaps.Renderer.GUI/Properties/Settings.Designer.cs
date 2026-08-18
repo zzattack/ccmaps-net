@@ -435,12 +435,12 @@ namespace CNCMaps.GUI.Properties {
 		[global::System.Configuration.UserScopedSettingAttribute()]
 		[global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
 		[global::System.Configuration.DefaultSettingValueAttribute("False")]
-		public bool diagwindow {
+		public bool previewwindow {
 			get {
-				return ((bool)(this["diagwindow"]));
+				return ((bool)(this["previewwindow"]));
 			}
 			set {
-				this["diagwindow"] = value;
+				this["previewwindow"] = value;
 			}
 		}
 

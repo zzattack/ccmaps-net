@@ -3,10 +3,7 @@
     <OutputType>Exe</OutputType>
     <RootNamespace>CNCMaps</RootNamespace>
     <AssemblyName>CNCMaps.Renderer</AssemblyName>
-    <TargetFrameworks>net10.0-windows;net10.0</TargetFrameworks>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(TargetFramework)' == 'net10.0-windows'">
-    <UseWindowsForms>true</UseWindowsForms>
+    <TargetFramework>net10.0</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="NLog" Version="5.5.0" />

@@ -120,7 +120,8 @@ namespace CNCMaps.GUI {
 			rbSizeFullmap.Checked = Settings.Default.fullsize;
 
 			cbMarkIceGrowth.Checked = Settings.Default.icegrowth;
-			cbDiagnosticWindow.Checked = Settings.Default.diagwindow;
+			cbPreviewWindow.Checked = Settings.Default.previewwindow && PreviewPlugin.IsAvailable;
+			cbPreviewWindow.Visible = PreviewPlugin.IsAvailable;
 			ckbFixupTiles.Checked = Settings.Default.fixuptiles;
 			cbBackup.Checked = Settings.Default.backup;
 			cbFixOverlay.Checked = Settings.Default.fixoverlays;
@@ -175,7 +176,7 @@ namespace CNCMaps.GUI {
 			Settings.Default.localsize = rbSizeLocal.Checked;
 			Settings.Default.fullsize = rbSizeFullmap.Checked;
 			Settings.Default.icegrowth = cbMarkIceGrowth.Checked;
-			Settings.Default.diagwindow = cbDiagnosticWindow.Checked;
+			Settings.Default.previewwindow = cbPreviewWindow.Checked;
 
 			Settings.Default.fixuptiles = ckbFixupTiles.Checked;
 			Settings.Default.backup = cbBackup.Checked;
@@ -405,7 +406,7 @@ namespace CNCMaps.GUI {
 			UpdateOptions();
 		}
 
-		private void cbDiagnosticWindow_CheckedChanged(object sender, EventArgs e) {
+		private void cbPreviewWindow_CheckedChanged(object sender, EventArgs e) {
 			UpdateOptions();
 		}
 
@@ -603,10 +604,6 @@ namespace CNCMaps.GUI {
 				cmd += "--icegrowth ";
 			}
 
-			if (cbDiagnosticWindow.Checked) {
-				cmd += "--diagwindow ";
-			}
-
 			if (cbBackup.Checked) {
 				cmd += "--bkp ";
 			}
@@ -660,7 +657,6 @@ namespace CNCMaps.GUI {
 			else if (rbSizeFullmap.Checked) rs.SizeMode = SizeMode.Full;
 
 			rs.MarkIceGrowth = cbMarkIceGrowth.Checked;
-			rs.DiagnosticWindow = cbDiagnosticWindow.Checked;
 
 			if (cbStartMarkers.Checked) rs.MarkStartPos = true;
 			if (cbStartMarkers.Checked || (cbReplacePreview.Checked && cbMarkersType.Text == "SelectedAsAbove")) {
@@ -748,7 +744,7 @@ namespace CNCMaps.GUI {
 		private bool ValidUIOptions() {
 			if (!cbOutputPNG.Checked && !cbOutputJPG.Checked && !cbOutputThumbnail.Checked &&
 				!cbReplacePreview.Checked && !ckbFixupTiles.Checked && !cbFixOverlay.Checked && !cbCompressTiles.Checked &&
-				!cbDiagnosticWindow.Checked) {
+				!cbPreviewWindow.Checked) {
 				UpdateStatus("aborted, no processing", 100);
 				MessageBox.Show("Either generate PNG/JPEG/Thumbnail or modify map or use preview window.", "Nothing to do..", MessageBoxButtons.OK,
 					MessageBoxIcon.Information);
@@ -764,9 +760,9 @@ namespace CNCMaps.GUI {
 
 			try {
 				var engine = new RenderEngine();
-				engine.ConfigureFromSettings(engineCfg);
-				if (showPreview)
+				if (showPreview && cbPreviewWindow.Checked)
 					engine.PreviewWindow = PreviewPlugin.TryCreate();
+				engine.ConfigureFromSettings(engineCfg);
 				var result = engine.Execute();
 
 				switch (result) {

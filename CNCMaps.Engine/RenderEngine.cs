@@ -188,20 +188,8 @@ namespace CNCMaps.Engine {
 					if (_settings.OutputDir == "")
 						_settings.OutputDir = Path.GetDirectoryName(_settings.InputFile);
 
-					if (PreviewWindow != null) {
+					if (PreviewWindow != null)
 						PreviewWindow.Show(map);
-					}
-					else if (_settings.DiagnosticWindow) {
-#if WINDOWS
-						using (var form = new DebugDrawingSurfaceWindow(map.GetDrawingSurface(), map.GetTiles(),
-							map.GetTheater(), map)) {
-							form.RequestTileEvaluate += map.DebugDrawTile;
-							form.ShowDialog();
-						}
-#else
-						_logger.Error("The diagnostic window is only available on Windows");
-#endif
-					}
 				} // VFS resources can now be released
 
 				// free up as much memory as possible before saving the large images
@@ -349,8 +337,8 @@ namespace CNCMaps.Engine {
 			}
 			else if (!_settings.SaveJPEG && !_settings.SavePNG && !_settings.SavePNGThumbnails  &&
 				!_settings.GeneratePreviewPack && !_settings.FixupTiles && !_settings.FixOverlays && !_settings.CompressTiles &&
-				!_settings.DiagnosticWindow) {
-				_logger.Error("No action to perform. Either generate PNG/JPEG/Thumbnail or modify map or use preview window.");
+				PreviewWindow == null) {
+				_logger.Error("No action to perform. Either generate PNG/JPEG/Thumbnail or modify map.");
 				return false;
 			}
 			else if (_settings.OutputDir != "" && !Directory.Exists(_settings.OutputDir)) {

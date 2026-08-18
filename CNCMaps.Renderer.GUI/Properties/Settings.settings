@@ -104,7 +104,7 @@
     <Setting Name="icegrowth" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">False</Value>
     </Setting>
-    <Setting Name="diagwindow" Type="System.Boolean" Scope="User">
+    <Setting Name="previewwindow" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">False</Value>
     </Setting>
     <Setting Name="skipupdatecheck" Type="System.Boolean" Scope="User">
