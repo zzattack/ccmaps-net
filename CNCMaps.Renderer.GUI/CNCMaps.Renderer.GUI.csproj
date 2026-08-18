@@ -9,7 +9,7 @@
     <ApplicationManifest>Properties\app.manifest</ApplicationManifest>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="NLog" Version="5.5.0" />
+    <PackageReference Include="NLog" Version="6.2.0" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\CNCMaps.Engine\CNCMaps.Engine.csproj" />

@@ -4,7 +4,7 @@
     <TargetFramework>net10.0</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="NLog" Version="5.5.0" />
+    <PackageReference Include="NLog" Version="6.2.0" />
     <PackageReference Include="OpenTK.Mathematics" Version="4.9.4" />
   </ItemGroup>
   <ItemGroup>

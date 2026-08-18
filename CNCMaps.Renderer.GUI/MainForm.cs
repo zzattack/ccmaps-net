@@ -40,7 +40,6 @@ namespace CNCMaps.GUI {
 			InitializeComponent();
 
 
-			ConfigurationItemFactory.Default.Targets.RegisterDefinition("GuiTarget", typeof(GuiTarget));
 			if (LogManager.Configuration == null) {
 				// init default config
 				var target = new GuiTarget();
