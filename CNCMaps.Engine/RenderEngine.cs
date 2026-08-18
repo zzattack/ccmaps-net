@@ -80,7 +80,7 @@ namespace CNCMaps.Engine {
 				}
 
 				if (_settings.Engine == EngineType.AutoDetect) {
-					_settings.Engine = EngineDetector.DetectEngineType(mapFile);
+					_settings.Engine = EngineDetector.DetectEngineType(mapFile, _settings.MixFilesDirectory);
 					_logger.Info("Engine autodetect result: {0}", _settings.Engine);
 				}
 
@@ -178,11 +178,15 @@ namespace CNCMaps.Engine {
 						_settings.OutputDir = Path.GetDirectoryName(_settings.InputFile);
 
 					if (_settings.DiagnosticWindow) {
+#if WINDOWS
 						using (var form = new DebugDrawingSurfaceWindow(map.GetDrawingSurface(), map.GetTiles(),
 							map.GetTheater(), map)) {
 							form.RequestTileEvaluate += map.DebugDrawTile;
 							form.ShowDialog();
 						}
+#else
+						_logger.Error("The diagnostic window is only available on Windows");
+#endif
 					}
 				} // VFS resources can now be released
 

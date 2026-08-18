@@ -17,20 +17,25 @@ namespace CNCMaps.Engine.Map {
 		/// <summary>Detect map type.</summary>
 		/// <param name="rules">The rules.ini file to be used.</param>
 		/// <returns>The engine to be used to render this map.</returns>
-		public static EngineType DetectEngineType(MapFile mf) {
+		public static EngineType DetectEngineType(MapFile mf, string mixDir = null) {
 			var vfsTS = new VirtualFileSystem();
 			var vfsFS = new VirtualFileSystem();
 			var vfsRA2 = new VirtualFileSystem();
 			var vfsYR = new VirtualFileSystem();
 
-			if (Directory.Exists(VirtualFileSystem.TSInstallDir)) {
-				vfsTS.LoadMixes(VirtualFileSystem.TSInstallDir, EngineType.TiberianSun);
-				vfsFS.LoadMixes(VirtualFileSystem.TSInstallDir, EngineType.Firestorm);
+			// prefer an explicitly given mix files directory; the registry-based
+			// install dirs are only available on Windows with the game installed
+			string tsDir = !string.IsNullOrEmpty(mixDir) ? mixDir : VirtualFileSystem.TSInstallDir;
+			string ra2Dir = !string.IsNullOrEmpty(mixDir) ? mixDir : VirtualFileSystem.RA2InstallDir;
+
+			if (tsDir != null && Directory.Exists(tsDir)) {
+				vfsTS.LoadMixes(tsDir, EngineType.TiberianSun);
+				vfsFS.LoadMixes(tsDir, EngineType.Firestorm);
 			}
 
-			if (Directory.Exists(VirtualFileSystem.RA2InstallDir)) {
-				vfsRA2.LoadMixes(VirtualFileSystem.RA2InstallDir, EngineType.RedAlert2);
-				vfsYR.LoadMixes(VirtualFileSystem.RA2InstallDir, EngineType.YurisRevenge);
+			if (ra2Dir != null && Directory.Exists(ra2Dir)) {
+				vfsRA2.LoadMixes(ra2Dir, EngineType.RedAlert2);
+				vfsYR.LoadMixes(ra2Dir, EngineType.YurisRevenge);
 			}
 
 			IniFile rulesTS = vfsTS.OpenFile<IniFile>("rules.ini");
