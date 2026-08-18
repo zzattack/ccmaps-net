@@ -94,6 +94,24 @@ namespace CNCMaps.Tests {
 		}
 
 		[Fact]
+		public void NoPreviewFixupDisablesDimensionFix() {
+			Assert.True(Parse().FixPreviewDimensions);
+			Assert.False(Parse("-x").FixPreviewDimensions);
+			Assert.False(Parse("--no-preview-fixup").FixPreviewDimensions);
+		}
+
+		[Fact]
+		public void TunnelOptionsMapToTheirOwnProperties() {
+			var rs = Parse("--tunnels", "--tunnelpos");
+			Assert.True(rs.TunnelPaths);
+			Assert.True(rs.TunnelPosition);
+
+			rs = Parse("--tunnels");
+			Assert.True(rs.TunnelPaths);
+			Assert.False(rs.TunnelPosition);
+		}
+
+		[Fact]
 		public void ThumbnailConfigAcceptsAspectPrefix() {
 			var rs = Parse("-z", "+(200,100)");
 			Assert.Equal("+(200,100)", rs.ThumbnailConfig);

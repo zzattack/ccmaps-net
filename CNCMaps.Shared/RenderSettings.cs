@@ -150,7 +150,7 @@ namespace CNCMaps.Shared {
 			});
 			Flag("--ignore-lighting", "-n", "Ignore all lighting and lamps on the map", () => IgnoreLighting = true);
 			Value<string>("--create-thumbnail", "-z", "Also save a thumbnail along with the fullmap in dimensions (x,y), prefix with + to keep aspect ratio", v => ThumbnailConfig = v);
-			Value<string>("--no-preview-fixup", "-x", "Also save a thumbnail along with the fullmap in dimensions (x,y), prefix with + to keep aspect ratio", v => ThumbnailConfig = v);
+			Flag("--no-preview-fixup", "-x", "Do not fix the [Preview] dimensions when injecting the rendered preview", () => FixPreviewDimensions = false);
 			Flag("--thumb-png", null, "Save thumbnails as PNG instead of JPEG.", () => SavePNGThumbnails = true);
 			Flag("--fixup-tiles", null, "Remove undefined tiles and overwrite IsoMapPack5 section in map", () => FixupTiles = true);
 			Flag("--icegrowth", "-g", "Mark cells with ice growth set, used in TS snow maps", () => MarkIceGrowth = true);
@@ -158,7 +158,7 @@ namespace CNCMaps.Shared {
 			Flag("--fix-overlays", null, "Remove undefined overlays and update overlay packs in map", () => FixOverlays = true);
 			Flag("--cmprs-tiles", null, "Compress and update IsoMapPack5 in map", () => CompressTiles = true);
 			Flag("--tunnels", null, "Show tunnels path lines", () => TunnelPaths = true);
-			Flag("--tunnelpos", null, "Adjust position of tunnel path lines", () => TunnelPaths = true);
+			Flag("--tunnelpos", null, "Adjust position of tunnel path lines", () => TunnelPosition = true);
 
 			var result = root.Parse(args);
 			foreach (var token in result.UnmatchedTokens)
