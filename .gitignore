@@ -8,3 +8,5 @@ CNCMaps_*.zip
 *.cache
 /desktop dump
 .vs
+publish
+CLAUDE.md

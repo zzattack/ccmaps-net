@@ -1,0 +1,7 @@
+<Solution>
+  <Project Path="CNCMaps.Engine/CNCMaps.Engine.csproj" />
+  <Project Path="CNCMaps.FileFormats/CNCMaps.FileFormats.csproj" />
+  <Project Path="CNCMaps.Renderer.GUI/CNCMaps.Renderer.GUI.csproj" />
+  <Project Path="CNCMaps.Renderer/CNCMaps.Renderer.csproj" />
+  <Project Path="CNCMaps.Shared/CNCMaps.Shared.csproj" />
+</Solution>

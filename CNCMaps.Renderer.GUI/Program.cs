@@ -16,6 +16,7 @@ namespace CNCMaps.GUI {
 		/// </summary>
 		[STAThread]
 		static void Main(string[] args) {
+			Application.SetHighDpiMode(HighDpiMode.SystemAware);
 			Application.EnableVisualStyles();
 			Application.SetCompatibleTextRenderingDefault(false);
 

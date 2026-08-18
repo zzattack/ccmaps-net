@@ -5,9 +5,10 @@ using CNCMaps.Engine.Game;
 using CNCMaps.Engine.Map;
 using CNCMaps.FileFormats;
 using NLog;
-using OpenTK;
-using OpenTK.Graphics;
 using OpenTK.Graphics.OpenGL;
+using OpenTK.Mathematics;
+using OpenTK.Windowing.Common;
+using OpenTK.Windowing.Desktop;
 using PixelFormat = System.Drawing.Imaging.PixelFormat;
 
 namespace CNCMaps.Engine.Rendering {
@@ -57,11 +58,20 @@ namespace CNCMaps.Engine.Rendering {
 
 		private bool CreateGameWindow() {
 			try {
-				_gw = new GameWindow(_surface.Width, _surface.Height, GraphicsMode.Default, "", GameWindowFlags.Default);
+				var nws = new NativeWindowSettings {
+					ClientSize = new Vector2i(_surface.Width, _surface.Height),
+					StartVisible = false,
+					API = ContextAPI.OpenGL,
+					Profile = ContextProfile.Compatability,
+					APIVersion = new Version(3, 3),
+					Title = "",
+				};
+				_gw = new GameWindow(GameWindowSettings.Default, nws);
+				_gw.MakeCurrent();
 				return true;
 			}
-			catch {
-				Logger.Warn("GameWindow could not be created.");
+			catch (Exception exc) {
+				Logger.Warn("GameWindow could not be created: {0}", exc.Message);
 				return false;
 			}
 		}
@@ -373,8 +383,8 @@ namespace CNCMaps.Engine.Rendering {
 		bool SetupFramebuffer() {
 			try {
 				int fbo;
-				GL.Ext.GenFramebuffers(1, out fbo);
-				GL.Ext.BindFramebuffer(FramebufferTarget.FramebufferExt, fbo);
+				GL.GenFramebuffers(1, out fbo);
+				GL.BindFramebuffer(FramebufferTarget.Framebuffer, fbo);
 				GL.DrawBuffer(DrawBufferMode.ColorAttachment0);
 				GL.ReadBuffer(ReadBufferMode.ColorAttachment0);
 			}
@@ -384,18 +394,18 @@ namespace CNCMaps.Engine.Rendering {
 			}
 			int depthbuffer;
 
-			GL.Ext.GenRenderbuffers(1, out depthbuffer);
-			GL.Ext.BindRenderbuffer(RenderbufferTarget.RenderbufferExt, depthbuffer);
-			GL.Ext.RenderbufferStorage(RenderbufferTarget.RenderbufferExt, RenderbufferStorage.DepthComponent32, _surface.BitmapData.Width, _surface.BitmapData.Height);
-			GL.Ext.FramebufferRenderbuffer(FramebufferTarget.FramebufferExt, FramebufferAttachment.DepthAttachmentExt, RenderbufferTarget.RenderbufferExt, depthbuffer);
+			GL.GenRenderbuffers(1, out depthbuffer);
+			GL.BindRenderbuffer(RenderbufferTarget.Renderbuffer, depthbuffer);
+			GL.RenderbufferStorage(RenderbufferTarget.Renderbuffer, RenderbufferStorage.DepthComponent32, _surface.BitmapData.Width, _surface.BitmapData.Height);
+			GL.FramebufferRenderbuffer(FramebufferTarget.Framebuffer, FramebufferAttachment.DepthAttachment, RenderbufferTarget.Renderbuffer, depthbuffer);
 
 			int rgb_rb;
-			GL.Ext.GenRenderbuffers(1, out rgb_rb);
-			GL.Ext.BindRenderbuffer(RenderbufferTarget.RenderbufferExt, rgb_rb);
-			GL.Ext.RenderbufferStorage(RenderbufferTarget.RenderbufferExt, RenderbufferStorage.Rgba8, _surface.BitmapData.Width, _surface.BitmapData.Height);
-			GL.Ext.FramebufferRenderbuffer(FramebufferTarget.FramebufferExt, FramebufferAttachment.ColorAttachment0Ext, RenderbufferTarget.RenderbufferExt, rgb_rb);
+			GL.GenRenderbuffers(1, out rgb_rb);
+			GL.BindRenderbuffer(RenderbufferTarget.Renderbuffer, rgb_rb);
+			GL.RenderbufferStorage(RenderbufferTarget.Renderbuffer, RenderbufferStorage.Rgba8, _surface.BitmapData.Width, _surface.BitmapData.Height);
+			GL.FramebufferRenderbuffer(FramebufferTarget.Framebuffer, FramebufferAttachment.ColorAttachment0, RenderbufferTarget.Renderbuffer, rgb_rb);
 
-			return GL.CheckFramebufferStatus(FramebufferTarget.FramebufferExt) == FramebufferErrorCode.FramebufferCompleteExt;
+			return GL.CheckFramebufferStatus(FramebufferTarget.Framebuffer) == FramebufferErrorCode.FramebufferComplete;
 		}
 
 		static readonly float[] zeroVector = { 0, 0, 0, 1 };

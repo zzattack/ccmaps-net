@@ -901,7 +901,7 @@ namespace CNCMaps.Shared.DynamicTypeDescription {
 				if (attr != null) {
 					try {
 						if (String.IsNullOrEmpty(attr.AssemblyFullName) == false) {
-							rm = new ResourceManager(attr.BaseName, Assembly.ReflectionOnlyLoad(attr.AssemblyFullName));
+							rm = new ResourceManager(attr.BaseName, Assembly.Load(attr.AssemblyFullName));
 						}
 						else {
 							rm = new ResourceManager(attr.BaseName, cpd.PropertyType.Assembly);
@@ -1176,7 +1176,7 @@ namespace CNCMaps.Shared.DynamicTypeDescription {
 				}
 				try {
 					if (String.IsNullOrEmpty(attr.AssemblyFullName) == false) {
-						rm = new ResourceManager(attr.BaseName, Assembly.ReflectionOnlyLoad(attr.AssemblyFullName));
+						rm = new ResourceManager(attr.BaseName, Assembly.Load(attr.AssemblyFullName));
 					}
 					else {
 						rm = new ResourceManager(attr.BaseName, base.GetPropertyOwner(cpd).GetType().Assembly);

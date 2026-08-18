@@ -60,7 +60,8 @@ namespace CNCMaps.FileFormats.VirtualFileSystem {
 			try {
 				return archive.OpenFile(filename, format, m);
 			}
-			catch {
+			catch (Exception e) {
+				Logger.Error("Opening file {0} from archive failed: {1}", filename, e);
 				return null;
 			}
 		}

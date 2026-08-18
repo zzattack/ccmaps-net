@@ -15,6 +15,7 @@ using CNCMaps.FileFormats.VirtualFileSystem;
 using CNCMaps.FileFormats.Encodings;
 using CNCMaps.Shared;
 using NLog;
+using PaletteType = CNCMaps.Shared.PaletteType;
 
 namespace CNCMaps.Engine.Map {
 	public class Map {

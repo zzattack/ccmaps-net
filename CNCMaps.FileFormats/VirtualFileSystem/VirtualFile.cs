@@ -61,7 +61,7 @@ namespace CNCMaps.FileFormats.VirtualFileSystem {
 			else {
 				// ensure
 				BaseStream.Position = BaseOffset + Pos;
-				BaseStream.Read(buffer, offset, count);
+				BaseStream.ReadExactly(buffer, offset, count);
 			}
 			Pos += count;
 			return count;
@@ -89,7 +89,7 @@ namespace CNCMaps.FileFormats.VirtualFileSystem {
 				// ensure
 				BaseStream.Position = BaseOffset + Pos;
 				byte[] rbuff = new byte[count];
-				BaseStream.Read(rbuff, 0, count);
+				BaseStream.ReadExactly(rbuff, 0, count);
 				for (int i = 0; i < count; i++)
 					*buffer++ = rbuff[i];
 			}
@@ -101,7 +101,7 @@ namespace CNCMaps.FileFormats.VirtualFileSystem {
 			// ensure
 			BaseStream.Position = BaseOffset + Pos;
 			_buff = new byte[Size];
-			BaseStream.Read(_buff, 0, (int)Size);
+			BaseStream.ReadExactly(_buff, 0, (int)Size);
 			_isBufferInitialized = true;
 		}
 

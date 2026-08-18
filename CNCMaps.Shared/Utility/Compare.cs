@@ -4,10 +4,6 @@ using System.Linq;
 
 namespace CNCMaps.Shared.Utility {
 	public static class Compare {
-		public static IEnumerable<T> DistinctBy<T, TIdentity>(this IEnumerable<T> source, Func<T, TIdentity> identitySelector) {
-			return source.Distinct(By(identitySelector));
-		}
-
 		public static IEqualityComparer<TSource> By<TSource, TIdentity>(Func<TSource, TIdentity> identitySelector) {
 			return new DelegateComparer<TSource, TIdentity>(identitySelector);
 		}

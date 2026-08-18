@@ -439,14 +439,19 @@ namespace CNCMaps.Engine {
 				// fallback for multiplayer maps with, .map extension,
 				// no YR objects so assumed to be ra2, but actually meant to be used on yr
 				if (mapExt == ".map" && pkt != null && !pkt.MapEntries.ContainsKey(pktEntryName) && engine >= EngineType.RedAlert2) {
-					var mapVfs = new VirtualFileSystem();
-					mapVfs.AddItem(_settings.InputFile);
-					pkt = mapVfs.OpenFile<PktFile>("missionsmd.pkt");
+					// this pkt (if any) comes from a private VFS over the map file itself,
+					// so it can be disposed here; the pkt opened from the main vfs must NOT be
+					// disposed as that would close the mix stream other files are read from
+					using (var mapVfs = new VirtualFileSystem()) {
+						pkt = null;
+						if (mapVfs.AddItem(_settings.InputFile))
+							pkt = mapVfs.OpenFile<PktFile>("missionsmd.pkt");
+						if (pkt != null && !string.IsNullOrEmpty(pktEntryName))
+							pktMapEntry = pkt.GetMapEntry(pktEntryName);
+					}
 				}
-
-				if (pkt != null && !string.IsNullOrEmpty(pktEntryName))
+				else if (pkt != null && !string.IsNullOrEmpty(pktEntryName))
 					pktMapEntry = pkt.GetMapEntry(pktEntryName);
-				pkt?.Dispose();
 			}
 
 			// now, if we have a map entry from a PKT file, 
@@ -485,7 +490,8 @@ namespace CNCMaps.Engine {
 				string csfFile = engine == EngineType.YurisRevenge ? "ra2md.csf" : "ra2.csf";
 				_logger.Info("Loading csf file {0}", csfFile);
 				var csf = vfs.Open<CsfFile>(csfFile);
-				mapName = csf.GetValue(csfEntryName.ToLower());
+				if (csf != null && csfEntryName != null)
+					mapName = csf.GetValue(csfEntryName.ToLower());
 
 				if (missionEntry != null) {
 					if (mapName.Contains("Operation: ")) {

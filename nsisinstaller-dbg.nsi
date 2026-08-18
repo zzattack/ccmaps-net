@@ -42,23 +42,9 @@ Section "Maps Renderer" sec_program
 	; Set Section properties
 	SetOverwrite on
 
-	; Set Section Files and Shortcuts
+	; Set Section Files and Shortcuts (produced by dotnet publish, see build_releases.bat)
 	SetOutPath "$INSTDIR\"
-	File "CNCMaps.Renderer\bin\${CONFIG}\CNCMaps.Renderer.exe"
-	File "CNCMaps.Renderer.GUI\bin\${CONFIG}\CNCMaps.Renderer.GUI.exe"
-	File "CNCMaps.Shared\bin\${CONFIG}\CNCMaps.Shared.dll"
-	File "CNCMaps.FileFormats\bin\${CONFIG}\CNCMaps.FileFormats.dll"
-	File "CNCMaps.Engine\bin\${CONFIG}\CNCMaps.Engine.dll"
-	
-	; these are no longer used	
-	Delete "$INSTDIR\NLog.config"
-	Delete "$INSTDIR\NLog.Debug.config"
-	
-	SetOverwrite ifnewer
-	
-	File "Lib\NLog.dll"
-	;File "Lib\OSMesa.dll"
-	File "Lib\OpenTK.dll"
+	File /r "publish\${CONFIG}\*"
 SectionEnd
 
 Section /o "Start menu shortcuts" sec_shortcut_startmenu
@@ -98,21 +84,11 @@ Section Uninstall
 	Delete "$SMPROGRAMS\CNCMaps\CNC Maps renderer.lnk" # old locations
 	Delete "$SMPROGRAMS\CNCMaps\Uninstall.lnk"
 
-	; Clean up Maps Renderer
-	Delete "$INSTDIR\CNCMaps.Renderer.exe"
-	Delete "$INSTDIR\CNCMaps.Renderer.GUI.exe"
-	Delete "$INSTDIR\CNCMaps.Shared.dll"
-	Delete "$INSTDIR\CNCMaps.FileFormats.dll"
-	Delete "$INSTDIR\CNCMaps.Engine.dll"
-	Delete "$INSTDIR\NLog.dll"
-	Delete "$INSTDIR\NLog.config"
-	Delete "$INSTDIR\NLog.Debug.config"
-	Delete "$INSTDIR\opentk.dll"
-	Delete "$INSTDIR\osmesa.dll"
+	; Clean up Maps Renderer (entire publish output)
+	RMDir /r "$INSTDIR\"
 
 	; Remove remaining directories
 	RMDir "$SMPROGRAMS\CNCMaps" # old
-	RMDir "$INSTDIR\"
 SectionEnd
 
 BrandingText "by Frank Razenberg"
