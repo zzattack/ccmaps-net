@@ -9,8 +9,9 @@ using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing.Design;
+using CNCMaps.Shared;
 
-namespace CNCMaps.Shared.DynamicTypeDescription {
+namespace CNCMaps.GUI.Design {
 	internal class PropertyValueUIService : IPropertyValueUIService {
 		private PropertyValueUIHandler m_ValueUIHandler;
 		private EventHandler m_NotifyHandler;

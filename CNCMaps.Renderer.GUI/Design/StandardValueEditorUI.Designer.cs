@@ -1,4 +1,4 @@
-namespace CNCMaps.Shared.DynamicTypeDescription {
+namespace CNCMaps.GUI.Design {
 	partial class StandardValueEditorUI {
 		/// <summary> 
 		/// Required designer variable.

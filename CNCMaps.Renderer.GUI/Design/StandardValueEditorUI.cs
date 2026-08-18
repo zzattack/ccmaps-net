@@ -9,8 +9,9 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Windows.Forms;
 using System.Windows.Forms.Design;
+using CNCMaps.Shared;
 
-namespace CNCMaps.Shared.DynamicTypeDescription {
+namespace CNCMaps.GUI.Design {
 
 	internal partial class StandardValueEditorUI : UserControl {
 		private class TagItem {

@@ -1,23 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <RootNamespace>CNCMaps.Shared</RootNamespace>
-    <TargetFrameworks>net10.0-windows;net10.0</TargetFrameworks>
+    <TargetFramework>net10.0</TargetFramework>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(TargetFramework)' == 'net10.0-windows'">
-    <UseWindowsForms>true</UseWindowsForms>
-  </PropertyGroup>
-  <ItemGroup Condition="'$(TargetFramework)' == 'net10.0-windows'">
-    <!-- editor stubs replace the WinForms editors only on the cross-platform target -->
-    <Compile Remove="DynamicTypeDescription\EditorStubs.cs" />
-  </ItemGroup>
-  <ItemGroup Condition="'$(TargetFramework)' != 'net10.0-windows'">
-    <!-- the property-grid editors are WinForms-based and only needed by the GUI -->
-    <Compile Remove="DynamicTypeDescription\Editors.cs" />
-    <Compile Remove="DynamicTypeDescription\CustomComponentModel.cs" />
-    <Compile Remove="DynamicTypeDescription\StandardValueEditorUI.cs" />
-    <Compile Remove="DynamicTypeDescription\StandardValueEditorUI.Designer.cs" />
-    <EmbeddedResource Remove="DynamicTypeDescription\StandardValueEditorUI.resx" />
-  </ItemGroup>
   <ItemGroup>
     <PackageReference Include="NLog" Version="5.5.0" />
   </ItemGroup>

@@ -5,7 +5,7 @@ using System.Globalization;
 using System.Linq;
 using System.Text;
 
-namespace CNCMaps.Shared.DynamicTypeDescription {
+namespace CNCMaps.Shared {
 	public class CsvConverter : TypeConverter {
 		// Overrides the ConvertTo method of TypeConverter.
 		public override object ConvertTo(ITypeDescriptorContext context, CultureInfo culture, object value, Type destinationType) {

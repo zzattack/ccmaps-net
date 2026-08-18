@@ -4,8 +4,9 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Design;
 using System.Windows.Forms.Design;
+using CNCMaps.Shared;
 
-namespace CNCMaps.Shared.DynamicTypeDescription {
+namespace CNCMaps.GUI.Design {
 	public class StandardValueEditor : UITypeEditor {
 		private StandardValueEditorUI m_ui = new StandardValueEditorUI();
 

@@ -11,6 +11,7 @@ namespace CNCMaps.GUI {
 		public ModConfig ModConfig { get; private set; }
 
 		public ModConfigEditor() {
+			Design.DescriptorInstaller.EnsureInstalled();
 			InitializeComponent();
 			propertyGrid1.PropertyValueChanged += (o, args) => {
 				_pendingChanges = true;

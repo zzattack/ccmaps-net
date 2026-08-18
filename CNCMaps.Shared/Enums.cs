@@ -1,11 +1,9 @@
 using System;
 using System.ComponentModel;
-using System.Drawing.Design;
-using CNCMaps.Shared.DynamicTypeDescription;
 
 namespace CNCMaps.Shared {
 
-	[Editor(typeof(StandardValueEditor), typeof(UITypeEditor))]
+	[Editor("CNCMaps.GUI.Design.StandardValueEditor, CNCMaps.Renderer.GUI", "System.Drawing.Design.UITypeEditor, System.Windows.Forms")]
 	[Flags]
 	public enum OverlayTibType {
 		NotSpecial = 0,
@@ -20,7 +18,7 @@ namespace CNCMaps.Shared {
 		All = 15,
 	};
 
-	[Editor(typeof(StandardValueEditor), typeof(UITypeEditor))]
+	[Editor("CNCMaps.GUI.Design.StandardValueEditor, CNCMaps.Renderer.GUI", "System.Drawing.Design.UITypeEditor, System.Windows.Forms")]
 	public enum EngineType {
 		[StandardValue("Auto Detect", Visible = false)]
 		AutoDetect = 0,
@@ -30,7 +28,7 @@ namespace CNCMaps.Shared {
 		YurisRevenge = 4,
 	}
 
-	[Editor(typeof(StandardValueEditor), typeof(UITypeEditor))]
+	[Editor("CNCMaps.GUI.Design.StandardValueEditor, CNCMaps.Renderer.GUI", "System.Drawing.Design.UITypeEditor, System.Windows.Forms")]
 	[Flags]
 	public enum TheaterType {
 		None = 0,
@@ -43,7 +41,7 @@ namespace CNCMaps.Shared {
 		All = 63,
 	}
 
-	[Editor(typeof(StandardValueEditor), typeof(UITypeEditor))]
+	[Editor("CNCMaps.GUI.Design.StandardValueEditor, CNCMaps.Renderer.GUI", "System.Drawing.Design.UITypeEditor, System.Windows.Forms")]
 	[Flags]
 	public enum CollectionType {
 		None = 0,
@@ -59,7 +57,7 @@ namespace CNCMaps.Shared {
 		All = 511
 	}
 
-	[Editor(typeof(StandardValueEditor), typeof(UITypeEditor))]
+	[Editor("CNCMaps.GUI.Design.StandardValueEditor, CNCMaps.Renderer.GUI", "System.Drawing.Design.UITypeEditor, System.Windows.Forms")]
 	public enum LightingType {
 		[StandardValue("No special lighting (default for ore/gems)")]
 		None,
@@ -76,7 +74,7 @@ namespace CNCMaps.Shared {
 	};
 
 
-	[Editor(typeof(StandardValueEditor), typeof(UITypeEditor))]
+	[Editor("CNCMaps.GUI.Design.StandardValueEditor, CNCMaps.Renderer.GUI", "System.Drawing.Design.UITypeEditor, System.Windows.Forms")]
 	public enum PaletteType {
 		[StandardValue("No palette", Visible = false)]
 		None,

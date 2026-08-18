@@ -1,19 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Drawing.Design;
 using System.IO;
 using System.Linq;
 using System.Xml.Serialization;
-using CNCMaps.Shared.DynamicTypeDescription;
 
 namespace CNCMaps.Shared {
 
 	[Serializable]
 	public class ModConfig : INotifyPropertyChanged {
 
-		[NonSerialized]
-		private DynamicCustomTypeDescriptor _dctd = null;
 		public static TheaterSettings ActiveTheater { get; private set; }
 
 		static ModConfig() {
@@ -60,28 +56,28 @@ namespace CNCMaps.Shared {
 		[Id(3, 1)]
 		[Description("Directories in which your mod stores assets, mixes, or configuration files.\r\nCan be entered as a comma-separated list.")]
 		[PropertyStateFlags((PropertyFlags.Default | PropertyFlags.ExpandIEnumerable) & ~PropertyFlags.SupportStandardValues)]
-		[Editor(@"System.Windows.Forms.Design.StringCollectionEditor, System.Design, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a", typeof(UITypeEditor))]
+		[Editor(@"System.Windows.Forms.Design.StringCollectionEditor, System.Design, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a", "System.Drawing.Design.UITypeEditor, System.Windows.Forms")]
 		[TypeConverter(typeof(CsvConverter))]
 		public List<string> Directories { get; set; }
 
 		[Id(4, 1)]
 		[Description("Extra mix files that should be loaded specific to your mod.\r\nCan be entered as a comma-separated list.")]
 		[PropertyStateFlags((PropertyFlags.Default | PropertyFlags.ExpandIEnumerable) & ~PropertyFlags.SupportStandardValues)]
-		[Editor(@"System.Windows.Forms.Design.StringCollectionEditor, System.Design, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a", typeof(UITypeEditor))]
+		[Editor(@"System.Windows.Forms.Design.StringCollectionEditor, System.Design, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a", "System.Drawing.Design.UITypeEditor, System.Windows.Forms")]
 		[TypeConverter(typeof(CsvConverter))]
 		public List<string> ExtraMixes { get; set; }
 
 		[Id(5, 1)]
 		[Description("Custom rules.ini filenames that should be loaded specific to your mod. First one listed is primary one, overriding standard game file. Contents of the rest get merged to it. Can be entered as a comma-separated list.")]
 		[PropertyStateFlags((PropertyFlags.Default | PropertyFlags.ExpandIEnumerable) & ~PropertyFlags.SupportStandardValues)]
-		[Editor(@"System.Windows.Forms.Design.StringCollectionEditor, System.Design, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a", typeof(UITypeEditor))]
+		[Editor(@"System.Windows.Forms.Design.StringCollectionEditor, System.Design, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a", "System.Drawing.Design.UITypeEditor, System.Windows.Forms")]
 		[TypeConverter(typeof(CsvConverter))]
 		public List<string> CustomRulesIniFiles { get; set; }
 
 		[Id(6, 1)]
 		[Description("Custom art.ini filenames that should be used with your mod. First one listed is primary one, overriding standard game file. Contents of the rest get merged to it. Can be entered as a comma-separated list.")]
 		[PropertyStateFlags((PropertyFlags.Default | PropertyFlags.ExpandIEnumerable) & ~PropertyFlags.SupportStandardValues)]
-		[Editor(@"System.Windows.Forms.Design.StringCollectionEditor, System.Design, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a", typeof(UITypeEditor))]
+		[Editor(@"System.Windows.Forms.Design.StringCollectionEditor, System.Design, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a", "System.Drawing.Design.UITypeEditor, System.Windows.Forms")]
 		[TypeConverter(typeof(CsvConverter))]
 		public List<string> CustomArtIniFiles { get; set; }
 
@@ -132,12 +128,6 @@ namespace CNCMaps.Shared {
 			CustomArtIniFiles = new List<string>();
 			ExtraOptions = new BindingList<ModOption>();
 			Engine = EngineType.YurisRevenge;
-			InstallTypeDescriptor();
-		}
-
-		private void InstallTypeDescriptor() {
-			_dctd = ProviderInstaller.Install(this);
-			_dctd.PropertySortOrder = CustomSortOrder.AscendingById;
 		}
 
 		public ModConfig Clone() {
@@ -159,7 +149,6 @@ namespace CNCMaps.Shared {
 			foreach (var t in ExtraOptions)
 				ret.ExtraOptions.Add(t.Clone());
 
-			ret.InstallTypeDescriptor();
 			return ret;
 		}
 
@@ -368,7 +357,6 @@ namespace CNCMaps.Shared {
 		}
 
 		public event PropertyChangedEventHandler PropertyChanged;
-		[NotifyPropertyChangedInvocator]
 		protected virtual void OnPropertyChanged(string propertyName) {
 			PropertyChangedEventHandler handler = PropertyChanged;
 			if (handler != null) handler(this, new PropertyChangedEventArgs(propertyName));
@@ -379,17 +367,8 @@ namespace CNCMaps.Shared {
 	[Serializable]
 	[TypeConverter(typeof(ExpandableObjectConverter))]
 	public class TheaterSettings {
-		[NonSerialized]
-		private DynamicCustomTypeDescriptor _dctd = null;
-
 		public TheaterSettings() {
 			Mixes = new List<string>();
-			InstallTypeDescriptor();
-		}
-
-		internal void InstallTypeDescriptor() {
-			_dctd = ProviderInstaller.Install(this);
-			_dctd.PropertySortOrder = CustomSortOrder.AscendingById;
 		}
 
 		[Id(1, 1)]
@@ -397,7 +376,7 @@ namespace CNCMaps.Shared {
 
 		[Id(2, 1)]
 		[Description("Mix files that should be loaded specific to this theater.")]
-		[Editor(@"System.Windows.Forms.Design.StringCollectionEditor, System.Design, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a", typeof(UITypeEditor))]
+		[Editor(@"System.Windows.Forms.Design.StringCollectionEditor, System.Design, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a", "System.Drawing.Design.UITypeEditor, System.Windows.Forms")]
 		[TypeConverter(typeof(CsvConverter))]
 		public List<string> Mixes { get; set; }
 
@@ -425,7 +404,6 @@ namespace CNCMaps.Shared {
 
 		internal TheaterSettings Clone() {
 			var ret = (TheaterSettings)MemberwiseClone();
-			ret.InstallTypeDescriptor();
 			return ret;
 		}
 	}
@@ -433,22 +411,13 @@ namespace CNCMaps.Shared {
 	[TypeConverter(typeof(ExpandableObjectConverter))]
 	[Serializable]
 	public class ObjectOverride {
-		[NonSerialized]
-		private DynamicCustomTypeDescriptor _dctd = null;
-
 		public ObjectOverride() {
-			InstallTypeDescriptor();
 			CollectionTypes = CollectionType.All;
 			TheaterTypes = TheaterType.All;
 			ObjRegex = "";
 			Palette = PaletteType.Default;
 			CustomPaletteFile = "";
 			Lighting = LightingType.Default;
-		}
-
-		internal void InstallTypeDescriptor() {
-			_dctd = ProviderInstaller.Install(this);
-			_dctd.PropertySortOrder = CustomSortOrder.AscendingById;
 		}
 
 		[Id(1, 1)]
@@ -481,7 +450,6 @@ namespace CNCMaps.Shared {
 
 		internal ObjectOverride Clone() {
 			var ret = (ObjectOverride)MemberwiseClone();
-			ret.InstallTypeDescriptor();
 			return ret;
 		}
 
@@ -493,9 +461,6 @@ namespace CNCMaps.Shared {
 	[TypeConverter(typeof(ExpandableObjectConverter))]
 	[Serializable]
 	public class ModOption {
-		[NonSerialized]
-		private DynamicCustomTypeDescriptor _dctd = null;
-
 		[Id(1, 1)]
 		[Description("Disable ore/tib randomization")]
 		[PropertyStateFlags(PropertyFlags.Default)]
@@ -552,7 +517,6 @@ namespace CNCMaps.Shared {
 		private string _lightingAmbientRGBDelta;
 
 		public ModOption() {
-			InstallTypeDescriptor();
 			DisableOreRandomization = false;
 			DisableTibRemap = false;
 			EnableRandomInfantryFacing = false;
@@ -560,14 +524,8 @@ namespace CNCMaps.Shared {
 			LightingAmbientRGBDelta = "0,0,0,0";
 		}
 
-		internal void InstallTypeDescriptor() {
-			_dctd = ProviderInstaller.Install(this);
-			_dctd.PropertySortOrder = CustomSortOrder.AscendingById;
-		}
-
 		internal ModOption Clone() {
 			var ret = (ModOption)MemberwiseClone();
-			ret.InstallTypeDescriptor();
 			return ret;
 		}
 
