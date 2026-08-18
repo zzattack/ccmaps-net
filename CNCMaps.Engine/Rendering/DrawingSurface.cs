@@ -41,7 +41,6 @@ namespace CNCMaps.Engine.Rendering {
 		public int BytesPerPixel => Format == SurfaceFormat.Bgr24 ? 3 : 4;
 
 		byte[] _data;
-		GCHandle _pin;
 		int[] _heightBuffer;
 		bool[] _shadowBuffer;
 		short[] zBuffer;
@@ -52,10 +51,12 @@ namespace CNCMaps.Engine.Rendering {
 			Format = format;
 			Width = width;
 			Height = height;
-			_data = new byte[width * height * BytesPerPixel];
-			_pin = GCHandle.Alloc(_data, GCHandleType.Pinned);
+			// allocated on the pinned object heap: the address is stable for the
+			// pointer-based renderers, yet the array is garbage-collected normally
+			// once the surface is unreferenced (no handle to leak)
+			_data = GC.AllocateArray<byte>(width * height * BytesPerPixel, pinned: true);
 			BitmapData = new BitmapData {
-				Scan0 = _pin.AddrOfPinnedObject(),
+				Scan0 = Marshal.UnsafeAddrOfPinnedArrayElement(_data, 0),
 				Stride = width * BytesPerPixel,
 				Width = width,
 				Height = height,
@@ -184,8 +185,6 @@ namespace CNCMaps.Engine.Rendering {
 		internal void Dispose() {
 			zBuffer = null;
 			_shadowBuffer = null;
-			if (_pin.IsAllocated)
-				_pin.Free();
 			_data = null;
 			BitmapData = null;
 		}
