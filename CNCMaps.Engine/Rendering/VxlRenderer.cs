@@ -113,8 +113,13 @@ namespace CNCMaps.Engine.Rendering {
 				// matrix stack (row-vector convention: leftmost matrix applies first)
 				var mvp = frame * @object * world * trans * lookat * persp;
 
-				var shadowScale = Matrix4.CreateScale(0.5f);
-				var shadowToScreen = frameTransl * shadowScale * frameRot * (@object * world) * trans * lookat;
+				// shadow: flatten the model onto the ground plane (z=0 in upright world
+				// space, i.e. after the model/facing/tilt transforms but before the
+				// camera transforms), then project to screen like regular geometry.
+				// This projects the actual voxel volume straight down, like the game.
+				var flatten = Matrix4.Identity;
+				flatten.M33 = 0f;
+				var shadowMvp = frame * @object * flatten * world * trans * lookat * persp;
 
 				// undo world transformations on light direction
 				var v = @object * world * frame * shadowTransform;
@@ -136,16 +141,7 @@ namespace CNCMaps.Engine.Rendering {
 
 							Vector3 vxlPos = Vector3.Multiply(new Vector3(x, y, vx.Z), section.Scale);
 							RenderVoxel(vxlPos, ref mvp, cr, cg, cb);
-
-							var shadpos = new Vector3(x, y, 0);
-							var screenPos = Vector3.TransformVector(shadpos, shadowToScreen);
-							// orthographic projection: no perspective divide
-							screenPos = Vector3.TransformVector(screenPos, persp);
-							screenPos.X = (screenPos.X + 1) * _surface.Width / 2;
-							screenPos.Y = (screenPos.Y + 1) * _surface.Height / 2;
-
-							if (0 <= screenPos.X && screenPos.X < _surface.Width && 0 <= screenPos.Y && screenPos.Y < _surface.Height)
-								shadBuf[(int)screenPos.X + (_surface.Height - 1 - (int)screenPos.Y) * _surface.Width] = true;
+							RenderVoxelShadow(vxlPos, ref shadowMvp, shadBuf);
 						}
 					}
 				}
@@ -331,6 +327,60 @@ namespace CNCMaps.Engine.Rendering {
 			foreach (var f in CubeFaces) {
 				RasterizeTriangle(_corners[f[0]], _corners[f[1]], _corners[f[2]], r, g, b);
 				RasterizeTriangle(_corners[f[0]], _corners[f[2]], _corners[f[3]], r, g, b);
+			}
+		}
+
+		readonly ScreenVertex[] _shadowCorners = new ScreenVertex[8];
+
+		void RenderVoxelShadow(Vector3 v, ref Matrix4 shadowMvp, bool[] shadBuf) {
+			const float rad = 0.5f;
+			for (int i = 0; i < 8; i++) {
+				var corner = new Vector4(
+					v.X + (((i & 1) != 0) ? rad : -rad),
+					v.Y + (((i & 2) != 0) ? rad : -rad),
+					v.Z + (((i & 4) != 0) ? rad : -rad), 1f);
+				var clip = Vector4.TransformRow(corner, shadowMvp);
+				if (clip.W <= 1e-6f)
+					return;
+				float invW = 1f / clip.W;
+				_shadowCorners[i].X = (clip.X * invW + 1f) * _surface.Width / 2f;
+				_shadowCorners[i].Y = (clip.Y * invW + 1f) * _surface.Height / 2f;
+			}
+
+			// the flattened cube's faces together cover its ground silhouette
+			foreach (var f in CubeFaces) {
+				RasterizeShadowTriangle(_shadowCorners[f[0]], _shadowCorners[f[1]], _shadowCorners[f[2]], shadBuf);
+				RasterizeShadowTriangle(_shadowCorners[f[0]], _shadowCorners[f[2]], _shadowCorners[f[3]], shadBuf);
+			}
+		}
+
+		void RasterizeShadowTriangle(ScreenVertex v0, ScreenVertex v1, ScreenVertex v2, bool[] shadBuf) {
+			int minX = Math.Max(0, (int)MathF.Floor(MathF.Min(v0.X, MathF.Min(v1.X, v2.X)) - 0.5f));
+			int maxX = Math.Min(_surface.Width - 1, (int)MathF.Ceiling(MathF.Max(v0.X, MathF.Max(v1.X, v2.X)) - 0.5f));
+			int minY = Math.Max(0, (int)MathF.Floor(MathF.Min(v0.Y, MathF.Min(v1.Y, v2.Y)) - 0.5f));
+			int maxY = Math.Min(_surface.Height - 1, (int)MathF.Ceiling(MathF.Max(v0.Y, MathF.Max(v1.Y, v2.Y)) - 0.5f));
+			if (minX > maxX || minY > maxY)
+				return;
+
+			float area = (v1.X - v0.X) * (v2.Y - v0.Y) - (v1.Y - v0.Y) * (v2.X - v0.X);
+			if (area == 0f)
+				return;
+			float invArea = 1f / area;
+
+			int height = _surface.Height, width = _surface.Width;
+			for (int py = minY; py <= maxY; py++) {
+				float sy = py + 0.5f;
+				// the shadow buffer is indexed top-down (see BlitVoxelToSurface)
+				int row = (height - 1 - py) * width;
+				for (int px = minX; px <= maxX; px++) {
+					float sx = px + 0.5f;
+					float w0 = ((v1.X - v0.X) * (sy - v0.Y) - (v1.Y - v0.Y) * (sx - v0.X)) * invArea;
+					float w1 = ((v2.X - v1.X) * (sy - v1.Y) - (v2.Y - v1.Y) * (sx - v1.X)) * invArea;
+					float w2 = 1f - w0 - w1;
+					if (w0 < 0f || w1 < 0f || w2 < 0f)
+						continue;
+					shadBuf[row + px] = true;
+				}
 			}
 		}
 

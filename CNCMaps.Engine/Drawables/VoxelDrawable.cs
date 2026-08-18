@@ -43,9 +43,30 @@ namespace CNCMaps.Engine.Drawables {
 			var w_low = (byte*)ds.BitmapData.Scan0;
 			byte* w_high = w_low + ds.BitmapData.Stride * ds.BitmapData.Height;
 			var zBuffer = ds.GetZBuffer();
+			var heightBuffer = ds.GetHeightBuffer();
 			var shadowBufVxl = vxl_ds.GetShadows();
 			var shadowBuf = ds.GetShadows();
 			// int rowsTouched = 0;
+
+			// the drawn sprite's vertical extent, standing in for the SHP path's shp.Height
+			int firstDrawnRow = int.MaxValue, lastDrawnRow = int.MinValue;
+			for (int y = 0; y < vxl_ds.Height; y++) {
+				byte* src = (byte*)vxl_ds.BitmapData.Scan0 + vxl_ds.BitmapData.Stride * y;
+				for (int x = 0; x < vxl_ds.Width; x++) {
+					if (*(src + x * 4 + 3) > 0) {
+						if (y < firstDrawnRow) firstDrawnRow = y;
+						lastDrawnRow = y;
+					}
+				}
+			}
+			int vxlHeight = lastDrawnRow >= firstDrawnRow ? lastDrawnRow - firstDrawnRow + 1 : 0;
+
+			// like the SHP path (ShpRenderer.Draw/DrawShadow): bodies stand vxlHeight above
+			// their tile, shadows lie on the ground plane and may not darken anything
+			// standing taller than that plane -- most notably this unit's own hull, drawn
+			// by an earlier blit of the same UnitDrawable
+			short hBufVal = (short)(obj.Tile.Z * _config.TileHeight / 2 + vxlHeight);
+			int castHeight = obj.Tile.Z * _config.TileHeight / 2;
 
 			// clip to 25-50-75-100
 			transLucency = transLucency / 25 * 25;
@@ -79,11 +100,12 @@ namespace CNCMaps.Engine.Drawables {
 						short zBufVal = (short)((obj.Tile.Rx + obj.Tile.Ry + obj.Tile.Z) * _config.TileHeight / 2);
 						if (zBufVal >= zBuffer[zIdx])
 							zBuffer[zIdx] = zBufVal;
+						heightBuffer[zIdx] = hBufVal;
 					}
 					// or shadows
-					else if (shadowBufVxl[x + y * vxl_ds.Height]) {
+					else if (shadowBufVxl[x + y * vxl_ds.Width]) {
 						int shadIdx = (d.Y + y) * ds.Width + d.X + x;
-						if (!shadowBuf[shadIdx]) {
+						if (!shadowBuf[shadIdx] && castHeight >= heightBuffer[shadIdx]) {
 							*(dst_row + x * 3) /= 2;
 							*(dst_row + x * 3 + 1) /= 2;
 							*(dst_row + x * 3 + 2) /= 2;
