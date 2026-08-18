@@ -25,6 +25,9 @@
     <PackageReference Include="SixLabors.ImageSharp.Drawing" Version="2.1.6" />
   </ItemGroup>
   <ItemGroup>
+    <InternalsVisibleTo Include="CNCMaps.Tests" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\CNCMaps.FileFormats\CNCMaps.FileFormats.csproj" />
     <ProjectReference Include="..\CNCMaps.Shared\CNCMaps.Shared.csproj" />
   </ItemGroup>

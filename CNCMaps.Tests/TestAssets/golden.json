@@ -1,0 +1,8 @@
+{
+  "mp22s8-png": "6c01ad7d4e30b281b77bf7cdf4236384503fe7425a325d3c93c3ce65b1ee7a26",
+  "hillbtwn-png": "5549a7f55bfe782ded3b3550b48ee5244a22d77d7fe8dc472be0b85a459eea98",
+  "hillbtwn-markers-png": "8ced96051db37a8a2bb6e5487f870c79cb19897ece7c1d65ef04b845a3a7cec6",
+  "hillbtwn-previewpack": "9766417a88d07bba5533be529e1886bd5796e172760b40e30ae76aaf8b36fdcc",
+  "austintx-png": "264f1ceabd568fa2136463086b194e3f5def19c4a7a48d1c1853d190c93311ab",
+  "_comment": "pixel hashes of renders of the TestAssets maps against unmodified RA2/YR game data; regenerate by deleting an entry and copying the hash a failing test reports"
+}

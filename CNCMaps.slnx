@@ -4,4 +4,5 @@
   <Project Path="CNCMaps.Renderer.GUI/CNCMaps.Renderer.GUI.csproj" />
   <Project Path="CNCMaps.Renderer/CNCMaps.Renderer.csproj" />
   <Project Path="CNCMaps.Shared/CNCMaps.Shared.csproj" />
+  <Project Path="CNCMaps.Tests/CNCMaps.Tests.csproj" />
 </Solution>
