@@ -38,10 +38,6 @@ namespace CNCMaps.Engine.Drawables {
 			return TmpRenderer.GetBounds(tile, TsEntry.GetTmpFile(tile));
 		}
 
-		public override void DrawBoundingBox(GameObject obj, Graphics gfx) {
-			// meh
-		}
-
 		public TileCollection.TileSetEntry GetTileSetEntry() {
 			return TsEntry;
 		}

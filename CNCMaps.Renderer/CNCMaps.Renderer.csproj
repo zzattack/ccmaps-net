@@ -9,10 +9,6 @@
     <UseWindowsForms>true</UseWindowsForms>
   </PropertyGroup>
   <ItemGroup>
-    <!-- enables the libgdiplus code paths of System.Drawing.Common 6.0 on Unix -->
-    <RuntimeHostConfigurationOption Include="System.Drawing.EnableUnixSupport" Value="true" />
-  </ItemGroup>
-  <ItemGroup>
     <PackageReference Include="NLog" Version="5.5.0" />
   </ItemGroup>
   <ItemGroup>

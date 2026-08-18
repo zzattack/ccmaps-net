@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.Drawing.Drawing2D;
-using System.Drawing.Imaging;
 using System.Globalization;
 using System.Linq;
 using CNCMaps.Engine.Drawables;
@@ -15,7 +13,15 @@ using CNCMaps.FileFormats.VirtualFileSystem;
 using CNCMaps.FileFormats.Encodings;
 using CNCMaps.Shared;
 using NLog;
+using SixLabors.ImageSharp.Drawing.Processing;
+using SixLabors.ImageSharp.PixelFormats;
+using SixLabors.ImageSharp.Processing;
 using PaletteType = CNCMaps.Shared.PaletteType;
+using ISColor = SixLabors.ImageSharp.Color;
+using ISPoint = SixLabors.ImageSharp.Point;
+using ISPointF = SixLabors.ImageSharp.PointF;
+using ISImage = SixLabors.ImageSharp.Image;
+using EllipsePolygon = SixLabors.ImageSharp.Drawing.EllipsePolygon;
 
 namespace CNCMaps.Engine.Map {
 	public class Map {
@@ -686,7 +692,7 @@ namespace CNCMaps.Engine.Map {
 			}
 		}
 
-		private void DrawStartMarkersBittah(Graphics gfx, Rectangle fullImage, Rectangle previewImage) {
+		private void DrawStartMarkersBittah(SixLabors.ImageSharp.Image<Bgr24> canvas, Rectangle fullImage, Rectangle previewImage) {
 			foreach (var w in _wayPoints.Where(w => w.Number < 8)) {
 				var t = _tiles.GetTile(w.Tile);
 				var center = new Point(t.Dx * _config.TileWidth / 2, (t.Dy - t.Z) * _config.TileHeight / 2);
@@ -694,17 +700,17 @@ namespace CNCMaps.Engine.Map {
 				double pctFullX = (center.X - fullImage.Left) / (double)fullImage.Width;
 				double pctFullY = (center.Y - fullImage.Top) / (double)fullImage.Height;
 				Point dest = new Point((int)(pctFullX * previewImage.Width), (int)(pctFullY * previewImage.Height));
-				var img = Resources.ResourceManager.GetObject("bittah_marker_" + (w.Number + 1)) as Image;
+				var img = MarkerResources.Get("bittah_marker_" + (w.Number + 1));
 				if (img != null) {
 					// center marker img
 					dest.Offset(-img.Width / 2, -img.Height / 2);
 					// draw it
-					gfx.DrawImage(img, dest);
+					canvas.Mutate(x => x.DrawImage(img, new ISPoint(dest.X, dest.Y), 1f));
 				}
 			}
 		}
 
-		private void DrawStartMarkersAro(Graphics gfx, Rectangle fullImage, Rectangle previewImage) {
+		private void DrawStartMarkersAro(SixLabors.ImageSharp.Image<Bgr24> canvas, Rectangle fullImage, Rectangle previewImage) {
 			foreach (var w in _wayPoints.Where(w => w.Number < 8)) {
 				var t = _tiles.GetTile(w.Tile);
 				var center = new Point(t.Dx * _config.TileWidth / 2, (t.Dy - t.Z) * _config.TileHeight / 2);// TileLayer.GetTilePixelCenter(w.Tile);
@@ -712,11 +718,13 @@ namespace CNCMaps.Engine.Map {
 				double pctFullX = (center.X - fullImage.Left) / (double)fullImage.Width;
 				double pctFullY = (center.Y - fullImage.Top) / (double)fullImage.Height;
 				Point dest = new Point((int)(pctFullX * previewImage.Width), (int)(pctFullY * previewImage.Height));
-				var img = Resources.ResourceManager.GetObject("aro_marker_" + (w.Number + 1)) as Image;
-				// center marker img
-				dest.Offset(-img.Width / 2, -img.Height / 2);
-				// draw it
-				gfx.DrawImage(img, dest);
+				var img = MarkerResources.Get("aro_marker_" + (w.Number + 1));
+				if (img != null) {
+					// center marker img
+					dest.Offset(-img.Width / 2, -img.Height / 2);
+					// draw it
+					canvas.Mutate(x => x.DrawImage(img, new ISPoint(dest.X, dest.Y), 1f));
+				}
 			}
 		}
 
@@ -773,8 +781,9 @@ namespace CNCMaps.Engine.Map {
 		public unsafe void DrawStartPositions() {
 			Logger.Info("Marking start positions");
 			double markerSize = StartMarkerSize;
-			_drawingSurface.Unlock();
-			using (Graphics g = Graphics.FromImage(_drawingSurface.Bitmap)) {
+			// draw aliased like GDI+ did
+			var noAA = new DrawingOptions { GraphicsOptions = new SixLabors.ImageSharp.GraphicsOptions { Antialias = false } };
+			using (var view = _drawingSurface.GetImageView()) {
 				foreach (var entry in _wayPoints) {
 					if (entry.Number < 8) {
 						try {
@@ -795,15 +804,16 @@ namespace CNCMaps.Engine.Map {
 								int width = (int)((double)_config.TileWidth * markerSize);
 								int height = (int)((double)_config.TileHeight * markerSize);
 
+								var fill = ISColor.FromRgba(255, 0, 0, (byte)opacity);
 								if (StartPosMarking == StartPositionMarking.Ellipsed)
-									g.FillEllipse(new SolidBrush(Color.FromArgb(opacity, Color.Red)), startX, startY, width, height);
+									view.Mutate(v => v.Fill(noAA, fill, new EllipsePolygon(startX + width / 2f, startY + height / 2f, width, height)));
 								else {
 									width /= 2;
 									startX = centerX - halfWidth / 2;
 									if (StartPosMarking == StartPositionMarking.Squared)
-										g.FillRectangle(new SolidBrush(Color.FromArgb(opacity, Color.Red)), startX, startY, width, height);
+										view.Mutate(v => v.Fill(noAA, fill, new SixLabors.ImageSharp.RectangleF(startX, startY, width, height)));
 									else
-										g.FillEllipse(new SolidBrush(Color.FromArgb(opacity, Color.Red)), startX, startY, width, height);
+										view.Mutate(v => v.Fill(noAA, fill, new EllipsePolygon(startX + width / 2f, startY + height / 2f, width, height)));
 								}
 							}
 							else if (StartPosMarking == StartPositionMarking.Diamond) {
@@ -813,7 +823,7 @@ namespace CNCMaps.Engine.Map {
 									new Point(centerX, centerY + halfHeight),
 									new Point(centerX - halfWidth, centerY)
 								};
-								g.FillPolygon(new SolidBrush(Color.FromArgb(opacity, Color.Red)), rhombus);
+								view.Mutate(v => v.FillPolygon(noAA, ISColor.FromRgba(255, 0, 0, (byte)opacity), rhombus.Select(pt => new ISPointF(pt.X, pt.Y)).ToArray()));
 							}
 							else if (StartPosMarking == StartPositionMarking.Starred) {
 								Point[] star = new Point[10];
@@ -826,7 +836,7 @@ namespace CNCMaps.Engine.Map {
 									star[i + 1].X = centerX + (int)(shorter * Math.Cos((i + 0.5) * angle));
 									star[i + 1].Y = centerY + (int)(shorter * Math.Sin((i + 0.5) * angle));
 								}
-								g.FillPolygon(new SolidBrush(Color.FromArgb(opacity, Color.Red)), star);
+								view.Mutate(v => v.FillPolygon(noAA, ISColor.FromRgba(255, 0, 0, (byte)opacity), star.Select(pt => new ISPointF(pt.X, pt.Y)).ToArray()));
 							}
 						}
 						catch (Exception) {
@@ -1003,7 +1013,7 @@ namespace CNCMaps.Engine.Map {
 			}
 		}
 		public void Draw() {
-			_drawingSurface = new DrawingSurface(FullSize.Width * _config.TileWidth, FullSize.Height * _config.TileHeight, PixelFormat.Format24bppRgb);
+			_drawingSurface = new DrawingSurface(FullSize.Width * _config.TileWidth, FullSize.Height * _config.TileHeight);
 
 #if SORT
 			Logger.Info("Sorting objects map");
@@ -1073,8 +1083,7 @@ namespace CNCMaps.Engine.Map {
 		public void GeneratePreviewPack(PreviewMarkersType previewMarkers, SizeMode sizeMode, IniFile map, bool fixDimensions) {
 			Logger.Info("Generating PreviewPack data");
 
-			// we will have to re-lock the BitmapData
-			_drawingSurface.Lock(_drawingSurface.Bitmap.PixelFormat);
+			_drawingSurface.Lock();
 			if (MarkOreFields == false) {
 				Logger.Trace("Marking ore and gems areas");
 				MarkOreAndGems();
@@ -1129,31 +1138,22 @@ namespace CNCMaps.Engine.Map {
 					throw new ArgumentOutOfRangeException();
 			}
 
-			using (var preview = new Bitmap(pw, ph, PixelFormat.Format24bppRgb)) {
-				using (Graphics gfx = Graphics.FromImage(preview)) {
-					// use high-quality scaling
-					gfx.InterpolationMode = InterpolationMode.HighQualityBicubic;
-					gfx.SmoothingMode = SmoothingMode.HighQuality;
-					gfx.PixelOffsetMode = PixelOffsetMode.HighQuality;
-					gfx.CompositingQuality = CompositingQuality.HighQuality;
+			var srcRect = GetSizePixels(sizeMode);
+			var dstRect = new Rectangle(0, 0, pw, ph);
+			using (var preview = _drawingSurface.CopyRegion(srcRect)) {
+				preview.Mutate(x => x.Resize(pw, ph, KnownResamplers.Bicubic));
 
-					var srcRect = GetSizePixels(sizeMode);
-					var dstRect = new Rectangle(0, 0, preview.Width, preview.Height);
-					gfx.DrawImage(_drawingSurface.Bitmap, dstRect, srcRect, GraphicsUnit.Pixel);
-
-					switch (previewMarkers) {
-						case PreviewMarkersType.None:
-						case PreviewMarkersType.SelectedAsAbove:
-							break;
-						case PreviewMarkersType.Bittah:
-							DrawStartMarkersBittah(gfx, srcRect, dstRect);
-							break;
-						case PreviewMarkersType.Aro:
-							DrawStartMarkersAro(gfx, srcRect, dstRect);
-							break;
-					}
+				switch (previewMarkers) {
+					case PreviewMarkersType.None:
+					case PreviewMarkersType.SelectedAsAbove:
+						break;
+					case PreviewMarkersType.Bittah:
+						DrawStartMarkersBittah(preview, srcRect, dstRect);
+						break;
+					case PreviewMarkersType.Aro:
+						DrawStartMarkersAro(preview, srcRect, dstRect);
+						break;
 				}
-
 
 				Logger.Info("Injecting thumbnail into map");
 				ThumbInjector.InjectThumb(preview, map);
@@ -1310,12 +1310,11 @@ namespace CNCMaps.Engine.Map {
 
 		public void PlotTunnels(bool adjustPosition = true) {
 			Logger.Info("Plotting Tunnel path");
-			_drawingSurface.Unlock();
-			using (Graphics g = Graphics.FromImage(_drawingSurface.Bitmap)) {
-				Pen linePen = new Pen(Color.FromArgb(148,255,0,0), 3);
-				Pen dashlinePen = new Pen(Color.FromArgb(180,0,255,205), 3);
+			var noAA = new DrawingOptions { GraphicsOptions = new SixLabors.ImageSharp.GraphicsOptions { Antialias = false } };
+			using (var view = _drawingSurface.GetImageView()) {
+				var lineColor = ISColor.FromRgba(255, 0, 0, 148);
+				var dashColor = ISColor.FromRgba(0, 255, 205, 180);
 				float[] dashValues = {2, 1};
-				dashlinePen.DashPattern = dashValues;
 
 				HashSet<int> endCells = new HashSet<int>();
 
@@ -1333,13 +1332,13 @@ namespace CNCMaps.Engine.Map {
 
 					endCells.Add(tunnelLine.EndX + 1000 * tunnelLine.EndY);
 					if (endCells.Contains(tunnelLine.StartX + 1000 * tunnelLine.StartY)) {
-						linePen.Color = Color.FromArgb(148, 255, 30, 255);
-						dashlinePen.Color = Color.FromArgb(180, 0, 0, 255);
+						lineColor = ISColor.FromRgba(255, 30, 255, 148);
+						dashColor = ISColor.FromRgba(0, 0, 255, 180);
 						deltaFromCenterY = 2;
 					}
 					else {
-						linePen.Color = Color.FromArgb(148, 255, 0, 0);
-						dashlinePen.Color = Color.FromArgb(180, 0, 255, 205);
+						lineColor = ISColor.FromRgba(255, 0, 0, 148);
+						dashColor = ISColor.FromRgba(0, 255, 205, 180);
 						deltaFromCenterY = -2;
 					}
 
@@ -1406,24 +1405,21 @@ namespace CNCMaps.Engine.Map {
 							}
 						}
 						if (linePoints.Count > 1) {
-							g.DrawLines(linePen, linePoints.ToArray());
+							view.Mutate(x => x.DrawLine(noAA, new SolidPen(lineColor, 3), linePoints.Select(pt => new ISPointF(pt.X, pt.Y)).ToArray()));
 						}
 					}
 
 					if (endTile.Rx != currentTile.Rx || endTile.Ry != currentTile.Ry) {
 						Point dashlineStart = new Point(currentPoint.X, currentPoint.Y + deltaFromCenterY);
 						Point dashlineEnd = new Point(endTileCenter.X, endTileCenter.Y + deltaFromCenterY);
-						g.DrawLine(dashlinePen, dashlineStart, dashlineEnd);
+						view.Mutate(x => x.DrawLine(noAA, new PatternPen(dashColor, 3, dashValues),
+							new ISPointF(dashlineStart.X, dashlineStart.Y), new ISPointF(dashlineEnd.X, dashlineEnd.Y)));
 					}
 
-					g.FillEllipse(new SolidBrush(Color.FromArgb(138, Color.Red)), startTileCenter.X - 10, startTileCenter.Y - 5, 20, 10);
-					g.FillEllipse(new SolidBrush(Color.FromArgb(138, Color.Red)), endTileCenter.X - 10, endTileCenter.Y - 5, 20, 10);
+					view.Mutate(x => x.Fill(noAA, ISColor.FromRgba(255, 0, 0, 138), new EllipsePolygon(startTileCenter.X, startTileCenter.Y, 20, 10)));
+					view.Mutate(x => x.Fill(noAA, ISColor.FromRgba(255, 0, 0, 138), new EllipsePolygon(endTileCenter.X, endTileCenter.Y, 20, 10)));
 				}
-
-				linePen.Dispose();
-				dashlinePen.Dispose();
 			}
-			_drawingSurface.Lock();
 		}
 
 	}

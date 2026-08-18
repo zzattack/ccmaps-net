@@ -1709,6 +1709,7 @@ namespace CNCMaps.Shared.DynamicTypeDescription {
 				return m_StatandardValues;
 			}
 		}
+#if WINDOWS
 		private Image m_ValueImage = null;
 
 		public Image ValueImage {
@@ -1719,6 +1720,7 @@ namespace CNCMaps.Shared.DynamicTypeDescription {
 				m_ValueImage = value;
 			}
 		}
+#endif
 
 		public PropertyFlags PropertyFlags {
 			get {

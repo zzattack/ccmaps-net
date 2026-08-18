@@ -17,8 +17,6 @@
     <Compile Remove="DynamicTypeDescription\StandardValueEditorUI.cs" />
     <Compile Remove="DynamicTypeDescription\StandardValueEditorUI.Designer.cs" />
     <EmbeddedResource Remove="DynamicTypeDescription\StandardValueEditorUI.resx" />
-    <!-- System.Drawing types (Image) used by CustomPropertyDescriptor; 6.0 is the last version with Unix support -->
-    <PackageReference Include="System.Drawing.Common" Version="6.0.0" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="NLog" Version="5.5.0" />

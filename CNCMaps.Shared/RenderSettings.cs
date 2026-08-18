@@ -1,4 +1,4 @@
-using NLog;
+﻿using NLog;
 
 namespace CNCMaps.Shared {
 
@@ -40,7 +40,7 @@ namespace CNCMaps.Shared {
 		public bool TunnelPosition { get; set; }
 
 		public RenderSettings() {
-			PNGQuality = 6;
+			PNGQuality = 4; // deflate level; with unfiltered scanlines this compresses game graphics best for its speed
 			SavePNG = false;
 			JPEGCompression = 95;
 			SaveJPEG = false;

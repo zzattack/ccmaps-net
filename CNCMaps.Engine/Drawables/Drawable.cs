@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Drawing;
 using CNCMaps.Engine.Game;
 using CNCMaps.Engine.Map;
@@ -212,37 +212,6 @@ namespace CNCMaps.Engine.Drawables {
 		public abstract void Draw(GameObject obj, DrawingSurface ds, bool shadow = true);
 		public virtual void DrawShadow(GameObject obj, DrawingSurface ds) { }
 		public abstract Rectangle GetBounds(GameObject obj);
-
-		private static readonly Pen BoundsRectPenVoxel = new Pen(Color.Blue);
-		private static readonly Pen BoundsRectPenSHP = new Pen(Color.Red);
-		private static readonly Pen BoundsRectPenISO = new Pen(Color.Purple);
-		public virtual void DrawBoundingBox(GameObject obj, Graphics gfx) {
-			if (IsVoxel)
-				gfx.DrawRectangle(BoundsRectPenVoxel, obj.GetBounds());
-			else
-				gfx.DrawRectangle(BoundsRectPenSHP, obj.GetBounds());
-			var top = obj.TopTile;
-			var left = obj.Tile.Layer.GetTileR(obj.TopTile.Rx, obj.TopTile.Ry + obj.Drawable.Foundation.Height);
-			var bottom = obj.Tile.Layer.GetTileR(obj.TopTile.Rx + obj.Drawable.Foundation.Width, obj.TopTile.Ry + obj.Drawable.Foundation.Height);
-			var right = obj.Tile.Layer.GetTileR(obj.TopTile.Rx + obj.Drawable.Foundation.Width, obj.TopTile.Ry);
-
-			List<Point> verts = new List<Point>();
-			// Fail-safe because these don't always seem to get initialized properly with buildings places near edges of the map for some reason.
-			if (top != null) verts.Add(new Point(top.Dx * _config.TileWidth / 2, top.Dy * _config.TileHeight / 2));
-			if (left != null) verts.Add(new Point(left.Dx * _config.TileWidth / 2 - _config.TileWidth / 4, left.Dy * _config.TileHeight / 2 + _config.TileHeight / 4));
-			if (bottom!= null) verts.Add(new Point(bottom.Dx * _config.TileWidth / 2, bottom.Dy * _config.TileHeight / 2 + _config.TileHeight / 2));
-			if (right != null) verts.Add(new Point(right.Dx * _config.TileWidth / 2 + _config.TileHeight / 2, right.Dy * _config.TileHeight / 2 + _config.TileHeight / 4));
-			if (top != null) verts.Add(new Point(top.Dx * _config.TileWidth / 2, top.Dy * _config.TileHeight / 2));
-
-			List<Point> verts2 = new List<Point>();
-			foreach (var p in verts) {
-				p.Offset(30, -15);
-				verts2.Add(p);
-			}
-			gfx.DrawLines(BoundsRectPenISO, verts2.ToArray());
-
-		}
-
 
 		internal Drawable Clone() {
 			var ret = (Drawable)MemberwiseClone();

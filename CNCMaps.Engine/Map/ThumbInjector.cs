@@ -1,30 +1,28 @@
 ﻿using System;
-using System.Drawing;
-using System.Drawing.Imaging;
 using System.Globalization;
+using System.Runtime.InteropServices;
 using CNCMaps.FileFormats;
 using CNCMaps.FileFormats.Encodings;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.PixelFormats;
 
 namespace CNCMaps.Engine.Map {
 	class ThumbInjector {
-		public static unsafe void InjectThumb(Bitmap preview, IniFile map) {
-			BitmapData bmd = preview.LockBits(new Rectangle(0, 0, preview.Width, preview.Height), ImageLockMode.ReadOnly, PixelFormat.Format24bppRgb);
+		public static void InjectThumb(Image<Bgr24> preview, IniFile map) {
 			byte[] image = new byte[preview.Width * preview.Height * 3];
-			int idx = 0;
 
-			// invert rgb->bgr
-			for (int y = 0; y < bmd.Height; y++) {
-				byte* p = (byte*)bmd.Scan0 + bmd.Stride * y;
-				for (int x = 0; x < bmd.Width; x++) {
-					byte r = *p++;
-					byte g = *p++;
-					byte b = *p++;
-
-					image[idx++] = b;
-					image[idx++] = g;
-					image[idx++] = r;
+			// the game stores the preview as RGB
+			preview.ProcessPixelRows(accessor => {
+				int idx = 0;
+				for (int y = 0; y < accessor.Height; y++) {
+					var row = MemoryMarshal.AsBytes(accessor.GetRowSpan(y));
+					for (int x = 0; x < accessor.Width; x++) {
+						image[idx++] = row[x * 3 + 2]; // r
+						image[idx++] = row[x * 3 + 1]; // g
+						image[idx++] = row[x * 3 + 0]; // b
+					}
 				}
-			}
+			});
 
 			// encode
 			byte[] image_compressed = Format5.Encode(image, 5);
@@ -44,37 +42,6 @@ namespace CNCMaps.Engine.Map {
 				section.SetValue(rowNum++.ToString(CultureInfo.InvariantCulture), image_base64.Substring(i, Math.Min(70, image_base64.Length - i)));
 			}
 
-		}
-
-		public static unsafe Bitmap ExtractThumb(IniFile map) {
-			var prevSection = map.GetSection("Preview");
-			var size = prevSection.ReadString("Size").Split(',');
-			var previewSize = new Rectangle(int.Parse(size[0]), int.Parse(size[1]), int.Parse(size[2]), int.Parse(size[3]));
-			var preview = new Bitmap(previewSize.Width, previewSize.Height, PixelFormat.Format24bppRgb);
-
-			byte[] image = new byte[preview.Width * preview.Height * 3];
-			var prevDataSection = map.GetSection("PreviewPack");
-			var image_compressed = Convert.FromBase64String(prevDataSection.ConcatenatedValues());
-			Format5.DecodeInto(image_compressed, image, 5);
-
-			// invert rgb->bgr
-			BitmapData bmd = preview.LockBits(new Rectangle(0, 0, preview.Width, preview.Height), ImageLockMode.WriteOnly, PixelFormat.Format24bppRgb);
-			int idx = 0;
-			for (int y = 0; y < bmd.Height; y++) {
-				byte* row = (byte*)bmd.Scan0 + bmd.Stride * y;
-				byte* p = row;
-				for (int x = 0; x < bmd.Width; x++) {
-					byte b = image[idx++];
-					byte g = image[idx++];
-					byte r = image[idx++];
-					*p++ = r;
-					*p++ = g;
-					*p++ = b;
-				}
-			}
-
-			preview.UnlockBits(bmd);
-			return preview;
 		}
 	}
 }

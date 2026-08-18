@@ -7,7 +7,6 @@ using CNCMaps.FileFormats;
 using CNCMaps.Shared;
 using NLog;
 using OpenTK.Mathematics;
-using PixelFormat = System.Drawing.Imaging.PixelFormat;
 
 namespace CNCMaps.Engine.Rendering {
 	/// <summary>
@@ -45,7 +44,7 @@ namespace CNCMaps.Engine.Rendering {
 		public void Initialize() {
 			Logger.Info("Initializing voxel renderer");
 			_isInit = true;
-			_surface = new DrawingSurface(400, 400, PixelFormat.Format32bppArgb);
+			_surface = new DrawingSurface(400, 400, SurfaceFormat.Bgra32);
 			_zBuffer = new float[_surface.Width * _surface.Height];
 		}
 

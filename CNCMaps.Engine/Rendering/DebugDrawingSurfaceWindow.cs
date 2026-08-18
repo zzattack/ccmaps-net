@@ -32,10 +32,8 @@ namespace CNCMaps.Engine.Rendering {
 
 			_cells = (_map.FullSize.Width * 2 - 1) * _map.FullSize.Height;
 
-			ds.Unlock();
-
 			// map is pre-rendered bitmap, shadow/heightmap are rendered on demand
-			canvasMap.Image = ds.Bitmap;
+			canvasMap.Image = ds.GetGdiBitmap();
 		}
 
 		private void canvas_MouseMove(object sender, MouseEventArgs e) {

@@ -372,17 +372,6 @@ namespace CNCMaps.Engine.Drawables {
 			return bounds;
 		}
 
-		public override void DrawBoundingBox(GameObject obj, Graphics gfx) {
-			base.DrawBoundingBox(obj, gfx);
-
-			var parts = new List<Drawable>();
-			parts.Add(_baseShp);
-			parts.AddRange(_anims);
-			parts.AddRange(SubDrawables);
-
-			foreach (var d in parts)
-				d.DrawBoundingBox(obj, gfx);
-		}
 	}
 
 	public class PowerupSlot {
