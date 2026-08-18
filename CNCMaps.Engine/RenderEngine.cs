@@ -352,10 +352,7 @@ namespace CNCMaps.Engine {
 			Console.ForegroundColor = ConsoleColor.Gray;
 			Console.Write("Usage: ");
 			Console.WriteLine("");
-			var sb = new StringBuilder();
-			var sw = new StringWriter(sb);
-			_settings.GetOptions().WriteOptionDescriptions(sw);
-			Console.WriteLine(sb.ToString());
+			Console.WriteLine(_settings.GetHelpText());
 		}
 
 		public static bool IsLinux {

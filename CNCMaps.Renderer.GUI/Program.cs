@@ -5,12 +5,11 @@ using System.IO;
 using System.Text;
 using System.Threading;
 using System.Windows.Forms;
+using System.CommandLine;
 using CNCMaps.Shared;
 
 namespace CNCMaps.GUI {
 	static class Program {
-		static OptionSet _options;
-
 		/// <summary>
 		/// The main entry point for the application.
 		/// </summary>
@@ -25,13 +24,22 @@ namespace CNCMaps.GUI {
 				bool showHelp = false;
 				bool skipUpdateCheck = false;
 
-				_options = new OptionSet {
-					{"h|help", "Show this short help text", v => showHelp = true},
-					{"k|killpid=", "Kill calling (old) process (to be used by updater)", KillDanglingProcess },
-					{"c|cleanupdate=", "Delete (old) executable (to be used by updater)", RemoveOldExecutable },
-					{"s|skip-update-check", "Skip update check)", v => skipUpdateCheck = true },
-				};
-				_options.Parse(args);
+				var optHelp = new Option<bool>("--help", "-h") { Description = "Show this short help text" };
+				var optKillPid = new Option<string>("--killpid", "-k") { Description = "Kill calling (old) process (to be used by updater)" };
+				var optCleanUpdate = new Option<string>("--cleanupdate", "-c") { Description = "Delete (old) executable (to be used by updater)" };
+				var optSkipUpdateCheck = new Option<bool>("--skip-update-check", "-s") { Description = "Skip update check" };
+				var rootCommand = new RootCommand { TreatUnmatchedTokensAsErrors = false };
+				rootCommand.Options.Add(optHelp);
+				rootCommand.Options.Add(optKillPid);
+				rootCommand.Options.Add(optCleanUpdate);
+				rootCommand.Options.Add(optSkipUpdateCheck);
+				var parsed = rootCommand.Parse(args);
+				showHelp = parsed.GetValue(optHelp);
+				skipUpdateCheck = parsed.GetValue(optSkipUpdateCheck);
+				if (parsed.GetValue(optKillPid) is string pid)
+					KillDanglingProcess(pid);
+				if (parsed.GetValue(optCleanUpdate) is string oldExe)
+					RemoveOldExecutable(oldExe);
 				if (showHelp) {
 					ShowHelp();
 					return;
@@ -84,13 +92,12 @@ namespace CNCMaps.GUI {
 		}
 
 		static void ShowHelp() {
-			Console.ForegroundColor = ConsoleColor.Gray;
-			Console.Write("Usage: ");
-			Console.WriteLine("");
-			var sb = new StringBuilder();
-			var sw = new StringWriter(sb);
-			_options.WriteOptionDescriptions(sw);
-			Console.WriteLine(sb.ToString());
+			MessageBox.Show(
+				"-h, --help               Show this short help text" + Environment.NewLine +
+				"-k, --killpid=PID        Kill calling (old) process (to be used by updater)" + Environment.NewLine +
+				"-c, --cleanupdate=EXE    Delete (old) executable (to be used by updater)" + Environment.NewLine +
+				"-s, --skip-update-check  Skip update check",
+				"Command line options");
 		}
 	}
 }

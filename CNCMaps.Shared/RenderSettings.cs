@@ -1,9 +1,13 @@
-﻿using NLog;
+using System;
+using System.Collections.Generic;
+using System.CommandLine;
+using System.Linq;
+using System.Text;
+using NLog;
 
 namespace CNCMaps.Shared {
 
 	public class RenderSettings {
-		OptionSet _options;
 		private static readonly Logger _logger = LogManager.GetCurrentClassLogger();
 
 		public string InputFile { get; set; }
@@ -67,82 +71,111 @@ namespace CNCMaps.Shared {
 			MarkerStartSize = 4.0;
 		}
 
+		private readonly List<(string invocation, string description)> _helpEntries = new List<(string, string)>();
+
 		public void ConfigureFromArgs(string[] args) {
-			var unprocessed = GetOptions().Parse(args);
-			foreach (var opt in unprocessed) {
-				_logger.Warn("Unknown option '{0}' passed", opt);
+			var applications = new List<Action<ParseResult>>();
+			var root = new RootCommand("Renders battle maps of RA2/YR and TS/FS to images") {
+				TreatUnmatchedTokensAsErrors = false,
+			};
+			// the built-in help/version machinery is bypassed: -h only sets ShowHelp, and
+			// the caller decides when to print GetHelpText()
+			for (int i = root.Options.Count - 1; i >= 0; i--)
+				root.Options.RemoveAt(i);
+
+			void Register<T>(Option<T> option, string description, Action<ParseResult, Option<T>> apply) {
+				option.Description = description;
+				root.Options.Add(option);
+				var names = option.Aliases.Concat(new[] { option.Name }).OrderBy(n => n.Length).ToList();
+				string valueSuffix = option.ValueType == typeof(bool) ? "" : "=VALUE";
+				_helpEntries.Add((string.Join(", ", names) + valueSuffix, description));
+				applications.Add(r => apply(r, option));
 			}
+			void Flag(string name, string alias, string description, Action apply) {
+				var option = alias != null ? new Option<bool>(name, alias) : new Option<bool>(name);
+				Register(option, description, (r, o) => {
+					if (r.GetValue(o))
+						apply();
+				});
+			}
+			void Value<T>(string name, string alias, string description, Action<T> apply) {
+				var option = alias != null ? new Option<T>(name, alias) : new Option<T>(name);
+				Register(option, description, (r, o) => {
+					if (r.GetResult(o) is { Implicit: false })
+						apply(r.GetValue(o));
+				});
+			}
+
+			Flag("--help", "-h", "Show this short help text", () => ShowHelp = true);
+			Value<string>("--infile", "-i", "Input file", v => InputFile = v);
+			Value<string>("--outfile", "-o", "Output file, without extension, read from map if not specified.", v => OutputFile = v);
+			Value<string>("--outdir", "-d", "Output directiory", v => OutputDir = v);
+			Flag("--force-ra2", "-y", "Force using the Red Alert 2 engine for rendering", () => Engine = EngineType.RedAlert2);
+			Flag("--force-yr", "-Y", "Force using the Yuri's Revenge engine for rendering", () => Engine = EngineType.YurisRevenge);
+			Flag("--force-ts", "-t", "Force using the Tiberian Sun engine for rendering", () => Engine = EngineType.TiberianSun);
+			Flag("--force-fs", "-T", "Force using the Firestorm engine for rendering", () => Engine = EngineType.Firestorm);
+			Flag("--output-jpg", "-j", "Output JPEG file", () => SaveJPEG = true);
+			Value<int>("--jpeg-quality", "-q", "Set JPEG quality level (0-100)", v => JPEGCompression = v);
+			Flag("--output-png", "-p", "Output PNG file", () => SavePNG = true);
+			Value<int>("--png-compression", "-c", "Set PNG compression level (1-9)", v => PNGQuality = v);
+			Value<string>("--mixdir", "-m", "Specify location of .mix files, read from registry if not specified (win only)", v => MixFilesDirectory = v);
+			Value<string>("--modconfig", "-M", "Filename of a game configuration specific to your mod (create with GUI)", v => ModConfig = v);
+			Flag("--mark-start-pos", null, "Mark starting positions", () => MarkStartPos = true);
+			Flag("--start-pos-squared", "-S", "Mark starting positions in a squared manner", () => StartPositionMarking = StartPositionMarking.Squared);
+			Flag("--start-pos-circled", null, "Mark starting positions in a circled manner", () => StartPositionMarking = StartPositionMarking.Circled);
+			Flag("--start-pos-diamond", null, "Mark starting positions in a diamond manner", () => StartPositionMarking = StartPositionMarking.Diamond);
+			Flag("--start-pos-ellipsed", null, "Mark starting positions in a ellipsed manner", () => StartPositionMarking = StartPositionMarking.Ellipsed);
+			Flag("--start-pos-star", null, "Mark starting positions in a star manner", () => StartPositionMarking = StartPositionMarking.Starred);
+			Flag("--start-pos-tiled", "-s", "Mark starting positions in a tiled manner", () => StartPositionMarking = StartPositionMarking.Tiled);
+			Value<double>("--start-pos-size", null, "Mark starting positions with given size (2-6)", v => MarkerStartSize = v);
+			Flag("--mark-ore", "-r", "Mark ore and gem fields more explicity, looks good when resizing to a preview", () => MarkOreFields = true);
+			Flag("--force-fullmap", "-F", "Ignore LocalSize definition and just save the full map", () => SizeMode = SizeMode.Full);
+			Flag("--force-localsize", "-f", "Use localsize for map dimensions (default)", () => SizeMode = SizeMode.Local);
+			Flag("--debug", "-D", "", () => Debug = true);
+			Flag("--replace-preview-nomarkers", "-k", "Update the maps [PreviewPack] data with the rendered image, using no markers on the start positions", () => {
+				GeneratePreviewPack = true;
+				PreviewMarkers = PreviewMarkersType.None;
+			});
+			Flag("--preview-markers-selected", "-K", "Update the maps [PreviewPack] data with the rendered image, using the selected options of marker type and size on the start positions", () => {
+				GeneratePreviewPack = true;
+				PreviewMarkers = PreviewMarkersType.SelectedAsAbove;
+			});
+			Flag("--preview-markers-bittah", "-l", "Update the maps [PreviewPack] data with the rendered image, using Bittah's image on the start positions", () => {
+				GeneratePreviewPack = true;
+				PreviewMarkers = PreviewMarkersType.Bittah;
+			});
+			Flag("--preview-markers-aro", "-L", "Update the maps [PreviewPack] data with the rendered image, using Aro's image on the start positions", () => {
+				GeneratePreviewPack = true;
+				PreviewMarkers = PreviewMarkersType.Aro;
+			});
+			Flag("--ignore-lighting", "-n", "Ignore all lighting and lamps on the map", () => IgnoreLighting = true);
+			Value<string>("--create-thumbnail", "-z", "Also save a thumbnail along with the fullmap in dimensions (x,y), prefix with + to keep aspect ratio", v => ThumbnailConfig = v);
+			Value<string>("--no-preview-fixup", "-x", "Also save a thumbnail along with the fullmap in dimensions (x,y), prefix with + to keep aspect ratio", v => ThumbnailConfig = v);
+			Flag("--thumb-png", null, "Save thumbnails as PNG instead of JPEG.", () => SavePNGThumbnails = true);
+			Flag("--fixup-tiles", null, "Remove undefined tiles and overwrite IsoMapPack5 section in map", () => FixupTiles = true);
+			Flag("--icegrowth", "-g", "Mark cells with ice growth set, used in TS snow maps", () => MarkIceGrowth = true);
+			Flag("--bkp", "-b", "Create map file backup when modifying", () => Backup = true);
+			Flag("--fix-overlays", null, "Remove undefined overlays and update overlay packs in map", () => FixOverlays = true);
+			Flag("--cmprs-tiles", null, "Compress and update IsoMapPack5 in map", () => CompressTiles = true);
+			Flag("--tunnels", null, "Show tunnels path lines", () => TunnelPaths = true);
+			Flag("--tunnelpos", null, "Adjust position of tunnel path lines", () => TunnelPaths = true);
+
+			var result = root.Parse(args);
+			foreach (var token in result.UnmatchedTokens)
+				_logger.Warn("Unknown option '{0}' passed", token);
+			foreach (var error in result.Errors)
+				_logger.Warn("Command line error: {0}", error.Message);
+			foreach (var apply in applications)
+				apply(result);
 		}
 
-		public OptionSet GetOptions() {
-			if (_options == null) _options = new OptionSet {
-				{"h|help", "Show this short help text", v => ShowHelp = true},
-				{"i|infile=", "Input file", v => InputFile = v},
-				{"o|outfile=", "Output file, without extension, read from map if not specified.", v => OutputFile = v},
-				{"d|outdir=", "Output directiory", v => OutputDir = v},
-				{"y|force-ra2", "Force using the Red Alert 2 engine for rendering", v => Engine = EngineType.RedAlert2},
-				{"Y|force-yr", "Force using the Yuri's Revenge engine for rendering", v => Engine = EngineType.YurisRevenge},
-				{"t|force-ts", "Force using the Tiberian Sun engine for rendering", v => Engine = EngineType.TiberianSun},
-				{"T|force-fs", "Force using the Firestorm engine for rendering", v => Engine = EngineType.Firestorm},
-				{"j|output-jpg", "Output JPEG file", v => SaveJPEG = true},
-				{"q|jpeg-quality=", "Set JPEG quality level (0-100)", (int v) => JPEGCompression = v},
-				{"p|output-png", "Output PNG file", v => SavePNG = true},
-				{"c|png-compression=", "Set PNG compression level (1-9)", (int v) => PNGQuality = v},
-				{"m|mixdir=", "Specify location of .mix files, read from registry if not specified (win only)",v => MixFilesDirectory = v},
-				{"M|modconfig=", "Filename of a game configuration specific to your mod (create with GUI)",v => ModConfig = v},
-				{"mark-start-pos", "Mark starting positions",v => MarkStartPos = true},
-				{"S|start-pos-squared", "Mark starting positions in a squared manner",v => StartPositionMarking = StartPositionMarking.Squared},
-				{"start-pos-circled", "Mark starting positions in a circled manner",v => StartPositionMarking = StartPositionMarking.Circled},
-				{"start-pos-diamond", "Mark starting positions in a diamond manner",v => StartPositionMarking = StartPositionMarking.Diamond},
-				{"start-pos-ellipsed", "Mark starting positions in a ellipsed manner",v => StartPositionMarking = StartPositionMarking.Ellipsed},
-				{"start-pos-star", "Mark starting positions in a star manner",v => StartPositionMarking = StartPositionMarking.Starred},
-				{"s|start-pos-tiled", "Mark starting positions in a tiled manner",v => StartPositionMarking = StartPositionMarking.Tiled},
-				{"start-pos-size", "Mark starting positions with given size (2-6)", (double v) => MarkerStartSize = v },
-				{"r|mark-ore", "Mark ore and gem fields more explicity, looks good when resizing to a preview", v => MarkOreFields = true},
-				{"F|force-fullmap", "Ignore LocalSize definition and just save the full map", v => SizeMode = SizeMode.Full},
-				{"f|force-localsize", "Use localsize for map dimensions (default)", v => SizeMode = SizeMode.Local},
-				{"D|debug", v => Debug = true },
-				{"k|replace-preview-nomarkers", "Update the maps [PreviewPack] data with the rendered image, using no markers on the start positions",
-					v => {
-						GeneratePreviewPack = true;
-						PreviewMarkers = PreviewMarkersType.None;
-					}
-				},
-				{"K|preview-markers-selected", "Update the maps [PreviewPack] data with the rendered image, using the selected options of marker type and size on the start positions",
-					v => {
-						GeneratePreviewPack = true;
-						PreviewMarkers = PreviewMarkersType.SelectedAsAbove;
-					}
-				},
-				{"l|preview-markers-bittah", "Update the maps [PreviewPack] data with the rendered image, using Bittah's image on the start positions",
-					v => {
-						GeneratePreviewPack = true;
-						PreviewMarkers = PreviewMarkersType.Bittah;
-					}
-				},
-				{"L|preview-markers-aro", "Update the maps [PreviewPack] data with the rendered image, using Aro's image on the start positions",
-					v => {
-						GeneratePreviewPack = true;
-						PreviewMarkers = PreviewMarkersType.Aro;
-					}
-				},
-
-				{"n|ignore-lighting", "Ignore all lighting and lamps on the map",v => IgnoreLighting = true}, 
-				// {"G|graphics-winmgr", "Attempt rendering voxels using window manager context first (default)",v => Settings.PreferOSMesa = false},
-				//{"g|graphics-osmesa", "Attempt rendering voxels using OSMesa context first", v => PreferOSMesa = true},
-				{"z|create-thumbnail=", "Also save a thumbnail along with the fullmap in dimensions (x,y), prefix with + to keep aspect ratio	", v => ThumbnailConfig = v},
-				{"x|no-preview-fixup=", "Also save a thumbnail along with the fullmap in dimensions (x,y), prefix with + to keep aspect ratio	", v => ThumbnailConfig = v},
-				{"thumb-png", "Save thumbnails as PNG instead of JPEG.", v => SavePNGThumbnails = true },
-				{"fixup-tiles", "Remove undefined tiles and overwrite IsoMapPack5 section in map", v => FixupTiles = true },
-				{"g|icegrowth", "Mark cells with ice growth set, used in TS snow maps", v => MarkIceGrowth = true},
-				{"b|bkp", "Create map file backup when modifying", v => Backup = true},
-				{"fix-overlays", "Remove undefined overlays and update overlay packs in map", v => FixOverlays = true},
-				{"cmprs-tiles", "Compress and update IsoMapPack5 in map", v => CompressTiles = true},
-				{"tunnels", "Show tunnels path lines", v => TunnelPaths = true},
-				{"tunnelpos", "Adjust position of tunnel path lines", v => TunnelPaths = true},
-			};
-
-			return _options;
+		public string GetHelpText() {
+			if (_helpEntries.Count == 0)
+				ConfigureFromArgs(Array.Empty<string>());
+			var sb = new StringBuilder();
+			foreach (var (invocation, description) in _helpEntries)
+				sb.AppendLine("  " + invocation.PadRight(30) + description);
+			return sb.ToString();
 		}
 	}
 
