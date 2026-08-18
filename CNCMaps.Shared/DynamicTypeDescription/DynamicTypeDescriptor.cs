@@ -16,7 +16,6 @@ using System.Linq;
 using System.Reflection;
 using System.Resources;
 using System.Text;
-using System.Windows.Forms.Design;
 
 namespace CNCMaps.Shared.DynamicTypeDescription {
 	public enum CustomSortOrder {
@@ -497,81 +496,6 @@ namespace CNCMaps.Shared.DynamicTypeDescription {
 		}
 
 
-
-	}
-
-	public class StandardValueEditor : UITypeEditor {
-		private StandardValueEditorUI m_ui = new StandardValueEditorUI();
-
-		public StandardValueEditor() {
-
-		}
-
-		public override bool GetPaintValueSupported(ITypeDescriptorContext context) {
-			return false;
-		}
-
-		public override UITypeEditorEditStyle GetEditStyle(ITypeDescriptorContext context) {
-			return UITypeEditorEditStyle.DropDown;
-		}
-
-		public override bool IsDropDownResizable {
-			get {
-				return true;
-			}
-		}
-
-		public override object EditValue(ITypeDescriptorContext context, IServiceProvider provider, object value) {
-			if (provider != null) {
-				IWindowsFormsEditorService editorService = provider.GetService(typeof(IWindowsFormsEditorService)) as IWindowsFormsEditorService;
-				if (editorService == null)
-					return value;
-
-				m_ui.SetData(context, editorService, value);
-
-				editorService.DropDownControl(m_ui);
-
-				value = m_ui.GetValue();
-
-			}
-
-			return value;
-		}
-	}
-
-	public class PropertyValuePaintEditor : UITypeEditor {
-		public override bool GetPaintValueSupported(ITypeDescriptorContext context) {
-			// let the property browser know we'd like
-			// to do custom painting.
-			if (context != null) {
-				if (context.PropertyDescriptor != null) {
-					if (context.PropertyDescriptor is CustomPropertyDescriptor) {
-						CustomPropertyDescriptor cpd = context.PropertyDescriptor as CustomPropertyDescriptor;
-						return (cpd.ValueImage != null);
-					}
-				}
-			}
-			return base.GetPaintValueSupported(context);
-		}
-
-		public override UITypeEditorEditStyle GetEditStyle(ITypeDescriptorContext context) {
-			return UITypeEditorEditStyle.None;
-		}
-		public override void PaintValue(PaintValueEventArgs pe) {
-			if (pe.Context != null) {
-				if (pe.Context.PropertyDescriptor != null) {
-					if (pe.Context.PropertyDescriptor is CustomPropertyDescriptor) {
-						CustomPropertyDescriptor cpd = pe.Context.PropertyDescriptor as CustomPropertyDescriptor;
-
-						if (cpd.ValueImage != null) {
-							pe.Graphics.DrawImage(cpd.ValueImage, pe.Bounds);
-							return;
-						}
-					}
-				}
-			}
-			base.PaintValue(pe);
-		}
 
 	}
 
@@ -1260,6 +1184,7 @@ namespace CNCMaps.Shared.DynamicTypeDescription {
 			}
 		}
 
+#if WINDOWS
 		private ISite m_site = null;
 		public ISite GetSite() {
 			if (m_site == null) {
@@ -1278,6 +1203,7 @@ namespace CNCMaps.Shared.DynamicTypeDescription {
 				itemList.AddRange(cpd.StateItems as ICollection);
 			}
 		}
+#endif
 
 		public CustomPropertyDescriptor GetProperty(string propertyName) {
 			CustomPropertyDescriptor cpd = m_pdl.FirstOrDefault(a => String.Compare(a.Name, propertyName, true) == 0);
@@ -1349,7 +1275,9 @@ namespace CNCMaps.Shared.DynamicTypeDescription {
 		private Type m_PropType = Type.Missing.GetType();
 		private AttributeList m_Attributes = new AttributeList();
 		private PropertyDescriptor m_pd = null;
+#if WINDOWS
 		private Collection<PropertyValueUIItem> m_colUIItem = new Collection<PropertyValueUIItem>();
+#endif
 
 		internal CustomPropertyDescriptor(object owner, string sName, Type type, object value, params Attribute[] attributes)
 			: base(sName, attributes) {
@@ -1764,11 +1692,13 @@ namespace CNCMaps.Shared.DynamicTypeDescription {
 
 		}
 
+#if WINDOWS
 		public ICollection<PropertyValueUIItem> StateItems {
 			get {
 				return m_colUIItem;
 			}
 		}
+#endif
 
 		private List<StandardValueAttribute> m_StatandardValues = new List<StandardValueAttribute>();
 		public ICollection<StandardValueAttribute> StatandardValues {

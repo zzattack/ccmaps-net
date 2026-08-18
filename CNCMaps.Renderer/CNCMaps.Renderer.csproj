@@ -3,7 +3,15 @@
     <OutputType>Exe</OutputType>
     <RootNamespace>CNCMaps</RootNamespace>
     <AssemblyName>CNCMaps.Renderer</AssemblyName>
+    <TargetFrameworks>net10.0-windows;net10.0</TargetFrameworks>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net10.0-windows'">
+    <UseWindowsForms>true</UseWindowsForms>
+  </PropertyGroup>
+  <ItemGroup>
+    <!-- enables the libgdiplus code paths of System.Drawing.Common 6.0 on Unix -->
+    <RuntimeHostConfigurationOption Include="System.Drawing.EnableUnixSupport" Value="true" />
+  </ItemGroup>
   <ItemGroup>
     <PackageReference Include="NLog" Version="5.5.0" />
   </ItemGroup>

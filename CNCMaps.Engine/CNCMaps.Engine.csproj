@@ -1,7 +1,23 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <RootNamespace>CNCMaps.Engine</RootNamespace>
+    <TargetFrameworks>net10.0-windows;net10.0</TargetFrameworks>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net10.0-windows'">
+    <UseWindowsForms>true</UseWindowsForms>
+  </PropertyGroup>
+  <ItemGroup Condition="'$(TargetFramework)' != 'net10.0-windows'">
+    <!-- the interactive tile debugging window is WinForms-based -->
+    <Compile Remove="Rendering\DebugDrawingSurfaceWindow.cs" />
+    <Compile Remove="Rendering\DebugDrawingSurfaceWindow.Designer.cs" />
+    <Compile Remove="Rendering\ZoomableCanvas.cs" />
+    <Compile Remove="Rendering\Gdi32.cs" Condition="Exists('Rendering\Gdi32.cs')" />
+    <EmbeddedResource Remove="Rendering\DebugDrawingSurfaceWindow.resx" />
+    <!-- System.Drawing on Unix: last version with libgdiplus support -->
+    <PackageReference Include="System.Drawing.Common" Version="6.0.0" />
+    <!-- required for the binary (bitmap) resources in Resources.resx; included in the Windows Desktop framework but not in the base runtime -->
+    <PackageReference Include="System.Resources.Extensions" Version="10.0.0" />
+  </ItemGroup>
   <ItemGroup>
     <PackageReference Include="NLog" Version="5.5.0" />
     <PackageReference Include="OpenTK.Mathematics" Version="4.9.4" />

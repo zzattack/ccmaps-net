@@ -1,7 +1,25 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <RootNamespace>CNCMaps.Shared</RootNamespace>
+    <TargetFrameworks>net10.0-windows;net10.0</TargetFrameworks>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net10.0-windows'">
+    <UseWindowsForms>true</UseWindowsForms>
+  </PropertyGroup>
+  <ItemGroup Condition="'$(TargetFramework)' == 'net10.0-windows'">
+    <!-- editor stubs replace the WinForms editors only on the cross-platform target -->
+    <Compile Remove="DynamicTypeDescription\EditorStubs.cs" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(TargetFramework)' != 'net10.0-windows'">
+    <!-- the property-grid editors are WinForms-based and only needed by the GUI -->
+    <Compile Remove="DynamicTypeDescription\Editors.cs" />
+    <Compile Remove="DynamicTypeDescription\CustomComponentModel.cs" />
+    <Compile Remove="DynamicTypeDescription\StandardValueEditorUI.cs" />
+    <Compile Remove="DynamicTypeDescription\StandardValueEditorUI.Designer.cs" />
+    <EmbeddedResource Remove="DynamicTypeDescription\StandardValueEditorUI.resx" />
+    <!-- System.Drawing types (Image) used by CustomPropertyDescriptor; 6.0 is the last version with Unix support -->
+    <PackageReference Include="System.Drawing.Common" Version="6.0.0" />
+  </ItemGroup>
   <ItemGroup>
     <PackageReference Include="NLog" Version="5.5.0" />
   </ItemGroup>

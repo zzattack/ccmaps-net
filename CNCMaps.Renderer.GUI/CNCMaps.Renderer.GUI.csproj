@@ -3,6 +3,8 @@
     <OutputType>WinExe</OutputType>
     <RootNamespace>CNCMaps.GUI</RootNamespace>
     <AssemblyName>CNCMaps.Renderer.GUI</AssemblyName>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
     <ApplicationIcon>ra2mapicon.ico</ApplicationIcon>
     <ApplicationManifest>Properties\app.manifest</ApplicationManifest>
   </PropertyGroup>

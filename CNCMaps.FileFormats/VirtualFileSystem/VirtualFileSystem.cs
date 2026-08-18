@@ -242,12 +242,14 @@ namespace CNCMaps.FileFormats.VirtualFileSystem {
 
 		public static string RA2InstallPath {
 			get {
+				if (!OperatingSystem.IsWindows()) return null;
 				var key = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry32);
 				return ReadRegistryString(key, "SOFTWARE\\Westwood\\Red Alert 2", "InstallPath");
 			}
 		}
 		public static string TSInstallPath {
 			get {
+				if (!OperatingSystem.IsWindows()) return null;
 				var key = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry32);
 				return ReadRegistryString(key, "SOFTWARE\\Westwood\\Tiberian Sun", "InstallPath");
 			}
