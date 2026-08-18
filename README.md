@@ -5,17 +5,17 @@ Project page:
 * http://github.com/zzattack/ccmaps-net
 
 Download:
-* http://cnc-maps.net/tool/get_latest
+* https://spysat.cc/downloads/
 
 This project provides a tool to render battle maps of the most popular Westwood RTS games Red Alert 2 and Tiberian Sun, including their expansions Yuri's Revenge and Firestorm.
 
 Status
 ------
-The project has reached maturity and will know no big feature additions, but bugs might be fixed if reported. I am toying with the idea of building a webservice out of the tool, but that would probably appear under a different project.
+The project has reached maturity and will know no big feature additions, but bugs might be fixed if reported. A map portal built around this renderer runs at https://spysat.cc, where maps can be uploaded, rendered and browsed.
 
 Installation
 ------------
-Run the installer or extract the latest zip release. The NSIS installer cannot be used on non-Windows OS but the files inside the zip-archive run fine under Mono.
+Run the installer or extract the latest zip release. Releases are published self-contained, so no separate .NET runtime install is needed.
 The program requires several .mix files from the original games. These include:
 
 * ra2.mix
@@ -23,9 +23,9 @@ The program requires several .mix files from the original games. These include:
 * theme.mix
 (or their TS equivalents)
 
-If the original game is installed under Microsoft Windows the location of these files will be found in the registry, but under Mono you have to specify their location on the command line.
+If the original game is installed the location of these files will be found in the registry, otherwise you can specify their location on the command line.
 
-The program depends on a software-only OpenGL renderer named Mesa. This approach was chosen to maximize compatibility on systems that have no window manager, such as on remote desktop sessions or on headless servers. This dependency is fulfilled on Windows by shipping the OpenGL32.dll and osmesa.dll files. On *nix systems the package _libosmesa-7.11.2_ or newer needs to be installed.
+Voxel rendering is performed by a built-in software rasterizer, so no GPU, OpenGL drivers or other graphics dependencies are required. This maximizes compatibility on systems without capable GPU drivers, such as remote desktop sessions or headless servers.
 
 Usage
 -----
@@ -33,7 +33,7 @@ Instructions on the command line application can be found by invoking `cncmaps -
 
 Development
 -----------
-Working on CNCMaps should be as easy as checking out the source. All dependencies, on Windows, are provided within the source tree. On Linux you need the libmesaos package which may be available through your package manager. Alternatively you can build it from http://www.mesa3d.org/download.html.
+Working on CNCMaps requires the .NET 10 SDK (or newer). Check out the source and run `dotnet build CNCMaps.slnx`; NuGet restores the dependencies. The console renderer is cross-platform (`dotnet publish CNCMaps.Renderer -r linux-x64 --self-contained` for Linux); the GUI targets Windows.
 
 Older code repositories which contain a fully functional but not bug-free C++ version of this program can be found at 
 
@@ -63,7 +63,7 @@ which are licenced under the GPL v3.
 
 (The MIT License)
 
-Copyright (c) 2007-2013 Frank Razenberg
+Copyright (c) 2007-2026 Frank Razenberg
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of
 this software and associated documentation files (the 'Software'), to deal in
