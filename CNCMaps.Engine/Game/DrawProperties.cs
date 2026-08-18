@@ -29,6 +29,7 @@ namespace CNCMaps.Engine.Game {
 		public Point ShadowOffset;
 		public int SortIndex { get; set; }
 		public float TurretVoxelOffset { get; set; }
+		public int FlightHeight { get; set; } // pixels above the ground plane; body only, shadow stays grounded
 
 		public Point GetOffset(GameObject obj) {
 			var ret = Offset;

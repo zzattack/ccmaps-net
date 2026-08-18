@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Drawing;
 using CNCMaps.Engine.Game;
 using CNCMaps.Engine.Map;
@@ -13,8 +14,21 @@ namespace CNCMaps.Engine.Drawables {
 		public UnitDrawable(ModConfig config, VirtualFileSystem vfs, IniFile.IniSection rules, IniFile.IniSection art)
 			: base(config, vfs, rules, art) { }
 
+		// the jumpjet locomotor's CLSID in the game rules
+		const string JumpjetLocomotor = "{92612C46-F71F-11d1-AC9F-006008055BB5}";
+
 		public override void LoadFromRules() {
 			base.LoadFromArtEssential();
+
+			// jumpjet units that can never land (BalloonHover, e.g. the Kirov airship)
+			// hover at their cruise height even when preplaced on a map; one height
+			// level is 104 leptons and projects to half a tile
+			if (Rules.ReadBool("BalloonHover") &&
+				string.Equals(Rules.ReadString("Locomotor"), JumpjetLocomotor, StringComparison.OrdinalIgnoreCase)) {
+				int cruiseDefault = OwnerCollection.Rules.GetOrCreateSection("JumpjetControls").ReadInt("CruiseHeight", 500);
+				int leptons = Rules.ReadInt("JumpjetHeight", cruiseDefault);
+				Props.FlightHeight = leptons * (_config.TileHeight / 2) / 104;
+			}
 
 			ShpDrawable shp = null;
 			VoxelDrawable vxl = null;
@@ -52,6 +66,7 @@ namespace CNCMaps.Engine.Drawables {
 						vxlturret.Props.Offset += new Size(Rules.ReadInt("TurretAnimX"), Rules.ReadInt("TurretAnimY"));
 						vxlturret.Props.TurretVoxelOffset = Art.ReadFloat("TurretOffset");
 						vxlturret.Props.Cloakable = Props.Cloakable;
+						vxlturret.Props.FlightHeight = Props.FlightHeight;
 						SubDrawables.Add(vxlturret);
 					}
 
@@ -76,6 +91,7 @@ namespace CNCMaps.Engine.Drawables {
 							barrel.Props.Offset = Props.Offset;
 							barrel.Props.Offset += new Size(Rules.ReadInt("TurretAnimX"), Rules.ReadInt("TurretAnimY"));
 							barrel.Props.TurretVoxelOffset = Art.ReadFloat("TurretOffset");
+							barrel.Props.FlightHeight = Props.FlightHeight;
 						}
 						barrel.Props.Cloakable = Props.Cloakable;
 						SubDrawables.Add(barrel);

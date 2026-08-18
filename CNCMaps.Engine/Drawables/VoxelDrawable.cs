@@ -31,6 +31,8 @@ namespace CNCMaps.Engine.Drawables {
 			var bounds = VxlRenderer.GetBounds(obj, Vxl, Hva, Props);
 			bounds.Offset(obj.Tile.Dx * _config.TileWidth / 2, (obj.Tile.Dy - obj.Tile.Z) * _config.TileHeight / 2);
 			bounds.Offset(Props.GetOffset(obj));
+			if (Props.FlightHeight > 0) // raised body plus grounded shadow
+				bounds = Rectangle.Union(bounds, new Rectangle(bounds.X, bounds.Y - Props.FlightHeight, bounds.Width, bounds.Height));
 			return bounds;
 		}
 
@@ -65,7 +67,10 @@ namespace CNCMaps.Engine.Drawables {
 			// their tile, shadows lie on the ground plane and may not darken anything
 			// standing taller than that plane -- most notably this unit's own hull, drawn
 			// by an earlier blit of the same UnitDrawable
-			short hBufVal = (short)(obj.Tile.Z * _config.TileHeight / 2 + vxlHeight);
+			// flying units (props.FlightHeight) draw their body raised while the
+			// shadow stays on the ground plane beneath them
+			int flight = props.FlightHeight;
+			short hBufVal = (short)(obj.Tile.Z * _config.TileHeight / 2 + vxlHeight + flight);
 			int castHeight = obj.Tile.Z * _config.TileHeight / 2;
 
 			// clip to 25-50-75-100
@@ -76,22 +81,26 @@ namespace CNCMaps.Engine.Drawables {
 			// short firstRowTouched = short.MaxValue;
 			for (int y = 0; y < vxl_ds.Height; y++) {
 				byte* src_row = (byte*)vxl_ds.BitmapData.Scan0 + vxl_ds.BitmapData.Stride * (vxl_ds.Height - y - 1);
-				byte* dst_row = ((byte*)ds.BitmapData.Scan0 + (d.Y + y) * ds.BitmapData.Stride + d.X * 3);
-				int zIdx = (d.Y + y) * ds.Width + d.X;
-				if (dst_row < w_low || dst_row >= w_high) continue;
+				byte* body_row = ((byte*)ds.BitmapData.Scan0 + (d.Y + y - flight) * ds.BitmapData.Stride + d.X * 3);
+				byte* shad_row = ((byte*)ds.BitmapData.Scan0 + (d.Y + y) * ds.BitmapData.Stride + d.X * 3);
+				int zIdx = (d.Y + y - flight) * ds.Width + d.X;
+				bool bodyRowValid = body_row >= w_low && body_row < w_high;
+				bool shadRowValid = shad_row >= w_low && shad_row < w_high;
+				if (!bodyRowValid && !shadRowValid) continue;
 
 				for (int x = 0; x < vxl_ds.Width; x++) {
+					bool bodyPx = *(src_row + x * 4 + 3) > 0;
 					// only non-transparent pixels
-					if (*(src_row + x * 4 + 3) > 0) {
+					if (bodyPx && bodyRowValid) {
 						if (transLucency != 0) {
-							*(dst_row + x * 3) = (byte)(a * *(dst_row + x * 3) + b * *(src_row + x * 4));
-							*(dst_row + x * 3 + 1) = (byte)(a * *(dst_row + x * 3 + 1) + b * *(src_row + x * 4 + 1));
-							*(dst_row + x * 3 + 2) = (byte)(a * *(dst_row + x * 3 + 2) + b * *(src_row + x * 4 + 2));
+							*(body_row + x * 3) = (byte)(a * *(body_row + x * 3) + b * *(src_row + x * 4));
+							*(body_row + x * 3 + 1) = (byte)(a * *(body_row + x * 3 + 1) + b * *(src_row + x * 4 + 1));
+							*(body_row + x * 3 + 2) = (byte)(a * *(body_row + x * 3 + 2) + b * *(src_row + x * 4 + 2));
 						}
 						else {
-							*(dst_row + x * 3) = *(src_row + x * 4);
-							*(dst_row + x * 3 + 1) = *(src_row + x * 4 + 1);
-							*(dst_row + x * 3 + 2) = *(src_row + x * 4 + 2);
+							*(body_row + x * 3) = *(src_row + x * 4);
+							*(body_row + x * 3 + 1) = *(src_row + x * 4 + 1);
+							*(body_row + x * 3 + 2) = *(src_row + x * 4 + 2);
 						}
 
 						// if (y < firstRowTouched)
@@ -102,13 +111,14 @@ namespace CNCMaps.Engine.Drawables {
 							zBuffer[zIdx] = zBufVal;
 						heightBuffer[zIdx] = hBufVal;
 					}
-					// or shadows
-					else if (shadowBufVxl[x + y * vxl_ds.Width]) {
+					// shadows fall where the surface has no body pixel; a raised body no
+					// longer occludes its own ground shadow
+					if ((!bodyPx || flight != 0) && shadRowValid && shadowBufVxl[x + y * vxl_ds.Width]) {
 						int shadIdx = (d.Y + y) * ds.Width + d.X + x;
 						if (!shadowBuf[shadIdx] && castHeight >= heightBuffer[shadIdx]) {
-							*(dst_row + x * 3) /= 2;
-							*(dst_row + x * 3 + 1) /= 2;
-							*(dst_row + x * 3 + 2) /= 2;
+							*(shad_row + x * 3) /= 2;
+							*(shad_row + x * 3 + 1) /= 2;
+							*(shad_row + x * 3 + 2) /= 2;
 							shadowBuf[shadIdx] = true;
 						}
 					}
