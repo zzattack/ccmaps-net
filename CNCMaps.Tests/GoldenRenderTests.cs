@@ -143,6 +143,35 @@ namespace CNCMaps.Tests {
 		}
 
 		[GoldenFact]
+		public void MapIniRuleOverrides_AffectTheRender() {
+			// maps can override rules/art entries in their own ini; verify the merge
+			// still takes effect: swapping the ambulance image must change the output
+			string overrideDir = Path.Combine(Path.GetTempPath(), "cncmaps-tests", Guid.NewGuid().ToString("N"));
+			Directory.CreateDirectory(overrideDir);
+			string modMap = Path.Combine(overrideDir, "hillbtwn_override.map");
+			File.Copy(AssetPath(Path.Combine("maps", "hillbtwn.map")), modMap);
+			File.AppendAllText(modMap, "\r\n[AMBU]\r\nImage=CAR\r\n");
+
+			string outDir = Path.Combine(overrideDir, "out");
+			Directory.CreateDirectory(outDir);
+			var settings = new RenderSettings {
+				InputFile = modMap,
+				OutputDir = outDir,
+				OutputFile = "render",
+				MixFilesDirectory = MixDir,
+				SavePNG = true,
+			};
+			var engine = new RenderEngine();
+			Assert.True(engine.ConfigureFromSettings(settings));
+			Assert.Equal(EngineResult.RenderedOk, engine.Execute());
+
+			var hash = PixelHash(Path.Combine(outDir, "render.png"));
+			var goldens = LoadGoldens();
+			Assert.NotEqual(goldens["hillbtwn-png"], hash); // override took effect
+			AssertGolden("hillbtwn-override-png", hash, overrideDir);
+		}
+
+		[GoldenFact]
 		public void EngineDetection_DetectsCorrectEngines() {
 			foreach (var (map, expected) in new[] { ("mp22s8.map", EngineType.RedAlert2), ("hillbtwn.map", EngineType.YurisRevenge), ("austintx.map", EngineType.YurisRevenge) }) {
 				using var stream = File.OpenRead(AssetPath(Path.Combine("maps", map)));
