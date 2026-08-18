@@ -11,7 +11,7 @@ namespace CNCMaps.GUI {
 		public event EventHandler UpdateCheckFailed;
 		public event DownloadProgressChangedEventHandler DownloadProgressChanged;
 
-		public const string UpdateCheckHost = "https://cnc-maps.net/";
+		public const string UpdateCheckHost = "https://spysat.cc/";
 		public const string UpdateCheckPage = "tool/version_check";
 
 		public void CheckVersion() {
