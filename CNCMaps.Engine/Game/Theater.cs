@@ -79,6 +79,9 @@ namespace CNCMaps.Engine.Game {
 
 			_palettes.AnimPalette = new Palette(_vfs.Open<PalFile>("anim.pal"));
 
+			// voxels.vpl provides the game's voxel lighting lookup
+			Drawables.VoxelDrawable.VoxelRenderer.Configure(_vfs.Open<VplFile>("voxels.vpl"), _config.Engine);
+
 			_animations = new ObjectCollection(CollectionType.Animation, _theaterType, _config, _vfs, _rules, _art,
 				_rules.GetSection("Animations"), _palettes);
 

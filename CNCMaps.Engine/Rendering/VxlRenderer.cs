@@ -4,6 +4,7 @@ using CNCMaps.Engine.Drawables;
 using CNCMaps.Engine.Game;
 using CNCMaps.Engine.Map;
 using CNCMaps.FileFormats;
+using CNCMaps.Shared;
 using NLog;
 using OpenTK.Mathematics;
 using PixelFormat = System.Drawing.Imaging.PixelFormat;
@@ -19,10 +20,24 @@ namespace CNCMaps.Engine.Rendering {
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 		bool _isInit;
 
-		// color contributors; the standard voxels.vpl already adds a lot of ambient,
-		// that's why these seem high
+		// color contributors for the fallback lighting used when no voxels.vpl is available;
+		// the standard voxels.vpl already adds a lot of ambient, that's why these seem high
 		private static readonly Vector3 Diffuse = new Vector3(1.3f);
 		private static readonly Vector3 Ambient = new Vector3(0.8f);
+
+		// game light directions for the vpl page selection (from WorldAlteringEditor)
+		private static readonly Vector3 TSLight = -Vector3.UnitX;
+		private static readonly Vector3 YRLight = Vector3.TransformVector(-Vector3.UnitX, Matrix4.CreateRotationZ(MathHelper.DegreesToRadians(45f)));
+
+		VplFile _vpl;
+		EngineType _engine = EngineType.YurisRevenge;
+
+		/// <summary>Sets the voxels.vpl lookup used for game-accurate lighting; without
+		/// it a Lambert approximation is used.</summary>
+		public void Configure(VplFile vpl, EngineType engine) {
+			_vpl = vpl;
+			_engine = engine;
+		}
 
 		DrawingSurface _surface;
 		float[] _zBuffer; // window-space depth in [-1,1] (ndc z), depth-test "less"
@@ -126,18 +141,33 @@ namespace CNCMaps.Engine.Rendering {
 
 				var lightDirection = (v.Determinant != 0.0) ? ExtractRotationVector(ToOpenGL(Matrix4.Invert(v))) : Vector3.Zero;
 
+				// game-accurate lighting: precompute which vpl page every normal maps to
+				byte[] vplPages = _vpl != null ? PreCalculateVplLighting(section.GetNormals(), direction) : null;
+
 				for (uint x = 0; x != section.SizeX; x++) {
 					for (uint y = 0; y != section.SizeY; y++) {
 						foreach (VxlFile.Voxel vx in section.Spans[x, y].Voxels) {
 							if (vx.ColorIndex == 0) continue;
-							Color color = obj.Palette.Colors[vx.ColorIndex];
-							Vector3 normal = section.GetNormal(vx.NormalIndex);
-							// shader function taken from https://github.com/OpenRA/OpenRA/blob/bleed/cg/vxl.fx
-							// thanks to pchote for a LOT of help getting it right
-							Vector3 colorMult = Vector3.Add(Ambient, Diffuse * Math.Max(Vector3.Dot(normal, lightDirection), 0f));
-							byte cr = (byte)Math.Min(255, color.R * colorMult.X);
-							byte cg = (byte)Math.Min(255, color.G * colorMult.Y);
-							byte cb = (byte)Math.Min(255, color.B * colorMult.Z);
+							byte cr, cg, cb;
+							if (vplPages != null) {
+								// like the game: remap the palette index through voxels.vpl
+								// for the lighting page this voxel's normal maps to
+								byte remapped = _vpl.GetPaletteIndex(vplPages[vx.NormalIndex], vx.ColorIndex);
+								Color color = obj.Palette.Colors[remapped];
+								cr = color.R;
+								cg = color.G;
+								cb = color.B;
+							}
+							else {
+								Color color = obj.Palette.Colors[vx.ColorIndex];
+								Vector3 normal = section.GetNormal(vx.NormalIndex);
+								// shader function taken from https://github.com/OpenRA/OpenRA/blob/bleed/cg/vxl.fx
+								// thanks to pchote for a LOT of help getting it right
+								Vector3 colorMult = Vector3.Add(Ambient, Diffuse * Math.Max(Vector3.Dot(normal, lightDirection), 0f));
+								cr = (byte)Math.Min(255, color.R * colorMult.X);
+								cg = (byte)Math.Min(255, color.G * colorMult.Y);
+								cb = (byte)Math.Min(255, color.B * colorMult.Z);
+							}
 
 							Vector3 vxlPos = Vector3.Multiply(new Vector3(x, y, vx.Z), section.Scale);
 							RenderVoxel(vxlPos, ref mvp, cr, cg, cb);
@@ -222,6 +252,40 @@ namespace CNCMaps.Engine.Rendering {
 			}
 
 			return ret;
+		}
+
+		/// <summary>
+		/// Maps every voxel normal to the voxels.vpl lighting page the game would use,
+		/// for a given object facing. Blinn-Phong reflection model as reverse-engineered
+		/// by the WorldAlteringEditor project.
+		/// </summary>
+		byte[] PreCalculateVplLighting(Vector3[] normalsTable, float direction) {
+			float rotationFromFacing = MathHelper.TwoPi * direction / 256f;
+			Vector3 baseLight = _engine >= EngineType.RedAlert2 ? YRLight : TSLight;
+			Vector3 light = Vector3.TransformVector(baseLight, Matrix4.CreateRotationZ(rotationFromFacing - MathHelper.DegreesToRadians(45f)));
+
+			// halfway vector between light direction and view direction (Blinn-Phong)
+			Vector3 viewer = Vector3.UnitZ;
+			Vector3 halfway = Vector3.Normalize(light + viewer);
+
+			const float specularStrength = 3.0f; // constant used in YR
+
+			var pages = new byte[256];
+			for (int i = 0; i < normalsTable.Length; i++) {
+				float diffuse = Math.Max(Vector3.Dot(normalsTable[i], light), 0f);
+				float halfwayDot = Vector3.Dot(normalsTable[i], halfway);
+				float specular = halfwayDot / (specularStrength - halfwayDot * specularStrength + halfwayDot);
+				specular = Math.Max(specular, 0f);
+
+				pages[i] = (byte)Math.Clamp((diffuse + specular) * 16.0f, 0f, 255f);
+			}
+
+			// special normal indices are neutrally lit
+			pages[253] = 16;
+			pages[254] = 16;
+			pages[255] = 16;
+
+			return pages;
 		}
 
 		static readonly float[] zeroVector = { 0, 0, 0, 1 };

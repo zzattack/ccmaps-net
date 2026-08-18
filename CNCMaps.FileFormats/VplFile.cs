@@ -38,10 +38,17 @@ namespace CNCMaps.FileFormats {
 			_parsed = true;
 		}
 
-		public byte GetPaletteIndex(byte normal, byte maxNormal, byte color) {
+		public uint NumSections {
+			get {
+				if (!_parsed) Parse();
+				return _numSections;
+			}
+		}
+
+		/// <summary>Looks up the palette index for a color at the given lighting page.</summary>
+		public byte GetPaletteIndex(byte page, byte color) {
 			if (!_parsed) Parse();
-			int vplSection = (int)(Math.Min(normal, maxNormal - 1) * _numSections / maxNormal);
-			return _lookupSections[vplSection][color];
+			return _lookupSections[Math.Min(page, (int)_numSections - 1)][color];
 		}
 
 	}
