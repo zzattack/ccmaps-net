@@ -129,13 +129,8 @@ namespace CNCMaps.Engine.Rendering {
 		public void SavePNG(string path, int compressionLevel, Rectangle saveRect) {
 			logger.Info("Saving PNG to {0}, compression level {1}, clip @({2},{3};{4}x{5})",
 				path, compressionLevel, saveRect.Left, saveRect.Top, saveRect.Width, saveRect.Height);
-			var encoder = new PngEncoder {
-				CompressionLevel = (PngCompressionLevel)Math.Clamp(compressionLevel, 1, 9),
-				ColorType = PngColorType.Rgb,
-				// game graphics compress better and much faster without scanline filtering
-				FilterMethod = PngFilterMethod.None,
-			};
-			Save(path, saveRect, encoder);
+			saveRect.Intersect(new Rectangle(0, 0, Width, Height));
+			PngWriter.Save(path, _data, Width, BytesPerPixel, saveRect, compressionLevel);
 		}
 
 		public void SaveJPEG(string path, int compression, int left, int top, int width, int height) {
