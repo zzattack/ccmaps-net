@@ -98,6 +98,16 @@ namespace CNCMaps.Engine.Map {
 		public static void RecalculateVeinsSpread(IEnumerable<OverlayObject> ovls, TileLayer tiles) {
 			OverlayObject anyVeins = null;
 
+			// VEINHOLEDUMMY marks the cells covered by a veinhole monster; the game renders
+			// them as fully grown veins (its rules entry has IsVeins=true but points to a
+			// nonexistent image), so give these overlays the real veins drawable.
+			var veinsDrawable = ovls.Where(o => IsVeins(o) && !o.Drawable.IsVeinHoleMonster
+				&& (o.Drawable as ShpDrawable)?.Shp != null).Select(o => o.Drawable).FirstOrDefault();
+			if (veinsDrawable != null)
+				foreach (var o in ovls)
+					if (IsVeins(o) && !o.Drawable.IsVeinHoleMonster && (o.Drawable as ShpDrawable)?.Shp == null)
+						o.Drawable = veinsDrawable;
+
 			foreach (var o in ovls) {
 				if (IsVeins(o) && !o.Drawable.IsVeinHoleMonster && o.OverlayValue / 3 == 15)
 					o.IsGeneratedVeins = true;

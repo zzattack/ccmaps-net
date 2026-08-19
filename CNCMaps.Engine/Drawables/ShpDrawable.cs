@@ -42,6 +42,24 @@ namespace CNCMaps.Engine.Drawables {
 				_renderer.DrawShadow(obj, Shp, Props, ds);
 			_renderer.Draw(Shp, obj, this, Props, ds, Props.Cloakable ? 50 : 0);
 			Props.Offset -= onBridgeOffset;
+
+			if (IsVeinHoleMonster)
+				DrawSurroundingVeins(obj, ds);
+		}
+
+		// The veinhole monster's image spans its 3x3 foundation of VEINHOLEDUMMY cells, and the
+		// game draws those cells' fully grown veins on top of its dull background so the monster
+		// connects to the surrounding vein field. Half of those cells are drawn before this
+		// object, so repeat their veins here to guarantee they end up on top.
+		private void DrawSurroundingVeins(GameObject obj, DrawingSurface ds) {
+			if (obj.Tile?.Layer == null) return;
+			foreach (TileLayer.TileDirection dir in System.Enum.GetValues(typeof(TileLayer.TileDirection))) {
+				var neighbour = obj.Tile.Layer.GetNeighbourTile(obj.Tile, dir);
+				if (neighbour == null) continue;
+				foreach (var ovl in neighbour.AllObjects.OfType<OverlayObject>())
+					if (ovl.Drawable != null && ovl.Drawable.IsVeins && !ovl.Drawable.IsVeinHoleMonster)
+						ovl.Drawable.Draw(ovl, ds, false);
+			}
 		}
 
 		public override void DrawShadow(GameObject obj, DrawingSurface ds) {

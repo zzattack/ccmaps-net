@@ -422,9 +422,13 @@ namespace CNCMaps.Engine.Map {
 				else {
 					ShpDrawable drawable = (ShpDrawable)c.GetDrawable(obj);
 					if (drawable.Shp == null) {
-						obj.Tile.RemoveObject(obj);
-						_overlayObjects.Remove(obj);
-						_overlaysAltered = true;
+						// Image-less veins overlays (VEINHOLEDUMMY) are valid game objects; they
+						// receive the real veins drawable in RecalculateVeinsSpread.
+						if (!drawable.IsVeins) {
+							obj.Tile.RemoveObject(obj);
+							_overlayObjects.Remove(obj);
+							_overlaysAltered = true;
+						}
 					}
 					else {
 						drawable.Shp.Initialize();
