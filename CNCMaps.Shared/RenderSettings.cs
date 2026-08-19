@@ -19,6 +19,7 @@ namespace CNCMaps.Shared {
 		public int JPEGCompression { get; set; }
 		public string MixFilesDirectory { get; set; }
 		public string ModConfig { get; set; }
+		public string MetadataOutFile { get; set; }
 		public bool ShowHelp { get; set; }
 		public bool MarkOreFields { get; set; }
 		public bool IgnoreLighting { get; set; }
@@ -56,6 +57,7 @@ namespace CNCMaps.Shared {
 			OutputFile = "";
 			MixFilesDirectory = "";
 			ModConfig = "";
+			MetadataOutFile = "";
 			ThumbnailConfig = "";
 			SavePNGThumbnails = false;
 			SizeMode = SizeMode.Auto;
@@ -120,6 +122,7 @@ namespace CNCMaps.Shared {
 			Value<int>("--png-compression", "-c", "Set PNG compression level (1-9)", v => PNGQuality = v);
 			Value<string>("--mixdir", "-m", "Specify location of .mix files, read from registry if not specified (win only)", v => MixFilesDirectory = v);
 			Value<string>("--modconfig", "-M", "Filename of a game configuration specific to your mod (create with GUI)", v => ModConfig = v);
+			Value<string>("--meta-json", null, "Write resolved map metadata (name, engine, theater, size, start positions) as JSON to the given file", v => MetadataOutFile = v);
 			Flag("--mark-start-pos", null, "Mark starting positions", () => MarkStartPos = true);
 			Flag("--start-pos-squared", "-S", "Mark starting positions in a squared manner", () => StartPositionMarking = StartPositionMarking.Squared);
 			Flag("--start-pos-circled", null, "Mark starting positions in a circled manner", () => StartPositionMarking = StartPositionMarking.Circled);

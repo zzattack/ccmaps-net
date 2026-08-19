@@ -108,6 +108,7 @@ namespace CNCMaps.Engine {
 					MarkOreFields = _settings.MarkOreFields
 				};
 
+				string resolvedName = Path.GetFileNameWithoutExtension(_settings.InputFile);
 				using (var vfs = new VirtualFileSystem()) {
 					// first add the dirs, then load the extra mixes, then scan the dirs
 					foreach (string modDir in modConfig.Directories)
@@ -185,8 +186,7 @@ namespace CNCMaps.Engine {
 						map.DrawStartPositions();
 
 					// always resolve the map's proper name (pkt/csf lookup for official maps);
-					// it is logged as "Mapname found:" for consumers even when -o was given
-					string resolvedName;
+					// it is logged as "Mapname found:" and exported via --meta-json
 					try {
 						resolvedName = DetermineMapName(mapFile, _settings.Engine, vfs);
 					}
@@ -195,7 +195,7 @@ namespace CNCMaps.Engine {
 						resolvedName = Path.GetFileNameWithoutExtension(_settings.InputFile);
 					}
 					if (_settings.OutputFile == "")
-						_settings.OutputFile = resolvedName;
+						_settings.OutputFile = StripPlayersFromName(MakeValidFileName(resolvedName)).Replace("  ", " ");
 
 					if (_settings.OutputDir == "")
 						_settings.OutputDir = Path.GetDirectoryName(_settings.InputFile);
@@ -263,6 +263,9 @@ namespace CNCMaps.Engine {
 							Path.Combine(_settings.OutputDir, "thumb_" + _settings.OutputFile + ".png"), true);
 					}
 				}
+
+				if (!string.IsNullOrEmpty(_settings.MetadataOutFile))
+					WriteMetadataJson(_settings.MetadataOutFile, resolvedName, mapFile, map, saveRect);
 
 				if (_settings.GeneratePreviewPack || _settings.FixupTiles || _settings.FixOverlays ||
 					_settings.CompressTiles) {
@@ -411,8 +414,38 @@ namespace CNCMaps.Engine {
 			}
 		}
 
-		/// <summary>Gets the determine map name. </summary>
-		/// <returns>The filename to save the map as</returns>
+		/// <summary>
+		/// Writes the authoritatively resolved map properties as JSON, for consumers
+		/// like the web portal that would otherwise have to re-parse the map INI.
+		/// </summary>
+		private void WriteMetadataJson(string path, string resolvedName, MapFile mapFile, Map.Map map, Rectangle saveRect) {
+			try {
+				var basic = mapFile.GetSection("Basic");
+				var meta = new {
+					name = StripPlayersFromName(resolvedName).Replace("  ", " ").Trim(),
+					rawName = resolvedName,
+					basicName = basic?.ReadString("Name") ?? "",
+					official = basic?.ReadBool("Official") ?? false,
+					multiplayerOnly = basic?.ReadBool("MultiplayerOnly") ?? false,
+					engine = _settings.Engine.ToString(),
+					theater = map.TheaterType.ToString(),
+					fullSize = new { x = mapFile.FullSize.X, y = mapFile.FullSize.Y, width = mapFile.FullSize.Width, height = mapFile.FullSize.Height },
+					localSize = new { x = mapFile.LocalSize.X, y = mapFile.LocalSize.Y, width = mapFile.LocalSize.Width, height = mapFile.LocalSize.Height },
+					startPositions = mapFile.Waypoints.Count(w => w.Number < 8),
+					renderedWidth = saveRect.Width,
+					renderedHeight = saveRect.Height,
+				};
+				File.WriteAllText(path, System.Text.Json.JsonSerializer.Serialize(meta,
+					new System.Text.Json.JsonSerializerOptions { WriteIndented = true }));
+				_logger.Info("Wrote map metadata to {0}", path);
+			}
+			catch (Exception exc) {
+				_logger.Error("Failed writing metadata JSON: {0}", exc.Message);
+			}
+		}
+
+		/// <summary>Determines the map's proper name (raw, unsanitized).</summary>
+		/// <returns>The resolved map name</returns>
 		public string DetermineMapName(MapFile map, EngineType engine, VirtualFileSystem vfs) {
 			string fileNameWithoutExtension = Path.GetFileNameWithoutExtension(map.FileName);
 
@@ -420,7 +453,7 @@ namespace CNCMaps.Engine {
 			if (basic == null)
 				return fileNameWithoutExtension;
 			if (basic.ReadBool("Official") == false)
-				return StripPlayersFromName(MakeValidFileName(basic.ReadString("Name", fileNameWithoutExtension)));
+				return basic.ReadString("Name", fileNameWithoutExtension);
 
 			string mapExt = Path.GetExtension(_settings.InputFile);
 			string missionName = "";
@@ -582,7 +615,6 @@ namespace CNCMaps.Engine {
 				_logger.Info("Mapname found: {0}", mapName);
 			}
 
-			mapName = StripPlayersFromName(MakeValidFileName(mapName)).Replace("  ", " ");
 			return mapName;
 		}
 
