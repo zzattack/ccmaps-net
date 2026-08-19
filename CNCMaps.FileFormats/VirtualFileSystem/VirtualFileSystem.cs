@@ -88,6 +88,10 @@ namespace CNCMaps.FileFormats.VirtualFileSystem {
 			// virtual mix file
 			else if (FileExists(path)) {
 				var mx = Open(path, FileFormat.Mix) as MixFile;
+				if (mx == null) {
+					Logger.Warn("Could not open mix file {0} found in VFS", path);
+					return false;
+				}
 				AllArchives.Add(mx);
 				Logger.Trace("Added <VirtualMixFile> {0} to VFS", path);
 				return true;
@@ -232,7 +236,7 @@ namespace CNCMaps.FileFormats.VirtualFileSystem {
 
 		public void Reset() {
 			foreach (var arch in AllArchives)
-				arch.Dispose();
+				arch?.Dispose();
 			AllArchives.Clear();
 		}
 		public void Dispose() {
