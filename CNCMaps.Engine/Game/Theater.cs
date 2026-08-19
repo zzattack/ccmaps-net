@@ -69,15 +69,29 @@ namespace CNCMaps.Engine.Game {
 			Active = this;
 
 			// load palettes and additional mix files for this theater
+			var isoPal = _vfs.Open<PalFile>(ModConfig.ActiveTheater.IsoPaletteName);
+			var ovlPal = _vfs.Open<PalFile>(ModConfig.ActiveTheater.OverlayPaletteName);
+			var unitPal = _vfs.Open<PalFile>(ModConfig.ActiveTheater.UnitPaletteName);
+			if (isoPal == null || ovlPal == null || unitPal == null) {
+				Logger.Fatal("Theater palettes could not be loaded; the mix file directory does not appear to " +
+							"contain valid game data for this engine. Try specifying the engine type manually.");
+				return false;
+			}
+
 			_palettes = new PaletteCollection(_vfs);
-			_palettes.IsoPalette = new Palette(_vfs.Open<PalFile>(ModConfig.ActiveTheater.IsoPaletteName));
-			_palettes.OvlPalette = new Palette(_vfs.Open<PalFile>(ModConfig.ActiveTheater.OverlayPaletteName));
-			_palettes.UnitPalette = new Palette(_vfs.Open<PalFile>(ModConfig.ActiveTheater.UnitPaletteName), ModConfig.ActiveTheater.UnitPaletteName, true);
+			_palettes.IsoPalette = new Palette(isoPal);
+			_palettes.OvlPalette = new Palette(ovlPal);
+			_palettes.UnitPalette = new Palette(unitPal, ModConfig.ActiveTheater.UnitPaletteName, true);
 
 			foreach (string mix in ModConfig.ActiveTheater.Mixes)
 				_vfs.Add(mix, CacheMethod.Cache); // we wish for these to be cached as they're gonna be hit often
 
-			_palettes.AnimPalette = new Palette(_vfs.Open<PalFile>("anim.pal"));
+			var animPal = _vfs.Open<PalFile>("anim.pal");
+			if (animPal == null) {
+				Logger.Fatal("anim.pal could not be loaded; the mix file directory does not appear to contain valid game data.");
+				return false;
+			}
+			_palettes.AnimPalette = new Palette(animPal);
 
 			// voxels.vpl provides the game's voxel lighting lookup
 			Drawables.VoxelDrawable.VoxelRenderer.Configure(_vfs.Open<VplFile>("voxels.vpl"), _config.Engine);

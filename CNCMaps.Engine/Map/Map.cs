@@ -187,13 +187,13 @@ namespace CNCMaps.Engine.Map {
 				if (_config.Engine == EngineType.YurisRevenge) {
 					_rules = _vfs.Open<IniFile>("rulesmd.ini");
 				}
-				else if (_config.Engine == EngineType.Firestorm) {
-					_rules = _vfs.Open<IniFile>("rules.ini");
-					Logger.Info("Merging Firestorm rules with TS rules");
-					_rules.MergeWith(_vfs.Open<IniFile>("firestrm.ini"));
-				}
 				else {
 					_rules = _vfs.Open<IniFile>("rules.ini");
+					if (_rules != null && _config.Engine == EngineType.Firestorm) {
+						// total conversions may lack firestrm.ini; MergeWith tolerates null
+						Logger.Info("Merging Firestorm rules with TS rules");
+						_rules.MergeWith(_vfs.Open<IniFile>("firestrm.ini"));
+					}
 				}
 			}
 			else {
@@ -205,13 +205,13 @@ namespace CNCMaps.Engine.Map {
 				if (_config.Engine == EngineType.YurisRevenge) {
 					_art = _vfs.Open<IniFile>("artmd.ini");
 				}
-				else if (_config.Engine == EngineType.Firestorm) {
-					_art = _vfs.Open<IniFile>("art.ini");
-					Logger.Info("Merging Firestorm art with TS art");
-					_art.MergeWith(_vfs.Open<IniFile>("artfs.ini"));
-				}
 				else {
 					_art = _vfs.Open<IniFile>("art.ini");
+					if (_art != null && _config.Engine == EngineType.Firestorm) {
+						// total conversions may lack artfs.ini; MergeWith tolerates null
+						Logger.Info("Merging Firestorm art with TS art");
+						_art.MergeWith(_vfs.Open<IniFile>("artfs.ini"));
+					}
 				}
 			}
 			else {
@@ -219,8 +219,8 @@ namespace CNCMaps.Engine.Map {
 			}
 
 			if (_rules == null || _art == null) {
-				Logger.Fatal("Rules or art config file could not be loaded! You cannot render a YR/FS map" +
-							" without the expansion installed");
+				Logger.Fatal("Rules or art config file could not be loaded! Verify that the mix file directory " +
+							"is correct and that any required expansion is installed.");
 				return false;
 			}
 			return true;
@@ -228,9 +228,16 @@ namespace CNCMaps.Engine.Map {
 
 		private IniFile LoadCustomInis(List<string> fileNames) {
 			IniFile ini = _vfs.Open<IniFile>(fileNames[0]);
+			if (ini == null) {
+				Logger.Error("Custom ini file {0} could not be loaded", fileNames[0]);
+				return null;
+			}
 			for (int i = 1; i < fileNames.Count; i++) {
 				Logger.Info("Merging " + fileNames[i] + " with " + fileNames[0]);
-				ini.MergeWith(_vfs.Open<IniFile>(fileNames[i]));
+				var extra = _vfs.Open<IniFile>(fileNames[i]);
+				if (extra == null)
+					Logger.Warn("Custom ini file {0} could not be loaded, skipping", fileNames[i]);
+				ini.MergeWith(extra);
 			}
 			return ini;
 		}
