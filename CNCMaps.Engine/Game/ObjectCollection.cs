@@ -114,6 +114,13 @@ namespace CNCMaps.Engine.Game {
 					drawable.Props.PaletteType = cfgOverride.Palette;
 					drawable.Props.CustomPaletteName = cfgOverride.CustomPaletteFile;
 				}
+
+				if (!string.IsNullOrWhiteSpace(cfgOverride.FrameDeciderCode)) {
+					if (FrameDeciders.TryParseFrameDeciderCode(cfgOverride.FrameDeciderCode, out var decider))
+						drawable.Props.FrameDecider = decider;
+					else
+						Logger.Warn("Unsupported FrameDeciderCode \"{0}\" in mod config ignored", cfgOverride.FrameDeciderCode);
+				}
 			}
 		}
 

@@ -418,6 +418,7 @@ namespace CNCMaps.Shared {
 			Palette = PaletteType.Default;
 			CustomPaletteFile = "";
 			Lighting = LightingType.Default;
+			FrameDeciderCode = "";
 		}
 
 		[Id(1, 1)]
@@ -445,6 +446,10 @@ namespace CNCMaps.Shared {
 		public LightingType Lighting { get; set; }
 
 		[Id(7, 1)]
+		[Description("Frame decider expression of the form \"frame = (obj as OwnableObject).Direction * a / b + c\". Only this linear form is supported.")]
+		public string FrameDeciderCode { get; set; }
+
+		[Id(8, 1)]
 		[Description("Priority of this override entry. Lower values indicate higher priority.")]
 		public int Priority { get; set; }
 

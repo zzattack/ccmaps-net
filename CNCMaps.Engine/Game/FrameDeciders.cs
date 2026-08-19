@@ -83,6 +83,33 @@ namespace CNCMaps.Engine.Game {
 			else return 0;
 		};
 
+		/// <summary>
+		/// Parses a mod config FrameDeciderCode expression. Historic mod configs (e.g. DTA's) contain a
+		/// C# snippet that older releases compiled at runtime; only its linear form
+		/// "frame = (obj as OwnableObject).Direction * a / b + c" is supported, with each of the
+		/// three terms optional.
+		/// </summary>
+		public static bool TryParseFrameDeciderCode(string code, out Func<GameObject, int> decider) {
+			decider = null;
+			if (string.IsNullOrWhiteSpace(code))
+				return false;
+			var match = System.Text.RegularExpressions.Regex.Match(code.Trim(),
+				@"^frame\s*=\s*\(\s*obj\s+as\s+OwnableObject\s*\)\s*\.\s*Direction" +
+				@"(?:\s*\*\s*(?<mul>\d+))?(?:\s*/\s*(?<div>\d+))?(?:\s*\+\s*(?<add>\d+))?\s*;?$");
+			if (!match.Success)
+				return false;
+			int mul = match.Groups["mul"].Success ? int.Parse(match.Groups["mul"].Value) : 1;
+			int div = match.Groups["div"].Success ? int.Parse(match.Groups["div"].Value) : 1;
+			int add = match.Groups["add"].Success ? int.Parse(match.Groups["add"].Value) : 0;
+			if (div == 0)
+				return false;
+			decider = delegate (GameObject obj) {
+				int direction = (obj is OwnableObject) ? (obj as OwnableObject).Direction : 0;
+				return direction * mul / div + add;
+			};
+			return true;
+		}
+
 		public static Func<GameObject, int> NullFrameDecider = arg => 0;
 
 		public static Func<GameObject, int> AlphaImageFrameDecider(ShpFile shp) {
