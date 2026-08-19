@@ -652,7 +652,7 @@ namespace CNCMaps.Engine.Map {
 					delta1 = -1; delta2 = 3;
 					break;
 			}
-			foreach (var w in _wayPoints.Where(w => w.Number < 8)) {
+			foreach (var w in _wayPoints.Where(w => w.Tile != null && w.Number < 8)) {
 				for (int x = w.Tile.Rx + delta1; x < w.Tile.Rx + delta2; x++) {
 					for (int y = w.Tile.Ry + delta1; y < w.Tile.Ry + delta2; y++) {
 						MapTile t = _tiles.GetTileR(x, y);
@@ -693,8 +693,9 @@ namespace CNCMaps.Engine.Map {
 		}
 
 		private void DrawStartMarkersBittah(SixLabors.ImageSharp.Image<Bgr24> canvas, Rectangle fullImage, Rectangle previewImage) {
-			foreach (var w in _wayPoints.Where(w => w.Number < 8)) {
+			foreach (var w in _wayPoints.Where(w => w.Tile != null && w.Number < 8)) {
 				var t = _tiles.GetTile(w.Tile);
+				if (t == null) continue;
 				var center = new Point(t.Dx * _config.TileWidth / 2, (t.Dy - t.Z) * _config.TileHeight / 2);
 				// project to preview dimensions
 				double pctFullX = (center.X - fullImage.Left) / (double)fullImage.Width;
@@ -711,8 +712,9 @@ namespace CNCMaps.Engine.Map {
 		}
 
 		private void DrawStartMarkersAro(SixLabors.ImageSharp.Image<Bgr24> canvas, Rectangle fullImage, Rectangle previewImage) {
-			foreach (var w in _wayPoints.Where(w => w.Number < 8)) {
+			foreach (var w in _wayPoints.Where(w => w.Tile != null && w.Number < 8)) {
 				var t = _tiles.GetTile(w.Tile);
+				if (t == null) continue;
 				var center = new Point(t.Dx * _config.TileWidth / 2, (t.Dy - t.Z) * _config.TileHeight / 2);// TileLayer.GetTilePixelCenter(w.Tile);
 																											  // project to preview dimensions
 				double pctFullX = (center.X - fullImage.Left) / (double)fullImage.Width;
