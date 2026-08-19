@@ -184,8 +184,18 @@ namespace CNCMaps.Engine {
 												   _settings.StartPositionMarking == StartPositionMarking.Starred))
 						map.DrawStartPositions();
 
+					// always resolve the map's proper name (pkt/csf lookup for official maps);
+					// it is logged as "Mapname found:" for consumers even when -o was given
+					string resolvedName;
+					try {
+						resolvedName = DetermineMapName(mapFile, _settings.Engine, vfs);
+					}
+					catch (Exception exc) {
+						_logger.Warn("Could not determine map name: {0}", exc.Message);
+						resolvedName = Path.GetFileNameWithoutExtension(_settings.InputFile);
+					}
 					if (_settings.OutputFile == "")
-						_settings.OutputFile = DetermineMapName(mapFile, _settings.Engine, vfs);
+						_settings.OutputFile = resolvedName;
 
 					if (_settings.OutputDir == "")
 						_settings.OutputDir = Path.GetDirectoryName(_settings.InputFile);
@@ -407,6 +417,8 @@ namespace CNCMaps.Engine {
 			string fileNameWithoutExtension = Path.GetFileNameWithoutExtension(map.FileName);
 
 			IniFile.IniSection basic = map.GetSection("Basic");
+			if (basic == null)
+				return fileNameWithoutExtension;
 			if (basic.ReadBool("Official") == false)
 				return StripPlayersFromName(MakeValidFileName(basic.ReadString("Name", fileNameWithoutExtension)));
 
