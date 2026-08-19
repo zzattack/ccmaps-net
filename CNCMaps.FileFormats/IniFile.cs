@@ -414,7 +414,12 @@ namespace CNCMaps.FileFormats {
 		}
 
 		public void Save(string filename) {
-			var sw = new StreamWriter(filename, false, Encoding.Default, 64 * 1024);
+			using (var fs = new FileStream(filename, FileMode.Create, FileAccess.Write))
+				Save(fs);
+		}
+
+		public void Save(Stream stream) {
+			var sw = new StreamWriter(stream, Encoding.Default, 64 * 1024, leaveOpen: true);
 			foreach (var section in Sections) {
 				if (section.Name == "#include" && section.OrderedEntries.Count == 0)
 					continue;

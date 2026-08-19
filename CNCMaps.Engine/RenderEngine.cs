@@ -64,6 +64,8 @@ namespace CNCMaps.Engine {
 				}
 				else {
 					vmapFile = new VirtualFile(mapStream, Path.GetFileName(_settings.InputFile), true);
+					vmapFile = ResolveIniInheritance(vmapFile,
+						Path.GetDirectoryName(Path.GetFullPath(_settings.InputFile)));
 				}
 				var mapFile = new MapFile(vmapFile, Path.GetFileName(_settings.InputFile));
 
@@ -282,6 +284,43 @@ namespace CNCMaps.Engine {
 				return EngineResult.Exception;
 			}
 			return EngineResult.RenderedOk;
+		}
+
+		/// <summary>
+		/// Resolves the CnCNet client's [INISystem]BasedOn map inheritance (used by e.g. DTA and
+		/// TI for difficulty variants): the referenced base map, resolved from the same directory,
+		/// is loaded first and the derived map's sections are merged on top of it.
+		/// </summary>
+		private VirtualFile ResolveIniInheritance(VirtualFile vmapFile, string mapDir) {
+			var ini = new IniFile(vmapFile, vmapFile.FileName, 0, vmapFile.Length);
+			if (ini.GetSection("INISystem")?.ReadString("BasedOn") is not { Length: > 0 }) {
+				vmapFile.Position = 0;
+				return vmapFile;
+			}
+
+			IniFile Resolve(IniFile derived, int depth) {
+				string basedOn = derived.GetSection("INISystem")?.ReadString("BasedOn");
+				if (string.IsNullOrEmpty(basedOn) || depth > 8)
+					return derived;
+				string basePath = Path.Combine(mapDir ?? "", basedOn);
+				if (!File.Exists(basePath)) {
+					_logger.Warn("Map is based on \"{0}\" but that file was not found next to it", basedOn);
+					return derived;
+				}
+				_logger.Info("Merging map with its base map {0}", basedOn);
+				var baseStream = File.Open(basePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+				var baseIni = new IniFile(baseStream, Path.GetFileName(basePath), 0, baseStream.Length);
+				baseIni = Resolve(baseIni, depth + 1);
+				baseIni.GetOrCreateSection("INISystem").Clear();
+				baseIni.MergeWith(derived);
+				return baseIni;
+			}
+
+			var merged = Resolve(ini, 0);
+			var ms = new MemoryStream();
+			merged.Save(ms);
+			ms.Position = 0;
+			return new VirtualFile(ms, vmapFile.FileName, 0, ms.Length, true);
 		}
 
 		private static void InitLoggerConfig() {

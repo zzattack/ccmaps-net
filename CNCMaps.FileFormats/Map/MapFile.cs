@@ -43,6 +43,10 @@ namespace CNCMaps.FileFormats.Map {
 
 		public void Initialize() {
 			var map = GetSection("Map");
+			if (map == null)
+				throw new InvalidDataException(
+					"Map file has no [Map] section. If it uses [INISystem]BasedOn inheritance, " +
+					"the base map file must be present next to it.");
 			string[] size = map.ReadString("Size").Split(',');
 			FullSize = new Rectangle(int.Parse(size[0]), int.Parse(size[1]), int.Parse(size[2]), int.Parse(size[3]));
 			Tiles = new TileLayer(FullSize.Width, FullSize.Height);
