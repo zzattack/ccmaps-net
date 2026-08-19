@@ -218,6 +218,8 @@ namespace CNCMaps.Engine.Game {
 		}
 
 		public string ApplyNewTheaterIfNeeded(string artName, string imageFileName) {
+			if (artName.Length < 2 || imageFileName.Length < 2)
+				return imageFileName;
 			if (_config.Engine <= EngineType.Firestorm) {
 				// the tag will only work if the ID for the object starts with either G, N or C and its second letter is A (for Arctic/Snow theater) or T (for Temperate theater)
 				if (new[] { 'G', 'N', 'C' }.Contains(artName[0]) && new[] { 'A', 'T' }.Contains(artName[1]))
