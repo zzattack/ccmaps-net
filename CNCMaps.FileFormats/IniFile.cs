@@ -16,6 +16,9 @@ namespace CNCMaps.FileFormats {
 		public List<IniSection> Sections { get; set; }
 		public IniSection CurrentSection { get; set; }
 
+		// section names repeat in some inis; the first one wins, matching a linear search
+		private readonly Dictionary<string, IniSection> _sectionsByName = new Dictionary<string, IniSection>();
+
 		static Logger logger = LogManager.GetCurrentClassLogger();
 
 		public IniFile(Stream baseStream, string filename, int baseOffset, long fileSize, bool isBuffered = true)
@@ -25,11 +28,18 @@ namespace CNCMaps.FileFormats {
 		}
 
 		public IniSection GetSection(string sectionName) {
-			return Sections.Find(x => x.Name == sectionName);
+			IniSection ret;
+			return _sectionsByName.TryGetValue(sectionName, out ret) ? ret : null;
+		}
+
+		private void AddSection(IniSection section) {
+			section.File = this;
+			if (!_sectionsByName.ContainsKey(section.Name))
+				_sectionsByName[section.Name] = section;
 		}
 
 		public IniSection GetOrCreateSection(string sectionName, string insertAfter = null) {
-			var ret = Sections.Find(x => x.Name == sectionName);
+			var ret = GetSection(sectionName);
 			if (ret == null) {
 				int insertIdx = (insertAfter != null) ? Sections.FindIndex(section => section.Name == insertAfter) : -1;
 
@@ -45,6 +55,7 @@ namespace CNCMaps.FileFormats {
 					Sections.Add(ret);
 					ret.Index = Sections.Count;
 				}
+				AddSection(ret);
 			}
 			return ret;
 		}
@@ -80,6 +91,7 @@ namespace CNCMaps.FileFormats {
 				var iniSection = new IniSection(sectionName, Sections.Count);
 				logger.Trace("Loading ini section {0}", sectionName);
 				Sections.Add(iniSection);
+				AddSection(iniSection);
 				CurrentSection = iniSection;
 			}
 			else if (CurrentSection != null) {
@@ -90,7 +102,7 @@ namespace CNCMaps.FileFormats {
 
 		void SetCurrentSection(string sectionName) {
 			logger.Trace("Changing current section to {0}", sectionName);
-			CurrentSection = Sections.Find(x => x.Name == sectionName);
+			CurrentSection = GetSection(sectionName);
 		}
 
 		public void SetCurrentSection(IniSection section) {
@@ -119,6 +131,7 @@ namespace CNCMaps.FileFormats {
 		public class IniSection {
 			public int Index { get; set; }
 			public string Name { get; set; }
+			public IniFile File { get; set; }
 
 			public class IniValue {
 				private string value;
@@ -251,12 +264,27 @@ namespace CNCMaps.FileFormats {
 				else return defaultValue;
 			}
 
+			// TS mods chain object definitions with BaseSection: a section inherits every key it does
+			// not set itself from the section it names. The depth cap breaks accidental cycles.
+			private const int MaxInheritanceDepth = 8;
+
 			public string ReadString(string key, string defaultValue = "") {
 				IniValue ret;
-				if (SortedEntries.TryGetValue(key, out ret))
-					return ret;
-				else
-					return defaultValue;
+				var section = this;
+				for (int depth = 0; section != null && depth <= MaxInheritanceDepth; depth++) {
+					if (section.SortedEntries.TryGetValue(key, out ret))
+						return ret;
+					section = section.GetBaseSection();
+				}
+				return defaultValue;
+			}
+
+			private IniSection GetBaseSection() {
+				IniValue baseName;
+				if (File == null || !SortedEntries.TryGetValue("BaseSection", out baseName))
+					return null;
+				var baseSection = File.GetSection(baseName);
+				return baseSection == this ? null : baseSection;
 			}
 
 			public int ReadInt(string key, int defaultValue = 0) {
