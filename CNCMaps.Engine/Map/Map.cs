@@ -624,8 +624,15 @@ namespace CNCMaps.Engine.Map {
 							radius = FullSize.Width * _config.TileWidth / 2 / 133 / 3;
 
 						int h = radius, w = radius;
-						for (int drawY = destY - h / 2; drawY < destY + h; drawY++) {
-							for (int drawX = destX - w / 2; drawX < destX + w; drawX++) {
+						// Cells at the map edge put part of the marker outside the
+						// surface; these are raw pointer writes, so clamp rather than
+						// rely on the catch below, which pointer stores never trigger.
+						int yStart = Math.Max(0, destY - h / 2);
+						int yEnd = Math.Min(_drawingSurface.Height, destY + h);
+						int xStart = Math.Max(0, destX - w / 2);
+						int xEnd = Math.Min(_drawingSurface.Width, destX + w);
+						for (int drawY = yStart; drawY < yEnd; drawY++) {
+							for (int drawX = xStart; drawX < xEnd; drawX++) {
 								byte* p = (byte*)_drawingSurface.BitmapData.Scan0 + drawY * _drawingSurface.BitmapData.Stride + 3 * drawX;
 								*p++ = 0x88;
 								*p++ = 0xFF;
