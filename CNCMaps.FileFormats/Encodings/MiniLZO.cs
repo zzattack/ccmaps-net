@@ -64,6 +64,16 @@ using System;
 
 namespace CNCMaps.FileFormats.Encodings {
 	public static class MiniLZO {
+		/// <summary>A corrupt stream tried to write past the caller's buffer.</summary>
+		public const int LZO_E_OUTPUT_OVERRUN = -5;
+		/// <summary>A match referenced data from before the start of the output.</summary>
+		public const int LZO_E_LOOKBEHIND_OVERRUN = -6;
+		/// <summary>
+		/// Bytes of headroom a decompression buffer must have past its logical size:
+		/// runs are copied 4 bytes at a time and may overshoot the end by up to 3.
+		/// </summary>
+		public const int LZO_OUT_SLACK = 8;
+
 
 		unsafe static uint lzo1x_1_compress_core(byte* @in, uint in_len, byte* @out, ref uint out_len, uint ti, void* wrkmem) {
 			byte* ip;
@@ -254,12 +264,23 @@ namespace CNCMaps.FileFormats.Encodings {
 			return 0;
 		}
 
-		public unsafe static int lzo1x_decompress(byte* @in, uint in_len, byte* @out, ref uint out_len, void* wrkmem) {
+		/// <summary>
+		/// Decompress <paramref name="in"/> into <paramref name="out"/>, refusing to write
+		/// more than <paramref name="out_cap"/> bytes. Map files are untrusted input and a
+		/// corrupt stream would otherwise run straight off the end of the buffer, so every
+		/// run is checked against the limit before it is copied.
+		///
+		/// The caller must still leave a few bytes of slack past out_cap: literal and match
+		/// runs are copied 4 bytes at a time and may legitimately overshoot the logical end
+		/// by up to 3 bytes (see LZO_OUT_SLACK).
+		/// </summary>
+		public unsafe static int lzo1x_decompress(byte* @in, uint in_len, byte* @out, ref uint out_len, void* wrkmem, uint out_cap) {
 			byte* op;
 			byte* ip;
 			uint t;
 			byte* m_pos;
 			byte* ip_end = @in + in_len;
+			byte* op_end = @out + out_cap;
 			out_len = 0;
 			op = @out;
 			ip = @in;
@@ -268,9 +289,11 @@ namespace CNCMaps.FileFormats.Encodings {
 			if (*ip > 17) {
 				t = (uint)(*ip++ - 17);
 				if (t < 4) {
+					if (op + t > op_end) goto output_overrun;
 					match_next(ref op, ref ip, ref t);
 				}
 				else {
+					if (op + t > op_end) goto output_overrun;
 					do *op++ = *ip++; while (--t > 0);
 					gt_first_literal_run = true;
 				}
@@ -291,6 +314,7 @@ namespace CNCMaps.FileFormats.Encodings {
 					}
 					t += (uint)(15 + *ip++);
 				}
+				if (op + t + 3 > op_end) goto output_overrun;
 				*(uint*)op = *(uint*)ip;
 				op += 4; ip += 4;
 				if (--t > 0) {
@@ -311,7 +335,8 @@ namespace CNCMaps.FileFormats.Encodings {
 				m_pos = op - (1 + 0x0800);
 				m_pos -= t >> 2;
 				m_pos -= *ip++ << 2;
-
+				if (m_pos < @out) goto lookbehind_overrun;
+				if (op + 3 > op_end) goto output_overrun;
 				*op++ = *m_pos++; *op++ = *m_pos++; *op++ = *m_pos;
 				gt_match_done = true;
 
@@ -327,7 +352,8 @@ namespace CNCMaps.FileFormats.Encodings {
 						m_pos -= (t >> 2) & 7;
 						m_pos -= *ip++ << 3;
 						t = (t >> 5) - 1;
-
+						if (m_pos < @out) goto lookbehind_overrun;
+						if (op + t + 2 > op_end) goto output_overrun;
 						copy_match(ref op, ref m_pos, ref t);
 						goto match_done;
 					}
@@ -365,10 +391,14 @@ namespace CNCMaps.FileFormats.Encodings {
 						m_pos = op - 1;
 						m_pos -= t >> 2;
 						m_pos -= *ip++ << 2;
+						if (m_pos < @out) goto lookbehind_overrun;
+						if (op + 2 > op_end) goto output_overrun;
 						*op++ = *m_pos++; *op++ = *m_pos;
 						goto match_done;
 					}
 
+					if (m_pos < @out) goto lookbehind_overrun;
+					if (op + t + 5 > op_end) goto output_overrun;
 					if (t >= 2 * 4 - (3 - 1) && (op - m_pos) >= 4) {
 						*(uint*)op = *(uint*)m_pos;
 						op += 4; m_pos += 4; t -= 4 - (3 - 1);
@@ -388,6 +418,7 @@ namespace CNCMaps.FileFormats.Encodings {
 					if (t == 0)
 						break;
 					// match_next:
+					if (op + t > op_end) goto output_overrun;
 					*op++ = *ip++;
 					if (t > 1) { *op++ = *ip++; if (t > 2) { *op++ = *ip++; } }
 					t = *ip++;
@@ -398,6 +429,14 @@ namespace CNCMaps.FileFormats.Encodings {
 			out_len = ((uint)((op) - (@out)));
 			return (ip == ip_end ? 0 :
 				   (ip < ip_end ? (-8) : (-4)));
+
+		output_overrun:
+			out_len = ((uint)((op) - (@out)));
+			return LZO_E_OUTPUT_OVERRUN;
+
+		lookbehind_overrun:
+			out_len = ((uint)((op) - (@out)));
+			return LZO_E_LOOKBEHIND_OVERRUN;
 		}
 
 		private static unsafe void match_next(ref byte* op, ref byte* ip, ref uint t) {
@@ -415,14 +454,19 @@ namespace CNCMaps.FileFormats.Encodings {
 		public static unsafe byte[] Decompress(byte[] @in, byte[] @out) {
 			uint out_len = 0;
 			fixed (byte* @pIn = @in, wrkmem = new byte[IntPtr.Size * 16384], pOut = @out) {
-				lzo1x_decompress(pIn, (uint)@in.Length, @pOut, ref @out_len, wrkmem);
+				lzo1x_decompress(pIn, (uint)@in.Length, @pOut, ref @out_len, wrkmem,
+					(uint)Math.Max(0, @out.Length - LZO_OUT_SLACK));
 			}
 			return @out;
 		}
 
-		public static unsafe void Decompress(byte* r, uint size_in, byte* w, ref uint size_out) {
+		/// <summary>
+		/// Decompress into a buffer that holds at least size_out + LZO_OUT_SLACK bytes.
+		/// Returns the lzo1x status: 0 on success, negative on a corrupt stream.
+		/// </summary>
+		public static unsafe int Decompress(byte* r, uint size_in, byte* w, ref uint size_out) {
 			fixed (byte* wrkmem = new byte[IntPtr.Size * 16384]) {
-				lzo1x_decompress(r, size_in, w, ref size_out, wrkmem);
+				return lzo1x_decompress(r, size_in, w, ref size_out, wrkmem, size_out);
 			}
 		}
 

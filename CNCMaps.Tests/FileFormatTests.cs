@@ -62,6 +62,53 @@ namespace CNCMaps.Tests {
 			Format5.DecodeInto(encoded, decoded, format);
 			Assert.Equal(data, decoded);
 		}
+
+		/// <summary>
+		/// Map files are untrusted input and some in the wild are malformed. Before
+		/// the chunk headers were validated, a chunk claiming more output than the
+		/// destination held ran the LZO decompressor off the end of the buffer and
+		/// killed the process with an AccessViolationException.
+		/// </summary>
+		[Fact]
+		public void DecodeInto_ChunkLargerThanDestination_DoesNotOverrun() {
+			var data = new byte[20_000];
+			Array.Fill(data, (byte)3);
+			var encoded = Format5.Encode(data, 5);
+
+			var tooSmall = new byte[500];
+			uint written = Format5.DecodeInto(encoded, tooSmall, 5);
+
+			Assert.True(written <= tooSmall.Length);
+		}
+
+		[Fact]
+		public void DecodeInto_TruncatedStream_StopsCleanly() {
+			var data = new byte[20_000];
+			Array.Fill(data, (byte)9);
+			var encoded = Format5.Encode(data, 5);
+
+			foreach (int keep in new[] { 1, 2, 3, 4, 5, 17, encoded.Length / 2, encoded.Length - 1 }) {
+				var truncated = encoded.Take(keep).ToArray();
+				var decoded = new byte[data.Length];
+				uint written = Format5.DecodeInto(truncated, decoded, 5);
+				Assert.True(written <= decoded.Length);
+			}
+		}
+
+		[Fact]
+		public void DecodeInto_GarbageChunkBody_StopsCleanly() {
+			var rnd = new Random(7);
+			var garbage = new byte[8192];
+			rnd.NextBytes(garbage);
+			// plausible header, nonsense payload
+			garbage[0] = 0x00; garbage[1] = 0x10;   // size_in  = 4096
+			garbage[2] = 0x00; garbage[3] = 0x20;   // size_out = 8192
+
+			var decoded = new byte[8192];
+			uint written = Format5.DecodeInto(garbage, decoded, 5);
+
+			Assert.True(written <= decoded.Length);
+		}
 	}
 
 	public class IniFileTests {
