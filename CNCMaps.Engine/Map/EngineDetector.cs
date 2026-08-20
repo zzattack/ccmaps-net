@@ -28,23 +28,24 @@ namespace CNCMaps.Engine.Map {
 		}
 
 		private static readonly object CacheLock = new object();
-		private static readonly Dictionary<(string dir, EngineType engine, TheaterType theater), ProbeContext> ProbeCache
+		private static readonly Dictionary<(string dirs, EngineType engine, TheaterType theater), ProbeContext> ProbeCache
 			= new Dictionary<(string, EngineType, TheaterType), ProbeContext>();
 
 		/// <summary>Preloads the probe contexts for all engines available in a mix
 		/// directory, so later detections only need to score. Optional; detection
 		/// fills the cache on demand as well.</summary>
-		public static void Preload(string mixDir, TheaterType theater) {
+		public static void Preload(IReadOnlyList<string> mixDirs, TheaterType theater) {
 			foreach (var engine in new[] { EngineType.RedAlert2, EngineType.YurisRevenge, EngineType.TiberianSun, EngineType.Firestorm })
-				GetProbeContext(mixDir, engine, theater);
+				GetProbeContext(mixDirs, engine, theater);
 		}
 
-		private static ProbeContext GetProbeContext(string mixDir, EngineType engine, TheaterType theater) {
-			string dir = !string.IsNullOrEmpty(mixDir) ? mixDir
-				: engine <= EngineType.Firestorm ? VirtualFileSystem.TSInstallDir : VirtualFileSystem.RA2InstallDir;
-			if (dir == null || !Directory.Exists(dir)) return null;
+		private static ProbeContext GetProbeContext(IReadOnlyList<string> mixDirs, EngineType engine, TheaterType theater) {
+			var dirs = (mixDirs != null && mixDirs.Count > 0 ? mixDirs
+				: new[] { engine <= EngineType.Firestorm ? VirtualFileSystem.TSInstallDir : VirtualFileSystem.RA2InstallDir })
+				.Where(d => d != null && Directory.Exists(d)).ToList();
+			if (dirs.Count == 0) return null;
 
-			var key = (Path.GetFullPath(dir).ToLowerInvariant(), engine, theater);
+			var key = (string.Join("|", dirs.Select(d => Path.GetFullPath(d).ToLowerInvariant())), engine, theater);
 			lock (CacheLock) {
 				if (ProbeCache.TryGetValue(key, out var cached))
 					return cached;
@@ -52,7 +53,9 @@ namespace CNCMaps.Engine.Map {
 
 			var ctx = new ProbeContext();
 			var vfs = new VirtualFileSystem();
-			vfs.LoadMixes(dir, engine);
+			foreach (string dir in dirs)
+				vfs.Add(dir);
+			vfs.LoadMixes(engine);
 			ctx.Vfs = vfs;
 
 			// cache.mix and local.mix exist under the same names in both the TS and RA2 games, so
@@ -63,7 +66,7 @@ namespace CNCMaps.Engine.Map {
 				? (engine == EngineType.YurisRevenge ? "ra2md.mix" : "ra2.mix") : "tibsun.mix";
 			bool anyMainMix = vfs.FileExists("ra2.mix") || vfs.FileExists("ra2md.mix") || vfs.FileExists("tibsun.mix");
 			if (anyMainMix && !vfs.FileExists(mainMix)) {
-				Logger.Debug("Skipping {0} probe: {1} not present in mix directory", engine, mainMix);
+				Logger.Debug("Skipping {0} probe: {1} not present in mix directories", engine, mainMix);
 				lock (CacheLock) {
 					ProbeCache[key] = null;
 				}
@@ -107,7 +110,7 @@ namespace CNCMaps.Engine.Map {
 
 		/// <summary>Detect map type.</summary>
 		/// <returns>The engine to be used to render this map.</returns>
-		public static EngineType DetectEngineType(MapFile mf, string mixDir = null, string inputFile = null) {
+		public static EngineType DetectEngineType(MapFile mf, IReadOnlyList<string> mixDirs = null, string inputFile = null) {
 			TheaterType theater = Theater.TheaterTypeFromString(mf.ReadString("Map", "Theater"));
 
 			// FinalAlert2 extensions identify the target game (.mpr = RA2, .yrm/.yro = YR), while
@@ -124,7 +127,7 @@ namespace CNCMaps.Engine.Map {
 				: new[] { EngineType.RedAlert2, EngineType.YurisRevenge, EngineType.TiberianSun, EngineType.Firestorm };
 			var scores = new double[order.Length];
 			for (int i = 0; i < order.Length; i++) {
-				var ctx = GetProbeContext(mixDir, order[i], theater);
+				var ctx = GetProbeContext(mixDirs, order[i], theater);
 				scores[i] = ctx == null ? 0.0 : PercentageObjectsKnown(mf, ctx);
 				Logger.Debug("Engine {0} scores {1:P1}", order[i], scores[i]);
 				if (scores[i] == 1.0) {

@@ -644,7 +644,7 @@ namespace CNCMaps.GUI {
 			if (ckbModConfig.Checked)
 				rs.ModConfig = tbModConfig.Text;
 			else if (!string.IsNullOrWhiteSpace(tbMixDir.Text) && tbMixDir.Text != FindMixDir(rbEngineAuto.Checked || rbEngineRA2.Checked || rbEngineYR.Checked))
-				rs.MixFilesDirectory = tbMixDir.Text;
+				rs.MixFilesDirectories.Add(tbMixDir.Text);
 
 			rs.MarkOreFields = cbEmphasizeOre.Checked;
 

@@ -73,7 +73,7 @@ namespace CNCMaps.Tests {
 				InputFile = mapCopy,
 				OutputDir = outDir,
 				OutputFile = "render",
-				MixFilesDirectory = MixDir,
+				MixFilesDirectories = { MixDir },
 				SavePNG = true,
 			};
 			configure?.Invoke(settings);
@@ -185,7 +185,7 @@ namespace CNCMaps.Tests {
 				InputFile = modMap,
 				OutputDir = outDir,
 				OutputFile = "render",
-				MixFilesDirectory = MixDir,
+				MixFilesDirectories = { MixDir },
 				SavePNG = true,
 			};
 			var engine = new RenderEngine();
@@ -201,7 +201,7 @@ namespace CNCMaps.Tests {
 		[GoldenFact]
 		public void EngineDetection_DetectsCorrectEngines() {
 			foreach (var (map, expected) in new[] { ("mp22s8.map", EngineType.RedAlert2), ("hillbtwn.map", EngineType.YurisRevenge), ("austintx.map", EngineType.YurisRevenge) }) {
-				var detected = Detect(map, MixDir);
+				var detected = Detect(map, new[] { MixDir });
 				Assert.Equal(expected, detected);
 			}
 		}
@@ -210,22 +210,22 @@ namespace CNCMaps.Tests {
 		public void EngineDetection_YrmExtensionBreaksTie() {
 			// mp22s8 uses only RA2-era objects, so RA2 and YR both score a perfect 1.0 and probe
 			// order decides. The FinalAlert2 YR extension must hand the tie to YR.
-			Assert.Equal(EngineType.RedAlert2, Detect("mp22s8.map", MixDir));
-			Assert.Equal(EngineType.YurisRevenge, Detect("mp22s8.map", MixDir, mapName: "mp22s8.yrm"));
+			Assert.Equal(EngineType.RedAlert2, Detect("mp22s8.map", new[] { MixDir }));
+			Assert.Equal(EngineType.YurisRevenge, Detect("mp22s8.map", new[] { MixDir }, mapName: "mp22s8.yrm"));
 		}
 
 		[TsGoldenFact]
 		public void EngineDetection_TsMapAgainstTsDirIsNotRa2() {
 			// The TS and RA2 games share the cache.mix/local.mix names, so an unguarded RA2 probe
 			// on a TS-only directory reads TS's own rules and scores 1.0.
-			Assert.Equal(EngineType.TiberianSun, Detect("arivruns.map", TsMixDir));
+			Assert.Equal(EngineType.TiberianSun, Detect("arivruns.map", new[] { TsMixDir }));
 		}
 
-		static EngineType Detect(string map, string mixDir, string mapName = null) {
+		static EngineType Detect(string map, string[] mixDirs, string mapName = null) {
 			using var stream = File.OpenRead(AssetPath(Path.Combine("maps", map)));
 			var vmapFile = new VirtualFile(stream, mapName ?? map, true);
 			var mapFile = new MapFile(vmapFile, mapName ?? map);
-			return CNCMaps.Engine.Map.EngineDetector.DetectEngineType(mapFile, mixDir);
+			return CNCMaps.Engine.Map.EngineDetector.DetectEngineType(mapFile, mixDirs);
 		}
 	}
 }

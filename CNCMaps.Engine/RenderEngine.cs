@@ -93,7 +93,7 @@ namespace CNCMaps.Engine {
 				}
 
 				if (_settings.Engine == EngineType.AutoDetect) {
-					_settings.Engine = EngineDetector.DetectEngineType(mapFile, _settings.MixFilesDirectory, _settings.InputFile);
+					_settings.Engine = EngineDetector.DetectEngineType(mapFile, _settings.MixFilesDirectories, _settings.InputFile);
 					_logger.Info("Engine autodetect result: {0}", _settings.Engine);
 				}
 
@@ -114,11 +114,13 @@ namespace CNCMaps.Engine {
 					foreach (string modDir in modConfig.Directories)
 						vfs.Add(modDir);
 
-					// add mixdir to VFS (if it's not included in the mod config)
+					// add the mixdirs to VFS (if they're not included in the mod config)
 					if (!modConfig.Directories.Any()) {
-						string mixDir =
-							VirtualFileSystem.DetermineMixDir(_settings.MixFilesDirectory, _settings.Engine);
-						vfs.Add(mixDir);
+						if (_settings.MixFilesDirectories.Any())
+							foreach (string mixDir in _settings.MixFilesDirectories)
+								vfs.Add(mixDir);
+						else
+							vfs.Add(VirtualFileSystem.DetermineMixDir(null, _settings.Engine));
 					}
 
 					foreach (string mixFile in modConfig.ExtraMixes)

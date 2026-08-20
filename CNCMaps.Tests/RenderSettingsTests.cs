@@ -21,7 +21,7 @@ namespace CNCMaps.Tests {
 			Assert.True(rs.SaveJPEG);
 			Assert.Equal(80, rs.JPEGCompression);
 			Assert.Equal(EngineType.YurisRevenge, rs.Engine);
-			Assert.Equal(@"C:\mix", rs.MixFilesDirectory);
+			Assert.Equal(new[] { @"C:\mix" }, rs.MixFilesDirectories);
 			Assert.True(rs.MarkStartPos);
 			Assert.Equal(StartPositionMarking.Squared, rs.StartPositionMarking);
 			Assert.Equal(5.5, rs.MarkerStartSize);
@@ -37,6 +37,17 @@ namespace CNCMaps.Tests {
 			Assert.True(rs.Backup);
 			Assert.False(rs.SavePNG);
 			Assert.Null(rs.MarkerStartSize);
+		}
+
+		[Fact]
+		public void MixDirCanBeGivenMoreThanOnce() {
+			var rs = Parse("-i", "a.map", "-m", @"C:\game\MIX", "-m", @"C:\game\INI");
+			Assert.Equal(new[] { @"C:\game\MIX", @"C:\game\INI" }, rs.MixFilesDirectories);
+		}
+
+		[Fact]
+		public void MixDirDefaultsToEmpty() {
+			Assert.Empty(Parse("-i", "a.map").MixFilesDirectories);
 		}
 
 		[Fact]

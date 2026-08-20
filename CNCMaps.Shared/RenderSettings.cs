@@ -17,7 +17,7 @@ namespace CNCMaps.Shared {
 		public bool SaveJPEG { get; set; }
 		public int PNGQuality { get; set; }
 		public int JPEGCompression { get; set; }
-		public string MixFilesDirectory { get; set; }
+		public List<string> MixFilesDirectories { get; set; }
 		public string ModConfig { get; set; }
 		public string MetadataOutFile { get; set; }
 		public bool ShowHelp { get; set; }
@@ -55,7 +55,7 @@ namespace CNCMaps.Shared {
 			InputFile = "";
 			OutputDir = "";
 			OutputFile = "";
-			MixFilesDirectory = "";
+			MixFilesDirectories = new List<string>();
 			ModConfig = "";
 			MetadataOutFile = "";
 			ThumbnailConfig = "";
@@ -119,7 +119,7 @@ namespace CNCMaps.Shared {
 			Value<int>("--jpeg-quality", "-q", "Set JPEG quality level (0-100)", v => JPEGCompression = v);
 			Flag("--output-png", "-p", "Output PNG file", () => SavePNG = true);
 			Value<int>("--png-compression", "-c", "Set PNG compression level (1-9)", v => PNGQuality = v);
-			Value<string>("--mixdir", "-m", "Specify location of .mix files, read from registry if not specified (win only)", v => MixFilesDirectory = v);
+			Value<string[]>("--mixdir", "-m", "Specify location of .mix files, read from registry if not specified (win only). May be repeated when a game keeps its mixes and inis in separate directories", v => MixFilesDirectories.AddRange(v.Where(d => !string.IsNullOrWhiteSpace(d))));
 			Value<string>("--modconfig", "-M", "Filename of a game configuration specific to your mod (create with GUI)", v => ModConfig = v);
 			Value<string>("--meta-json", null, "Write resolved map metadata (name, engine, theater, size, start positions) as JSON to the given file", v => MetadataOutFile = v);
 			Flag("--mark-start-pos", null, "Mark starting positions", () => MarkStartPos = true);
