@@ -566,7 +566,8 @@ namespace CNCMaps.GUI {
 						cmd += "-s ";
 						break;
 				}
-				cmd += "--start-pos-size " + cbMarkerSize.Text + " ";
+				if (double.TryParse(cbMarkerSize.Text, NumberStyles.Number, CultureInfo.InvariantCulture, out _))
+					cmd += "--start-pos-size " + cbMarkerSize.Text + " ";
 			}
 
 			if (cbReplacePreview.Checked) {
@@ -687,7 +688,7 @@ namespace CNCMaps.GUI {
 					out double markerSize))
 					rs.MarkerStartSize = Math.Abs(markerSize);
 				else
-					rs.MarkerStartSize = 4.0;
+					rs.MarkerStartSize = null;
 			}
 
 			if (cbReplacePreview.Checked) {

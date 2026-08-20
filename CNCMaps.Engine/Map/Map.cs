@@ -29,7 +29,7 @@ namespace CNCMaps.Engine.Map {
 		public TheaterType TheaterType { get; private set; }
 		public bool IgnoreLighting { get; set; }
 		public StartPositionMarking StartPosMarking { get; set; }
-		public double StartMarkerSize;
+		public double? StartMarkerSize;
 		public bool MarkOreFields { get; set; }
 
 		public Rectangle FullSize { get; private set; }
@@ -641,7 +641,8 @@ namespace CNCMaps.Engine.Map {
 
 		public void MarkTiledStartPositions() {
 			var red = Palette.MakePalette(Color.Red);
-			int markSize = (int)StartMarkerSize;
+			// a player start area is 4x4 cells in RA2/YR but 3x3 in TS/FS
+			int markSize = (int)(StartMarkerSize ?? (_config.Engine >= EngineType.RedAlert2 ? 4 : 3));
 			int delta1, delta2;
 			switch (markSize) {
 				case 2:
@@ -799,7 +800,7 @@ namespace CNCMaps.Engine.Map {
 
 		public unsafe void DrawStartPositions() {
 			Logger.Info("Marking start positions");
-			double markerSize = StartMarkerSize;
+			double markerSize = StartMarkerSize ?? 4.0;
 			// draw aliased like GDI+ did
 			var noAA = new DrawingOptions { GraphicsOptions = new SixLabors.ImageSharp.GraphicsOptions { Antialias = false } };
 			using (var view = _drawingSurface.GetImageView()) {
@@ -812,7 +813,7 @@ namespace CNCMaps.Engine.Map {
 							int centerY = (t.Dy - t.Z + 1) * _config.TileHeight / 2;
 							int halfWidth = (int)((double)_config.TileWidth * (markerSize / 2.0));
 							int halfHeight = (int)((double)_config.TileHeight * (markerSize / 2.0));
-							int opacity = 155 + (int)((7.2 - StartMarkerSize) * 18);
+							int opacity = 155 + (int)((7.2 - markerSize) * 18);
 							if (opacity < 145) opacity = 145;
 							if (opacity > 255) opacity = 255;
 

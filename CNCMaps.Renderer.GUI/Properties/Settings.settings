@@ -135,7 +135,7 @@
       <Value Profile="(Default)">Diamond</Value>
     </Setting>
     <Setting Name="startmarkersize" Type="System.String" Scope="User">
-      <Value Profile="(Default)">4</Value>
+      <Value Profile="(Default)">Auto</Value>
     </Setting>
   </Settings>
 </SettingsFile>

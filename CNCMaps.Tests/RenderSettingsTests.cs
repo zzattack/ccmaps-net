@@ -36,7 +36,7 @@ namespace CNCMaps.Tests {
 			Assert.Equal(SizeMode.Auto, rs.SizeMode);
 			Assert.True(rs.Backup);
 			Assert.False(rs.SavePNG);
-			Assert.Equal(4.0, rs.MarkerStartSize);
+			Assert.Null(rs.MarkerStartSize);
 		}
 
 		[Fact]

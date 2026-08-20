@@ -27,7 +27,7 @@ namespace CNCMaps.Shared {
 		public EngineType Engine { get; set; }
 		public StartPositionMarking StartPositionMarking;
 		public bool MarkStartPos { get; set; }
-		public double MarkerStartSize { get; set; }
+		public double? MarkerStartSize { get; set; }
 		public bool PreferOSMesa { get; set; }
 		public string ThumbnailConfig { get; set; }
 		public bool FixupTiles { get; set; }
@@ -70,7 +70,6 @@ namespace CNCMaps.Shared {
 			TunnelPaths = false;
 			TunnelPosition = false;
 			MarkStartPos = false;
-			MarkerStartSize = 4.0;
 		}
 
 		private readonly List<(string invocation, string description)> _helpEntries = new List<(string, string)>();
@@ -130,7 +129,7 @@ namespace CNCMaps.Shared {
 			Flag("--start-pos-ellipsed", null, "Mark starting positions in a ellipsed manner", () => StartPositionMarking = StartPositionMarking.Ellipsed);
 			Flag("--start-pos-star", null, "Mark starting positions in a star manner", () => StartPositionMarking = StartPositionMarking.Starred);
 			Flag("--start-pos-tiled", "-s", "Mark starting positions in a tiled manner", () => StartPositionMarking = StartPositionMarking.Tiled);
-			Value<double>("--start-pos-size", null, "Mark starting positions with given size (2-6)", v => MarkerStartSize = v);
+			Value<double>("--start-pos-size", null, "Mark starting positions with given size (2-6), defaults to 4, or 3 for tiled markers on TS/FS", v => MarkerStartSize = v);
 			Flag("--mark-ore", "-r", "Mark ore and gem fields more explicity, looks good when resizing to a preview", () => MarkOreFields = true);
 			Flag("--force-fullmap", "-F", "Ignore LocalSize definition and just save the full map", () => SizeMode = SizeMode.Full);
 			Flag("--force-localsize", "-f", "Use localsize for map dimensions; without this or -F the size is picked automatically", () => SizeMode = SizeMode.Local);

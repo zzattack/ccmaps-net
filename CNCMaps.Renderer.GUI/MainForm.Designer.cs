@@ -286,7 +286,7 @@ namespace CNCMaps.GUI {
 			this.lblMarkerSize.Size = new System.Drawing.Size(63, 13);
 			this.lblMarkerSize.TabIndex = 4;
 			this.lblMarkerSize.Text = "Marker Size";
-			this.toolTip.SetToolTip(this.lblMarkerSize, "Shapes other than Tiled can use decimal input sizes.");
+			this.toolTip.SetToolTip(this.lblMarkerSize, "Auto uses the game's own start area size. Shapes other than Tiled can use decimal input sizes.");
 			// 
 			// lblStartMarkerType
 			// 
@@ -301,6 +301,7 @@ namespace CNCMaps.GUI {
 			// 
 			this.cbMarkerSize.FormattingEnabled = true;
 			this.cbMarkerSize.Items.AddRange(new object[] {
+            "Auto",
             "2",
             "3",
             "4",
@@ -310,7 +311,7 @@ namespace CNCMaps.GUI {
 			this.cbMarkerSize.Name = "cbMarkerSize";
 			this.cbMarkerSize.Size = new System.Drawing.Size(59, 21);
 			this.cbMarkerSize.TabIndex = 5;
-			this.cbMarkerSize.Text = "4";
+			this.cbMarkerSize.Text = "Auto";
 			this.cbMarkerSize.SelectedIndexChanged += new System.EventHandler(this.cmbMarkerSize_SelectedIndexChanged);
 			// 
 			// cmbStartMarkers
