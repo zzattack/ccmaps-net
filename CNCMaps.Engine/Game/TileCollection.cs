@@ -68,8 +68,13 @@ namespace CNCMaps.Engine.Game {
 				// if this is not a randomizing tileset, but instead one with damaged data,
 				// then return the "undamaged" version
 				randomChosen.Initialize();
-				if (randomChosen.Images[Math.Min(t.SubTile, randomChosen.Images.Count - 1)].HasDamagedData)
-					return TmpFiles[Math.Min(damaged ? 1 : 0, TmpFiles.Count - 1)];
+				if (randomChosen.Images[Math.Min(t.SubTile, randomChosen.Images.Count - 1)].HasDamagedData) {
+					// the fallback is a different file than the one initialized above, and
+					// callers expect to receive tiles ready to draw
+					var undamaged = TmpFiles[Math.Min(damaged ? 1 : 0, TmpFiles.Count - 1)];
+					undamaged.Initialize();
+					return undamaged;
+				}
 				else
 					return randomChosen;
 			}
