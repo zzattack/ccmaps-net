@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.Specialized;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
 using System.Reflection;
 using System.Security;
 using System.Threading;
@@ -810,42 +810,45 @@ namespace CNCMaps.GUI {
 			}
 		}
 
-		private void SubmitBugReport(string email, Exception exc) {
+		private static readonly HttpClient BugReportClient = new HttpClient { Timeout = TimeSpan.FromSeconds(60) };
+
+		private async void SubmitBugReport(string email, Exception exc) {
+			UpdateStatus("sending bug report.. ", 5);
 			try {
 				const string url = UpdateChecker.UpdateCheckHost + "tool/report_bug";
-				WebClient wc = new WebClient();
-				wc.Proxy = null;
-				var data = new NameValueCollection();
-				data.Set("renderer_version", typeof(Map).Assembly.GetName().Version.ToString());
-				data.Set("exception", exc == null ? "" : exc.ToString());
-				data.Set("input_map", File.ReadAllText(tbInput.Text));  // batch passes filename instead of UI main setting input
-				data.Set("input_name", Path.GetFileName(tbInput.Text));
-				data.Set("commandline", GetCommandLine());
-				data.Set("log_text", rtbLog.Text);
-				data.Set("email", email);
+				using var form = new MultipartFormDataContent();
+				void Add(string name, string value) => form.Add(new StringContent(value ?? ""), name);
+				Add("renderer_version", typeof(Map).Assembly.GetName().Version.ToString());
+				Add("exception", exc?.ToString());
+				Add("input_name", Path.GetFileName(tbInput.Text));
+				Add("commandline", GetCommandLine());
+				Add("log_text", rtbLog.Text);
+				Add("email", email);
 
-				wc.OpenWriteCompleted += (o, args) => UpdateStatus("sending bug report.. connected", 15);
-				wc.UploadProgressChanged += (o, args) => {
-					double pct = 15 + Math.Round(85.0 * (args.TotalBytesToSend / args.BytesSent) / 100.0, 0);
-					UpdateStatus("sending bug report.. uploading " + pct + "%", (int)pct);
-				};
-				wc.UploadValuesCompleted += (o, args) => {
-					if (args.Cancelled || args.Error != null)
-						BugReportFailed();
-					else
-						UpdateStatus("bug report sent", 100);
-				};
+				// batch renders put the map filename in tbInput, so this is the map being rendered
+				try {
+					var map = new ByteArrayContent(File.ReadAllBytes(tbInput.Text));
+					form.Add(map, "input_map", Path.GetFileName(tbInput.Text));
+				}
+				catch (Exception ex) {
+					Add("input_map", "");
+					Log("Could not attach the map to the bug report: " + ex.Message);
+				}
 
-				wc.UploadValuesAsync(new Uri(url), "POST", data);
-				UpdateStatus("sending bug report.. ", 5);
+				UpdateStatus("sending bug report.. connected", 15);
+				var response = await BugReportClient.PostAsync(url, form);
+				if (response.IsSuccessStatusCode)
+					UpdateStatus("bug report sent", 100);
+				else
+					BugReportFailed($"server returned {(int)response.StatusCode} {response.ReasonPhrase}");
 			}
-			catch {
-				BugReportFailed();
+			catch (Exception ex) {
+				BugReportFailed(ex.Message);
 			}
 		}
 
-		private void BugReportFailed() {
-			Log("Submitting bug report failed. Please send a manual bug report to frank@zzattack.org including your map, settings and error log");
+		private void BugReportFailed(string reason) {
+			Log($"Submitting bug report failed ({reason}). Please send a manual bug report to frank@zzattack.org including your map, settings and error log");
 			UpdateStatus("bug report failed", 100);
 		}
 
