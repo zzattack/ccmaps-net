@@ -137,6 +137,13 @@ namespace CNCMaps.Engine.Rendering {
 			}
 		}
 
+		// An object with a body of its own may only darken what stands below its top: a tie means a
+		// neighbouring copy of the same object, and those must not shade each other. Flat casters
+		// carry no height, and high bridges rely on the tie to reach the ground from their deck.
+		private static bool CastsOver(Drawable dr, int castHeight, int surfaceHeight) {
+			return dr.Flat ? castHeight >= surfaceHeight : castHeight > surfaceHeight;
+		}
+
 		public unsafe void DrawShadow(GameObject obj, ShpFile shp, DrawProperties props, DrawingSurface ds) {
 			shp.Initialize();
 			int frameIndex = props.FrameDecider(obj);
@@ -193,7 +200,7 @@ namespace CNCMaps.Engine.Rendering {
 					if (0 <= offset.X + x && offset.X + x < ds.Width && 0 <= y + offset.Y && y + offset.Y < ds.Height &&
 						imgData[rIdx] != 0 && !shadows[zIdx] &&
 						// zBufVal >= zBuffer[zIdx] &&
-						castHeight >= heightBuffer[zIdx]) {
+						CastsOver(obj.Drawable, castHeight, heightBuffer[zIdx])) {
 
 						*(w + 0) /= 2;
 						*(w + 1) /= 2;
