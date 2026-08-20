@@ -289,7 +289,7 @@ namespace CNCMaps.Engine.Map {
 		// For walls given as buildings in the map instead of overlays, recalculate its SHP frame 
 		// so that those connect with its adjacent objects
 		private void RevisitWallBuildings() {
-			var generalSection = _rules.GetSection("General");
+			var generalSection = _rules.GetOrCreateSection("General");
 			string EWGate1 = generalSection.ReadString("GDIGateOne","");
 			string NSGate1 = generalSection.ReadString("GDIGateTwo","");
 			string EWGate2 = generalSection.ReadString("NodGateOne","");
@@ -541,7 +541,7 @@ namespace CNCMaps.Engine.Map {
 			if (_config.ExtraOptions.FirstOrDefault() != null)
 				disableTibRemapping = _config.ExtraOptions.FirstOrDefault().DisableTibRemap;
 			if (_config.Engine <= EngineType.Firestorm && !disableTibRemapping) {
-				var tiberiums = _rules.GetSection("Tiberiums").OrderedEntries.Select(tib => tib.Value.ToString());
+				var tiberiums = _rules.GetOrCreateSection("Tiberiums").OrderedEntries.Select(tib => tib.Value.ToString());
 				var remaps = tiberiums.Select(tib => _rules.GetOrCreateSection(tib).ReadString("Color"));
 				var tibRemaps = tiberiums.Zip(remaps, (k, v) => new { k, v }).ToDictionary(x => x.k, x => x.v);
 
@@ -743,7 +743,7 @@ namespace CNCMaps.Engine.Map {
 
 		/// <summary>Loads the colors. </summary>
 		private void LoadColors() {
-			var colorsSection = _rules.GetSection("Colors");
+			var colorsSection = _rules.GetOrCreateSection("Colors");
 			foreach (var entry in colorsSection.OrderedEntries) {
 				string[] colorComponents = ((string)entry.Value).Split(',');
 				var h = new HsvColor(int.Parse(colorComponents[0]),
@@ -780,7 +780,13 @@ namespace CNCMaps.Engine.Map {
 		private void LoadCountries() {
 			Logger.Info("Loading countries");
 
-			var countriesSection = _rules.GetSection(_config.Engine >= EngineType.RedAlert2 ? "Countries" : "Houses");
+			string sectionName = _config.Engine >= EngineType.RedAlert2 ? "Countries" : "Houses";
+			var countriesSection = _rules.GetSection(sectionName);
+			if (countriesSection == null) {
+				// usually means the detected engine does not match the game data
+				Logger.Warn("Rules contain no [{0}] section; house colors will be missing", sectionName);
+				return;
+			}
 			foreach (var entry in countriesSection.OrderedEntries) {
 				IniFile.IniSection countrySection = _rules.GetSection(entry.Value);
 				if (countrySection == null) continue;
