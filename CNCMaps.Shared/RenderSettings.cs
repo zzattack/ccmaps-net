@@ -64,7 +64,7 @@ namespace CNCMaps.Shared {
 			FixPreviewDimensions = true;
 			Debug = false;
 			MarkIceGrowth = false;
-			Backup = true;
+			Backup = false;
 			FixOverlays = false;
 			CompressTiles = false;
 			TunnelPaths = false;

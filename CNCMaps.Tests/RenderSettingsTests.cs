@@ -34,9 +34,15 @@ namespace CNCMaps.Tests {
 			Assert.Equal(95, rs.JPEGCompression);
 			Assert.Equal(EngineType.AutoDetect, rs.Engine);
 			Assert.Equal(SizeMode.Auto, rs.SizeMode);
-			Assert.True(rs.Backup);
+			Assert.False(rs.Backup);          // opt in with --bkp
 			Assert.False(rs.SavePNG);
 			Assert.Null(rs.MarkerStartSize);
+		}
+
+		[Fact]
+		public void BackupIsEnabledByItsFlag() {
+			Assert.True(Parse("-i", "a.map", "--bkp").Backup);
+			Assert.True(Parse("-i", "a.map", "-b").Backup);
 		}
 
 		[Fact]
