@@ -8,6 +8,8 @@
     <Product>CNCMaps Renderer</Product>
     <GenerateResourceUsePreserializedResources>true</GenerateResourceUsePreserializedResources>
     <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+    <!-- Symbols inside the assemblies: bug-report stack traces keep line numbers without shipping pdb files -->
+    <DebugType Condition="'$(Configuration)' == 'Release'">embedded</DebugType>
     <!-- WFO1000: WinForms designer serialization; CA1416: platform-guarded registry/System.Drawing usage -->
     <NoWarn>$(NoWarn);WFO1000;CA1416</NoWarn>
   </PropertyGroup>
