@@ -12,6 +12,11 @@
     <PackageReference Include="NLog" Version="6.2.0" />
   </ItemGroup>
   <ItemGroup>
+    <!-- Closed-source preview window plugin, distributed in binary form only. The GUI probes
+         for it beside the exe at runtime; nothing references it at compile time. -->
+    <None Include="lib\CNCMaps.Preview.dll" CopyToOutputDirectory="PreserveNewest" TargetPath="CNCMaps.Preview.dll" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\CNCMaps.Engine\CNCMaps.Engine.csproj" />
     <ProjectReference Include="..\CNCMaps.FileFormats\CNCMaps.FileFormats.csproj" />
     <ProjectReference Include="..\CNCMaps.Shared\CNCMaps.Shared.csproj" />
