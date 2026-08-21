@@ -44,6 +44,10 @@ namespace CNCMaps.Engine.Rendering {
 			var zBuffer = ds.GetZBuffer();
 			var heightBuffer = ds.GetHeightBuffer();
 			Palette p = tile.Palette;
+			byte[] bgr = p.GetBgrBytes();
+			byte[] zData = img.ZData;
+			short zBase = (short)((tile.Rx + tile.Ry) * tmp.BlockHeight / 2);
+			short hBufVal = (short)(tile.Z * _config.TileHeight / 2);
 
 			// calculate tile index -> pixel index
 			Point offset = new Point(tile.Dx * tmp.BlockWidth / 2, (tile.Dy - tile.Z) * tmp.BlockHeight / 2);
@@ -56,7 +60,8 @@ namespace CNCMaps.Engine.Rendering {
 				tile.Layer.GridTouchedBy[centerGridTile.Dx, centerGridTile.Dy / 2] = tile;
 			}
 
-			Logger.Trace("Drawing TMP file {0} (subtile {1}) at ({2},{3})", tmp.FileName, tile.SubTile, offset.X, offset.Y);
+			if (Logger.IsTraceEnabled)
+				Logger.Trace("Drawing TMP file {0} (subtile {1}) at ({2},{3})", tmp.FileName, tile.SubTile, offset.X, offset.Y);
 
 			int stride = ds.BitmapData.Stride;
 
@@ -77,13 +82,14 @@ namespace CNCMaps.Engine.Rendering {
 				for (ushort c = 0; c < cx; c++) {
 					byte paletteValue = img.TileData[rIdx];
 
-					short zBufVal = (short)((tile.Rx + tile.Ry) * tmp.BlockHeight / 2 - (img.ZData != null ? img.ZData[rIdx] : 0));
+					short zBufVal = (short)(zBase - (zData != null ? zData[rIdx] : 0));
 					if (paletteValue != 0 && w_low <= w && w < w_high && zBufVal >= zBuffer[zIdx]) {
-						*(w + 0) = p.Colors[paletteValue].B;
-						*(w + 1) = p.Colors[paletteValue].G;
-						*(w + 2) = p.Colors[paletteValue].R;
+						int ci = paletteValue * 3;
+						*(w + 0) = bgr[ci];
+						*(w + 1) = bgr[ci + 1];
+						*(w + 2) = bgr[ci + 2];
 						zBuffer[zIdx] = zBufVal;
-						heightBuffer[zIdx] = (short)(tile.Z * _config.TileHeight / 2);
+						heightBuffer[zIdx] = hBufVal;
 					}
 					w += 3;
 					zIdx++;
@@ -100,13 +106,14 @@ namespace CNCMaps.Engine.Rendering {
 				for (ushort c = 0; c < cx; c++) {
 					byte paletteValue = img.TileData[rIdx];
 
-					short zBufVal = (short)((tile.Rx + tile.Ry) * tmp.BlockHeight / 2 - (img.ZData != null ? img.ZData[rIdx] : 0));
+					short zBufVal = (short)(zBase - (zData != null ? zData[rIdx] : 0));
 					if (paletteValue != 0 && w_low <= w && w < w_high && zBufVal >= zBuffer[zIdx]) {
-						*(w + 0) = p.Colors[paletteValue].B;
-						*(w + 1) = p.Colors[paletteValue].G;
-						*(w + 2) = p.Colors[paletteValue].R;
+						int ci = paletteValue * 3;
+						*(w + 0) = bgr[ci];
+						*(w + 1) = bgr[ci + 1];
+						*(w + 2) = bgr[ci + 2];
 						zBuffer[zIdx] = zBufVal;
-						heightBuffer[zIdx] = (short)(tile.Z * _config.TileHeight / 2);
+						heightBuffer[zIdx] = hBufVal;
 					}
 					w += 3;
 					zIdx++;
@@ -117,6 +124,7 @@ namespace CNCMaps.Engine.Rendering {
 			}
 
 			if (!img.HasExtraData) return; // we're done now
+			byte[] xzData = img.ExtraZData;
 
 			offset.X += img.ExtraX - img.X;
 			offset.Y += img.ExtraY - img.Y;
@@ -134,8 +142,9 @@ namespace CNCMaps.Engine.Rendering {
 				for (int bx = extraScreenBounds.Left; bx < extraScreenBounds.Right; bx += tmp.BlockWidth / 2) {
 					var gridTileNoZ = tile.Layer.GetTileScreen(new Point(bx, by), true, true);
 					if (gridTileNoZ != null) {
-						Logger.Trace("Tile at ({0},{1}) has extradata affecting ({2},{3})", tile.Dx, tile.Dy, gridTileNoZ.Dx,
-							gridTileNoZ.Dy);
+						if (Logger.IsTraceEnabled)
+							Logger.Trace("Tile at ({0},{1}) has extradata affecting ({2},{3})", tile.Dx, tile.Dy, gridTileNoZ.Dx,
+								gridTileNoZ.Dy);
 						tile.Layer.GridTouched[gridTileNoZ.Dx, gridTileNoZ.Dy / 2] |= TileLayer.TouchType.ByExtraData;
 						tile.Layer.GridTouchedBy[gridTileNoZ.Dx, gridTileNoZ.Dy / 2] = tile;
 					}
@@ -147,14 +156,15 @@ namespace CNCMaps.Engine.Rendering {
 				for (x = 0; x < img.ExtraWidth; x++) {
 					// Checking per line is required because v needs to be checked every time
 					byte paletteValue = img.ExtraData[rIdx];
-					short zBufVal = (short)((tile.Rx + tile.Ry) * tmp.BlockHeight / 2 - (img.ExtraZData != null ? img.ExtraZData[rIdx] : 0));
+					short zBufVal = (short)(zBase - (xzData != null ? xzData[rIdx] : 0));
 
 					if (paletteValue != 0 && w_low <= w && w < w_high && zBufVal >= zBuffer[zIdx]) {
-						*w++ = p.Colors[paletteValue].B;
-						*w++ = p.Colors[paletteValue].G;
-						*w++ = p.Colors[paletteValue].R;
+						int ci = paletteValue * 3;
+						*w++ = bgr[ci];
+						*w++ = bgr[ci + 1];
+						*w++ = bgr[ci + 2];
 						zBuffer[zIdx] = zBufVal;
-						heightBuffer[zIdx] = (short)(img.ExtraHeight - y + tile.Z * _config.TileHeight / 2);
+						heightBuffer[zIdx] = (short)(img.ExtraHeight - y + hBufVal);
 					}
 					else
 						w += 3;

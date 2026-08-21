@@ -17,6 +17,8 @@ namespace CNCMaps.Engine.Rendering {
 		byte[] _origColors;
 		public bool IsShared { get; set; }
 
+		byte[] _bgr; // per-pixel loops read colors as raw bytes; Color's property accessors are too slow there
+
 		double _redMult = 1.0,
 			_greenMult = 1.0,
 			_blueMult = 1.0,
@@ -49,8 +51,22 @@ namespace CNCMaps.Engine.Rendering {
 		internal Palette Clone() {
 			var p = (Palette)MemberwiseClone();
 			p.Colors = new Color[256];
+			p._bgr = null;
 			p.IsShared = false;
 			return p;
+		}
+
+		/// <summary>Colors as B,G,R triplets, rebuilt after every Recalculate.</summary>
+		public byte[] GetBgrBytes() {
+			if (_bgr == null) {
+				_bgr = new byte[768];
+				for (int i = 0; i < 256; i++) {
+					_bgr[i * 3 + 0] = Colors[i].B;
+					_bgr[i * 3 + 1] = Colors[i].G;
+					_bgr[i * 3 + 2] = Colors[i].R;
+				}
+			}
+			return _bgr;
 		}
 
 		public void ApplyLighting(Lighting l, int level = 0, bool applyTints = true) {
@@ -104,6 +120,7 @@ namespace CNCMaps.Engine.Rendering {
 				var b = (byte)Math.Min(255, _origColors[i * 3 + 2] * bmult / 63.0 * 255.0);
 				Colors[i] = Color.FromArgb(r, g, b);
 			}
+			_bgr = null;
 		}
 
 		public static Palette MakePalette(Color c) {

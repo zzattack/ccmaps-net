@@ -39,6 +39,7 @@ namespace CNCMaps.Engine.Rendering {
 		public unsafe void Draw(ShpFile shp, GameObject obj, Drawable dr, DrawProperties props, DrawingSurface ds, int transLucency = 0) {
 			shp.Initialize();
 			Palette p = props.PaletteOverride ?? obj.Palette;
+			byte[] bgr = p.GetBgrBytes();
 			int frameIndex = props.FrameDecider(obj);
 			if (obj.Drawable.IsActualWall)
 				frameIndex = ((StructureObject)obj).WallBuildingFrame;
@@ -102,15 +103,16 @@ namespace CNCMaps.Engine.Rendering {
 							zBufVal += img.Height;
 
 						if (w_low <= w && w < w_high  /*&& zBufVal >= zBuffer[zIdx]*/) {
+							int ci = paletteValue * 3;
 							if (transLucency != 0) {
-								*(w + 0) = (byte)(a * *(w + 0) + b * p.Colors[paletteValue].B);
-								*(w + 1) = (byte)(a * *(w + 1) + b * p.Colors[paletteValue].G);
-								*(w + 2) = (byte)(a * *(w + 2) + b * p.Colors[paletteValue].R);
+								*(w + 0) = (byte)(a * *(w + 0) + b * bgr[ci]);
+								*(w + 1) = (byte)(a * *(w + 1) + b * bgr[ci + 1]);
+								*(w + 2) = (byte)(a * *(w + 2) + b * bgr[ci + 2]);
 							}
 							else {
-								*(w + 0) = p.Colors[paletteValue].B;
-								*(w + 1) = p.Colors[paletteValue].G;
-								*(w + 2) = p.Colors[paletteValue].R;
+								*(w + 0) = bgr[ci];
+								*(w + 1) = bgr[ci + 1];
+								*(w + 2) = bgr[ci + 2];
 
 								//var pal = Theater.Active.GetPalettes().UnitPalette.Colors;
 								//*(w + 0) = pal[zshapeOffset].R;
