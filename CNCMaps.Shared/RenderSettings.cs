@@ -130,7 +130,7 @@ namespace CNCMaps.Shared {
 			Value<double>("--start-pos-size", null, "Mark starting positions with given size (2-6)", v => MarkerStartSize = v);
 			Flag("--mark-ore", "-r", "Mark ore and gem fields more explicity, looks good when resizing to a preview", () => MarkOreFields = true);
 			Flag("--force-fullmap", "-F", "Ignore LocalSize definition and just save the full map", () => SizeMode = SizeMode.Full);
-			Flag("--force-localsize", "-f", "Use localsize for map dimensions (default)", () => SizeMode = SizeMode.Local);
+			Flag("--force-localsize", "-f", "Use localsize for map dimensions; without this or -F the size is picked automatically", () => SizeMode = SizeMode.Local);
 			Flag("--debug", "-D", "", () => Debug = true);
 			Flag("--replace-preview-nomarkers", "-k", "Update the maps [PreviewPack] data with the rendered image, using no markers on the start positions", () => {
 				GeneratePreviewPack = true;
