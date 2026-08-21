@@ -454,6 +454,11 @@ namespace CNCMaps.Engine.Map {
 				tile.Drawable = _theater.GetCollection(CollectionType.Tiles).GetDrawable(tile);
 				foreach (var obj in tile.AllObjects) {
 					obj.Collection = _theater.GetObjectCollection(obj);
+					// an object type without a collection must not crash the whole render
+					if (obj.Collection == null) {
+						Logger.Warn("No collection for object {0} at {1}; skipping it", obj, obj.Tile);
+						continue;
+					}
 					obj.Drawable = obj.Collection.GetDrawable(obj);
 				}
 			}

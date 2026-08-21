@@ -110,7 +110,7 @@ namespace CNCMaps.Shared {
 			Flag("--help", "-h", "Show this short help text", () => ShowHelp = true);
 			Value<string>("--infile", "-i", "Input file", v => InputFile = v);
 			Value<string>("--outfile", "-o", "Output file, without extension, read from map if not specified.", v => OutputFile = v);
-			Value<string>("--outdir", "-d", "Output directiory", v => OutputDir = v);
+			Value<string>("--outdir", "-d", "Output directory", v => OutputDir = v);
 			Flag("--force-ra2", "-y", "Force using the Red Alert 2 engine for rendering", () => Engine = EngineType.RedAlert2);
 			Flag("--force-yr", "-Y", "Force using the Yuri's Revenge engine for rendering", () => Engine = EngineType.YurisRevenge);
 			Flag("--force-ts", "-t", "Force using the Tiberian Sun engine for rendering", () => Engine = EngineType.TiberianSun);
