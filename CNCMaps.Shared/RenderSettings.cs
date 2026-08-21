@@ -36,6 +36,7 @@ namespace CNCMaps.Shared {
 		public bool SavePNGThumbnails { get; set; }
 		public bool FixPreviewDimensions { get; set; }
 		public bool Debug { get; set; }
+		public bool ReportProgress { get; set; }
 		public bool MarkIceGrowth { get; set; }
 		public bool Backup { get; set; }
 		public bool FixOverlays { get; set; }
@@ -122,6 +123,7 @@ namespace CNCMaps.Shared {
 			Value<string[]>("--mixdir", "-m", "Specify location of .mix files, read from registry if not specified (win only). May be repeated when a game keeps its mixes and inis in separate directories", v => MixFilesDirectories.AddRange(v.Where(d => !string.IsNullOrWhiteSpace(d))));
 			Value<string>("--modconfig", "-M", "Filename of a game configuration specific to your mod (create with GUI)", v => ModConfig = v);
 			Value<string>("--meta-json", null, "Write resolved map metadata (name, engine, theater, size, start positions) as JSON to the given file", v => MetadataOutFile = v);
+			Flag("--progress", null, "Print machine-readable render progress to stdout as progress:N:phase lines", () => ReportProgress = true);
 			Flag("--mark-start-pos", null, "Mark starting positions", () => MarkStartPos = true);
 			Flag("--start-pos-squared", "-S", "Mark starting positions in a squared manner", () => StartPositionMarking = StartPositionMarking.Squared);
 			Flag("--start-pos-circled", null, "Mark starting positions in a circled manner", () => StartPositionMarking = StartPositionMarking.Circled);

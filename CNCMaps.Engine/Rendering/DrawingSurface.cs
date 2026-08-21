@@ -127,11 +127,11 @@ namespace CNCMaps.Engine.Rendering {
 			SavePNG(path, compressionLevel, new Rectangle(left, top, width, height));
 		}
 
-		public void SavePNG(string path, int compressionLevel, Rectangle saveRect) {
+		public void SavePNG(string path, int compressionLevel, Rectangle saveRect, Action<double> progress = null) {
 			logger.Info("Saving PNG to {0}, compression level {1}, clip @({2},{3};{4}x{5})",
 				path, compressionLevel, saveRect.Left, saveRect.Top, saveRect.Width, saveRect.Height);
 			saveRect.Intersect(new Rectangle(0, 0, Width, Height));
-			PngWriter.Save(path, _data, Width, BytesPerPixel, saveRect, compressionLevel);
+			PngWriter.Save(path, _data, Width, BytesPerPixel, saveRect, compressionLevel, progress);
 		}
 
 		public void SaveJPEG(string path, int compression, int left, int top, int width, int height) {

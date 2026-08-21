@@ -45,11 +45,22 @@ namespace CNCMaps.Engine {
 			return ValidateSettings();
 		}
 
+		/// <summary>Overall render progress: percent (0-100, monotonic) and a phase label.
+		/// The GUI subscribes directly; the --progress flag prints the same to stdout.</summary>
+		public Action<int, string> ProgressChanged { get; set; }
+
 		public EngineResult Execute() {
 			try {
 				// make each render deterministic regardless of how many renders ran
 				// earlier in this process
 				CNCMaps.Shared.Utility.Rand.Reset();
+
+				var sink = ProgressChanged;
+				if (sink == null && _settings.ReportProgress)
+					sink = (pct, phase) => { Console.WriteLine("progress:{0}:{1}", pct, phase); Console.Out.Flush(); };
+				int drawEnd = 100 - (_settings.SaveJPEG ? 5 : 0) - (_settings.SavePNG ? 10 : 0);
+				var progress = new RenderProgress(sink, drawEnd);
+				progress.Report(0, "loading map");
 
 				_logger.Info("Initializing virtual filesystem");
 
@@ -113,6 +124,8 @@ namespace CNCMaps.Engine {
 					_logger.Info("Engine autodetect result: {0}", _settings.Engine);
 				}
 
+				progress.Report(5, "loading game data");
+
 				// Engine type is now definitive, load mod config
 				if (modConfig == null)
 					modConfig = ModConfig.GetDefaultConfig(_settings.Engine);
@@ -153,6 +166,8 @@ namespace CNCMaps.Engine {
 						_logger.Error("Could not successfully load all required components for this map. Aborting.");
 						return EngineResult.LoadTheaterFailed;
 					}
+					progress.Report(15, "preparing");
+					map.Progress = progress;
 
 					if (_settings.MarkStartPos && _settings.StartPositionMarking == StartPositionMarking.Tiled)
 						map.MarkTiledStartPositions();
@@ -233,13 +248,20 @@ namespace CNCMaps.Engine {
 					GC.Collect();
 				}
 
-				if (_settings.SaveJPEG)
+				progress.Report(progress.DrawEnd, "encoding");
+
+				if (_settings.SaveJPEG) {
 					ds.SaveJPEG(Path.Combine(_settings.OutputDir, _settings.OutputFile + ".jpg"),
 						_settings.JPEGCompression, saveRect);
+					progress.Report(Math.Min(progress.DrawEnd + 5, 99), "encoding");
+				}
 
-				if (_settings.SavePNG)
+				if (_settings.SavePNG) {
+					int pngFrom = progress.DrawEnd + (_settings.SaveJPEG ? 5 : 0);
 					ds.SavePNG(Path.Combine(_settings.OutputDir, _settings.OutputFile + ".png"),
-						_settings.PNGQuality, saveRect);
+						_settings.PNGQuality, saveRect,
+						frac => progress.Span(pngFrom, Math.Min(pngFrom + 10, 99), frac, "encoding"));
+				}
 
 				Regex reThumb = new Regex(@"(\+|)?\((\d+),(\d+)\)");
 				var match = reThumb.Match(_settings.ThumbnailConfig);
@@ -306,6 +328,8 @@ namespace CNCMaps.Engine {
 						mapFile.Save(_settings.InputFile);
 					}
 				}
+
+				progress.Report(100, "done");
 			}
 			catch (Exception exc) {
 				_logger.Error(string.Format("An unknown fatal exception occurred: {0}", exc), exc);

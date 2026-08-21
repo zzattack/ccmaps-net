@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.IO.Compression;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace CNCMaps.Engine.Rendering {
@@ -19,7 +20,7 @@ namespace CNCMaps.Engine.Rendering {
 		/// <param name="bytesPerPixel">3 (BGR) or 4 (BGRA, alpha is dropped)</param>
 		/// <param name="rect">region of the source to save</param>
 		/// <param name="compressionLevel">1-9, mapped onto the deflate implementation's levels</param>
-		public static void Save(string path, byte[] data, int surfaceWidth, int bytesPerPixel, System.Drawing.Rectangle rect, int compressionLevel) {
+		public static void Save(string path, byte[] data, int surfaceWidth, int bytesPerPixel, System.Drawing.Rectangle rect, int compressionLevel, Action<double> progress = null) {
 			int rowBytes = rect.Width * 3;
 			var raw = new byte[(rowBytes + 1) * rect.Height];
 
@@ -49,6 +50,7 @@ namespace CNCMaps.Engine.Rendering {
 			var fragments = new byte[chunkCount][];
 			var adlers = new uint[chunkCount];
 			var lengths = new int[chunkCount];
+			int blocksDone = 0;
 			Parallel.For(0, chunkCount, i => {
 				int off = i * chunkSize;
 				int len = Math.Min(chunkSize, raw.Length - off);
@@ -60,6 +62,7 @@ namespace CNCMaps.Engine.Rendering {
 				ds.Flush();
 				fragments[i] = ms.ToArray(); // snapshot before Dispose would emit a final block
 				ds.Dispose();
+				progress?.Invoke((double)Interlocked.Increment(ref blocksDone) / chunkCount);
 			});
 
 			uint adler = 1;

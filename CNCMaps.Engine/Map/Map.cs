@@ -1044,6 +1044,9 @@ namespace CNCMaps.Engine.Map {
 				}
 			}
 		}
+		/// <summary>Optional whole-render progress; the draw loops fill 20 up to its DrawEnd.</summary>
+		public RenderProgress Progress { get; set; }
+
 		public void Draw() {
 			_drawingSurface = new DrawingSurface(FullSize.Width * _config.TileWidth, FullSize.Height * _config.TileHeight);
 
@@ -1072,6 +1075,8 @@ namespace CNCMaps.Engine.Map {
 				for (int x = FullSize.Width * 2 - 3; x >= 0; x -= 2)
 					_theater.Draw(_tiles.GetTile(x, y), _drawingSurface);
 
+				if (Progress != null)
+					Progress.Span(20, 20 + (Progress.DrawEnd - 20) / 2, (double)y / FullSize.Height, "drawing tiles");
 				double pct = 50.0 * y / FullSize.Height;
 				if (pct > lastReported + 5) {
 					Logger.Info("Drawing tiles... {0}%", Math.Round(pct, 0));
@@ -1090,6 +1095,8 @@ namespace CNCMaps.Engine.Map {
 					foreach (GameObject o in GetObjectsAt(x, y))
 						_theater.Draw(o, _drawingSurface);
 
+				if (Progress != null)
+					Progress.Span(20 + (Progress.DrawEnd - 20) / 2, Progress.DrawEnd, (double)y / FullSize.Height, "drawing objects");
 				double pct = 50 + 50.0 * y / FullSize.Height;
 				if (pct > lastReported + 5) {
 					Logger.Info("Drawing objects... {0}%", Math.Round(pct, 0));
