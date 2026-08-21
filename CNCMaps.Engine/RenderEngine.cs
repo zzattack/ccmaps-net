@@ -76,6 +76,22 @@ namespace CNCMaps.Engine {
 							using (FileStream f = File.OpenRead(_settings.ModConfig))
 								modConfig = ModConfig.Deserialize(f);
 
+							// relative directories resolve against the config file, so a config can ship
+							// inside a mod folder and work from any working directory
+							string configDir = Path.GetDirectoryName(Path.GetFullPath(_settings.ModConfig));
+							for (int i = 0; i < modConfig.Directories.Count; i++) {
+								if (!Path.IsPathRooted(modConfig.Directories[i]))
+									modConfig.Directories[i] = Path.GetFullPath(Path.Combine(configDir, modConfig.Directories[i]));
+								if (!Directory.Exists(modConfig.Directories[i]))
+									_logger.Warn("Mod config directory {0} does not exist", modConfig.Directories[i]);
+							}
+							for (int i = 0; i < modConfig.ExtraMixes.Count; i++) {
+								if (Path.IsPathRooted(modConfig.ExtraMixes[i])) continue;
+								string resolved = Path.GetFullPath(Path.Combine(configDir, modConfig.ExtraMixes[i]));
+								// a name that is no file beside the config resolves inside the VFS search order
+								if (File.Exists(resolved))
+									modConfig.ExtraMixes[i] = resolved;
+							}
 						}
 						catch (IOException) {
 							_logger.Fatal("IOException while loading mod config");
