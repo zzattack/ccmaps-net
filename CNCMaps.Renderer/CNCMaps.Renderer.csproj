@@ -4,9 +4,19 @@
     <RootNamespace>CNCMaps</RootNamespace>
     <AssemblyName>CNCMaps.Renderer</AssemblyName>
     <TargetFramework>net10.0</TargetFramework>
+    <!-- Trimmed publishes disable reflection-based System.Text.Json, which the meta-json export uses.
+         Safe to re-enable because the CNCMaps assemblies are rooted below. -->
+    <JsonSerializerIsReflectionEnabledByDefault Condition="'$(PublishTrimmed)' == 'true'">true</JsonSerializerIsReflectionEnabledByDefault>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="NLog" Version="6.2.0" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(PublishTrimmed)' == 'true'">
+    <!-- Keep our own assemblies whole when trimming: ModConfig XML deserialization reaches
+         types and properties through reflection the trimmer cannot see. -->
+    <TrimmerRootAssembly Include="CNCMaps.Engine" />
+    <TrimmerRootAssembly Include="CNCMaps.FileFormats" />
+    <TrimmerRootAssembly Include="CNCMaps.Shared" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\CNCMaps.Engine\CNCMaps.Engine.csproj" />
