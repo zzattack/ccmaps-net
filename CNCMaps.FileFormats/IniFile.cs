@@ -81,6 +81,49 @@ namespace CNCMaps.FileFormats {
 			}
 		}
 
+		public void LoadPhobosIncludes(VirtualFileSystem.VirtualFileSystem vfs) {
+			// support for Phobos tag
+			var includes = GetOrCreateSection("$Include");
+			foreach (var entry in includes.OrderedEntries) {
+				var include = vfs.Open<IniFile>(entry.Value);
+				if (include == null) {
+					logger.Debug("Include ini {0} not found", entry.Value);
+					continue;
+				}
+				include.LoadPhobosIncludes(vfs);
+				MergeWith(include);
+			}
+		}
+
+		// Phobos $Inherits: a section copies every key it does not set itself from the
+		// parent sections it names, resolved once after all includes are merged.
+		public void SolvePhobosInheritance() {
+			foreach (var section in Sections)
+				Inherit(section);
+		}
+
+		private void Inherit(IniSection section) {
+			if (section.AlreadyInherited)
+				return;
+			// mark before recursing so mutually-inheriting sections cannot loop
+			section.AlreadyInherited = true;
+			if (!section.HasKey("$Inherits"))
+				return;
+
+			foreach (var parentName in section.ReadString("$Inherits").Split(',')) {
+				var parent = GetSection(parentName.Trim());
+				if (parent == null) {
+					logger.Warn("Section {0} names missing parent {1} in $Inherits", section.Name, parentName.Trim());
+					continue;
+				}
+				Inherit(parent);
+				foreach (var pair in parent.OrderedEntries) {
+					if (!section.HasKey(pair.Key))
+						section.SetValue(pair.Key, pair.Value);
+				}
+			}
+		}
+
 		int ProcessLine(string line) {
 			IniSection.FixLine(ref line);
 			if (line.Length == 0) return 0;
@@ -166,6 +209,7 @@ namespace CNCMaps.FileFormats {
 
 			public Dictionary<string, IniValue> SortedEntries { get; set; }
 			public List<KeyValuePair<string, IniValue>> OrderedEntries { get; set; }
+			public bool AlreadyInherited { get; set; }
 
 			static NumberFormatInfo culture = CultureInfo.InvariantCulture.NumberFormat;
 
