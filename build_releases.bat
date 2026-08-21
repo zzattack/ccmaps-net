@@ -1,5 +1,5 @@
 @echo off
-set VER=2.4.0
+set VER=3.0.0
 set MAKENSIS="%PROGRAMFILES(X86)%\nsis\makensis.exe"
 
 del CNCMaps_release_*.exe CNCMaps_console_*.zip 2>nul
