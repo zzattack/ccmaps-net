@@ -156,13 +156,13 @@ namespace CNCMaps.Engine.Rendering {
 			}
 		}
 
-		public void SaveThumb(Size dimensions, Rectangle cutout, string path, bool saveAsPng = false) {
+		public void SaveThumb(Size dimensions, Rectangle cutout, string path, bool saveAsPng = false, int jpegQuality = 95) {
 			using (var thumb = CopyRegion(cutout)) {
 				thumb.Mutate(x => x.Resize(dimensions.Width, dimensions.Height, KnownResamplers.Bicubic));
 				if (saveAsPng)
 					thumb.Save(path, new PngEncoder { CompressionLevel = PngCompressionLevel.Level6, ColorType = PngColorType.Rgb });
 				else
-					thumb.Save(path, new JpegEncoder { Quality = 95 });
+					thumb.Save(path, new JpegEncoder { Quality = jpegQuality });
 			}
 		}
 

@@ -263,15 +263,19 @@ namespace CNCMaps.Engine {
 						frac => progress.Span(pngFrom, Math.Min(pngFrom + 10, 99), frac, "encoding"));
 				}
 
-				Regex reThumb = new Regex(@"(\+|)?\((\d+),(\d+)\)");
-				var match = reThumb.Match(_settings.ThumbnailConfig);
-				if (match.Success) {
+				// One or more comma-separated specs, e.g. "+(480,480),preview:+(1280,1280)@82".
+				// Each spec is [name:][+](x,y)[@q]: name overrides the file prefix (default
+				// thumb for the first, thumbN for the Nth), + keeps aspect, @q sets JPEG quality.
+				Regex reThumb = new Regex(@"(?:([A-Za-z0-9_-]+):)?(\+|)?\((\d+),(\d+)\)(?:@(\d+))?");
+				int thumbIndex = 0;
+				foreach (Match match in reThumb.Matches(_settings.ThumbnailConfig)) {
+					thumbIndex++;
 					Size dimensions = new Size(
-							int.Parse(match.Groups[2].Captures[0].Value),
-							int.Parse(match.Groups[3].Captures[0].Value));
+							int.Parse(match.Groups[3].Captures[0].Value),
+							int.Parse(match.Groups[4].Captures[0].Value));
 					var cutRect = map.GetSizePixels(_settings.SizeMode);
 
-					if (match.Groups[1].Captures[0].Value == "+") {
+					if (match.Groups[2].Captures[0].Value == "+") {
 						// + means maintain aspect ratio
 
 						if (dimensions.Width > 0 && dimensions.Height > 0) {
@@ -292,15 +296,19 @@ namespace CNCMaps.Engine {
 						}
 					}
 
+					int jpegQuality = match.Groups[5].Success ? int.Parse(match.Groups[5].Value) : 95;
+					string prefix = match.Groups[1].Success ? match.Groups[1].Value
+							: (thumbIndex == 1 ? "thumb" : $"thumb{thumbIndex}");
+					string thumbName = prefix + "_" + _settings.OutputFile;
 					_logger.Info("Saving thumbnail with dimensions {0}x{1}", dimensions.Width, dimensions.Height);
 
 					if (!_settings.SavePNGThumbnails) {
 						ds.SaveThumb(dimensions, cutRect,
-							Path.Combine(_settings.OutputDir, "thumb_" + _settings.OutputFile + ".jpg"));
+							Path.Combine(_settings.OutputDir, thumbName + ".jpg"), false, jpegQuality);
 					}
 					else {
 						ds.SaveThumb(dimensions, cutRect,
-							Path.Combine(_settings.OutputDir, "thumb_" + _settings.OutputFile + ".png"), true);
+							Path.Combine(_settings.OutputDir, thumbName + ".png"), true);
 					}
 				}
 

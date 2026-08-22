@@ -153,7 +153,7 @@ namespace CNCMaps.Shared {
 				PreviewMarkers = PreviewMarkersType.Aro;
 			});
 			Flag("--ignore-lighting", "-n", "Ignore all lighting and lamps on the map", () => IgnoreLighting = true);
-			Value<string>("--create-thumbnail", "-z", "Also save a thumbnail along with the fullmap in dimensions (x,y), prefix with + to keep aspect ratio", v => ThumbnailConfig = v);
+			Value<string>("--create-thumbnail", "-z", "Also save thumbnail(s) along with the fullmap; comma-separated specs [name:][+](x,y)[@q] where name overrides the thumb_ file prefix, + keeps aspect ratio and @q sets JPEG quality (e.g. \"+(480,480),preview:+(1280,1280)@82\")", v => ThumbnailConfig = v);
 			Flag("--no-preview-fixup", "-x", "Do not fix the [Preview] dimensions when injecting the rendered preview", () => FixPreviewDimensions = false);
 			Flag("--thumb-png", null, "Save thumbnails as PNG instead of JPEG.", () => SavePNGThumbnails = true);
 			Flag("--fixup-tiles", null, "Remove undefined tiles and overwrite IsoMapPack5 section in map", () => FixupTiles = true);
