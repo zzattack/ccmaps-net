@@ -30,7 +30,7 @@ namespace CNCMaps.Shared {
 		}
 
 		public bool SetActiveTheater(TheaterType theater) {
-			ActiveTheater = Theaters.First(t => t.Type == theater);
+			ActiveTheater = Theaters.FirstOrDefault(t => t.Type == theater);
 			return ActiveTheater != null;
 		}
 

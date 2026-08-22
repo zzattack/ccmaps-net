@@ -126,6 +126,23 @@ namespace CNCMaps.Engine {
 
 				progress.Report(5, "loading game data");
 
+				// A theater that only exists in the expansion cannot render with the base
+				// game: NewUrban, Lunar and Desert need YR data no matter what the map or
+				// caller claims. Upgrade within the family instead of failing on it.
+				if (modConfig == null) {
+					var mapTheater = Game.Theater.TheaterTypeFromString(mapFile.ReadString("Map", "Theater"));
+					if (ModConfig.GetDefaultConfig(_settings.Engine).GetTheater(mapTheater) == null) {
+						EngineType upgraded =
+							_settings.Engine == EngineType.RedAlert2 ? EngineType.YurisRevenge :
+							_settings.Engine == EngineType.TiberianSun ? EngineType.Firestorm : _settings.Engine;
+						if (upgraded != _settings.Engine && ModConfig.GetDefaultConfig(upgraded).GetTheater(mapTheater) != null) {
+							_logger.Info("Theater {0} does not exist in {1}; rendering with {2} instead",
+								mapTheater, _settings.Engine, upgraded);
+							_settings.Engine = upgraded;
+						}
+					}
+				}
+
 				// Engine type is now definitive, load mod config
 				if (modConfig == null)
 					modConfig = ModConfig.GetDefaultConfig(_settings.Engine);

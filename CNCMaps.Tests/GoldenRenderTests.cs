@@ -207,6 +207,15 @@ namespace CNCMaps.Tests {
 		}
 
 		[GoldenFact]
+		public void ForcedBaseEngine_UpgradesForExpansionTheater() {
+			// austintx is NewUrban, which plain RA2 does not have; forcing the RA2 engine
+			// must upgrade to YR and produce the exact same render, not crash on a
+			// missing theater
+			var outDir = Render("austintx.map", s => s.Engine = EngineType.RedAlert2);
+			AssertGolden("austintx-png", PixelHash(Path.Combine(outDir, "render.png")), outDir);
+		}
+
+		[GoldenFact]
 		public void EngineDetection_YrmExtensionBreaksTie() {
 			// mp22s8 uses only RA2-era objects, so RA2 and YR both score a perfect 1.0 and probe
 			// order decides. The FinalAlert2 YR extension must hand the tie to YR.
