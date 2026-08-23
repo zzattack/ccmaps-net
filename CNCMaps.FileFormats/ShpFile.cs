@@ -115,7 +115,7 @@ namespace CNCMaps.FileFormats {
 		}
 
 		public ShpImage GetImage(int imageIndex) {
-			if (imageIndex >= Images.Count) return new ShpImage();
+			if (imageIndex < 0 || imageIndex >= Images.Count) return new ShpImage();
 			return Images[imageIndex];
 		}
 	}

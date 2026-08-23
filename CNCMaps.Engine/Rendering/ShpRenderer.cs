@@ -44,7 +44,7 @@ namespace CNCMaps.Engine.Rendering {
 			if (obj.Drawable.IsActualWall)
 				frameIndex = ((StructureObject)obj).WallBuildingFrame;
 			frameIndex = DecideFrameIndex(frameIndex, shp.NumImages);
-			if (frameIndex >= shp.Images.Count)
+			if (frameIndex < 0 || frameIndex >= shp.Images.Count)
 				return;
 
 			var img = shp.GetImage(frameIndex);
@@ -152,6 +152,8 @@ namespace CNCMaps.Engine.Rendering {
 			if (obj.Drawable.IsActualWall)
 				frameIndex = ((StructureObject)obj).WallBuildingFrame;
 			frameIndex = DecideFrameIndex(frameIndex, shp.NumImages);
+			if (frameIndex < 0)
+				return;
 			frameIndex += shp.Images.Count / 2; // latter half are shadow Images
 			if (frameIndex >= shp.Images.Count)
 				return;
@@ -294,8 +296,10 @@ namespace CNCMaps.Engine.Rendering {
 					BuildingZ = _vfs.Open<ShpFile>("buildngz.sha");
 				if (BuildingZ != null)
 					BuildingZ.Initialize();
-				else
+				else {
 					_noBuildingZAvailable = true;
+					return 0;
+				}
 			}
 
 			var zImg = BuildingZ.GetImage(0);
