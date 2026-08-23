@@ -123,6 +123,7 @@ namespace CNCMaps.FileFormats.Map {
 			// Overwrite with actual entries found in IsoMapPack5
 			var mf = new MemoryFile(isoMapPack);
 			int numtiles = 0;
+			int outOfBounds = 0;
 			for (int i = 0; i < cells; i++) {
 				ushort rx = mf.ReadUInt16();
 				ushort ry = mf.ReadUInt16();
@@ -137,13 +138,18 @@ namespace CNCMaps.FileFormats.Map {
 					int dx = rx - ry + FullSize.Width - 1;
 					int dy = rx + ry - FullSize.Width - 1;
 					numtiles++;
-					if (dx >= 0 && dx < 2 * Tiles.Width && dy >= 0 && dy < 2 * Tiles.Height) {
+					// the tile array is (2 * Width - 1) x Height, indexed [dx, dy / 2]
+					if (dx >= 0 && dx < 2 * Tiles.Width - 1 && dy >= 0 && dy < 2 * Tiles.Height) {
 						var tile = new IsoTile((ushort)dx, (ushort)dy, rx, ry, z, tilenum, subtile, icegrowth);
 						Tiles[(ushort)dx, (ushort)dy / 2] = tile;
 					}
+					else
+						outOfBounds++;
 				}
 			}
 
+			if (outOfBounds > 0)
+				Logger.Warn("Ignored {0} tile entries outside map bounds", outOfBounds);
 			Logger.Debug("Read {0} tiles", numtiles);
 		}
 
