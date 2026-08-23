@@ -245,7 +245,7 @@ namespace CNCMaps.FileFormats.Map {
 					short health = short.Parse(entries[2]);
 					int rx = int.Parse(entries[3]);
 					int ry = int.Parse(entries[4]);
-					short direction = short.Parse(entries[7]);
+					short direction = (short)(short.Parse(entries[7]) & 0xFF); // the game stores facings as a byte
 					bool onBridge = entries[11] == "1";
 					var i = new Infantry(owner, name, health, direction, onBridge);
 					i.Tile = Tiles.GetTileR(rx, ry);
@@ -278,7 +278,7 @@ namespace CNCMaps.FileFormats.Map {
 					short health = short.Parse(entries[2]);
 					int rx = int.Parse(entries[3]);
 					int ry = int.Parse(entries[4]);
-					short direction = short.Parse(entries[5]);
+					short direction = (short)(short.Parse(entries[5]) & 0xFF); // the game stores facings as a byte
 					bool onBridge = entries[10] == "1";
 					var u = new Unit(owner, name, health, direction, onBridge);
 					u.Tile = Tiles.GetTileR(rx, ry);
@@ -308,7 +308,7 @@ namespace CNCMaps.FileFormats.Map {
 					short health = short.Parse(entries[2]);
 					int rx = int.Parse(entries[3]);
 					int ry = int.Parse(entries[4]);
-					short direction = short.Parse(entries[5]);
+					short direction = (short)(short.Parse(entries[5]) & 0xFF); // the game stores facings as a byte
 					bool onBridge = entries[entries.Length - 4] == "1";
 					var a = new Aircraft(owner, name, health, direction, onBridge);
 					a.Tile = Tiles.GetTileR(rx, ry);
@@ -339,7 +339,7 @@ namespace CNCMaps.FileFormats.Map {
 					short health = short.Parse(entries[2]);
 					int rx = int.Parse(entries[3]);
 					int ry = int.Parse(entries[4]);
-					short direction = short.Parse(entries[5]);
+					short direction = (short)(short.Parse(entries[5]) & 0xFF); // the game stores facings as a byte
 					var s = new Structure(owner, name, health, direction);
 					s.Upgrade1 = entries[12];
 					s.Upgrade2 = entries[13];
