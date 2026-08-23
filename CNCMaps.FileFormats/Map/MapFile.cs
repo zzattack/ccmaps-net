@@ -87,10 +87,27 @@ namespace CNCMaps.FileFormats.Map {
 			Lighting = new Lighting(GetOrCreateSection("Lighting"));
 		}
 
+		/// <summary>Decodes a base64 pack section. Some map editors leave a stray character or bad
+		/// padding at the end; the game ignores that, so this decodes the largest valid prefix.</summary>
+		private static byte[] DecodePackBase64(string s) {
+			try {
+				return Convert.FromBase64String(s);
+			}
+			catch (FormatException) {
+				var sb = new System.Text.StringBuilder(s.Length);
+				foreach (char c in s)
+					if (!char.IsWhiteSpace(c)) sb.Append(c);
+				while (sb.Length > 0 && sb[sb.Length - 1] == '=')
+					sb.Length--;
+				sb.Length -= sb.Length % 4;
+				return Convert.FromBase64String(sb.ToString());
+			}
+		}
+
 		/// <summary>Reads the tiles. </summary>
 		private void ReadTiles() {
 			var mapSection = GetSection("IsoMapPack5");
-			byte[] lzoData = Convert.FromBase64String(mapSection.ConcatenatedValues());
+			byte[] lzoData = DecodePackBase64(mapSection.ConcatenatedValues());
 			int cells = (FullSize.Width * 2 - 1) * FullSize.Height;
 			int lzoPackSize = cells * 11 + 4; // last 4 bytes contains a lzo pack header saying no more data is left
 
@@ -202,7 +219,7 @@ namespace CNCMaps.FileFormats.Map {
 				return;
 			}
 
-			byte[] format80Data = Convert.FromBase64String(overlaySection.ConcatenatedValues());
+			byte[] format80Data = DecodePackBase64(overlaySection.ConcatenatedValues());
 			var overlayPack = new byte[1 << 18];
 			Format5.DecodeInto(format80Data, overlayPack, 80);
 
@@ -211,7 +228,7 @@ namespace CNCMaps.FileFormats.Map {
 				Logger.Debug("OverlayDataPack section unavailable in {0}, overlay will be unavailable", Path.GetFileName(FileName));
 				return;
 			}
-			format80Data = Convert.FromBase64String(overlayDataSection.ConcatenatedValues());
+			format80Data = DecodePackBase64(overlayDataSection.ConcatenatedValues());
 			var overlayDataPack = new byte[1 << 18];
 			Format5.DecodeInto(format80Data, overlayDataPack, 80);
 
