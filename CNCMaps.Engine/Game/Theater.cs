@@ -132,6 +132,8 @@ namespace CNCMaps.Engine.Game {
 				_rules.GetSection("VehicleTypes"), _palettes);
 
 			_tileTypes.InitTilesets();
+			Logger.Info("Theater {0}: {1} tiles (highest valid tile index {2})",
+				_theaterType, _tileTypes.NumTiles, _tileTypes.NumTiles - 1);
 			_tileTypes.InitAnimations(_animations);
 
 			return true;

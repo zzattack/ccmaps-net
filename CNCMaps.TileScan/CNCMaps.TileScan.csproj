@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>CNCMaps.TileScan</RootNamespace>
+    <AssemblyName>CNCMaps.TileScan</AssemblyName>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>disable</Nullable>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\CNCMaps.FileFormats\CNCMaps.FileFormats.csproj" />
+  </ItemGroup>
+</Project>
