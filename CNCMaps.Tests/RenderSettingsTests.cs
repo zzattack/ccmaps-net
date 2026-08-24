@@ -133,5 +133,13 @@ namespace CNCMaps.Tests {
 			var rs = Parse("-z", "+(200,100)");
 			Assert.Equal("+(200,100)", rs.ThumbnailConfig);
 		}
+
+		[Fact]
+		public void ThumbMarkersParseToEnum() {
+			Assert.Equal(StartPositionMarking.Squared, Parse("--thumb-markers", "squared").ThumbnailMarkers);
+			Assert.Equal(StartPositionMarking.Starred, Parse("--thumb-markers=star").ThumbnailMarkers);
+			Assert.Equal(StartPositionMarking.None, Parse("--thumb-markers", "tiled").ThumbnailMarkers);
+			Assert.Equal(StartPositionMarking.None, Parse().ThumbnailMarkers);
+		}
 	}
 }

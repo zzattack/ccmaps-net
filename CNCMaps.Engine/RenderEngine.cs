@@ -258,8 +258,15 @@ namespace CNCMaps.Engine {
 				Rectangle saveRect = map.GetSizePixels(_settings.SizeMode);
 				DrawingSurface ds = map.GetDrawingSurface();
 				saveRect.Intersect(new Rectangle(0, 0, ds.Width, ds.Height));
+				bool thumbMarkers = _settings.ThumbnailMarkers != StartPositionMarking.None &&
+					_settings.ThumbnailConfig != "" &&
+					!(_settings.MarkStartPos && _settings.StartPositionMarking == _settings.ThumbnailMarkers);
+				// replacing tiled markers for the thumbnails redraws tiles, which needs the
+				// z-buffer and palettes that would otherwise be freed here
+				bool thumbMarkersRedraw = thumbMarkers &&
+					_settings.MarkStartPos && _settings.StartPositionMarking == StartPositionMarking.Tiled;
 				// if we don't need this data anymore, we can try to save some memory
-				if (!_settings.GeneratePreviewPack) {
+				if (!_settings.GeneratePreviewPack && !thumbMarkersRedraw) {
 					ds.FreeNonBitmap();
 					map.FreeUseless();
 					GC.Collect();
@@ -278,6 +285,16 @@ namespace CNCMaps.Engine {
 					ds.SavePNG(Path.Combine(_settings.OutputDir, _settings.OutputFile + ".png"),
 						_settings.PNGQuality, saveRect,
 						frac => progress.Span(pngFrom, Math.Min(pngFrom + 10, 99), frac, "encoding"));
+				}
+
+				// The thumbnails are cut from the same surface as the full map, so the marker style is swapped
+				// only after the full-size images are saved. Tiled markers must be erased first or their tinted
+				// terrain bleeds out around the stamped shape.
+				if (thumbMarkers) {
+					if (thumbMarkersRedraw)
+						map.RedrawTiledStartPositions(true);
+					map.StartPosMarking = _settings.ThumbnailMarkers;
+					map.DrawStartPositions();
 				}
 
 				// One or more comma-separated specs, e.g. "+(480,480),preview:+(1280,1280)@82".
@@ -455,6 +472,7 @@ namespace CNCMaps.Engine {
 				return false;
 			}
 			else if (!_settings.SaveJPEG && !_settings.SavePNG && !_settings.SavePNGThumbnails  &&
+				string.IsNullOrEmpty(_settings.ThumbnailConfig) &&
 				!_settings.GeneratePreviewPack && !_settings.FixupTiles && !_settings.FixOverlays && !_settings.CompressTiles &&
 				PreviewWindow == null) {
 				_logger.Error("No action to perform. Either generate PNG/JPEG/Thumbnail or modify map.");

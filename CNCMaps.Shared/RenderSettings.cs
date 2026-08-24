@@ -30,6 +30,7 @@ namespace CNCMaps.Shared {
 		public double? MarkerStartSize { get; set; }
 		public bool PreferOSMesa { get; set; }
 		public string ThumbnailConfig { get; set; }
+		public StartPositionMarking ThumbnailMarkers { get; set; }
 		public bool FixupTiles { get; set; }
 		public bool GeneratePreviewPack { get; set; }
 		public PreviewMarkersType PreviewMarkers { get; set; }
@@ -60,6 +61,7 @@ namespace CNCMaps.Shared {
 			ModConfig = "";
 			MetadataOutFile = "";
 			ThumbnailConfig = "";
+			ThumbnailMarkers = StartPositionMarking.None;
 			SavePNGThumbnails = false;
 			SizeMode = SizeMode.Auto;
 			FixPreviewDimensions = true;
@@ -154,6 +156,18 @@ namespace CNCMaps.Shared {
 			});
 			Flag("--ignore-lighting", "-n", "Ignore all lighting and lamps on the map", () => IgnoreLighting = true);
 			Value<string>("--create-thumbnail", "-z", "Also save thumbnail(s) along with the fullmap; comma-separated specs [name:][+](x,y)[@q] where name overrides the thumb_ file prefix, + keeps aspect ratio and @q sets JPEG quality (e.g. \"+(480,480),preview:+(1280,1280)@82\")", v => ThumbnailConfig = v);
+			Value<string>("--thumb-markers", null, "Draw this start position marker style (squared|circled|diamond|ellipsed|star) onto the thumbnails only; it is stamped after the full-size image is saved, so the main render keeps its own marker style", v => {
+				switch (v?.ToLowerInvariant()) {
+					case "squared": ThumbnailMarkers = StartPositionMarking.Squared; break;
+					case "circled": ThumbnailMarkers = StartPositionMarking.Circled; break;
+					case "diamond": ThumbnailMarkers = StartPositionMarking.Diamond; break;
+					case "ellipsed": ThumbnailMarkers = StartPositionMarking.Ellipsed; break;
+					case "star":
+					case "starred": ThumbnailMarkers = StartPositionMarking.Starred; break;
+					// tiled is baked into the tile palettes before drawing, so it cannot be applied per-thumbnail
+					default: _logger.Warn("Unknown --thumb-markers style '{0}' ignored", v); break;
+				}
+			});
 			Flag("--no-preview-fixup", "-x", "Do not fix the [Preview] dimensions when injecting the rendered preview", () => FixPreviewDimensions = false);
 			Flag("--thumb-png", null, "Save thumbnails as PNG instead of JPEG.", () => SavePNGThumbnails = true);
 			Flag("--fixup-tiles", null, "Remove undefined tiles and overwrite IsoMapPack5 section in map", () => FixupTiles = true);
