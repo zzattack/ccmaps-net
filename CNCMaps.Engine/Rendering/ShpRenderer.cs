@@ -13,10 +13,8 @@ namespace CNCMaps.Engine.Rendering {
 	class ShpRenderer {
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
-		private bool _noBuildingZAvailable = false;
 		private readonly ModConfig _config;
 		private readonly VirtualFileSystem _vfs;
-		private ShpFile BuildingZ;
 
 		public ShpRenderer(ModConfig config, VirtualFileSystem vfs) {
 			_config = config;
@@ -73,7 +71,20 @@ namespace CNCMaps.Engine.Rendering {
 			int rIdx = 0; // image pixel index
 			int zIdx = offset.X + offset.Y * ds.Width; // z-buffer pixel index
 			short hBufVal = (short)(obj.Tile.Z * _config.TileHeight / 2);
-			short zOffset = (short)((obj.BottomTile.Rx + obj.BottomTile.Ry) * _config.TileHeight / 2 + props.ZAdjust);
+
+			// Game z model (gamemd Shape_Draw_Z): tiles write the ground ramp that reaches zBase at the
+			// cell diamond's bottom row (TmpRenderer: zBase - ZData). A standing shape sits 12 in front of
+			// the ground at its anchor row, raised by any elevation above its tile (high bridges), and
+			// recedes 1 z per 3 rows toward its top; a flat shape follows the ground ramp. Buildings anchor
+			// at their cell's bottom row so attached parts (anims, turrets, upgrades) drawn later tie with
+			// the body instead of losing against its lifted wall z.
+			bool isBuilding = obj is StructureObject;
+			var bt = obj.BottomTile;
+			int cellBottomY = (bt.Dy - bt.Z) * _config.TileHeight / 2 + _config.TileHeight - 1;
+			int spriteBottomY = offset.Y + img.Height - 1;
+			int zAnchorY = isBuilding ? cellBottomY : spriteBottomY;
+			int zGround = (bt.Rx + bt.Ry) * _config.TileHeight / 2 + (zAnchorY - cellBottomY)
+				+ dr.TileElevation * _config.TileHeight / 2;
 
 			if (!dr.Flat)
 				hBufVal += shp.Height;
@@ -89,20 +100,15 @@ namespace CNCMaps.Engine.Rendering {
 				for (int x = 0; x < img.Width; x++) {
 					byte paletteValue = imgData[rIdx];
 
-					short zshapeOffset = obj is StructureObject ? (GetBuildingZ(x, y, shp, img, obj)) : (short)0;
-
 					if (paletteValue != 0) {
-						short zBufVal = zOffset;
+						// ZAdjust uses the game's sign: positive pushes away from the screen
+						short zBufVal;
 						if (dr.Flat)
-							zBufVal += (short)(y - img.Height);
-						else if (dr.IsBuildingPart) {
-							// nonflat building
-							zBufVal += zshapeOffset;
-						}
+							zBufVal = (short)(zGround + (offset.Y + y) - zAnchorY - props.ZAdjust);
 						else
-							zBufVal += img.Height;
+							zBufVal = (short)(zGround + 12 + (zAnchorY - (offset.Y + y)) / 3 - props.ZAdjust);
 
-						if (w_low <= w && w < w_high  /*&& zBufVal >= zBuffer[zIdx]*/) {
+						if (w_low <= w && w < w_high && zBufVal >= zBuffer[zIdx]) {
 							int ci = paletteValue * 3;
 							if (transLucency != 0) {
 								*(w + 0) = (byte)(a * *(w + 0) + b * bgr[ci]);
@@ -113,11 +119,6 @@ namespace CNCMaps.Engine.Rendering {
 								*(w + 0) = bgr[ci];
 								*(w + 1) = bgr[ci + 1];
 								*(w + 2) = bgr[ci + 2];
-
-								//var pal = Theater.Active.GetPalettes().UnitPalette.Colors;
-								//*(w + 0) = pal[zshapeOffset].R;
-								//*(w + 1) = pal[zshapeOffset].G;
-								//*(w + 2) = pal[zshapeOffset].B;
 							}
 							zBuffer[zIdx] = zBufVal;
 							heightBuffer[zIdx] = hBufVal;
@@ -137,13 +138,6 @@ namespace CNCMaps.Engine.Rendering {
 				w += stride - 3 * img.Width;
 				zIdx += ds.Width - img.Width;
 			}
-		}
-
-		// An object with a body of its own may only darken what stands below its top: a tie means a
-		// neighbouring copy of the same object, and those must not shade each other. Flat casters
-		// carry no height, and high bridges rely on the tie to reach the ground from their deck.
-		private static bool CastsOver(Drawable dr, int castHeight, int surfaceHeight) {
-			return dr.Flat ? castHeight >= surfaceHeight : castHeight > surfaceHeight;
 		}
 
 		public unsafe void DrawShadow(GameObject obj, ShpFile shp, DrawProperties props, DrawingSurface ds) {
@@ -171,20 +165,17 @@ namespace CNCMaps.Engine.Rendering {
 			int stride = ds.BitmapData.Stride;
 			var shadows = ds.GetShadows();
 			var zBuffer = ds.GetZBuffer();
-			var heightBuffer = ds.GetHeightBuffer();
-
-			var w_low = (byte*)ds.BitmapData.Scan0;
-			byte* w_high = (byte*)ds.BitmapData.Scan0 + stride * ds.BitmapData.Height;
 
 			byte* w = (byte*)ds.BitmapData.Scan0 + offset.X * 3 + stride * offset.Y;
 			int zIdx = offset.X + offset.Y * ds.Width;
 			int rIdx = 0;
-			short zOffset = (short)((obj.Tile.Rx + obj.Tile.Ry) * _config.TileHeight / 2 - shp.Height / 2 + img.Y);
-			int castHeight = obj.Tile.Z * _config.TileHeight / 2;
-			if (obj.Drawable != null && !obj.Drawable.Flat) {
-				castHeight += shp.Height;
-				castHeight += obj.Drawable.TileElevation * _config.TileHeight / 2;
-			}
+
+			// Shadows lie on the caster's ground plane, 2 z in front of it: gamemd draws them with the
+			// Ground z-gradient and darkens only where that plane is in front of what the pixel holds.
+			// No z is written back; the shadows mask deduplicates overlapping shadows.
+			var t = obj.Tile;
+			int cellBottomY = (t.Dy - t.Z) * _config.TileHeight / 2 + _config.TileHeight - 1;
+			int zBase = (t.Rx + t.Ry) * _config.TileHeight / 2;
 
 			for (int y = 0; y < img.Height; y++) {
 				if (offset.Y + y < 0) {
@@ -194,17 +185,12 @@ namespace CNCMaps.Engine.Rendering {
 					continue; // out of bounds
 				}
 
-				short zBufVal = zOffset;
-				if (obj.Drawable.Flat)
-					zBufVal += (short)y;
-				else
-					zBufVal += img.Height;
+				short zBufVal = (short)(zBase + (offset.Y + y) - cellBottomY + 2);
 
 				for (int x = 0; x < img.Width; x++) {
 					if (0 <= offset.X + x && offset.X + x < ds.Width && 0 <= y + offset.Y && y + offset.Y < ds.Height &&
 						imgData[rIdx] != 0 && !shadows[zIdx] &&
-						// zBufVal >= zBuffer[zIdx] &&
-						CastsOver(obj.Drawable, castHeight, heightBuffer[zIdx])) {
+						zBufVal > zBuffer[zIdx]) {
 
 						*(w + 0) /= 2;
 						*(w + 1) /= 2;
@@ -246,7 +232,6 @@ namespace CNCMaps.Engine.Rendering {
 			int dx = offset.X + _config.TileWidth / 2 - shp.Width / 2 + img.X,
 				dy = offset.Y - shp.Height / 2 + img.Y;
 			byte* w = (byte*)ds.BitmapData.Scan0 + dx * 3 + stride * dy;
-			short zOffset = (short)((obj.Tile.Rx + obj.Tile.Ry) * _config.TileHeight / 2 - shp.Height / 2 + img.Y + props.ZAdjust);
 			int rIdx = 0;
 
 			for (int y = 0; y < img.Height; y++) {
@@ -283,47 +268,6 @@ namespace CNCMaps.Engine.Rendering {
 			//	frameIndex = Images.Count / 4;
 			//}
 			return frameIndex;
-		}
-
-		private short GetBuildingZ(int x, int y, ShpFile shp, ShpFile.ShpImage img, GameObject obj) {
-			if (_noBuildingZAvailable)
-				return 0;
-
-			else if (BuildingZ == null) {
-				if (_config.Engine < EngineType.YurisRevenge)
-					BuildingZ = _vfs.Open<ShpFile>("buildngz.shp");
-				else // Yuri's Revenge uses .sha as a file extension for this
-					BuildingZ = _vfs.Open<ShpFile>("buildngz.sha");
-				if (BuildingZ != null)
-					BuildingZ.Initialize();
-				else {
-					_noBuildingZAvailable = true;
-					return 0;
-				}
-			}
-
-			var zImg = BuildingZ.GetImage(0);
-			byte[] zData = zImg.GetImageData();
-
-			// center x
-			x += zImg.Width / 2 - shp.Width / 2 + img.X;
-
-			// correct for foundation
-			x -= (obj.Drawable.Foundation.Width - obj.Drawable.Foundation.Height) * 30;
-
-			// add zshapepointmove
-			x += obj.Drawable.Props.ZShapePointMove.X;
-
-			// align y on bottom
-			y += zImg.Height - shp.Height;
-
-			// add zshapepointmove
-			y -= obj.Drawable.Props.ZShapePointMove.Y;
-
-			x = Math.Min(zImg.Width - 1, Math.Max(0, x));
-			y = Math.Min(zImg.Height - 1, Math.Max(0, y));
-
-			return (short)(-64 + zData[y * zImg.Width + x]);
 		}
 
 	}

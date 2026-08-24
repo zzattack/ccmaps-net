@@ -167,9 +167,10 @@ namespace CNCMaps.Engine.Drawables {
 			}
 			else if (Rules.ReadString("Land") == "Road") {
 				Props.Offset.Y += _config.TileHeight / 2;
-				// Some silly crap with low bridges not rendering.
-				if (Name.ToUpper().Contains("LOBRDG") || Name.ToUpper().Contains("LOBRDB")) 
-					Props.ZAdjust += _config.TileHeight;
+				// lift low bridges toward the viewer so they draw over the terrain under them
+				// (ZAdjust uses the game's sign: negative = closer)
+				if (Name.ToUpper().Contains("LOBRDG") || Name.ToUpper().Contains("LOBRDB"))
+					Props.ZAdjust -= _config.TileHeight;
 			}
 			else if (Rules.ReadString("Land") == "Railroad") {
 				if (_config.Engine <= EngineType.Firestorm)
