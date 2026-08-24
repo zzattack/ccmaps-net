@@ -1050,23 +1050,6 @@ namespace CNCMaps.Engine.Map {
 		public void Draw() {
 			_drawingSurface = new DrawingSurface(FullSize.Width * _config.TileWidth, FullSize.Height * _config.TileHeight);
 
-#if SORT
-			Logger.Info("Sorting objects map");
-			var sorter = new ObjectSorter(_theater, _tiles);
-			var orderedObjs = sorter.GetOrderedObjects().ToList();
-
-			double lastReported = 0.0;
-			Logger.Info("Drawing map... 0%");
-			for (int i = 0; i < orderedObjs.Count; i++) {
-				var obj = orderedObjs[i];
-				_theater.Draw(obj, _drawingSurface);
-				double pct = 100.0 * i / orderedObjs.Count;
-				if (pct > lastReported + 5) {
-					Logger.Info("Drawing map... {0}%", Math.Round(pct, 0));
-					lastReported = pct;
-				}
-			}
-#else
 			double lastReported = 0.0;
 			for (int y = 0; y < FullSize.Height; y++) {
 				Logger.Trace("Drawing tiles row {0}", y);
@@ -1103,8 +1086,6 @@ namespace CNCMaps.Engine.Map {
 					lastReported = pct;
 				}
 			}
-#endif
-
 
 #if DEBUG && FALSE
 			// test that my bounds make some kind of sense
