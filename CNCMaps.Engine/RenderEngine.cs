@@ -50,6 +50,7 @@ namespace CNCMaps.Engine {
 		public Action<int, string> ProgressChanged { get; set; }
 
 		public EngineResult Execute() {
+			VirtualFileSystem vfs = null;
 			try {
 				// make each render deterministic regardless of how many renders ran
 				// earlier in this process
@@ -155,7 +156,18 @@ namespace CNCMaps.Engine {
 				};
 
 				string resolvedName = Path.GetFileNameWithoutExtension(_settings.InputFile);
-				using (var vfs = new VirtualFileSystem()) {
+				bool thumbMarkers = _settings.ThumbnailMarkers != StartPositionMarking.None &&
+					_settings.ThumbnailConfig != "" &&
+					!(_settings.MarkStartPos && _settings.StartPositionMarking == _settings.ThumbnailMarkers);
+				bool thumbMarkersRedraw = thumbMarkers &&
+					_settings.MarkStartPos && _settings.StartPositionMarking == StartPositionMarking.Tiled;
+				// post-save redraws (the thumbnail marker swap, [PreviewPack] markers on a
+				// tiled-marked surface) lazily load TMP files from the mixes, so the VFS
+				// must then outlive the full-size save instead of being released here
+				bool lateVfsDispose = thumbMarkersRedraw ||
+					(_settings.GeneratePreviewPack && _settings.MarkStartPos);
+				vfs = new VirtualFileSystem();
+				{
 					// first add the dirs, then load the extra mixes, then scan the dirs
 					foreach (string modDir in modConfig.Directories)
 						vfs.Add(modDir);
@@ -252,20 +264,18 @@ namespace CNCMaps.Engine {
 
 					if (PreviewWindow != null)
 						PreviewWindow.Show(map);
-				} // VFS resources can now be released
+				}
+				if (!lateVfsDispose) {
+					vfs.Dispose();
+					vfs = null;
+				}
 
 				// free up as much memory as possible before saving the large images
 				Rectangle saveRect = map.GetSizePixels(_settings.SizeMode);
 				DrawingSurface ds = map.GetDrawingSurface();
 				saveRect.Intersect(new Rectangle(0, 0, ds.Width, ds.Height));
-				bool thumbMarkers = _settings.ThumbnailMarkers != StartPositionMarking.None &&
-					_settings.ThumbnailConfig != "" &&
-					!(_settings.MarkStartPos && _settings.StartPositionMarking == _settings.ThumbnailMarkers);
 				// replacing tiled markers for the thumbnails redraws tiles, which needs the
-				// z-buffer and palettes that would otherwise be freed here
-				bool thumbMarkersRedraw = thumbMarkers &&
-					_settings.MarkStartPos && _settings.StartPositionMarking == StartPositionMarking.Tiled;
-				// if we don't need this data anymore, we can try to save some memory
+				// z-buffer and palettes (and the VFS above) that would otherwise be freed here
 				if (!_settings.GeneratePreviewPack && !thumbMarkersRedraw) {
 					ds.FreeNonBitmap();
 					map.FreeUseless();
@@ -379,6 +389,9 @@ namespace CNCMaps.Engine {
 				throw;
 #endif
 				return EngineResult.Exception;
+			}
+			finally {
+				vfs?.Dispose();
 			}
 			return EngineResult.RenderedOk;
 		}
