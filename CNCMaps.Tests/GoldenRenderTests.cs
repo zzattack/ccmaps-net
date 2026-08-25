@@ -156,6 +156,18 @@ namespace CNCMaps.Tests {
 			AssertGolden("hillbtwn-previewpack", hash, outDir);
 		}
 
+		[TsGoldenFact]
+		public void TsLampMap_RendersGoldenPixels() {
+			// duel.map places six TSTLAMP alpha light posts; this covers the TS render
+			// pipeline and the AlphaImage glow of invisible lamp buildings
+			var outDir = Render("duel.map", s => {
+				s.MixFilesDirectories.Clear();
+				s.MixFilesDirectories.Add(TsMixDir);
+				s.Engine = EngineType.TiberianSun;
+			});
+			AssertGolden("duel-png", PixelHash(Path.Combine(outDir, "render.png")), outDir);
+		}
+
 		[GoldenFact]
 		public void RepeatedInProcessRenders_StayGolden() {
 			// a long-running service worker renders many maps in one process; verify

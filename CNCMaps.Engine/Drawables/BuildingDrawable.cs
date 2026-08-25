@@ -274,8 +274,12 @@ namespace CNCMaps.Engine.Drawables {
 		}
 
 		public override void Draw(GameObject obj, DrawingSurface ds, bool shadows = true) {
-			if (InvisibleInGame)
+			if (InvisibleInGame) {
+				// invisible lamp buildings still project their AlphaImage glow in game
+				foreach (var sub in SubDrawables.OfType<AlphaDrawable>())
+					sub.Draw(obj, ds, false);
 				return;
+			}
 
 			// RA2/YR building rubble
 			if (obj is StructureObject && (obj as StructureObject).Health == 0 && _config.Engine >= EngineType.RedAlert2 && _baseShp.Shp != null) {
