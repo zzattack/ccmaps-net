@@ -128,12 +128,14 @@ namespace CNCMaps.Engine.Map {
 		void Initialize(IniFile.IniSection lamp, Lighting scenario) {
 			logger.Trace("Loading LightSource {0} at ({1},{2})", lamp.Name, Tile);
 
-			// Read and assume default values
+			// An absent tint defaults to 1000.0 in the game (BuildingTypeClass ctor inits the fields to
+			// 1,000,000 per-mille), so a lamp with an intensity but no tints saturates the tint clamp and
+			// doubles brightness over its whole radius. Vanilla lamps set all three.
 			LightVisibility = lamp.ReadDouble("LightVisibility", 5000.0);
 			LightIntensity = lamp.ReadDouble("LightIntensity", 0.0);
-			LightRedTint = lamp.ReadDouble("LightRedTint", 1.0);
-			LightGreenTint = lamp.ReadDouble("LightGreenTint", 1.0);
-			LightBlueTint = lamp.ReadDouble("LightBlueTint", 1.0);
+			LightRedTint = lamp.ReadDouble("LightRedTint", 1000.0);
+			LightGreenTint = lamp.ReadDouble("LightGreenTint", 1000.0);
+			LightBlueTint = lamp.ReadDouble("LightBlueTint", 1000.0);
 			this.scenario = scenario;
 		}
 
@@ -144,6 +146,7 @@ namespace CNCMaps.Engine.Map {
 		/// <returns>Whether the palette was replaced, meaning it needs to be recalculated</returns>
 		public bool ApplyLamp(GameObject obj, bool ambientOnly = false) {
 			var lamp = this;
+			// the game only creates a light source for buildings with LightIntensity != 0
 			const double TOLERANCE = 0.001;
 			if (Math.Abs(lamp.LightIntensity) < TOLERANCE)
 				return false;

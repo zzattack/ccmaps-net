@@ -99,25 +99,35 @@ namespace CNCMaps.Engine.Rendering {
 			if (!_originalColorsLoaded) LoadOriginalColors();
 			if (!_originalColorsLoaded) return;
 
-			// Starkku: What is the purpose of this? Can cause weird discoloration issues when you hit this ceiling when recalculating palettes f.ex
-			// from light sources, something that does not happen in the game (it lightens stuff up until it's near white and so on.
-			const double clipMult = Double.MaxValue; //1.3;
-			_ambientMult = Math.Min(Math.Max(_ambientMult, 0), clipMult);
-			_redMult = Math.Min(Math.Max(_redMult, 0), clipMult);
-			_greenMult = Math.Min(Math.Max(_greenMult, 0), clipMult);
-			_blueMult = Math.Min(Math.Max(_blueMult, 0), clipMult);
+			// gamemd (CellClass::ComputeLighting 0x484180, normalize 0x5558E0): the ambient sum and each
+			// tint sum clamp to [0,2]; the tint triple is normalized so its max channel becomes 1, the max
+			// goes into the intensity, and that clamps to [0,2] again. Without a binding clamp this is the
+			// plain per-channel product; the clamps cap the dominant channel's gain at 2x, which keeps
+			// stacked or negative lamps from discoloring.
+			double amb = Math.Min(Math.Max(_ambientMult, 0), 2.0);
+			double tr = Math.Min(Math.Max(_redMult, 0), 2.0);
+			double tg = Math.Min(Math.Max(_greenMult, 0), 2.0);
+			double tb = Math.Min(Math.Max(_blueMult, 0), 2.0);
+			double m = Math.Max(tr, Math.Max(tg, tb));
 			double rmult, gmult, bmult;
+			if (m < 0.001) {
+				rmult = gmult = bmult = 0;
+			}
+			else {
+				double intensity = Math.Min(amb * m, 2.0);
+				rmult = intensity * (tr / m);
+				gmult = intensity * (tg / m);
+				bmult = intensity * (tb / m);
+			}
 			for (int i = 0; i < 256; i++) {
-				rmult = _ambientMult * _redMult;
-				gmult = _ambientMult * _greenMult;
-				bmult = _ambientMult * _blueMult;
+				double rm = rmult, gm = gmult, bm = bmult;
 				// For object palettes colors 240-254 do not get any lighting applied on them.
 				if (i >= 240 && i <= 254 && _isObjectPalette) {
-					rmult = gmult = bmult = 1.0;
+					rm = gm = bm = 1.0;
 				}
-				var r = (byte)Math.Min(255, _origColors[i * 3 + 0] * rmult / 63.0 * 255.0);
-				var g = (byte)Math.Min(255, _origColors[i * 3 + 1] * gmult / 63.0 * 255.0);
-				var b = (byte)Math.Min(255, _origColors[i * 3 + 2] * bmult / 63.0 * 255.0);
+				var r = (byte)Math.Min(255, _origColors[i * 3 + 0] * rm / 63.0 * 255.0);
+				var g = (byte)Math.Min(255, _origColors[i * 3 + 1] * gm / 63.0 * 255.0);
+				var b = (byte)Math.Min(255, _origColors[i * 3 + 2] * bm / 63.0 * 255.0);
 				Colors[i] = Color.FromArgb(r, g, b);
 			}
 			_bgr = null;
