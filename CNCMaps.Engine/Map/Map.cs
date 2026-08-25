@@ -1201,6 +1201,89 @@ namespace CNCMaps.Engine.Map {
 			return ret;
 		}
 
+		/// <summary>Derives map statistics for --meta-json. Requires rules to still be loaded,
+		/// so call before FreeUseless.</summary>
+		public MapStats ComputeStats() {
+			var stats = new MapStats();
+			var coll = _theater.GetTileCollection();
+			var cliffSets = new HashSet<int> { coll.CliffSet, coll.WaterCliffs, coll.DestroyableCliffs,
+				coll.WaterCliffAPieces, coll.MMWaterCliffAPieces, coll.CrystalCliff };
+			var rampSets = new HashSet<int> { coll.RampBase, coll.RampSmooth, coll.SlopeSetPieces,
+				coll.SlopeSetPieces2, coll.CliffRamps, coll.PavedRoadSlopes, coll.DirtRoadSlopes, coll.MonorailSlopes };
+			cliffSets.Remove(-1);
+			rampSets.Remove(-1);
+
+			stats.HeightMin = int.MaxValue;
+			foreach (MapTile t in _tiles) {
+				if (t == null) continue;
+				stats.TotalTiles++;
+				if (t.Z < stats.HeightMin) stats.HeightMin = t.Z;
+				if (t.Z > stats.HeightMax) stats.HeightMax = t.Z;
+				if (t.SetNum == -1) continue;
+				if (t.SetNum == coll.WaterSet || t.SetNum == coll.WaterCaves && coll.WaterCaves != -1)
+					stats.WaterTiles++;
+				else if (t.SetNum == coll.ShorePieces)
+					stats.ShoreTiles++;
+				else if (cliffSets.Contains(t.SetNum))
+					stats.CliffTiles++;
+				else if (rampSets.Contains(t.SetNum))
+					stats.RampTiles++;
+			}
+			if (stats.HeightMin == int.MaxValue) stats.HeightMin = 0;
+
+			// full ore cell = 12 * Value credits: a cell holds OverlayValue+1 units
+			int oreValue = _rules.GetOrCreateSection("Riparius").ReadInt("Value", 25);
+			int gemValue = _rules.GetOrCreateSection("Cruentus").ReadInt("Value", 50);
+			int ore2Value = _rules.GetOrCreateSection("Vinifera").ReadInt("Value", 25);
+			int ore3Value = _rules.GetOrCreateSection("Aboreus").ReadInt("Value", 25);
+			foreach (var ovl in _overlayObjects) {
+				var tib = SpecialOverlays.GetOverlayTibType(ovl, _config.Engine);
+				switch (tib) {
+					case OverlayTibType.Ore:
+						stats.OreCells++;
+						stats.TotalCredits += (ovl.OverlayValue + 1) * oreValue;
+						break;
+					case OverlayTibType.Gems:
+						stats.GemCells++;
+						stats.TotalCredits += (ovl.OverlayValue + 1) * gemValue;
+						break;
+					case OverlayTibType.Vinifera:
+						stats.OreCells++;
+						stats.TotalCredits += (ovl.OverlayValue + 1) * ore2Value;
+						break;
+					case OverlayTibType.Aboreus:
+						stats.OreCells++;
+						stats.TotalCredits += (ovl.OverlayValue + 1) * ore3Value;
+						break;
+				}
+				// overlay ids 59/60 are rail bridges in TS but plain train tracks in RA2/YR
+				if (SpecialOverlays.IsHighBridge(ovl) ||
+					(_config.Engine <= EngineType.Firestorm && SpecialOverlays.IsTSHighRailsBridge(ovl)) ||
+					(ovl.Drawable != null && ovl.Drawable.Name.StartsWith("LOBRDG", StringComparison.OrdinalIgnoreCase)))
+					stats.HasBridges = true;
+			}
+
+			foreach (var s in _structureObjects) {
+				stats.Structures++;
+				var rs = _rules.GetSection(s.Name);
+				if (rs == null) continue;
+				if (rs.ReadBool("NeedsEngineer")) {
+					stats.TechStructures++;
+					stats.TechStructureTypes.TryGetValue(s.Name, out int n);
+					stats.TechStructureTypes[s.Name] = n + 1;
+				}
+				if (rs.ReadBool("CanBeOccupied"))
+					stats.GarrisonableStructures++;
+			}
+			stats.TerrainObjects = _terrainObjects.Count;
+			stats.OreSpawners = _terrainObjects.Count(t => t.Name.StartsWith("TIBTRE", StringComparison.OrdinalIgnoreCase));
+			stats.Units = _unitObjects.Count;
+			stats.Infantry = _infantryObjects.Count;
+			stats.Aircraft = _aircraftObjects.Count;
+			stats.Smudges = _smudgeObjects.Count;
+			return stats;
+		}
+
 		public DrawingSurface GetDrawingSurface() {
 			return _drawingSurface;
 		}

@@ -274,6 +274,8 @@ namespace CNCMaps.Engine {
 				Rectangle saveRect = map.GetSizePixels(_settings.SizeMode);
 				DrawingSurface ds = map.GetDrawingSurface();
 				saveRect.Intersect(new Rectangle(0, 0, ds.Width, ds.Height));
+				// stats need the rules, which FreeUseless disposes below
+				MapStats mapStats = string.IsNullOrEmpty(_settings.MetadataOutFile) ? null : map.ComputeStats();
 				// replacing tiled markers for the thumbnails redraws tiles, which needs the
 				// z-buffer and palettes (and the VFS above) that would otherwise be freed here
 				if (!_settings.GeneratePreviewPack && !thumbMarkersRedraw) {
@@ -357,7 +359,7 @@ namespace CNCMaps.Engine {
 				}
 
 				if (!string.IsNullOrEmpty(_settings.MetadataOutFile))
-					WriteMetadataJson(_settings.MetadataOutFile, resolvedName, mapFile, map, saveRect);
+					WriteMetadataJson(_settings.MetadataOutFile, resolvedName, mapFile, map, saveRect, mapStats);
 
 				if (_settings.GeneratePreviewPack || _settings.FixupTiles || _settings.FixOverlays ||
 					_settings.CompressTiles) {
@@ -516,9 +518,20 @@ namespace CNCMaps.Engine {
 		/// Writes the authoritatively resolved map properties as JSON, for consumers
 		/// like the web portal that would otherwise have to re-parse the map INI.
 		/// </summary>
-		private void WriteMetadataJson(string path, string resolvedName, MapFile mapFile, Map.Map map, Rectangle saveRect) {
+		private void WriteMetadataJson(string path, string resolvedName, MapFile mapFile, Map.Map map, Rectangle saveRect, MapStats stats) {
 			try {
 				var basic = mapFile.GetSection("Basic");
+
+				// start waypoints counted straight from the ini: MapFile.Waypoints is gated on
+				// MultiplayerOnly, but maps missing that flag still carry playable starts
+				int startPositions = 0;
+				var wpSection = mapFile.GetSection("Waypoints");
+				if (wpSection != null) {
+					foreach (var kv in wpSection.OrderedEntries)
+						if (int.TryParse(kv.Key, out int num) && num < 8 && int.TryParse(kv.Value, out _))
+							startPositions++;
+				}
+
 				var meta = new {
 					name = StripPlayersFromName(resolvedName).Replace("  ", " ").Trim(),
 					rawName = resolvedName,
@@ -529,9 +542,36 @@ namespace CNCMaps.Engine {
 					theater = map.TheaterType.ToString(),
 					fullSize = new { x = mapFile.FullSize.X, y = mapFile.FullSize.Y, width = mapFile.FullSize.Width, height = mapFile.FullSize.Height },
 					localSize = new { x = mapFile.LocalSize.X, y = mapFile.LocalSize.Y, width = mapFile.LocalSize.Width, height = mapFile.LocalSize.Height },
-					startPositions = mapFile.Waypoints.Count(w => w.Number < 8),
+					startPositions,
 					renderedWidth = saveRect.Width,
 					renderedHeight = saveRect.Height,
+					terrain = stats == null ? null : new {
+						heightMin = stats.HeightMin,
+						heightMax = stats.HeightMax,
+						totalTiles = stats.TotalTiles,
+						waterTiles = stats.WaterTiles,
+						shoreTiles = stats.ShoreTiles,
+						cliffTiles = stats.CliffTiles,
+						rampTiles = stats.RampTiles,
+					},
+					resources = stats == null ? null : new {
+						oreCells = stats.OreCells,
+						gemCells = stats.GemCells,
+						totalCredits = stats.TotalCredits,
+						oreSpawners = stats.OreSpawners,
+					},
+					objects = stats == null ? null : new {
+						structures = stats.Structures,
+						techStructures = stats.TechStructures,
+						techStructureTypes = stats.TechStructureTypes,
+						garrisonableStructures = stats.GarrisonableStructures,
+						terrainObjects = stats.TerrainObjects,
+						units = stats.Units,
+						infantry = stats.Infantry,
+						aircraft = stats.Aircraft,
+						smudges = stats.Smudges,
+						hasBridges = stats.HasBridges,
+					},
 				};
 				File.WriteAllText(path, System.Text.Json.JsonSerializer.Serialize(meta,
 					new System.Text.Json.JsonSerializerOptions { WriteIndented = true }));
