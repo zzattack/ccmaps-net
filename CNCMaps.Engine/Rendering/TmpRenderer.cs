@@ -77,18 +77,23 @@ namespace CNCMaps.Engine.Rendering {
 			int zIdx = offset.Y * ds.Width + offset.X + halfCx - 2;
 			int cx = 0; // Amount of pixel to copy
 
+			// like the game (Blit_Iso_Tile): a tile without a z-data section draws without
+			// touching the z-buffer, so its pixels stay "far" and never occlude anything
+			bool useZ = zData != null;
+
 			for (; y < halfCy; y++) {
 				cx += 4;
 				for (ushort c = 0; c < cx; c++) {
 					byte paletteValue = img.TileData[rIdx];
 
-					short zBufVal = (short)(zBase - (zData != null ? zData[rIdx] : 0));
-					if (paletteValue != 0 && w_low <= w && w < w_high && zBufVal >= zBuffer[zIdx]) {
+					short zBufVal = (short)(zBase - (useZ ? zData[rIdx] : 0));
+					if (paletteValue != 0 && w_low <= w && w < w_high && (!useZ || zBufVal >= zBuffer[zIdx])) {
 						int ci = paletteValue * 3;
 						*(w + 0) = bgr[ci];
 						*(w + 1) = bgr[ci + 1];
 						*(w + 2) = bgr[ci + 2];
-						zBuffer[zIdx] = zBufVal;
+						if (useZ)
+							zBuffer[zIdx] = zBufVal;
 						heightBuffer[zIdx] = hBufVal;
 					}
 					w += 3;
@@ -106,13 +111,14 @@ namespace CNCMaps.Engine.Rendering {
 				for (ushort c = 0; c < cx; c++) {
 					byte paletteValue = img.TileData[rIdx];
 
-					short zBufVal = (short)(zBase - (zData != null ? zData[rIdx] : 0));
-					if (paletteValue != 0 && w_low <= w && w < w_high && zBufVal >= zBuffer[zIdx]) {
+					short zBufVal = (short)(zBase - (useZ ? zData[rIdx] : 0));
+					if (paletteValue != 0 && w_low <= w && w < w_high && (!useZ || zBufVal >= zBuffer[zIdx])) {
 						int ci = paletteValue * 3;
 						*(w + 0) = bgr[ci];
 						*(w + 1) = bgr[ci + 1];
 						*(w + 2) = bgr[ci + 2];
-						zBuffer[zIdx] = zBufVal;
+						if (useZ)
+							zBuffer[zIdx] = zBufVal;
 						heightBuffer[zIdx] = hBufVal;
 					}
 					w += 3;
@@ -151,19 +157,22 @@ namespace CNCMaps.Engine.Rendering {
 				}
 			}
 
-			// Extra graphics are just a square
+			// Extra graphics are just a square; their z data extends the diamond's ramp
+			// from the same zBase anchor
+			bool useXz = xzData != null;
 			for (y = 0; y < img.ExtraHeight; y++) {
 				for (x = 0; x < img.ExtraWidth; x++) {
 					// Checking per line is required because v needs to be checked every time
 					byte paletteValue = img.ExtraData[rIdx];
-					short zBufVal = (short)(zBase - (xzData != null ? xzData[rIdx] : 0));
+					short zBufVal = (short)(zBase - (useXz ? xzData[rIdx] : 0));
 
-					if (paletteValue != 0 && w_low <= w && w < w_high && zBufVal >= zBuffer[zIdx]) {
+					if (paletteValue != 0 && w_low <= w && w < w_high && (!useXz || zBufVal >= zBuffer[zIdx])) {
 						int ci = paletteValue * 3;
 						*w++ = bgr[ci];
 						*w++ = bgr[ci + 1];
 						*w++ = bgr[ci + 2];
-						zBuffer[zIdx] = zBufVal;
+						if (useXz)
+							zBuffer[zIdx] = zBufVal;
 						heightBuffer[zIdx] = (short)(img.ExtraHeight - y + hBufVal);
 					}
 					else
