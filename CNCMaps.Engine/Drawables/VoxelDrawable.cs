@@ -45,40 +45,44 @@ namespace CNCMaps.Engine.Drawables {
 			var w_low = (byte*)ds.BitmapData.Scan0;
 			byte* w_high = w_low + ds.BitmapData.Stride * ds.BitmapData.Height;
 			var zBuffer = ds.GetZBuffer();
-			var heightBuffer = ds.GetHeightBuffer();
 			var shadowBufVxl = vxl_ds.GetShadows();
 			var shadowBuf = ds.GetShadows();
-			// int rowsTouched = 0;
 
-			// the drawn sprite's vertical extent, standing in for the SHP path's shp.Height
-			int firstDrawnRow = int.MaxValue, lastDrawnRow = int.MinValue;
+			// bottom-most drawn source row; source rows are stored bottom-up, so source
+			// row r appears on display row (Height - 1 - r)
+			int firstDrawnRow = int.MaxValue;
 			for (int y = 0; y < vxl_ds.Height; y++) {
 				byte* src = (byte*)vxl_ds.BitmapData.Scan0 + vxl_ds.BitmapData.Stride * y;
 				for (int x = 0; x < vxl_ds.Width; x++) {
 					if (*(src + x * 4 + 3) > 0) {
-						if (y < firstDrawnRow) firstDrawnRow = y;
-						lastDrawnRow = y;
+						firstDrawnRow = y;
+						break;
 					}
 				}
+				if (firstDrawnRow != int.MaxValue) break;
 			}
-			int vxlHeight = lastDrawnRow >= firstDrawnRow ? lastDrawnRow - firstDrawnRow + 1 : 0;
+			if (firstDrawnRow == int.MaxValue)
+				return;
 
-			// like the SHP path (ShpRenderer.Draw/DrawShadow): bodies stand vxlHeight above
-			// their tile, shadows lie on the ground plane and may not darken anything
-			// standing taller than that plane -- most notably this unit's own hull, drawn
-			// by an earlier blit of the same UnitDrawable
-			// flying units (props.FlightHeight) draw their body raised while the
-			// shadow stays on the ground plane beneath them
+			// gamemd blits the cached voxel through the same Shape_Draw_Z path as SHP objects, with the
+			// Deg90 standing gradient anchored at the drawn sprite's bottom row and BlitterFlags Alpha|Flat:
+			// the pixels are z-tested against the buffer but never written back. Flying bodies draw raised
+			// while their z stays anchored at the ground-projected bottom row.
 			int flight = props.FlightHeight;
-			short hBufVal = (short)(obj.Tile.Z * _config.TileHeight / 2 + vxlHeight + flight);
-			int castHeight = obj.Tile.Z * _config.TileHeight / 2;
+			var t = obj.Tile;
+			int cellBottomY = (t.Dy - t.Z) * _config.TileHeight / 2 + _config.TileHeight - 1;
+			int anchorY = d.Y + (vxl_ds.Height - 1 - firstDrawnRow);
+			int zBase = (t.Rx + t.Ry) * _config.TileHeight / 2 + (anchorY - cellBottomY) + 1;
+			int zShadowBase = (t.Rx + t.Ry) * _config.TileHeight / 2 + 2;
+			// units on a bridge draw raised; their z stays anchored on the deck plane
+			if (obj is OwnableObject oo && oo.OnBridge)
+				zBase += 4 * _config.TileHeight / 2;
 
 			// clip to 25-50-75-100
 			transLucency = transLucency / 25 * 25;
 			float a = transLucency / 100f;
 			float b = 1 - a;
 
-			// short firstRowTouched = short.MaxValue;
 			for (int y = 0; y < vxl_ds.Height; y++) {
 				byte* src_row = (byte*)vxl_ds.BitmapData.Scan0 + vxl_ds.BitmapData.Stride * (vxl_ds.Height - y - 1);
 				byte* body_row = ((byte*)ds.BitmapData.Scan0 + (d.Y + y - flight) * ds.BitmapData.Stride + d.X * 3);
@@ -88,10 +92,13 @@ namespace CNCMaps.Engine.Drawables {
 				bool shadRowValid = shad_row >= w_low && shad_row < w_high;
 				if (!bodyRowValid && !shadRowValid) continue;
 
+				short zBufVal = (short)(zBase + (anchorY - (d.Y + y - flight)) / 3);
+				short zShadowVal = (short)(zShadowBase + (d.Y + y) - cellBottomY);
+
 				for (int x = 0; x < vxl_ds.Width; x++) {
 					bool bodyPx = *(src_row + x * 4 + 3) > 0;
-					// only non-transparent pixels
-					if (bodyPx && bodyRowValid) {
+					// only non-transparent pixels in front of what the buffer holds
+					if (bodyPx && bodyRowValid && zBufVal >= zBuffer[zIdx]) {
 						if (transLucency != 0) {
 							*(body_row + x * 3) = (byte)(a * *(body_row + x * 3) + b * *(src_row + x * 4));
 							*(body_row + x * 3 + 1) = (byte)(a * *(body_row + x * 3 + 1) + b * *(src_row + x * 4 + 1));
@@ -102,20 +109,13 @@ namespace CNCMaps.Engine.Drawables {
 							*(body_row + x * 3 + 1) = *(src_row + x * 4 + 1);
 							*(body_row + x * 3 + 2) = *(src_row + x * 4 + 2);
 						}
-
-						// if (y < firstRowTouched)
-						// 	firstRowTouched = (short)y;
-
-						short zBufVal = (short)((obj.Tile.Rx + obj.Tile.Ry + obj.Tile.Z) * _config.TileHeight / 2);
-						if (zBufVal >= zBuffer[zIdx])
-							zBuffer[zIdx] = zBufVal;
-						heightBuffer[zIdx] = hBufVal;
 					}
-					// shadows fall where the surface has no body pixel; a raised body no
-					// longer occludes its own ground shadow
+					// shadows lie on the caster's ground plane and darken only where that
+					// plane is in front of the buffer; the body pixels drawn by this same
+					// blit keep covering their own shadow
 					if ((!bodyPx || flight != 0) && shadRowValid && shadowBufVxl[x + y * vxl_ds.Width]) {
 						int shadIdx = (d.Y + y) * ds.Width + d.X + x;
-						if (!shadowBuf[shadIdx] && castHeight >= heightBuffer[shadIdx]) {
+						if (!shadowBuf[shadIdx] && zShadowVal > zBuffer[shadIdx]) {
 							*(shad_row + x * 3) /= 2;
 							*(shad_row + x * 3 + 1) /= 2;
 							*(shad_row + x * 3 + 2) /= 2;

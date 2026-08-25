@@ -36,6 +36,7 @@ namespace CNCMaps.Engine.Drawables {
 
 		public bool Overrides { get; set; }
 		public bool IsWall { get; set; }
+		public bool IsRock { get; set; }
 		public bool IsActualWall { get; set; }
 		public bool IsGate { get; set; }
 		public bool IsRubble { get; set; }
@@ -161,16 +162,13 @@ namespace CNCMaps.Engine.Drawables {
 				IsVeinHoleMonster = true;
 			}
 
+			IsRock = Rules.ReadBool("IsARock");
 			if (Rules.ReadString("Land") == "Rock") {
 				Props.Offset.Y += _config.TileHeight / 2;
-				//mainProps.ZBufferAdjust += Drawable.TileHeight / 2;
+				IsRock = true;
 			}
 			else if (Rules.ReadString("Land") == "Road") {
 				Props.Offset.Y += _config.TileHeight / 2;
-				// lift low bridges toward the viewer so they draw over the terrain under them
-				// (ZAdjust uses the game's sign: negative = closer)
-				if (Name.ToUpper().Contains("LOBRDG") || Name.ToUpper().Contains("LOBRDB"))
-					Props.ZAdjust -= _config.TileHeight;
 			}
 			else if (Rules.ReadString("Land") == "Railroad") {
 				if (_config.Engine <= EngineType.Firestorm)

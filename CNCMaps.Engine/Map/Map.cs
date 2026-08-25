@@ -1068,14 +1068,27 @@ namespace CNCMaps.Engine.Map {
 			}
 			Logger.Info("Tiles drawn");
 
+			// overlays belong to the terrain pass like the game's CellClass draw: their z values (walls,
+			// ore, bridge decks) are written before any object is tested, and units, which never write z,
+			// cannot be repainted by a later overlay
+			for (int y = 0; y < FullSize.Height; y++) {
+				for (int x = FullSize.Width * 2 - 2; x >= 0; x -= 2)
+					foreach (GameObject o in _tiles[x, y].AllObjects.OfType<OverlayObject>())
+						_theater.Draw(o, _drawingSurface);
+				for (int x = FullSize.Width * 2 - 3; x >= 0; x -= 2)
+					foreach (GameObject o in _tiles[x, y].AllObjects.OfType<OverlayObject>())
+						_theater.Draw(o, _drawingSurface);
+			}
+			Logger.Info("Overlays drawn");
+
 			for (int y = 0; y < FullSize.Height; y++) {
 				Logger.Trace("Drawing objects row {0}", y);
 				for (int x = FullSize.Width * 2 - 2; x >= 0; x -= 2)
-					foreach (GameObject o in GetObjectsAt(x, y))
+					foreach (GameObject o in GetObjectsAt(x, y, false))
 						_theater.Draw(o, _drawingSurface);
 
 				for (int x = FullSize.Width * 2 - 3; x >= 0; x -= 2)
-					foreach (GameObject o in GetObjectsAt(x, y))
+					foreach (GameObject o in GetObjectsAt(x, y, false))
 						_theater.Draw(o, _drawingSurface);
 
 				if (Progress != null)
@@ -1187,17 +1200,19 @@ namespace CNCMaps.Engine.Map {
 			Operations.CountNeighbouringVeins(tile, Operations.IsVeins);
 		}
 
-		public List<GameObject> GetObjectsAt(int dx, int dy) {
+		public List<GameObject> GetObjectsAt(int dx, int dy, bool includeOverlays = true) {
 			var tile = _tiles[dx, dy];
 			var ret = new List<GameObject>();
 			ret.AddRange(tile.AllObjects.OfType<SmudgeObject>());
-			ret.AddRange(tile.AllObjects.OfType<OverlayObject>().Where(o => o.Drawable == null || !o.Drawable.Overrides));
+			// the main draw handles overlays in the terrain pass; localized redraws
+			// (ore markers, tiled start positions) still want them here
+			if (includeOverlays)
+				ret.AddRange(tile.AllObjects.OfType<OverlayObject>());
 			ret.AddRange(tile.AllObjects.OfType<TerrainObject>());
 			ret.AddRange(tile.AllObjects.OfType<InfantryObject>());
 			ret.AddRange(tile.AllObjects.OfType<UnitObject>());
 			ret.AddRange(tile.AllObjects.OfType<StructureObject>());
 			ret.AddRange(tile.AllObjects.OfType<AircraftObject>());
-			ret.AddRange(tile.AllObjects.OfType<OverlayObject>().Where(o => o.Drawable != null && o.Drawable.Overrides));
 			return ret;
 		}
 

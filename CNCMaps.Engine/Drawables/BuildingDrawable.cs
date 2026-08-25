@@ -289,6 +289,7 @@ namespace CNCMaps.Engine.Drawables {
 				if (rubble.Shp.NumImages >= 8) {
 					rubble.Props.PaletteOverride = OwnerCollection.Palettes.IsoPalette;
 					rubble.Props.FrameDecider = FrameDeciders.BuildingRubbleFrameDecider(rubble.Shp.NumImages);
+					(obj as StructureObject).DrawnBodyAnchorY = rubble.GetDrawnBottomY(obj);
 					if (shadows)
 						rubble.DrawShadow(obj, ds);
 					rubble.Draw(obj, ds, false);
@@ -312,6 +313,11 @@ namespace CNCMaps.Engine.Drawables {
 					if (health > _conditionRedHealth && _canBeOccupied) isOnFire = false;
 				}
 			}
+
+			// the body's drawn bottom row is the z anchor the game uses for the whole
+			// building; parts above it (anims, turrets) share it via StructureObject
+			if (obj is StructureObject so)
+				so.DrawnBodyAnchorY = _baseShp.GetDrawnBottomY(obj);
 
 			var drawList = new List<Drawable>();
 			drawList.Add(_baseShp);

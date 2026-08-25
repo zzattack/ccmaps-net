@@ -72,19 +72,43 @@ namespace CNCMaps.Engine.Rendering {
 			int zIdx = offset.X + offset.Y * ds.Width; // z-buffer pixel index
 			short hBufVal = (short)(obj.Tile.Z * _config.TileHeight / 2);
 
-			// Game z model (gamemd Shape_Draw_Z): tiles write the ground ramp that reaches zBase at the
-			// cell diamond's bottom row (TmpRenderer: zBase - ZData). A standing shape sits 12 in front of
-			// the ground at its anchor row, raised by any elevation above its tile (high bridges), and
-			// recedes 1 z per 3 rows toward its top; a flat shape follows the ground ramp. Buildings anchor
-			// at their cell's bottom row so attached parts (anims, turrets, upgrades) drawn later tie with
-			// the body instead of losing against its lifted wall z.
+			// Game z model (gamemd Shape_Draw_Z, CellClass::DrawOverlay): tiles write the ground ramp
+			// that reaches zBase at the cell diamond's bottom row (TmpRenderer: zBase - ZData). A standing
+			// shape anchors at its drawn bottom row, sits a per-class lift in front of the ground there,
+			// and recedes 1 z per 3 rows toward its top; a flat shape follows the ground ramp. Lifts:
+			// terrain objects 12 (game ZAdjust -AdjustForZ-12), wall/rock overlays and all flat overlays
+			// (ore, roads, bridge decks) 2, other standing overlays 17, units/infantry/aircraft 1.
+			// Units and their shadows are only z-tested, never written (the game blits them with the
+			// ZRead blitter family), so anything drawn later must carry its own closer z or cover them.
+			// Buildings anchor at their cell's bottom row so attached parts (anims, turrets, upgrades)
+			// drawn later tie with the body instead of losing against its lifted wall z.
+			bool unitLike = obj is UnitObject || obj is InfantryObject || obj is AircraftObject;
 			bool isBuilding = obj is StructureObject;
+			int zLift;
+			if (obj is OverlayObject)
+				// flat overlays sit at ground+1 (the Ground gradient keeps 1 of the game's +2 overlay ZAdjust),
+				// standing ones take the full lift
+				zLift = dr.Flat ? 1 : dr.IsWall || dr.IsRock ? 2 : 17;
+			else if (unitLike || isBuilding)
+				zLift = 1;
+			else
+				zLift = dr.Flat ? 0 : 12;
 			var bt = obj.BottomTile;
 			int cellBottomY = (bt.Dy - bt.Z) * _config.TileHeight / 2 + _config.TileHeight - 1;
 			int spriteBottomY = offset.Y + img.Height - 1;
-			int zAnchorY = isBuilding ? cellBottomY : spriteBottomY;
+			// buildings anchor at their body's drawn bottom row; parts drawn above it
+			// (anims, turrets, upgrades) share that anchor so they tie with the body,
+			// while a bib extending below keeps its own deeper anchor
+			int zAnchorY = spriteBottomY;
+			if (isBuilding) {
+				int? bodyAnchor = ((StructureObject)obj).DrawnBodyAnchorY;
+				zAnchorY = Math.Max(spriteBottomY, bodyAnchor ?? cellBottomY);
+			}
 			int zGround = (bt.Rx + bt.Ry) * _config.TileHeight / 2 + (zAnchorY - cellBottomY)
 				+ dr.TileElevation * _config.TileHeight / 2;
+			// units on a bridge draw raised; their z stays anchored on the deck plane
+			if (unitLike && obj is OwnableObject oo && oo.OnBridge)
+				zGround += 4 * _config.TileHeight / 2;
 
 			if (!dr.Flat)
 				hBufVal += shp.Height;
@@ -104,9 +128,9 @@ namespace CNCMaps.Engine.Rendering {
 						// ZAdjust uses the game's sign: positive pushes away from the screen
 						short zBufVal;
 						if (dr.Flat)
-							zBufVal = (short)(zGround + (offset.Y + y) - zAnchorY - props.ZAdjust);
+							zBufVal = (short)(zGround + zLift + (offset.Y + y) - zAnchorY - props.ZAdjust);
 						else
-							zBufVal = (short)(zGround + 12 + (zAnchorY - (offset.Y + y)) / 3 - props.ZAdjust);
+							zBufVal = (short)(zGround + zLift + (zAnchorY - (offset.Y + y)) / 3 - props.ZAdjust);
 
 						if (w_low <= w && w < w_high && zBufVal >= zBuffer[zIdx]) {
 							int ci = paletteValue * 3;
@@ -120,8 +144,10 @@ namespace CNCMaps.Engine.Rendering {
 								*(w + 1) = bgr[ci + 1];
 								*(w + 2) = bgr[ci + 2];
 							}
-							zBuffer[zIdx] = zBufVal;
-							heightBuffer[zIdx] = hBufVal;
+							if (!unitLike) {
+								zBuffer[zIdx] = zBufVal;
+								heightBuffer[zIdx] = hBufVal;
+							}
 						}
 					}
 					//else {
@@ -172,7 +198,9 @@ namespace CNCMaps.Engine.Rendering {
 
 			// Shadows lie on the caster's ground plane, 2 z in front of it: gamemd draws them with the
 			// Ground z-gradient and darkens only where that plane is in front of what the pixel holds.
-			// No z is written back; the shadows mask deduplicates overlapping shadows.
+			// Terrain and building shadows use the ZReadWrite darken blitter and store their z; unit
+			// shadows only test.
+			bool unitLike = obj is UnitObject || obj is InfantryObject || obj is AircraftObject;
 			var t = obj.Tile;
 			int cellBottomY = (t.Dy - t.Z) * _config.TileHeight / 2 + _config.TileHeight - 1;
 			int zBase = (t.Rx + t.Ry) * _config.TileHeight / 2;
@@ -196,6 +224,8 @@ namespace CNCMaps.Engine.Rendering {
 						*(w + 1) /= 2;
 						*(w + 2) /= 2;
 						shadows[zIdx] = true;
+						if (!unitLike)
+							zBuffer[zIdx] = zBufVal;
 					}
 					// Up to the next pixel
 					rIdx++;

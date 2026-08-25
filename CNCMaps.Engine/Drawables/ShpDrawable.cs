@@ -77,6 +77,21 @@ namespace CNCMaps.Engine.Drawables {
 			return bounds;
 		}
 
+		/// <summary>Screen row of this shape's drawn bottom for the given object, or null
+		/// when no drawable frame exists. Mirrors the offset math in ShpRenderer.Draw.</summary>
+		public int? GetDrawnBottomY(GameObject obj) {
+			if (Shp == null) return null;
+			Shp.Initialize();
+			int frameIndex = Props.FrameDecider(obj);
+			if (obj.Drawable != null && obj.Drawable.IsActualWall)
+				frameIndex = ((StructureObject)obj).WallBuildingFrame;
+			if (frameIndex < 0 || frameIndex >= Shp.Images.Count) return null;
+			var img = Shp.GetImage(frameIndex);
+			if (img == null || img.Height == 0) return null;
+			return Props.GetOffset(obj).Y + (obj.Tile.Dy - obj.Tile.Z) * _config.TileHeight / 2
+				- Shp.Height / 2 + img.Y + img.Height - 1;
+		}
+
 		public string GetFilename() {
 			string fn = Image;
 			if (TheaterExtension)

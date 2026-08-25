@@ -220,6 +220,10 @@ namespace CNCMaps.Engine.Map {
 		public string Upgrade3 { get; set; }
 
 		public int WallBuildingFrame { get; set; }
+
+		// screen row of the building body's drawn bottom, set by BuildingDrawable so
+		// attached parts share the body's z anchor
+		public int? DrawnBodyAnchorY { get; set; }
 	}
 	public class TerrainObject : NamedObject {
 		public TerrainObject(string name) {
