@@ -37,6 +37,7 @@ namespace CNCMaps.Shared {
 		public bool SavePNGThumbnails { get; set; }
 		public bool FixPreviewDimensions { get; set; }
 		public bool Debug { get; set; }
+		public string DebugZBufferFile { get; set; }
 		public bool ReportProgress { get; set; }
 		public bool MarkIceGrowth { get; set; }
 		public bool Backup { get; set; }
@@ -66,6 +67,7 @@ namespace CNCMaps.Shared {
 			SizeMode = SizeMode.Auto;
 			FixPreviewDimensions = true;
 			Debug = false;
+			DebugZBufferFile = "";
 			MarkIceGrowth = false;
 			Backup = false;
 			FixOverlays = false;
@@ -138,6 +140,7 @@ namespace CNCMaps.Shared {
 			Flag("--force-fullmap", "-F", "Ignore LocalSize definition and just save the full map", () => SizeMode = SizeMode.Full);
 			Flag("--force-localsize", "-f", "Use localsize for map dimensions; without this or -F the size is picked automatically", () => SizeMode = SizeMode.Local);
 			Flag("--debug", "-D", "", () => Debug = true);
+			Value<string>("--debug-zbuffer", null, "Write the render's z-buffer (.npy) and shadow mask (.shadow.npy) to the given path for diagnostics", v => DebugZBufferFile = v);
 			Flag("--replace-preview-nomarkers", "-k", "Update the maps [PreviewPack] data with the rendered image, using no markers on the start positions", () => {
 				GeneratePreviewPack = true;
 				PreviewMarkers = PreviewMarkersType.None;

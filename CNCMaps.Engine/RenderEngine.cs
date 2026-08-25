@@ -234,6 +234,9 @@ namespace CNCMaps.Engine {
 
 					map.Draw();
 
+					if (!string.IsNullOrEmpty(_settings.DebugZBufferFile))
+						DumpZBuffer(map.GetDrawingSurface(), _settings.DebugZBufferFile);
+
 					if (_settings.MarkIceGrowth)
 						map.MarkIceGrowth();
 
@@ -762,6 +765,29 @@ namespace CNCMaps.Engine {
 			else if (mapName.IndexOf(" [") != -1)
 				mapName = mapName.Substring(0, mapName.IndexOf(" ["));
 			return mapName;
+		}
+
+		// numpy .npy v1.0 files so the buffers load directly into analysis scripts
+		private static void DumpZBuffer(Rendering.DrawingSurface ds, string path) {
+			WriteNpy(path, "<i2", ds.Height, ds.Width, w => {
+				foreach (short v in ds.GetZBuffer()) w.Write(v);
+			});
+			WriteNpy(path + ".shadow.npy", "|b1", ds.Height, ds.Width, w => {
+				foreach (bool v in ds.GetShadows()) w.Write(v ? (byte)1 : (byte)0);
+			});
+		}
+
+		private static void WriteNpy(string path, string descr, int h, int w, Action<BinaryWriter> writeData) {
+			using var bw = new BinaryWriter(new BufferedStream(File.Create(path), 1 << 20));
+			string header = $"{{'descr': '{descr}', 'fortran_order': False, 'shape': ({h}, {w}), }}";
+			int padded = (10 + header.Length + 1 + 63) / 64 * 64;
+			header = header.PadRight(padded - 10 - 1) + "\n";
+			bw.Write((byte)0x93);
+			bw.Write(Encoding.ASCII.GetBytes("NUMPY"));
+			bw.Write((byte)1); bw.Write((byte)0);
+			bw.Write((ushort)header.Length);
+			bw.Write(Encoding.ASCII.GetBytes(header));
+			writeData(bw);
 		}
 
 		/// <summary>Makes a valid file name.</summary>
