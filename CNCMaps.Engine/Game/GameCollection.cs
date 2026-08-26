@@ -39,6 +39,10 @@ namespace CNCMaps.Engine.Game {
 			return sub;
 		}
 
+		public int DrawableCount {
+			get { return _drawables.Count; }
+		}
+
 		public Drawable GetDrawable(GameObject o) {
 			if (o is NamedObject)
 				return GetDrawable((o as NamedObject).Name);

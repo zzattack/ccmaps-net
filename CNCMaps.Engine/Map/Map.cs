@@ -460,6 +460,14 @@ namespace CNCMaps.Engine.Map {
 						continue;
 					}
 					obj.Drawable = obj.Collection.GetDrawable(obj);
+
+					// tiberium draws the type's pooled art for the cell, not the stored id
+					if (obj is OverlayObject ovl && obj.Drawable != null) {
+						int rampType = (tile.Drawable as TileDrawable)?.GetTileImage(tile)?.RampType ?? 0;
+						int pooled = SpecialOverlays.GetPooledDrawId(ovl, _config.Engine, rampType);
+						if (pooled != ovl.OverlayID && pooled < obj.Collection.DrawableCount)
+							obj.Drawable = obj.Collection.GetDrawable(pooled) ?? obj.Drawable;
+					}
 				}
 			}
 		}

@@ -1,4 +1,5 @@
-﻿using CNCMaps.Engine.Map;
+﻿using System;
+using CNCMaps.Engine.Map;
 using CNCMaps.Shared;
 
 namespace CNCMaps.Engine.Game {
@@ -73,6 +74,42 @@ namespace CNCMaps.Engine.Game {
 				else if (IsRA2_Aboreus(o)) return OverlayTibType.Aboreus;
 			}
 			return OverlayTibType.NotSpecial;
+		}
+
+		// gamemd draws tiberium from the type's pooled image list, not from the id stored in the map
+		// (CellClass::DrawOverlay): a flat cell draws pool[(x*y) % NumImages]; a cell on a full slope
+		// draws one of the 8 slope pieces after the flat pool, 2 per slope direction. The stored id
+		// only identifies the tiberium type. Pools hold 12 flat images; ore-style pools carry 8 slope
+		// pieces after them, the 12-entry gem pool has none.
+		public static int GetPooledDrawId(OverlayObject o, EngineType engine, int rampType) {
+			var tibType = GetOverlayTibType(o, engine);
+			if (tibType == OverlayTibType.NotSpecial)
+				return o.OverlayID;
+			int min, max;
+			switch (tibType) {
+				case OverlayTibType.Riparius:
+					min = engine <= EngineType.Firestorm ? TsMinIdRiparius : Ra2MinIdRiparius;
+					max = engine <= EngineType.Firestorm ? TsMaxIdRiparius : Ra2MaxIdRiparius;
+					break;
+				case OverlayTibType.Cruentus:
+					min = engine <= EngineType.Firestorm ? TsMinIdCruentus : Ra2MinIdCruentus;
+					max = engine <= EngineType.Firestorm ? TsMaxIdCruentus : Ra2MaxIdCruentus;
+					break;
+				case OverlayTibType.Vinifera:
+					min = engine <= EngineType.Firestorm ? TsMinIdVinifera : Ra2MinIdVinifera;
+					max = engine <= EngineType.Firestorm ? TsMaxIdVinifera : Ra2MaxIdVinifera;
+					break;
+				default:
+					min = engine <= EngineType.Firestorm ? TsMinIdAboreus : Ra2MinIdAboreus;
+					max = engine <= EngineType.Firestorm ? TsMaxIdAboreus : Ra2MaxIdAboreus;
+					break;
+			}
+			int numImages = Math.Min(12, max - min + 1);
+			int numSlopes = max - min + 1 - numImages;
+			int cellProduct = o.Tile.Rx * o.Tile.Ry;
+			if (rampType >= 1 && rampType <= 4 && numSlopes >= 8)
+				return min + numImages + cellProduct % 2 + (rampType - 1) * 2;
+			return min + cellProduct % numImages;
 		}
 
 		internal static string GetTibName(OverlayObject o, EngineType engine) {
