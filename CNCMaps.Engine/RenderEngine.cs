@@ -56,6 +56,13 @@ namespace CNCMaps.Engine {
 				// earlier in this process
 				CNCMaps.Shared.Utility.Rand.Reset();
 
+				if (!string.IsNullOrEmpty(_settings.TileLattice)) {
+					var vals = _settings.TileLattice.Split(',');
+					if (vals.Length != 64)
+						throw new ArgumentException("--tile-lattice needs 64 comma-separated values");
+					Game.TileCollection.VariantLattice = vals.Select(int.Parse).ToArray();
+				}
+
 				var sink = ProgressChanged;
 				if (sink == null && _settings.ReportProgress)
 					sink = (pct, phase) => { Console.WriteLine("progress:{0}:{1}", pct, phase); Console.Out.Flush(); };

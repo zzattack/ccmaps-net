@@ -64,7 +64,7 @@ namespace CNCMaps.Engine.Game {
 			public TmpFile GetTmpFile(MapTile t, bool damaged = false) {
 				if (TmpFiles.Count == 0)
 					return null;
-				var randomChosen = TmpFiles[Rand.Next(TmpFiles.Count)];
+				var randomChosen = TmpFiles[PickVariant(t)];
 				// if this is not a randomizing tileset, but instead one with damaged data,
 				// then return the "undamaged" version
 				randomChosen.Initialize();
@@ -79,10 +79,56 @@ namespace CNCMaps.Engine.Game {
 					return randomChosen;
 			}
 
+			// gamemd picks tile variants as a pure function of the cell (CellClass tile variant pick
+			// 0x4814F0): sets with more than 4 variants index an 8x8 lattice by (x&7, y&7), smaller sets
+			// the game's static 4x4 Latin square by (x&3, y&3). Multi-cell tiles index by their origin
+			// cell scaled to the tile grid. The game builds one random lattice per session; this uses a
+			// fixed adjacency-valid one, overridable for A/B runs against a capture.
+			private int PickVariant(MapTile t) {
+				int count = TmpFiles.Count;
+				if (count <= 1)
+					return 0;
+				int x = t.Rx, y = t.Ry;
+				if (t.SubTile != 0) {
+					var tmp = TmpFiles[0];
+					tmp.Initialize();
+					x = (x - t.SubTile % tmp.Width) / tmp.Width;
+					y = (y - t.SubTile / tmp.Width) / tmp.Height;
+				}
+				int v = count > 4
+					? VariantLattice[(x & 7) + (y & 7) * 8]
+					: VariantPattern4[((y & 3) << 2) | (x & 3)];
+				return v >= count ? v % count : v;
+			}
+
 			public override string ToString() {
 				return string.Format("{0} ({1})", MemberOfSet.SetName, Index);
 			}
 		}
+
+		// the game's static 4x4 variant pattern (0x81CCA8)
+		static readonly int[] VariantPattern4 = {
+			0, 1, 2, 3,
+			3, 2, 1, 0,
+			2, 3, 0, 1,
+			1, 0, 3, 2,
+		};
+
+		// (3x + 2y) & 7: no two orthogonally or diagonally adjacent cells share a value,
+		// including across the (x&7, y&7) tiling seams, like the game's constrained lattice
+		static readonly int[] DefaultVariantLattice = BuildDefaultLattice();
+
+		private static int[] BuildDefaultLattice() {
+			var l = new int[64];
+			for (int y = 0; y < 8; y++)
+				for (int x = 0; x < 8; x++)
+					l[x + y * 8] = (3 * x + 2 * y) & 7;
+			return l;
+		}
+
+		/// <summary>The 8x8 variant lattice; replaceable with the one exported from an
+		/// engine capture to make A/B renders art-identical.</summary>
+		public static int[] VariantLattice = DefaultVariantLattice;
 
 		// ReSharper disable InconsistentNaming
 		public short ACliffMMPieces;
