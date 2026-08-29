@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using CNCMaps.Engine.Map;
 using CNCMaps.Engine.Rendering;
 using CNCMaps.FileFormats;
@@ -81,6 +81,27 @@ namespace CNCMaps.Engine.Game {
 		public static Func<GameObject, int> OverlayValueFrameDecider = delegate(GameObject obj) {
 			if (obj is OverlayObject) return (obj as OverlayObject).OverlayValue;
 			else return 0;
+		};
+
+		// CellClass::Draw_Overlay picks one of the four interchangeable full-span frames from this
+		// table so a long bridge does not draw the same image in every cell.
+		private static readonly int[] BridgeVariation = {
+			0, 1, 2, 3,
+			3, 2, 1, 0,
+			2, 3, 0, 1,
+			1, 0, 3, 2,
+		};
+
+		/// <summary>
+		/// High bridge decks. Frames 0-3 are the east-west full spans and 9-12 the north-south
+		/// ones; a map stores only the first of each pair and the game varies it by cell position.
+		/// </summary>
+		public static Func<GameObject, int> HighBridgeFrameDecider = delegate(GameObject obj) {
+			if (!(obj is OverlayObject o)) return 0;
+			int frame = o.OverlayValue;
+			if ((frame == 0 || frame == 9) && o.Tile != null)
+				frame += BridgeVariation[(o.Tile.Rx & 3) | ((o.Tile.Ry & 3) << 2)];
+			return frame;
 		};
 
 		/// <summary>

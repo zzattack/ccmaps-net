@@ -28,4 +28,15 @@ namespace CNCMaps.Engine.Map {
 
 		public SortedDictionary<string, int> TechStructureTypes = new SortedDictionary<string, int>();
 	}
+
+	/// <summary>A start waypoint in both cell and drawing-surface pixel coordinates, exported via
+	/// --meta-json so a render can be aligned against an engine capture of the same map.</summary>
+	public class StartPositionPixel {
+		public int Number;
+		public int Rx;
+		public int Ry;
+		public int Z;
+		public int X;
+		public int Y;
+	}
 }

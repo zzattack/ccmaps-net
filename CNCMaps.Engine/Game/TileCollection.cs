@@ -130,6 +130,13 @@ namespace CNCMaps.Engine.Game {
 		/// engine capture to make A/B renders art-identical.</summary>
 		public static int[] VariantLattice = DefaultVariantLattice;
 
+		/// <summary>Sets the variant lattice, restoring the built-in one when given null. This
+		/// static outlives a single render, so every render assigns it rather than only the
+		/// renders that carry an override.</summary>
+		public static void SetVariantLattice(int[] lattice) {
+			VariantLattice = lattice ?? DefaultVariantLattice;
+		}
+
 		// ReSharper disable InconsistentNaming
 		public short ACliffMMPieces;
 		public short ACliffPieces;

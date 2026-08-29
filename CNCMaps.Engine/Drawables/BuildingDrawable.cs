@@ -14,14 +14,6 @@ namespace CNCMaps.Engine.Drawables {
 	class BuildingDrawable : Drawable {
 
 		#region crap
-		private static readonly string[] LampNames = {
-			"REDLAMP", "BLUELAMP", "GRENLAMP", "YELWLAMP", "PURPLAMP", "INORANLAMP", "INGRNLMP", "INREDLMP", "INBLULMP",
-			"INGALITE", "GALITE", "TSTLAMP",
-			"INYELWLAMP", "INPURPLAMP", "NEGLAMP", "NERGRED", "TEMMORLAMP", "TEMPDAYLAMP", "TEMDAYLAMP", "TEMDUSLAMP",
-			"TEMNITLAMP", "SNOMORLAMP",
-			"SNODAYLAMP", "SNODUSLAMP", "SNONITLAMP"
-		};
-
 		private static readonly string[] AnimImages = {
 			// "ProductionAnim",  // you don't want ProductionAnims on map renders, but IdleAnim instead
 			"IdleAnim",
@@ -56,7 +48,10 @@ namespace CNCMaps.Engine.Drawables {
 			base.LoadFromRules();
 
 			IsBuildingPart = true;
-			InvisibleInGame = Rules.ReadBool("InvisibleInGame") || LampNames.Contains(Name.ToUpper());
+			// Both games have two kinds of lamp: the IN* and theater-named ones declare InvisibleInGame
+			// and only light their surroundings; REDLAMP, GALITE, TSTLAMP and friends are real light
+			// posts drawn from GALITE art.
+			InvisibleInGame = Rules.ReadBool("InvisibleInGame");
 			string foundation = Art.ReadString("Foundation", "1x1");
 			if (!foundation.Equals("custom", StringComparison.InvariantCultureIgnoreCase)) {
 				int fx = foundation[0] - '0';

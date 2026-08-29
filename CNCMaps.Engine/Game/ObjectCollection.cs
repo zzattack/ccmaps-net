@@ -193,10 +193,15 @@ namespace CNCMaps.Engine.Game {
 					props.FrameDecider = FrameDeciders.OverlayValueFrameDecider;
 					props.PaletteType = PaletteType.Overlay;
 					props.LightingType = LightingType.None;
+					// The game draws tiberium in its own pass with its own anchor, 3 pixels lower than the
+					// centred-canvas placement of the other overlays. Uniform over ore, gems and Vinifera, all 12
+					// pool images and all four theaters.
+					props.Offset.Offset(0, 3);
 				}
 				else if (SpecialOverlays.IsHighBridge(ovl)) {
 					props.OffsetHack = OffsetHacks.RA2BridgeOffsets;
 					props.ShadowOffsetHack = OffsetHacks.RA2BridgeShadowOffsets;
+					props.FrameDecider = FrameDeciders.HighBridgeFrameDecider;
 					drawable.TileElevation = 4; // for lighting
 					drawable.Foundation = new Size(3, 1); // ensures they're drawn later --> fixes overlap
 				}
@@ -211,6 +216,7 @@ namespace CNCMaps.Engine.Game {
 				else if (SpecialOverlays.IsHighBridge(ovl) || SpecialOverlays.IsTSHighRailsBridge(ovl)) {
 					props.OffsetHack = OffsetHacks.TSBridgeOffsets;
 					props.ShadowOffsetHack = OffsetHacks.TSBridgeShadowOffsets;
+					props.FrameDecider = FrameDeciders.HighBridgeFrameDecider;
 					drawable.TileElevation = 4; // for lighting
 												//drawable.Foundation = new Size(3, 1); // ensures they're drawn later --> fixes overlap
 				}

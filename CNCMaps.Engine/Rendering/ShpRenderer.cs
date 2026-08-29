@@ -53,6 +53,9 @@ namespace CNCMaps.Engine.Rendering {
 			Point offset = props.GetOffset(obj);
 			offset.X += obj.Tile.Dx * _config.TileWidth / 2 - shp.Width / 2 + img.X;
 			offset.Y += (obj.Tile.Dy - obj.Tile.Z) * _config.TileHeight / 2 - shp.Height / 2 + img.Y;
+			// something standing on a slope stands on its surface, not on the cell's stored corner
+			int rampLift = dr.Flat ? 0 : RampHeight.PixelLift(obj.Tile, _config.TileHeight);
+			offset.Y -= rampLift;
 			Logger.Trace("Drawing SHP file {0} (Frame {1}) at ({2},{3})", shp.FileName, frameIndex, offset.X, offset.Y);
 
 			int stride = ds.BitmapData.Stride;
@@ -104,7 +107,10 @@ namespace CNCMaps.Engine.Rendering {
 				int? bodyAnchor = ((StructureObject)obj).DrawnBodyAnchorY;
 				zAnchorY = Math.Max(spriteBottomY, bodyAnchor ?? cellBottomY);
 			}
-			int zGround = (bt.Rx + bt.Ry) * _config.TileHeight / 2 + (zAnchorY - cellBottomY)
+			// the game's ZAdjust is -Z_Lepton_To_Pixel(Position.Z), an absolute height that already
+			// contains the ramp surface, so the lift moves the sprite on screen without moving it
+			// in z; add it back here or a shape on a slope sits a lift behind its own ground
+			int zGround = (bt.Rx + bt.Ry) * _config.TileHeight / 2 + (zAnchorY + rampLift - cellBottomY)
 				+ dr.TileElevation * _config.TileHeight / 2;
 			// units on a bridge draw raised; their z stays anchored on the deck plane
 			if (unitLike && obj is OwnableObject oo && oo.OnBridge)
@@ -186,6 +192,9 @@ namespace CNCMaps.Engine.Rendering {
 			Point offset = props.GetShadowOffset(obj);
 			offset.X += obj.Tile.Dx * _config.TileWidth / 2 - shp.Width / 2 + img.X;
 			offset.Y += (obj.Tile.Dy - obj.Tile.Z) * _config.TileHeight / 2 - shp.Height / 2 + img.Y;
+			int rampLift = obj.Drawable != null && !obj.Drawable.Flat
+				? RampHeight.PixelLift(obj.Tile, _config.TileHeight) : 0;
+			offset.Y -= rampLift;
 			Logger.Trace("Drawing SHP shadow {0} (frame {1}) at ({2},{3})", shp.FileName, frameIndex, offset.X, offset.Y);
 
 			int stride = ds.BitmapData.Stride;
@@ -213,7 +222,8 @@ namespace CNCMaps.Engine.Rendering {
 					continue; // out of bounds
 				}
 
-				short zBufVal = (short)(zBase + (offset.Y + y) - cellBottomY + 2);
+				// as in Draw: the ramp lift is a screen offset, not a depth one
+				short zBufVal = (short)(zBase + (offset.Y + y + rampLift) - cellBottomY + 2);
 
 				for (int x = 0; x < img.Width; x++) {
 					if (0 <= offset.X + x && offset.X + x < ds.Width && 0 <= y + offset.Y && y + offset.Y < ds.Height &&

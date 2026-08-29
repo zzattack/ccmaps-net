@@ -40,6 +40,23 @@ namespace CNCMaps.Tests {
 		}
 
 		[Fact]
+		public void AbDiagnosticOptionsParse() {
+			var rs = Parse("-i", "a.map", "--pin-random", "--debug-voxelmask", @"C:\out\vx.npy",
+				"--debug-zbuffer", @"C:\out\z.npy");
+			Assert.True(rs.PinRandomDraws);
+			Assert.Equal(@"C:\out\vx.npy", rs.DebugVoxelMaskFile);
+			Assert.Equal(@"C:\out\z.npy", rs.DebugZBufferFile);
+		}
+
+		[Fact]
+		public void AbDiagnosticOptionsAreOffByDefault() {
+			var rs = Parse("-i", "a.map");
+			Assert.False(rs.PinRandomDraws);
+			Assert.Equal("", rs.DebugVoxelMaskFile);
+			Assert.Equal("", rs.TileLattice);
+		}
+
+		[Fact]
 		public void BackupIsEnabledByItsFlag() {
 			Assert.True(Parse("-i", "a.map", "--bkp").Backup);
 			Assert.True(Parse("-i", "a.map", "-b").Backup);

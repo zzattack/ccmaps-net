@@ -248,13 +248,6 @@ namespace CNCMaps.Engine.Map {
 			if (!_theater.Initialize())
 				return false;
 
-			// needs to be done before drawables are set
-			bool disableOreRandomizing = false;
-			if (_config.ExtraOptions.FirstOrDefault() != null)
-				disableOreRandomizing = _config.ExtraOptions.FirstOrDefault().DisableOreRandomization;
-			if (!disableOreRandomizing)
-				Operations.RecalculateOreSpread(_overlayObjects, _config.Engine);
-
 			RemoveUnknownObjects();
 			SetDrawables();
 
@@ -461,13 +454,8 @@ namespace CNCMaps.Engine.Map {
 					}
 					obj.Drawable = obj.Collection.GetDrawable(obj);
 
-					// tiberium draws the type's pooled art for the cell, not the stored id
-					if (obj is OverlayObject ovl && obj.Drawable != null) {
-						int rampType = (tile.Drawable as TileDrawable)?.GetTileImage(tile)?.RampType ?? 0;
-						int pooled = SpecialOverlays.GetPooledDrawId(ovl, _config.Engine, rampType);
-						if (pooled != ovl.OverlayID && pooled < obj.Collection.DrawableCount)
-							obj.Drawable = obj.Collection.GetDrawable(pooled) ?? obj.Drawable;
-					}
+					if (obj is OverlayObject ovl)
+						Operations.ApplyTiberiumArt(tile, ovl, _config.Engine);
 				}
 			}
 		}
@@ -924,6 +912,30 @@ namespace CNCMaps.Engine.Map {
 			return y;
 		}
 
+		/// <summary>Iso tile dimensions in pixels; 60x30 for RA2/YR, 48x24 for TS/FS.</summary>
+		public int TileWidth => _config.TileWidth;
+		public int TileHeight => _config.TileHeight;
+
+		/// <summary>Start waypoints with their cell and the pixel centre of that cell on the
+		/// drawing surface. Subtract the saved image's crop origin to reach coordinates in the
+		/// saved file. Used to align a render against an engine capture of the same map.</summary>
+		public List<StartPositionPixel> GetStartPositionPixels() {
+			var positions = new List<StartPositionPixel>();
+			foreach (var w in _wayPoints.Where(w => w.Tile != null && w.Number < 8).OrderBy(w => w.Number)) {
+				MapTile t = _tiles.GetTile(w.Tile);
+				if (t == null) continue;
+				positions.Add(new StartPositionPixel {
+					Number = w.Number,
+					Rx = t.Rx,
+					Ry = t.Ry,
+					Z = t.Z,
+					X = (t.Dx + 1) * _config.TileWidth / 2,
+					Y = (t.Dy - t.Z + 1) * _config.TileHeight / 2,
+				});
+			}
+			return positions;
+		}
+
 		public Rectangle GetSizePixels(SizeMode sizeMode) {
 			switch (sizeMode) {
 				case SizeMode.Local:
@@ -1055,8 +1067,12 @@ namespace CNCMaps.Engine.Map {
 		/// <summary>Optional whole-render progress; the draw loops fill 20 up to its DrawEnd.</summary>
 		public RenderProgress Progress { get; set; }
 
+		/// <summary>Set before Draw to record which pixels the voxel rasteriser wrote.</summary>
+		public bool TrackVoxelMask { get; set; }
+
 		public void Draw() {
 			_drawingSurface = new DrawingSurface(FullSize.Width * _config.TileWidth, FullSize.Height * _config.TileHeight);
+			_drawingSurface.TrackVoxelMask = TrackVoxelMask;
 
 			double lastReported = 0.0;
 			for (int y = 0; y < FullSize.Height; y++) {
@@ -1107,6 +1123,8 @@ namespace CNCMaps.Engine.Map {
 					lastReported = pct;
 				}
 			}
+
+			_drawingSurface.DrawDeferredAlpha();
 
 #if DEBUG && FALSE
 			// test that my bounds make some kind of sense

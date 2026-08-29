@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Drawing;
 using CNCMaps.Engine.Drawables;
 using CNCMaps.Engine.Game;
@@ -181,6 +181,10 @@ namespace CNCMaps.Engine.Map {
 		public byte OverlayValue { get; set; }
 		public override MapTile BottomTile { get; set; }
 		public override MapTile TopTile { get; set; }
+
+		/// <summary>The drawable of the id the map stored, kept when tiberium swaps in the type's
+		/// pooled art, because the shadow still comes from the stored id.</summary>
+		public Drawables.Drawable StoredDrawable { get; set; }
 
 		public OverlayObject(byte overlayID, byte overlayValue) {
 			OverlayID = overlayID;

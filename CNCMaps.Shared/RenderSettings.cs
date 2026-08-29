@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.CommandLine;
 using System.Linq;
@@ -38,7 +38,10 @@ namespace CNCMaps.Shared {
 		public bool FixPreviewDimensions { get; set; }
 		public bool Debug { get; set; }
 		public string DebugZBufferFile { get; set; }
+		public string DebugVoxelMaskFile { get; set; }
+		public string DebugTilesFile { get; set; }
 		public string TileLattice { get; set; }
+		public bool PinRandomDraws { get; set; }
 		public bool ReportProgress { get; set; }
 		public bool MarkIceGrowth { get; set; }
 		public bool Backup { get; set; }
@@ -69,7 +72,9 @@ namespace CNCMaps.Shared {
 			FixPreviewDimensions = true;
 			Debug = false;
 			DebugZBufferFile = "";
+			DebugVoxelMaskFile = "";
 			TileLattice = "";
+			PinRandomDraws = false;
 			MarkIceGrowth = false;
 			Backup = false;
 			FixOverlays = false;
@@ -143,7 +148,10 @@ namespace CNCMaps.Shared {
 			Flag("--force-localsize", "-f", "Use localsize for map dimensions; without this or -F the size is picked automatically", () => SizeMode = SizeMode.Local);
 			Flag("--debug", "-D", "", () => Debug = true);
 			Value<string>("--debug-zbuffer", null, "Write the render's z-buffer (.npy) and shadow mask (.shadow.npy) to the given path for diagnostics", v => DebugZBufferFile = v);
+			Value<string>("--debug-tiles", null, "Write one CSV row per map cell (rx,ry,z,ramp,tile,subtile) for diagnostics that need to know a cell's height or slope", v => DebugTilesFile = v);
+			Value<string>("--debug-voxelmask", null, "Write a mask (.npy) of the pixels drawn by the voxel rasterizer, so a comparison against a game capture can exclude them: the game shades voxels differently on purpose", v => DebugVoxelMaskFile = v);
 			Value<string>("--tile-lattice", null, "Override the 8x8 tile-variant lattice with 64 comma-separated values 0-7 (row-major), e.g. one exported from an engine capture", v => TileLattice = v);
+			Flag("--pin-random", null, "Pin every randomised draw choice (animation loop frame, random SHP frame, building fire art, generated veins) to its first option, so a render is byte-comparable with an engine capture whose game logic was frozen", () => PinRandomDraws = true);
 			Flag("--replace-preview-nomarkers", "-k", "Update the maps [PreviewPack] data with the rendered image, using no markers on the start positions", () => {
 				GeneratePreviewPack = true;
 				PreviewMarkers = PreviewMarkersType.None;

@@ -90,6 +90,37 @@ namespace CNCMaps.Engine.Rendering {
 			return _heightBuffer;
 		}
 
+		private readonly System.Collections.Generic.List<Action> _deferredAlpha = new System.Collections.Generic.List<Action>();
+
+		/// <summary>
+		/// Queue an AlphaImage glow to be applied once everything else is drawn. The game keeps
+		/// its alpha lighting in a buffer that every blitter reads, so the glow lights whatever
+		/// ends up visible under it; drawing it in place would only light what came before.
+		/// </summary>
+		public void DeferAlpha(Action draw) {
+			_deferredAlpha.Add(draw);
+		}
+
+		public void DrawDeferredAlpha() {
+			foreach (var draw in _deferredAlpha)
+				draw();
+			_deferredAlpha.Clear();
+		}
+
+		/// <summary>Set before drawing to have the voxel blit record which pixels it wrote. Off by
+		/// default: the buffer costs a byte per pixel and only A/B diagnostics read it.</summary>
+		public bool TrackVoxelMask { get; set; }
+		private bool[] _voxelMask;
+
+		/// <summary>Pixels drawn by the voxel rasteriser, or null when tracking is off. The game shades
+		/// voxels differently (a known divergence), so a comparison against an engine capture masks
+		/// these out instead of counting them as defects.</summary>
+		public bool[] GetVoxelMask() {
+			if (!TrackVoxelMask)
+				return null;
+			return _voxelMask ??= new bool[Width * Height];
+		}
+
 		/// <summary>
 		/// An ImageSharp view over this surface's pixel buffer; mutations write directly
 		/// into the surface. Only valid for Bgr24 surfaces. Do not dispose the surface

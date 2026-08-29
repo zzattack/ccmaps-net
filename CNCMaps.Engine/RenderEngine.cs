@@ -55,13 +55,16 @@ namespace CNCMaps.Engine {
 				// make each render deterministic regardless of how many renders ran
 				// earlier in this process
 				CNCMaps.Shared.Utility.Rand.Reset();
+				CNCMaps.Shared.Utility.Rand.Pinned = _settings.PinRandomDraws;
 
+				int[] lattice = null;
 				if (!string.IsNullOrEmpty(_settings.TileLattice)) {
 					var vals = _settings.TileLattice.Split(',');
 					if (vals.Length != 64)
 						throw new ArgumentException("--tile-lattice needs 64 comma-separated values");
-					Game.TileCollection.VariantLattice = vals.Select(int.Parse).ToArray();
+					lattice = vals.Select(int.Parse).ToArray();
 				}
+				Game.TileCollection.SetVariantLattice(lattice);
 
 				var sink = ProgressChanged;
 				if (sink == null && _settings.ReportProgress)
@@ -155,6 +158,8 @@ namespace CNCMaps.Engine {
 				if (modConfig == null)
 					modConfig = ModConfig.GetDefaultConfig(_settings.Engine);
 
+				Rendering.Palette.QuantizeIntensity = true;
+
 				var map = new Map.Map {
 					IgnoreLighting = _settings.IgnoreLighting,
 					StartPosMarking = _settings.StartPositionMarking,
@@ -239,10 +244,17 @@ namespace CNCMaps.Engine {
 					if (_settings.FixupTiles)
 						map.FixupTileLayer();
 
+					map.TrackVoxelMask = !string.IsNullOrEmpty(_settings.DebugVoxelMaskFile);
 					map.Draw();
 
 					if (!string.IsNullOrEmpty(_settings.DebugZBufferFile))
 						DumpZBuffer(map.GetDrawingSurface(), _settings.DebugZBufferFile);
+
+					if (!string.IsNullOrEmpty(_settings.DebugVoxelMaskFile))
+						DumpVoxelMask(map.GetDrawingSurface(), _settings.DebugVoxelMaskFile);
+
+					if (!string.IsNullOrEmpty(_settings.DebugTilesFile))
+						DumpTiles(map, _settings.DebugTilesFile);
 
 					if (_settings.MarkIceGrowth)
 						map.MarkIceGrowth();
@@ -555,6 +567,21 @@ namespace CNCMaps.Engine {
 					startPositions,
 					renderedWidth = saveRect.Width,
 					renderedHeight = saveRect.Height,
+					// Everything needed to map a cell to a pixel in the saved image:
+					//   Dx = Rx - Ry + fullSize.width - 1        Dy = Rx + Ry - fullSize.width - 1
+					//   x  = Dx * tileWidth / 2      - saveRect.x
+					//   y  = (Dy - z) * tileHeight/2 - saveRect.y
+					// saveRect is the crop taken out of the drawing surface; without its origin the
+					// surface coordinates above cannot be converted to saved-image coordinates.
+					saveRect = new { x = saveRect.X, y = saveRect.Y, width = saveRect.Width, height = saveRect.Height },
+					tileWidth = map.TileWidth,
+					tileHeight = map.TileHeight,
+					startPositionPixels = map.GetStartPositionPixels().Select(sp => new {
+						number = sp.Number,
+						cell = new { x = sp.Rx, y = sp.Ry, z = sp.Z },
+						pixel = new { x = sp.X - saveRect.X, y = sp.Y - saveRect.Y },
+						surfacePixel = new { x = sp.X, y = sp.Y },
+					}),
 					terrain = stats == null ? null : new {
 						heightMin = stats.HeightMin,
 						heightMax = stats.HeightMax,
@@ -775,12 +802,36 @@ namespace CNCMaps.Engine {
 		}
 
 		// numpy .npy v1.0 files so the buffers load directly into analysis scripts
+		/// <summary>One row per cell: rx,ry,z,ramp,tile,subtile. The ramp type lives in the tile image
+		/// rather than the map, and IsoMapPack5 is LZO, so a script outside the renderer cannot work
+		/// either out on its own.</summary>
+		private static void DumpTiles(Map.Map map, string path) {
+			using var w = new StreamWriter(path);
+			w.WriteLine("rx,ry,z,ramp,tile,subtile");
+			foreach (var t in map.GetTiles()) {
+				if (t == null) continue;
+				int ramp = (t.Drawable as Drawables.TileDrawable)?.GetTileImage(t)?.RampType ?? 0;
+				w.WriteLine($"{t.Rx},{t.Ry},{t.Z},{ramp},{t.TileNum},{t.SubTile}");
+			}
+		}
+
 		private static void DumpZBuffer(Rendering.DrawingSurface ds, string path) {
 			WriteNpy(path, "<i2", ds.Height, ds.Width, w => {
 				foreach (short v in ds.GetZBuffer()) w.Write(v);
 			});
 			WriteNpy(path + ".shadow.npy", "|b1", ds.Height, ds.Width, w => {
 				foreach (bool v in ds.GetShadows()) w.Write(v ? (byte)1 : (byte)0);
+			});
+		}
+
+		private static void DumpVoxelMask(Rendering.DrawingSurface ds, string path) {
+			var mask = ds.GetVoxelMask();
+			WriteNpy(path, "|b1", ds.Height, ds.Width, w => {
+				if (mask == null) {
+					for (long i = 0; i < (long)ds.Height * ds.Width; i++) w.Write((byte)0);
+					return;
+				}
+				foreach (bool v in mask) w.Write(v ? (byte)1 : (byte)0);
 			});
 		}
 

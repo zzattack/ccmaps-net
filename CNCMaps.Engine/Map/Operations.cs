@@ -12,87 +12,25 @@ namespace CNCMaps.Engine.Map {
 	class Operations {
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
-		public static void RecalculateOreSpread(IEnumerable<OverlayObject> ovls, EngineType engine) {
-			Logger.Info("Redistributing ore-spread over patches");
-
-			foreach (OverlayObject o in ovls) {
-				// The value consists of the sum of all dx's with a little magic offsets
-				// plus the sum of all dy's with also a little magic offset, and also
-				// everything is calculated modulo 12
-				var type = SpecialOverlays.GetOverlayTibType(o, engine);
-
-				if (type == OverlayTibType.Ore) {
-					int x = o.Tile.Dx;
-					int y = o.Tile.Dy;
-					double yInc = ((((y - 9) / 2) % 12) * (((y - 8) / 2) % 12)) % 12;
-					double xInc = ((((x - 13) / 2) % 12) * (((x - 12) / 2) % 12)) % 12;
-
-					// x_inc may be > y_inc so adding a big number outside of cell bounds
-					// will surely keep num positive
-					var num = (int)(yInc - xInc + 120000);
-					num %= 12;
-
-					if (engine <= EngineType.RedAlert2)
-						o.OverlayID = (byte)(SpecialOverlays.Ra2MinIdRiparius + num);
-					else
-						o.OverlayID = (byte)(SpecialOverlays.TsMinIdRiparius + num);
-				}
-
-				else if (type == OverlayTibType.Gems) {
-					int x = o.Tile.Dx;
-					int y = o.Tile.Dy;
-					double yInc = ((((y - 9) / 2) % 12) * (((y - 8) / 2) % 12)) % 12;
-					double xInc = ((((x - 13) / 2) % 12) * (((x - 12) / 2) % 12)) % 12;
-
-					// x_inc may be > y_inc so adding a big number outside of cell bounds
-					// will surely keep num positive
-					var num = (int)(yInc - xInc + 120000);
-					num %= 12;
-
-					// replace gems
-					if (engine <= EngineType.RedAlert2)
-						o.OverlayID = (byte)(SpecialOverlays.Ra2MinIdCruentus + num);
-					else
-						o.OverlayID = (byte)(SpecialOverlays.TsMinIdCruentus + num);
-				}
-
-				else if (type == OverlayTibType.Vinifera) {
-					int x = o.Tile.Dx;
-					int y = o.Tile.Dy;
-					double yInc = ((((y - 9) / 2) % 12) * (((y - 8) / 2) % 12)) % 12;
-					double xInc = ((((x - 13) / 2) % 12) * (((x - 12) / 2) % 12)) % 12;
-
-					// x_inc may be > y_inc so adding a big number outside of cell bounds
-					// will surely keep num positive
-					var num = (int)(yInc - xInc + 120000);
-					num %= 12;
-
-					// replace gems
-					if (engine <= EngineType.RedAlert2)
-						o.OverlayID = (byte)(SpecialOverlays.Ra2MinIdVinifera + num);
-					else
-						o.OverlayID = (byte)(SpecialOverlays.TsMinIdVinifera + num);
-				}
-
-				else if (type == OverlayTibType.Aboreus) {
-					int x = o.Tile.Dx;
-					int y = o.Tile.Dy;
-					double yInc = ((((y - 9) / 2) % 12) * (((y - 8) / 2) % 12)) % 12;
-					double xInc = ((((x - 13) / 2) % 12) * (((x - 12) / 2) % 12)) % 12;
-
-					// x_inc may be > y_inc so adding a big number outside of cell bounds
-					// will surely keep num positive
-					var num = (int)(yInc - xInc + 120000);
-					num %= 12;
-
-					// replace gems
-					if (engine <= EngineType.RedAlert2)
-						o.OverlayID = (byte)(SpecialOverlays.Ra2MinIdAboreus + num);
-					else
-						o.OverlayID = (byte)(SpecialOverlays.TsMinIdAboreus + num);
-				}
-
-			}
+		/// <summary>
+		/// Give a tiberium overlay the art the game would draw for its cell.
+		/// The engine never rewrites the cell's overlay; it picks one of the type's twelve images
+		/// at draw time from the cell's own coordinates, and one of the eight slope pieces that
+		/// follow them when the cell ramps. The stored drawable is kept because the shadow still
+		/// comes from the id the map holds.
+		/// </summary>
+		public static void ApplyTiberiumArt(MapTile tile, OverlayObject ovl, EngineType engine) {
+			if (ovl.Drawable == null || ovl.Collection == null)
+				return;
+			int rampType = (tile.Drawable as TileDrawable)?.GetTileImage(tile)?.RampType ?? 0;
+			int pooled = SpecialOverlays.GetPooledDrawId(ovl, engine, rampType);
+			if (pooled == ovl.OverlayID || pooled >= ovl.Collection.DrawableCount)
+				return;
+			var pooledDrawable = ovl.Collection.GetDrawable(pooled);
+			if (pooledDrawable == null)
+				return;
+			ovl.StoredDrawable = ovl.Drawable;
+			ovl.Drawable = pooledDrawable;
 		}
 
 		public static void RecalculateVeinsSpread(IEnumerable<OverlayObject> ovls, TileLayer tiles) {

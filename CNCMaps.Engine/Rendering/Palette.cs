@@ -17,6 +17,10 @@ namespace CNCMaps.Engine.Rendering {
 		byte[] _origColors;
 		public bool IsShared { get; set; }
 
+		/// <summary>Quantize lighting to the 63 intensity steps the engine draws through.
+		/// Always on; kept as a switch so a render can be compared against the continuous maths.</summary>
+		public static bool QuantizeIntensity { get; set; }
+
 		byte[] _bgr; // per-pixel loops read colors as raw bytes; Color's property accessors are too slow there
 
 		double _redMult = 1.0,
@@ -78,6 +82,22 @@ namespace CNCMaps.Engine.Rendering {
 			}
 		}
 
+		// The engine does not scale colors by the light level. It draws every shape through a
+		// LightConvertClass whose table holds 63 intensity steps from black to double brightness, and
+		// the cell's brightness picks one of them, so a cell's lighting always lands on a multiple of
+		// 1/31. The chain below is the game's own: Draw_Tile hands the brightness to
+		// AlphaLightingRemapClass::Get_Table, whose row index is (261*brightness)>>11, and the table
+		// entry is (alpha * shade * 62) / 32258 with alpha at its neutral 127. RA2 and YR use the same
+		// machinery.
+		private static double QuantizeTsIntensity(double intensity) {
+			int brightness = (int)(intensity * 1000);
+			if (brightness < 0) brightness = 0;
+			if (brightness > 2000) brightness = 2000;
+			int shade = Math.Min(254, (261 * brightness) >> 11);
+			int level = Math.Min(62, 127 * shade * 62 / 32258);
+			return level / 31.0;
+		}
+
 		public void ApplyLamp(LightSource lamp, double lsEffect, bool ambientOnly = false) {
 			_ambientMult += lsEffect * lamp.LightIntensity;
 			if (!ambientOnly) {
@@ -115,6 +135,8 @@ namespace CNCMaps.Engine.Rendering {
 			}
 			else {
 				double intensity = Math.Min(amb * m, 2.0);
+				if (QuantizeIntensity)
+					intensity = QuantizeTsIntensity(intensity);
 				rmult = intensity * (tr / m);
 				gmult = intensity * (tg / m);
 				bmult = intensity * (tb / m);

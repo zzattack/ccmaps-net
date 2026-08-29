@@ -162,6 +162,11 @@ namespace CNCMaps.Engine.Drawables {
 				IsVeinHoleMonster = true;
 			}
 
+			// TerrainClass::Draw_It adds this straight to the draw point. Only the TS blossom-tree
+			// types set it (YDrawFudge=-12, half a TS tile); RA2 and YR define it nowhere.
+			if (OwnerCollection != null && OwnerCollection.Type == CollectionType.Terrain)
+				Props.Offset.Y += Rules.ReadInt("YDrawFudge");
+
 			IsRock = Rules.ReadBool("IsARock");
 			if (Rules.ReadString("Land") == "Rock") {
 				Props.Offset.Y += _config.TileHeight / 2;
@@ -180,9 +185,12 @@ namespace CNCMaps.Engine.Drawables {
 				// Foundation = new Size(2, 2); // hack to get these later in the drawing order
 			}
 			if (Rules.ReadBool("SpawnsTiberium")) {
-				// For example on TIBTRE / Ore Poles
+				// TIBTRE / ore poles. TerrainClass::Draw_It sends these through TiberiumDrawer, which
+				// init.cpp aliases to VoxelDrawer (the unit palette), and tints them with the cell's
+				// Brightness rather than its TileBrightness. Brightness carries the ambient without the tile
+				// tint, which is what LightingType.Ambient applies.
 				Props.Offset.Y = -1;
-				Props.LightingType = LightingType.None; // todo: verify it's not NONE
+				Props.LightingType = LightingType.Ambient;
 				Props.PaletteType = PaletteType.Unit;
 			}
 

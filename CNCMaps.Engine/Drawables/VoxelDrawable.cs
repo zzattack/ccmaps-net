@@ -47,6 +47,7 @@ namespace CNCMaps.Engine.Drawables {
 			var zBuffer = ds.GetZBuffer();
 			var shadowBufVxl = vxl_ds.GetShadows();
 			var shadowBuf = ds.GetShadows();
+			var voxelMask = ds.GetVoxelMask();
 
 			// bottom-most drawn source row; source rows are stored bottom-up, so source
 			// row r appears on display row (Height - 1 - r)
@@ -72,7 +73,11 @@ namespace CNCMaps.Engine.Drawables {
 			var t = obj.Tile;
 			int cellBottomY = (t.Dy - t.Z) * _config.TileHeight / 2 + _config.TileHeight - 1;
 			int anchorY = d.Y + (vxl_ds.Height - 1 - firstDrawnRow);
-			int zBase = (t.Rx + t.Ry) * _config.TileHeight / 2 + (anchorY - cellBottomY) + 1;
+			// ZAdjust uses the game's sign, as in ShpRenderer: positive pushes away from the screen.
+			// A voxel turret on a building carries the building's TurretAnimZAdjust; without it the
+			// turret loses the z-test against the body it sits on (the Grand Cannon's mounting plate
+			// then draws over its own gun).
+			int zBase = (t.Rx + t.Ry) * _config.TileHeight / 2 + (anchorY - cellBottomY) + 1 - props.ZAdjust;
 			int zShadowBase = (t.Rx + t.Ry) * _config.TileHeight / 2 + 2;
 			// units on a bridge draw raised; their z stays anchored on the deck plane
 			if (obj is OwnableObject oo && oo.OnBridge)
@@ -109,6 +114,8 @@ namespace CNCMaps.Engine.Drawables {
 							*(body_row + x * 3 + 1) = *(src_row + x * 4 + 1);
 							*(body_row + x * 3 + 2) = *(src_row + x * 4 + 2);
 						}
+						if (voxelMask != null)
+							voxelMask[zIdx] = true;
 					}
 					// shadows lie on the caster's ground plane and darken only where that
 					// plane is in front of the buffer; the body pixels drawn by this same
