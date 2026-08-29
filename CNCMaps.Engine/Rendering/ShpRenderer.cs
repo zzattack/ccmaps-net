@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Drawing;
 using CNCMaps.Engine.Drawables;
 using CNCMaps.Engine.Game;
@@ -19,6 +19,37 @@ namespace CNCMaps.Engine.Rendering {
 		public ShpRenderer(ModConfig config, VirtualFileSystem vfs) {
 			_config = config;
 			_vfs = vfs;
+		}
+
+		private const int ZShapeWidth = 396, ZShapeHeight = 477;
+		private byte[] _buildingZShape;
+		private bool _buildingZShapeTried;
+
+		/// <summary>BUILDNGZ.SHA, the per-pixel z cone the game blits under a building's own
+		/// shapes. Absent in Tiberian Sun, where buildings keep the plain standing profile.</summary>
+		private byte[] BuildingZShape {
+			get {
+				if (!_buildingZShapeTried) {
+					_buildingZShapeTried = true;
+					var sha = _vfs.Open<ShpFile>("buildngz.sha");
+					if (sha != null) {
+						sha.Initialize();
+						var frame = sha.NumImages > 0 ? sha.GetImage(0) : null;
+						var data = frame?.GetImageData();
+						if (data != null && frame.Width == ZShapeWidth && frame.Height == ZShapeHeight)
+							_buildingZShape = data;
+					}
+					if (_buildingZShape == null)
+						Logger.Debug("No usable buildngz.sha; buildings fall back to the flat standing z profile");
+				}
+				return _buildingZShape;
+			}
+		}
+
+		private static int SampleZShape(byte[] zShape, int x, int y, int originX, int originY) {
+			int col = Math.Clamp(x - originX, 0, ZShapeWidth - 1);
+			int row = Math.Clamp(y - originY, 0, ZShapeHeight - 1);
+			return zShape[row * ZShapeWidth + col];
 		}
 
 		public Rectangle GetBounds(GameObject obj, ShpFile shp, DrawProperties props) {
@@ -92,7 +123,10 @@ namespace CNCMaps.Engine.Rendering {
 				// flat overlays sit at ground+1 (the Ground gradient keeps 1 of the game's +2 overlay ZAdjust),
 				// standing ones take the full lift
 				zLift = dr.Flat ? 1 : dr.IsWall || dr.IsRock ? 2 : 17;
-			else if (unitLike || isBuilding)
+			else if (isBuilding)
+				// 3 is the lift at the cone's crown
+				zLift = BuildingZShape != null ? 3 : 1;
+			else if (unitLike)
 				zLift = 1;
 			else
 				zLift = dr.Flat ? 0 : 12;
@@ -120,6 +154,25 @@ namespace CNCMaps.Engine.Rendering {
 			if (!dr.Flat)
 				hBufVal += shp.Height;
 
+			// BuildingClass::Draw_It (0x43d767) hands the building's own shapes BUILDNGZ.SHA as
+			// Shape_Draw_Z's ZShape: a cone centred on the object's draw point that recedes 1 z per 3 px
+			// sideways as well as per 3 rows down. The plain 4/3 standing profile is only its vertical
+			// half; without the sideways half a tower at the edge of a wide sprite sits up to 24 z too far
+			// forward and pokes through the cliff art in front of it. Anims are drawn by AnimClass and get
+			// no shape, so they keep the plain profile.
+			byte[] zShape = isBuilding && !dr.Flat && !(dr is AnimDrawable) ? BuildingZShape : null;
+			int zShapeX = 0, zShapeY = 0, zShapeBase = 0;
+			if (zShape != null) {
+				// the game offsets the shape by the foundation's client-space diagonal
+				// (BuildingClass::Draw_It 0x43d730: CoordsToClient of (w-1, h-1) cells), which
+				// on screen is only a sideways move for a non-square footprint
+				var fnd = obj.Drawable?.Foundation ?? new Size(1, 1);
+				zShapeX = obj.Tile.Dx * _config.TileWidth / 2 + _config.TileWidth / 2
+					+ (fnd.Width - fnd.Height) * (_config.TileWidth / 2) - ZShapeWidth / 2;
+				zShapeY = (obj.Tile.Dy - obj.Tile.Z) * _config.TileHeight / 2 - ZShapeHeight / 2 - 1;
+				zShapeBase = SampleZShape(zShape, zShapeX + ZShapeWidth / 2, zAnchorY, zShapeX, zShapeY);
+			}
+
 			for (int y = 0; y < img.Height; y++) {
 				if (offset.Y + y < 0) {
 					w += stride;
@@ -136,6 +189,16 @@ namespace CNCMaps.Engine.Rendering {
 						short zBufVal;
 						if (dr.Flat)
 							zBufVal = (short)(zGround + zLift + (offset.Y + y) - zAnchorY - props.ZAdjust);
+						else if (zShape != null) {
+							zBufVal = (short)(zGround + zLift - props.ZAdjust
+								+ SampleZShape(zShape, offset.X + x, offset.Y + y, zShapeX, zShapeY) - zShapeBase);
+							// the cone only ever moves a pixel closer: the engine floors it at the crown's own lift above
+							// the ground plane, so the sideways fall-off cannot push the edge of a wide sprite behind its
+							// own ground
+							short floor = (short)(zGround + (offset.Y + y) - zAnchorY + zLift);
+							if (zBufVal < floor)
+								zBufVal = floor;
+						}
 						else
 							zBufVal = (short)(zGround + zLift + (zAnchorY - (offset.Y + y)) / 3 - props.ZAdjust);
 
