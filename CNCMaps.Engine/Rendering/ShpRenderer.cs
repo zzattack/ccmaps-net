@@ -54,7 +54,7 @@ namespace CNCMaps.Engine.Rendering {
 			offset.X += obj.Tile.Dx * _config.TileWidth / 2 - shp.Width / 2 + img.X;
 			offset.Y += (obj.Tile.Dy - obj.Tile.Z) * _config.TileHeight / 2 - shp.Height / 2 + img.Y;
 			// something standing on a slope stands on its surface, not on the cell's stored corner
-			int rampLift = dr.Flat ? 0 : RampHeight.PixelLift(obj.Tile, _config.TileHeight);
+			int rampLift = dr.Flat ? 0 : RampHeight.PixelLift(obj.Tile, _config);
 			offset.Y -= rampLift;
 			Logger.Trace("Drawing SHP file {0} (Frame {1}) at ({2},{3})", shp.FileName, frameIndex, offset.X, offset.Y);
 
@@ -193,7 +193,7 @@ namespace CNCMaps.Engine.Rendering {
 			offset.X += obj.Tile.Dx * _config.TileWidth / 2 - shp.Width / 2 + img.X;
 			offset.Y += (obj.Tile.Dy - obj.Tile.Z) * _config.TileHeight / 2 - shp.Height / 2 + img.Y;
 			int rampLift = obj.Drawable != null && !obj.Drawable.Flat
-				? RampHeight.PixelLift(obj.Tile, _config.TileHeight) : 0;
+				? RampHeight.PixelLift(obj.Tile, _config) : 0;
 			offset.Y -= rampLift;
 			Logger.Trace("Drawing SHP shadow {0} (frame {1}) at ({2},{3})", shp.FileName, frameIndex, offset.X, offset.Y);
 
