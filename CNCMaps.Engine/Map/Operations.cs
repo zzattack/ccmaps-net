@@ -289,54 +289,54 @@ namespace CNCMaps.Engine.Map {
 					}
 				}
 
-				// apply ramp fixup
-				else if (t.SetNum == collection.RampBase) {
+				// apply ramp fixup (CellClass LAT recalc 0x47CA80): ramps 1-4 bordering flat
+				// ground on a diagonal are replaced by the matching RampSmooth piece; a
+				// smooth piece whose flat neighbours are gone reverts to the plain ramp
+				else if (t.SetNum == collection.RampBase || t.SetNum == collection.RampSmooth) {
 					var ti = t.GetTileImage();
-					if (ti.RampType < 1 || 4 < ti.TerrainType) continue;
+					if (ti.RampType < 1 || 4 < ti.RampType) continue;
+
+					// an off-map neighbour counts as flat, like the game's blank cell
+					bool FlatAt(TileLayer.TileDirection dir) {
+						var n = tiles.GetNeighbourTile(t, dir);
+						return n == null || n.GetTileImage().RampType == 0;
+					}
 
 					int fixup = -1;
-					MapTile tileTopRight = tiles.GetNeighbourTile(t, TileLayer.TileDirection.TopRight);
-					MapTile tileBottomRight = tiles.GetNeighbourTile(t, TileLayer.TileDirection.BottomRight);
-					MapTile tileBottomLeft = tiles.GetNeighbourTile(t, TileLayer.TileDirection.BottomLeft);
-					MapTile tileTopLeft = tiles.GetNeighbourTile(t, TileLayer.TileDirection.TopLeft);
-
-
 					switch (ti.RampType) {
-						case 1:
-							// northwest facing
-							if (tileTopLeft != null && tileTopLeft.GetTileImage().RampType == 0)
+						case 1: // northwest facing
+							if (FlatAt(TileLayer.TileDirection.TopLeft))
 								fixup++;
-							if (tileBottomRight != null && tileBottomRight.GetTileImage().RampType == 0)
+							if (FlatAt(TileLayer.TileDirection.BottomRight))
 								fixup += 2;
 							break;
 
 						case 2: // northeast facing
-							if (tileTopRight != null && tileTopRight.GetTileImage().RampType == 0)
+							if (FlatAt(TileLayer.TileDirection.TopRight))
 								fixup++;
-							if (tileBottomLeft != null && tileBottomLeft.GetTileImage().RampType == 0)
+							if (FlatAt(TileLayer.TileDirection.BottomLeft))
 								fixup += 2;
 							break;
 
 						case 3: // southeast facing
-							if (tileBottomRight != null && tileBottomRight.GetTileImage().RampType == 0)
+							if (FlatAt(TileLayer.TileDirection.BottomRight))
 								fixup++;
-							if (tileTopLeft != null && tileTopLeft.GetTileImage().RampType == 0)
+							if (FlatAt(TileLayer.TileDirection.TopLeft))
 								fixup += 2;
 							break;
 
 						case 4: // southwest facing
-							if (tileBottomLeft != null && tileBottomLeft.GetTileImage().RampType == 0)
+							if (FlatAt(TileLayer.TileDirection.BottomLeft))
 								fixup++;
-							if (tileTopRight != null && tileTopRight.GetTileImage().RampType == 0)
+							if (FlatAt(TileLayer.TileDirection.TopRight))
 								fixup += 2;
 							break;
 					}
 
-					if (fixup != -1) {
-						t.TileNum = collection.GetTileNumFromSet(collection.RampSmooth, (byte)((ti.RampType - 1) * 3 + fixup));
-						// update drawable too
-						t.Drawable = collection.GetDrawable(t);
-					}
+					t.TileNum = fixup != -1
+						? collection.GetTileNumFromSet(collection.RampSmooth, (byte)((ti.RampType - 1) * 3 + fixup))
+						: collection.GetTileNumFromSet(collection.RampBase, (byte)(ti.RampType - 1));
+					t.Drawable = collection.GetDrawable(t);
 				}
 
 			}
