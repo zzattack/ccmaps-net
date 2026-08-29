@@ -173,6 +173,13 @@ namespace CNCMaps.Engine.Drawables {
 			IniFile.IniSection extraArt = OwnerCollection.Art.GetOrCreateSection(animSection);
 			var anim = new AnimDrawable(_config, _vfs, extraRules, extraArt);
 			anim.OwnerCollection = OwnerCollection;
+			// gamemd pauses power-gated anims (<slot>Powered, default yes) on buildings that are not
+			// operating: capture-to-operate ones (NeedsEngineer, e.g. a neutral oil derrick's pump)
+			// and power-dependent ones (Powered=true; preplaced owners have no power at the frames
+			// --anim-frame simulates, so the owner's actual power balance is not modelled)
+			string slot = extraImage.EndsWith("Damaged") ? extraImage.Substring(0, extraImage.Length - 7) : extraImage;
+			anim.HoldAtStart = (Rules.ReadBool("NeedsEngineer") || Rules.ReadBool("Powered"))
+				&& Art.ReadBool(slot + "Powered", true);
 			anim.LoadFromRules();
 
 			anim.NewTheater = this.NewTheater;

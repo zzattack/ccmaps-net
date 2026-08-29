@@ -89,7 +89,7 @@ namespace CNCMaps.Engine.Types {
 			Reverse = art.ReadBool("Reverse");
 			PsiWarning = art.ReadBool("PsiWarning");
 			TiberiumChainReaction = art.ReadBool("TiberiumChainReaction");
-			Rate = art.ReadInt("Rate", 1);
+			Rate = art.ReadInt("Rate", 900);
 			Damage = art.ReadFloat("Damage");
 			Start = art.ReadInt("Start");
 			End = art.ReadInt("End");

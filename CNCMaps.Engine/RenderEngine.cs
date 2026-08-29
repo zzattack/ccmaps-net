@@ -56,6 +56,7 @@ namespace CNCMaps.Engine {
 				// earlier in this process
 				CNCMaps.Shared.Utility.Rand.Reset();
 				CNCMaps.Shared.Utility.Rand.Pinned = _settings.PinRandomDraws;
+				Game.FrameDeciders.AnimSimFrame = _settings.AnimFrame;
 
 				int[] lattice = null;
 				if (!string.IsNullOrEmpty(_settings.TileLattice)) {

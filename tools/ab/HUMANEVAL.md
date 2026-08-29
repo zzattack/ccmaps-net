@@ -76,4 +76,10 @@ Caveats: the map list is read once at startup — restart to see corpus entries 
 ## Knobs
 
 - `humaneval.py compare --min-area <N>` (default 30) and `--tolerance <N>` (default 8): re-running `compare` after deleting zones.json files only rewrites analysis, no rendering. Many maps cap at 200 stored zones; the viewer's slider filters client-side, so prefer the slider over re-comparing.
+- `render` passes `--anim-frame <capture.json frame>` so animations draw the exact frame the
+  engine showed when its logic was frozen (flags, fountains, oil-derrick flares, waterfalls).
+  The tick simulation lives in `CNCMaps.Engine\Game\FrameDeciders.SimulateAnimStage`; power-gated
+  anim slots (`<slot>Powered`, default yes) on `NeedsEngineer` or `Powered=true` buildings hold at
+  their start frame like the game's unpowered-anim pause (a neutral oil derrick's pump stands
+  still while its `Powered=no` flare keeps burning).
 - TS/FS comparisons: planned, not built. The pipeline defaults (map dir, game dir, presets, `-Y`) are YR-specific.

@@ -1,12 +1,111 @@
 ﻿using System;
+using CNCMaps.Engine.Drawables;
 using CNCMaps.Engine.Map;
 using CNCMaps.Engine.Rendering;
+using CNCMaps.Engine.Types;
 using CNCMaps.FileFormats;
 using CNCMaps.Shared;
 using CNCMaps.Shared.Utility;
 
 namespace CNCMaps.Engine.Game {
 	public static class FrameDeciders {
+
+		/// <summary>Game-loop frame to simulate animations at (--anim-frame); -1 keeps the random loop frame.</summary>
+		public static int AnimSimFrame = -1;
+
+		// OptionsClass::Normalize_Delay: Normalized=yes anims scale their per-frame delay by the game
+		// speed so their apparent speed stays constant. GameSpeed 0 is fastest (60 fps); the A/B
+		// capture pipeline runs with spawn.ini GameSpeed=2, which is the value used here.
+		private const int AnimGameSpeed = 2;
+		private static readonly int[,] NormalizedDelay = {
+			{ 2, 2, 1, 1, 1, 1, 1, 1 },
+			{ 3, 3, 3, 2, 2, 2, 1, 1 },
+			{ 5, 4, 4, 3, 3, 2, 2, 1 },
+			{ 7, 6, 5, 4, 4, 4, 3, 2 },
+		};
+
+		// Anims tick twice during scenario load before the game's frame counter starts counting
+		// (calibrated against frozen-logic captures of CAUSFGL_A and CAWSH18A).
+		private const int AnimPhase = 2;
+
+		/// <summary>
+		/// Replays gamemd's AnimClass tick logic so a render matches an engine capture whose logic
+		/// was frozen at game-loop frame <paramref name="simFrame"/>. Field semantics from the YR
+		/// binary: Rate is stored as a delay of 900/Rate game frames per anim frame; End/LoopEnd of
+		/// 0 mean unset and resolve against the SHP frame count (halved for Shadow=yes anims, whose
+		/// second half holds the shadow frames). RandomRate/RandomLoopDelay roll the game's synced
+		/// RNG and cannot be replayed; they are treated as plain Rate with no inter-loop pause.
+		/// Returns the frame index to draw, or shpFrames (out of range, skipping the draw) for an
+		/// animation that has expired by then.
+		/// </summary>
+		public static int SimulateAnimStage(Animation art, int shpFrames, int simFrame) {
+			int delay = art.Rate > 0 ? 900 / art.Rate : 0;
+			if (art.Normalized)
+				delay = delay <= 0 ? 0 : delay < 5 ? NormalizedDelay[delay - 1, AnimGameSpeed] : delay * 8 / (AnimGameSpeed + 1);
+
+			int bodyFrames = art.Shadow ? shpFrames / 2 : shpFrames;
+			int end = art.End > 0 ? art.End : bodyFrames;
+			int loopEnd = art.LoopEnd > 0 ? art.LoopEnd : end;
+
+			// the loop count multiplies into a byte in-game; LoopCount=-1 wraps to 0xFF = infinite
+			int loops = (byte)art.LoopCount;
+			if (loops <= 1) loops = 1;
+			bool infinite = loops == 0xFF;
+
+			int stage = 0, step = 1;
+			if (art.Reverse) { stage = loopEnd - 1; step = -1; }
+			if (delay <= 0)
+				return art.Start + stage;
+
+			int started = 0;
+			for (int f = 1; f <= simFrame + AnimPhase; f++) {
+				if (f - started < delay)
+					continue;
+				started = f;
+				stage += step;
+
+				if (art.PingPong) {
+					bool atBound = loops > 1
+						? stage >= loopEnd - art.Start || stage == art.Start
+						: stage >= end || stage == 0;
+					if (atBound) step = -step;
+					continue;
+				}
+
+				bool atEnd = loops > 1 ? stage >= loopEnd - art.Start : stage >= end;
+				if (art.Reverse)
+					atEnd |= stage <= 0;
+				// Shadow anims wrap at the loop bound even on their last loop, so they never run
+				// into the shadow half
+				else if (!atEnd && art.Shadow)
+					atEnd = stage >= loopEnd - art.Start;
+				if (!atEnd)
+					continue;
+
+				if (!infinite)
+					loops--;
+				if (loops == 0)
+					return shpFrames;
+				stage = art.Reverse ? loopEnd : art.LoopStart - art.Start;
+			}
+			return art.Start + stage;
+		}
+
+		/// <summary>
+		/// Deterministic replacement for LoopFrameDecider: the frame the game engine shows at
+		/// game-loop frame AnimSimFrame. Pure, so the draw, shadow and bounds passes agree.
+		/// </summary>
+		internal static Func<GameObject, int> AnimTickFrameDecider(Animation animProps, ShpDrawable drawable) {
+			int simFrame = AnimSimFrame;
+			int frame = -1;
+			return delegate (GameObject obj) {
+				if (frame < 0) {
+					drawable.Shp.Initialize();
+					frame = SimulateAnimStage(animProps, drawable.Shp.NumImages, simFrame);
+				}
+				return frame;
+			};
+		}
 
 		/// <summary>
 		/// Building turrets

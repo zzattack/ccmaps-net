@@ -265,9 +265,11 @@ def cmd_render(args):
         for d in mix_dirs():
             cmd += ["-m", d]
         with open(os.path.join(meta_dir(out), entry["capture"])) as fh:
-            lattice = (json.load(fh).get("provenance") or {}).get("variantLattice")
+            cap = json.load(fh)
+        lattice = (cap.get("provenance") or {}).get("variantLattice")
         if lattice:
             cmd += ["--tile-lattice", ",".join(str(v) for v in lattice)]
+        cmd += ["--anim-frame", str(cap.get("frame", 6))]
 
         print(f"#{key} {name}: rendering...", flush=True)
         code, output = run_streaming(cmd)

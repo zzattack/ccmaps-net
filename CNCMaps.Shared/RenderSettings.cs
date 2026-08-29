@@ -42,6 +42,7 @@ namespace CNCMaps.Shared {
 		public string DebugTilesFile { get; set; }
 		public string TileLattice { get; set; }
 		public bool PinRandomDraws { get; set; }
+		public int AnimFrame { get; set; }
 		public bool ReportProgress { get; set; }
 		public bool MarkIceGrowth { get; set; }
 		public bool Backup { get; set; }
@@ -75,6 +76,7 @@ namespace CNCMaps.Shared {
 			DebugVoxelMaskFile = "";
 			TileLattice = "";
 			PinRandomDraws = false;
+			AnimFrame = -1;
 			MarkIceGrowth = false;
 			Backup = false;
 			FixOverlays = false;
@@ -152,6 +154,7 @@ namespace CNCMaps.Shared {
 			Value<string>("--debug-voxelmask", null, "Write a mask (.npy) of the pixels drawn by the voxel rasterizer, so a comparison against a game capture can exclude them: the game shades voxels differently on purpose", v => DebugVoxelMaskFile = v);
 			Value<string>("--tile-lattice", null, "Override the 8x8 tile-variant lattice with 64 comma-separated values 0-7 (row-major), e.g. one exported from an engine capture", v => TileLattice = v);
 			Flag("--pin-random", null, "Pin every randomised draw choice (animation loop frame, random SHP frame, building fire art, generated veins) to its first option, so a render is byte-comparable with an engine capture whose game logic was frozen", () => PinRandomDraws = true);
+			Value<int>("--anim-frame", null, "Draw every animation at the frame the game engine shows at game-loop frame VALUE, for comparing against an engine capture whose logic was frozen at that frame", v => AnimFrame = v);
 			Flag("--replace-preview-nomarkers", "-k", "Update the maps [PreviewPack] data with the rendered image, using no markers on the start positions", () => {
 				GeneratePreviewPack = true;
 				PreviewMarkers = PreviewMarkersType.None;

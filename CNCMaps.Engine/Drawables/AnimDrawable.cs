@@ -14,6 +14,10 @@ namespace CNCMaps.Engine.Drawables {
 		private Animation _animProps;
 		private int _translucency;
 
+		/// <summary>Power-gated anim on a building that must be captured before it operates
+		/// (e.g. a neutral oil derrick's pump): the game holds it at its start frame.</summary>
+		public bool HoldAtStart;
+
 		public AnimDrawable(ModConfig config, VirtualFileSystem vfs, IniFile.IniSection rules, IniFile.IniSection art, ShpFile shpFile = null)
 			: base(config, vfs, rules, art, shpFile) {
 		}
@@ -28,9 +32,14 @@ namespace CNCMaps.Engine.Drawables {
 
 			Props.HasShadow = Art.ReadBool("Shadow", Defaults.GetShadowAssumption(CollectionType.Animation));
 
-			Props.FrameDecider = FrameDeciders.LoopFrameDecider(
-				Art.ReadInt("LoopStart"),
-				Art.ReadInt("LoopEnd", 1));
+			if (FrameDeciders.AnimSimFrame < 0)
+				Props.FrameDecider = FrameDeciders.LoopFrameDecider(
+					Art.ReadInt("LoopStart"),
+					Art.ReadInt("LoopEnd", 1));
+			else if (HoldAtStart)
+				Props.FrameDecider = obj => _animProps.Start;
+			else
+				Props.FrameDecider = FrameDeciders.AnimTickFrameDecider(_animProps, this);
 
 			Flat = Art.ReadBool("DrawFlat", Defaults.GetFlatnessAssumption(OwnerCollection.Type))
 				|| Art.ReadBool("Flat");
