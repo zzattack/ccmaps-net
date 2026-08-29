@@ -99,11 +99,12 @@ namespace CNCMaps.Engine.Rendering {
 			var bt = obj.BottomTile;
 			int cellBottomY = (bt.Dy - bt.Z) * _config.TileHeight / 2 + _config.TileHeight - 1;
 			int spriteBottomY = offset.Y + img.Height - 1;
-			// buildings anchor at their body's drawn bottom row; parts drawn above it
-			// (anims, turrets, upgrades) share that anchor so they tie with the body,
-			// while a bib extending below keeps its own deeper anchor
+			// buildings anchor at their body's drawn bottom row; turrets and upgrades share that anchor
+			// so they tie with the body, while a bib extending below keeps its own deeper anchor. Anims
+			// keep the game's per-shape anchor: a flag or flare on a mast draws from its own bottom row,
+			// so it recedes behind the roof it rises out of.
 			int zAnchorY = spriteBottomY;
-			if (isBuilding) {
+			if (isBuilding && !(dr is AnimDrawable)) {
 				int? bodyAnchor = ((StructureObject)obj).DrawnBodyAnchorY;
 				zAnchorY = Math.Max(spriteBottomY, bodyAnchor ?? cellBottomY);
 			}
