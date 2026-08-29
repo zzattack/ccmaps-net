@@ -10,3 +10,4 @@ CNCMaps_*.zip
 .vs
 publish
 CLAUDE.md
+__pycache__/

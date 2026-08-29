@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>CNCMaps.MixTool</RootNamespace>
+    <AssemblyName>CNCMaps.MixTool</AssemblyName>
+    <TargetFramework>net10.0</TargetFramework>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\CNCMaps.FileFormats\CNCMaps.FileFormats.csproj" />
+  </ItemGroup>
+</Project>
