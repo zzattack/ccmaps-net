@@ -280,7 +280,12 @@ namespace CNCMaps.Engine.Rendering {
 			// Shadows lie on the caster's ground plane, 2 z in front of it: gamemd draws them with the
 			// Ground z-gradient and darkens only where that plane is in front of what the pixel holds.
 			// Terrain and building shadows use the ZReadWrite darken blitter and store their z; unit
-			// shadows only test.
+			// shadows only test. A building's shadow keeps the ground gradient and carries no z-shape,
+			// but the engine gives it ZAdjust -4 against the body's -2 (FUN_00705e00: iStack_c = -4 -
+			// heightAdjust, gradient 0, z-shape args zeroed) and draws it one call after the body, so it
+			// darkens the body wherever the cone has dipped below it.
+			bool building = obj is StructureObject && !(dr is AnimDrawable) && (dr == null || !dr.Flat);
+			int shadowLift = building ? 4 : 2;
 			bool unitLike = obj is UnitObject || obj is InfantryObject || obj is AircraftObject;
 			bool isAnim = dr is AnimDrawable && !(obj is MapTile);
 			var t = obj.Tile;
@@ -296,7 +301,7 @@ namespace CNCMaps.Engine.Rendering {
 				}
 
 				// as in Draw: the ramp lift is a screen offset, not a depth one
-				short zBufVal = (short)(zBase + (offset.Y + y + rampLift) - cellBottomY + 2);
+				short zBufVal = (short)(zBase + (offset.Y + y + rampLift) - cellBottomY + shadowLift);
 
 				for (int x = 0; x < img.Width; x++) {
 					if (0 <= offset.X + x && offset.X + x < ds.Width && 0 <= y + offset.Y && y + offset.Y < ds.Height &&

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
@@ -350,9 +350,11 @@ namespace CNCMaps.Engine.Drawables {
 					ds.DeferAnim(() => part.Draw(obj, ds, !shadows));
 					continue;
 				}
+				// the engine emits body then shadow for a building, which is what lets a shadow
+				// darken the body it belongs to
+				part.Draw(obj, ds, false);
 				if (shadows)
 					part.DrawShadow(obj, ds);
-				part.Draw(obj, ds, false);
 			}
 
 			var strObj = obj as StructureObject;
