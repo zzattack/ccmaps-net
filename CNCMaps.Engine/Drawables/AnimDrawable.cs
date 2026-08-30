@@ -50,7 +50,7 @@ namespace CNCMaps.Engine.Drawables {
 
 		public override void Draw(GameObject obj, DrawingSurface ds, bool omitShadow = false) {
 			if (Props.HasShadow && !omitShadow && !obj.Drawable.Props.Cloakable)
-				_renderer.DrawShadow(obj, Shp, Props, ds);
+				_renderer.DrawShadow(obj, Shp, this, Props, ds);
 			if (_translucency == 0)
 				base.Draw(obj, ds, omitShadow);
 			else if (!(obj.Drawable.Props.Cloakable && _translucency > 0)) {

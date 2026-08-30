@@ -118,6 +118,13 @@ namespace CNCMaps.Engine.Rendering {
 			// drawn later tie with the body instead of losing against its lifted wall z.
 			bool unitLike = obj is UnitObject || obj is InfantryObject || obj is AircraftObject;
 			bool isBuilding = obj is StructureObject;
+			// AnimClass never carries SHAPE_ZWRITE: it is constructed with SHAPE_WIN_REL|SHAPE_CENTER and
+			// no draw path adds the flag, so an anim paints colour without storing depth. This covers a
+			// building's ActiveAnim too, whose flat standing profile would otherwise overwrite the body's
+			// z cone across the whole footprint. A tile's animation is not an AnimClass: the game draws
+			// those from IsoTileTypeClass with SHAPE_ZWRITE set (isotype.cpp, cell.cpp), so animated
+			// water and its kin keep storing depth.
+			bool isAnim = dr is AnimDrawable && !(obj is MapTile);
 			int zLift;
 			if (obj is OverlayObject)
 				// flat overlays sit at ground+1 (the Ground gradient keeps 1 of the game's +2 overlay ZAdjust),
@@ -215,7 +222,8 @@ namespace CNCMaps.Engine.Rendering {
 								*(w + 2) = bgr[ci + 2];
 							}
 							if (!unitLike) {
-								zBuffer[zIdx] = zBufVal;
+								if (!isAnim)
+									zBuffer[zIdx] = zBufVal;
 								heightBuffer[zIdx] = hBufVal;
 							}
 						}
@@ -236,7 +244,7 @@ namespace CNCMaps.Engine.Rendering {
 			}
 		}
 
-		public unsafe void DrawShadow(GameObject obj, ShpFile shp, DrawProperties props, DrawingSurface ds) {
+		public unsafe void DrawShadow(GameObject obj, ShpFile shp, Drawable dr, DrawProperties props, DrawingSurface ds) {
 			shp.Initialize();
 			int frameIndex = props.FrameDecider(obj);
 			if (obj.Drawable.IsActualWall)
@@ -274,6 +282,7 @@ namespace CNCMaps.Engine.Rendering {
 			// Terrain and building shadows use the ZReadWrite darken blitter and store their z; unit
 			// shadows only test.
 			bool unitLike = obj is UnitObject || obj is InfantryObject || obj is AircraftObject;
+			bool isAnim = dr is AnimDrawable && !(obj is MapTile);
 			var t = obj.Tile;
 			int cellBottomY = (t.Dy - t.Z) * _config.TileHeight / 2 + _config.TileHeight - 1;
 			int zBase = (t.Rx + t.Ry) * _config.TileHeight / 2;
@@ -298,7 +307,7 @@ namespace CNCMaps.Engine.Rendering {
 						*(w + 1) /= 2;
 						*(w + 2) /= 2;
 						shadows[zIdx] = true;
-						if (!unitLike)
+						if (!unitLike && !isAnim)
 							zBuffer[zIdx] = zBufVal;
 					}
 					// Up to the next pixel

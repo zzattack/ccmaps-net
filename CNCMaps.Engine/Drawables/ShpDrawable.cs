@@ -39,7 +39,7 @@ namespace CNCMaps.Engine.Drawables {
 
 			Props.Offset += onBridgeOffset;
 			if (Props.HasShadow && shadow && !Props.Cloakable)
-				_renderer.DrawShadow(obj, ShadowShp(obj), Props, ds);
+				_renderer.DrawShadow(obj, ShadowShp(obj), this, Props, ds);
 			_renderer.Draw(Shp, obj, this, Props, ds, Props.Cloakable ? 50 : 0);
 			Props.Offset -= onBridgeOffset;
 
@@ -65,7 +65,7 @@ namespace CNCMaps.Engine.Drawables {
 		public override void DrawShadow(GameObject obj, DrawingSurface ds) {
 			if (InvisibleInGame || Shp == null) return;
 			if (Props.HasShadow && !Props.Cloakable)
-				_renderer.DrawShadow(obj, ShadowShp(obj), Props, ds);
+				_renderer.DrawShadow(obj, ShadowShp(obj), this, Props, ds);
 		}
 
 		// CellClass::Draw_Overlay_Shadow reads OverlayTypes[Overlay] back directly, so tiberium

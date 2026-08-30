@@ -1124,6 +1124,8 @@ namespace CNCMaps.Engine.Map {
 				}
 			}
 
+			_drawingSurface.DrawDeferredAnims();
+
 			_drawingSurface.DrawDeferredAlpha();
 
 #if DEBUG && FALSE

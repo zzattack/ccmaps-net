@@ -90,6 +90,23 @@ namespace CNCMaps.Engine.Rendering {
 			return _heightBuffer;
 		}
 
+		private readonly System.Collections.Generic.List<Action> _deferredAnims = new System.Collections.Generic.List<Action>();
+
+		/// <summary>
+		/// Queue an attached animation to be drawn once every object has been drawn. gamemd orders a
+		/// scene terrain -> buildings -> anims and puts anims last whatever their position, so an
+		/// anim's art is never darkened by a shadow: nothing is drawn after it.
+		/// </summary>
+		public void DeferAnim(Action draw) {
+			_deferredAnims.Add(draw);
+		}
+
+		public void DrawDeferredAnims() {
+			foreach (var draw in _deferredAnims)
+				draw();
+			_deferredAnims.Clear();
+		}
+
 		private readonly System.Collections.Generic.List<Action> _deferredAlpha = new System.Collections.Generic.List<Action>();
 
 		/// <summary>

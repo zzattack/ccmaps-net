@@ -342,9 +342,17 @@ namespace CNCMaps.Engine.Drawables {
 			drawList = drawList.OrderBy(d => d.Flat ? -1 : 1).ThenBy(d => d.Props.SortIndex).ToList();
 
 			foreach (var d in drawList) {
+				var part = d;
+				// an attached anim is drawn with every other anim after the object pass, never here
+				if (part is AnimDrawable) {
+					// AnimDrawable.Draw's third parameter is omitShadow: it draws its own shadow,
+					// so an explicit DrawShadow here would darken the same pixels twice
+					ds.DeferAnim(() => part.Draw(obj, ds, !shadows));
+					continue;
+				}
 				if (shadows)
-					d.DrawShadow(obj, ds);
-				d.Draw(obj, ds, false);
+					part.DrawShadow(obj, ds);
+				part.Draw(obj, ds, false);
 			}
 
 			var strObj = obj as StructureObject;
