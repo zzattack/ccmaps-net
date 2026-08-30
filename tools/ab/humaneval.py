@@ -27,6 +27,7 @@ import shutil
 import subprocess
 import sys
 import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from abcompare import palette_quantize  # noqa: E402
@@ -232,6 +233,28 @@ def mix_dirs() -> list[str]:
     return dirs
 
 
+def render_cmd(out: str, key: str, entry: dict, base: str, render_json: str) -> list[str]:
+    cmd = [
+        RENDERER,
+        "-i", entry["map"],
+        "-d", out,
+        "-o", base,
+        "-p", "-f", "-Y",
+        "--pin-random",
+        "--progress",
+        "--meta-json", os.path.join(meta_dir(out), render_json),
+    ]
+    for d in mix_dirs():
+        cmd += ["-m", d]
+    with open(os.path.join(meta_dir(out), entry["capture"])) as fh:
+        cap = json.load(fh)
+    lattice = (cap.get("provenance") or {}).get("variantLattice")
+    if lattice:
+        cmd += ["--tile-lattice", ",".join(str(v) for v in lattice)]
+    cmd += ["--anim-frame", str(cap.get("frame", 6))]
+    return cmd
+
+
 def cmd_render(args):
     out = args.outdir
     manifest = load_manifest(out)
@@ -239,6 +262,7 @@ def cmd_render(args):
         raise SystemExit("no manifest; run capture first")
     build_renderer()
 
+    todo = []
     for key, entry in selected(manifest, args.limit):
         name = entry.get("name")
         if not name:
@@ -250,37 +274,58 @@ def cmd_render(args):
             entry.setdefault("render", f"#{key}_{name}.render.json")
             print(f"#{key} {name}: render present, skipped")
             continue
-
         render_json = f"#{key}_{name}.render.json"
-        cmd = [
-            RENDERER,
-            "-i", entry["map"],
-            "-d", out,
-            "-o", base,
-            "-p", "-f", "-Y",
-            "--pin-random",
-            "--progress",
-            "--meta-json", os.path.join(meta_dir(out), render_json),
-        ]
-        for d in mix_dirs():
-            cmd += ["-m", d]
-        with open(os.path.join(meta_dir(out), entry["capture"])) as fh:
-            cap = json.load(fh)
-        lattice = (cap.get("provenance") or {}).get("variantLattice")
-        if lattice:
-            cmd += ["--tile-lattice", ",".join(str(v) for v in lattice)]
-        cmd += ["--anim-frame", str(cap.get("frame", 6))]
+        todo.append((key, entry, name, base, png, render_json))
 
-        print(f"#{key} {name}: rendering...", flush=True)
-        code, output = run_streaming(cmd)
+    if not todo:
+        save_manifest(out, manifest)
+        return
+
+    def finish(key, entry, name, base, png, render_json, code, output):
         if code != 0 or not os.path.exists(png):
             log_failure(out, f"#{key} {name}: renderer exit {code} | {output.strip()[-400:]}")
             print(f"#{key} {name}: RENDER FAILED (exit {code})", flush=True)
-            continue
-
+            return False
         entry.update(ccmaps=base + ".png", render=render_json)
+        return True
+
+    # One map, or --jobs 1: keep streaming the renderer's own --progress output, which the viewer's
+    # re-render reads to drive its progress bar. Interleaving eight of those is noise, so a batch
+    # run reports one line per finished map instead.
+    if args.jobs <= 1 or len(todo) == 1:
+        for key, entry, name, base, png, render_json in todo:
+            print(f"#{key} {name}: rendering...", flush=True)
+            code, output = run_streaming(render_cmd(out, key, entry, base, render_json))
+            if finish(key, entry, name, base, png, render_json, code, output):
+                save_manifest(out, manifest)
+                print(f"#{key} {name}: rendered", flush=True)
         save_manifest(out, manifest)
-        print(f"#{key} {name}: rendered", flush=True)
+        return
+
+    jobs = min(args.jobs, len(todo))
+    print(f"rendering {len(todo)} maps on {jobs} processes", flush=True)
+    started = time.time()
+    done = 0
+    with ThreadPoolExecutor(max_workers=jobs) as pool:
+        futures = {}
+        for item in todo:
+            key, entry, name, base, png, render_json = item
+            cmd = render_cmd(out, key, entry, base, render_json)
+            futures[pool.submit(subprocess.run, cmd, capture_output=True, text=True)] = item
+        for fut in as_completed(futures):
+            key, entry, name, base, png, render_json = futures[fut]
+            done += 1
+            try:
+                proc = fut.result()
+                code, output = proc.returncode, (proc.stdout or "") + (proc.stderr or "")
+            except Exception as exc:  # noqa: BLE001 - a crashed child must not sink the batch
+                code, output = -1, repr(exc)
+            if finish(key, entry, name, base, png, render_json, code, output):
+                print(f"[{done}/{len(todo)}] #{key} {name}: rendered", flush=True)
+            # the manifest is the only shared state; written from this thread only
+            if done % 25 == 0:
+                save_manifest(out, manifest)
+    print(f"rendered {len(todo)} maps in {time.time() - started:.0f}s", flush=True)
 
     save_manifest(out, manifest)
 
@@ -336,26 +381,50 @@ def cmd_compare(args):
         raise SystemExit("no manifest; run capture first")
     rows = []
 
+    work = []
     for key, entry in selected(manifest, args.limit):
         if not all(entry.get(k) for k in ("gamemd", "ccmaps", "capture", "render")):
             continue
         zones_name = f"#{key}_{entry['name']}.zones.json"
         zones_path = os.path.join(meta_dir(out), zones_name)
-        if os.path.exists(zones_path):
+        work.append((key, entry, zones_name, zones_path))
+
+    # Diffing two full-map PNGs is numpy-bound and releases the GIL, so threads get most of the win
+    # without pickling the images across processes.
+    fresh = [w for w in work if not os.path.exists(w[3])]
+    reports = {}
+    if fresh:
+        jobs = max(1, min(args.jobs, len(fresh)))
+        print(f"comparing {len(fresh)} maps on {jobs} threads", flush=True)
+        started = time.time()
+        done = 0
+        with ThreadPoolExecutor(max_workers=jobs) as pool:
+            futures = {pool.submit(compare_one, out, entry, args.tolerance, args.min_area): w
+                       for w in fresh for key, entry, _, _ in [w]}
+            for fut in as_completed(futures):
+                key, entry, zones_name, zones_path = futures[fut]
+                done += 1
+                try:
+                    report = fut.result()
+                except Exception as exc:  # noqa: BLE001
+                    log_failure(out, f"#{key} {entry.get('name', entry['stem'])}: compare failed: {exc}")
+                    print(f"#{key}: COMPARE FAILED {exc}", flush=True)
+                    continue
+                with open(zones_path, "w") as fh:
+                    json.dump(report, fh, indent=2)
+                entry["zones"] = zones_name
+                reports[key] = report
+                print(f"[{done}/{len(fresh)}] #{key} {entry['name']}: {report['stats']['percent']:.4f}%", flush=True)
+        save_manifest(out, manifest)
+        print(f"compared {len(fresh)} maps in {time.time() - started:.0f}s", flush=True)
+
+    for key, entry, zones_name, zones_path in work:
+        report = reports.get(key)
+        if report is None:
+            if not os.path.exists(zones_path):
+                continue
             with open(zones_path) as fh:
                 report = json.load(fh)
-        else:
-            print(f"#{key} {entry['name']}: comparing...", flush=True)
-            try:
-                report = compare_one(out, entry, args.tolerance, args.min_area)
-            except Exception as exc:
-                log_failure(out, f"#{key} {entry.get('name', entry['stem'])}: compare failed: {exc}")
-                print(f"#{key}: COMPARE FAILED {exc}")
-                continue
-            with open(zones_path, "w") as fh:
-                json.dump(report, fh, indent=2)
-            entry["zones"] = zones_name
-            save_manifest(out, manifest)
 
         percent = report["stats"]["percent"]
         rows.append({
@@ -385,6 +454,8 @@ def main():
     ap.add_argument("--outdir", default=DEFAULT_OUT)
     ap.add_argument("--mapdir", default=MAP_DIR)
     ap.add_argument("--limit", type=int, help="only the first N maps, for smoke tests")
+    ap.add_argument("--jobs", type=int, default=8,
+                    help="parallel renders; 1 keeps the streaming progress output")
     ap.add_argument("--tolerance", type=int, default=8)
     ap.add_argument("--min-area", type=int, default=30)
     ap.add_argument("--timeout", type=int, default=600,

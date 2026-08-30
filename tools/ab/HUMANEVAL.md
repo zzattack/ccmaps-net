@@ -41,7 +41,7 @@ Zone coordinates live in the aligned common space; `captureOrigin`/`renderOrigin
 
 **Targeted loop (single map, seconds):** the user selects the map in the viewer and presses `R`. That deletes the map's CCMAPS png + render.json + zones.json, runs `humaneval.py render` then `compare` (render includes `dotnet build CNCMaps.slnx -c Release`, so the freshly changed renderer code is what runs), and reloads the pair in place. Agent-side equivalent: delete those three files yourself, then run the two subcommands.
 
-**Corpus regression (all maps, ~30-60 min):** after an engine change that should hold corpus-wide:
+**Corpus regression (all maps, ~2.5 min):** after an engine change that should hold corpus-wide:
 
 ```powershell
 cd $env:USERPROFILE\Desktop\ComparisonRenders\YR
@@ -51,6 +51,13 @@ cd C:\Users\Frank\Desktop\workspace\ccmaps-net
 C:\Python314\python.exe tools\ab\humaneval.py render
 C:\Python314\python.exe tools\ab\humaneval.py compare
 ```
+
+Both steps run 8-wide by default (`--jobs`), putting a full sweep at about two and a half
+minutes: ~60s to render 449 maps and ~80s to compare them. Output is byte-identical to a
+serial run -- the renderer is pinned by `--pin-random` and `--tile-lattice`, and renders and
+zones.json alike were checked hash-for-hash against `--jobs 1` before this became the default.
+A batch prints one line per finished map; `--jobs 1` restores the streamed per-map `--progress`
+output that the viewer's `R` re-render reads, and a single-map run takes that path on its own.
 
 Then diff `summary.before.json` against the new `summary.json` per map. Frank's standing rule for pixel changes: a no-regression gate — report the mean and every map whose percent went UP, not just the improved ones. Keep the before-file until the change is accepted.
 
