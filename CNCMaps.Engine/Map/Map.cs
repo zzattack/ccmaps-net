@@ -1228,7 +1228,12 @@ namespace CNCMaps.Engine.Map {
 			Operations.CountNeighbouringVeins(tile, Operations.IsVeins);
 		}
 
-		public List<GameObject> GetObjectsAt(int dx, int dy, bool includeOverlays = true) {
+		// keep the two-arg overload: the external preview plugin is compiled against it
+		public List<GameObject> GetObjectsAt(int dx, int dy) {
+			return GetObjectsAt(dx, dy, true);
+		}
+
+		public List<GameObject> GetObjectsAt(int dx, int dy, bool includeOverlays) {
 			var tile = _tiles[dx, dy];
 			var ret = new List<GameObject>();
 			ret.AddRange(tile.AllObjects.OfType<SmudgeObject>());
