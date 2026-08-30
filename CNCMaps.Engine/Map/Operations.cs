@@ -168,6 +168,9 @@ namespace CNCMaps.Engine.Map {
 				if (collection.IsCLAT(t.SetNum)) {
 					t.SetNum = collection.GetLAT(t.SetNum);
 					t.TileNum = collection.GetTileNumFromSet(t.SetNum);
+					// the drawable was picked from the map's tile before this pass; a cell the
+					// autolat below leaves plain would otherwise keep drawing the CLAT art
+					t.Drawable = collection.GetDrawable(t);
 				}
 			}
 
