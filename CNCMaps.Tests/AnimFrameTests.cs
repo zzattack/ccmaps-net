@@ -1,4 +1,4 @@
-using CNCMaps.Engine.Game;
+﻿using CNCMaps.Engine.Game;
 using CNCMaps.Engine.Types;
 using Xunit;
 
@@ -17,11 +17,12 @@ namespace CNCMaps.Tests {
 		}
 
 		[Theory]
-		// CAUSFGL_A flag: Rate=250 (delay 3), LoopEnd=15, LoopCount=-1, Shadow -> stage 2 at capture frame 6
-		[InlineData(250, 15, 6, 2)]
-		// CAWSH18A fountain: Rate=220 (delay 4), LoopEnd=10, LoopCount=-1, Shadow -> stage 2 at 6, stage 1 at 5
+		// Stages under the current AnimPhase, which the A/B corpus pins (FrameDeciders).
+		// CAUSFGL_A flag: Rate=250 (delay 3), LoopEnd=15, LoopCount=-1, Shadow -> stage 3 at capture frame 6
+		[InlineData(250, 15, 6, 3)]
+		// CAWSH18A fountain: Rate=220 (delay 4), LoopEnd=10, LoopCount=-1, Shadow -> stage 2 at 5 and at 6
 		[InlineData(220, 10, 6, 2)]
-		[InlineData(220, 10, 5, 1)]
+		[InlineData(220, 10, 5, 2)]
 		public void CalibratedCaptureFrames(int rate, int loopEnd, int captureFrame, int expected) {
 			var art = Anim(rate: rate, loopEnd: loopEnd, loopCount: -1, shadow: true);
 			Assert.Equal(expected, FrameDeciders.SimulateAnimStage(art, 64, captureFrame));
@@ -29,10 +30,11 @@ namespace CNCMaps.Tests {
 
 		[Fact]
 		public void LoopsWrapToLoopStart() {
-			// delay 1, 4-frame loop: 8 ticks = stages 1,2,3,wrap->0,1,2,3,wrap->0
+			// delay 1, 4-frame loop: 8 ticks = stages 1,2,3,wrap->0,1,2,3,wrap->0. The tick count is
+			// the capture frame plus AnimPhase, so these two are 8 and 9 ticks.
 			var art = Anim(loopEnd: 4, loopCount: -1);
-			Assert.Equal(0, FrameDeciders.SimulateAnimStage(art, 4, 6));
-			Assert.Equal(1, FrameDeciders.SimulateAnimStage(art, 4, 7));
+			Assert.Equal(0, FrameDeciders.SimulateAnimStage(art, 4, 3));
+			Assert.Equal(1, FrameDeciders.SimulateAnimStage(art, 4, 4));
 		}
 
 		[Fact]

@@ -24,9 +24,11 @@ namespace CNCMaps.Engine.Game {
 			{ 7, 6, 5, 4, 4, 4, 3, 2 },
 		};
 
-		// Anims tick twice during scenario load before the game's frame counter starts counting
-		// (calibrated against frozen-logic captures of CAUSFGL_A and CAWSH18A).
-		private const int AnimPhase = 2;
+		// Anims tick this many times during scenario load, before the frame counter a capture reports
+		// starts counting. It belongs to the capture setup rather than to the engine: the load runs
+		// longer with more players, so the A/B corpus needs 5 with every start position filled and
+		// needed 2 with one human against one AI (both from a sweep of --anim-frame over the corpus).
+		private const int AnimPhase = 5;
 
 		/// <summary>
 		/// Replays gamemd's AnimClass tick logic so a render matches an engine capture whose logic
