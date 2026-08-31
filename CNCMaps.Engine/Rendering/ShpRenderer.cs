@@ -22,6 +22,15 @@ namespace CNCMaps.Engine.Rendering {
 		}
 
 		private const int ZShapeWidth = 396, ZShapeHeight = 477;
+		// gamemd BuildingClass::Draw_It hands CC_Draw_Shape the z-shape reference point (198, 446),
+		// moved by the art ZShapePointMove and back by the foundation far corner, laid on the building
+		// draw point
+		private const int ZShapeRefY = 446;
+		// the body stands 2 in front of the ground at its sprite bottom row (ZAdjust -2 - Zpix) and
+		// each shape byte adds its value less 66, a constant bias, not a normalisation. Where the
+		// shape holds no byte the pixel keeps the plain 2, which draws a wide sprite's lower fringe
+		// beside its foundation (CAMEX02) instead of sinking it
+		private const int BodyLift = 2, ZShapeBias = -66;
 		private byte[] _buildingZShape;
 		private bool _buildingZShapeTried;
 
@@ -47,8 +56,9 @@ namespace CNCMaps.Engine.Rendering {
 		}
 
 		private static int SampleZShape(byte[] zShape, int x, int y, int originX, int originY) {
-			int col = Math.Clamp(x - originX, 0, ZShapeWidth - 1);
-			int row = Math.Clamp(y - originY, 0, ZShapeHeight - 1);
+			int col = x - originX, row = y - originY;
+			if (col < 0 || col >= ZShapeWidth || row < 0 || row >= ZShapeHeight)
+				return 0;
 			return zShape[row * ZShapeWidth + col];
 		}
 
@@ -131,7 +141,8 @@ namespace CNCMaps.Engine.Rendering {
 				// standing ones take the full lift
 				zLift = dr.Flat ? 1 : dr.IsWall || dr.IsRock ? 2 : 17;
 			else if (isBuilding)
-				// 3 is the lift at the cone's crown
+				// the body itself takes its z from the z-shape below; this lift is for the plain-profile
+				// parts drawn on it (turret, upgrades) and for Tiberian Sun bodies, which have no shape
 				zLift = BuildingZShape != null ? 3 : 1;
 			else if (unitLike)
 				zLift = 1;
@@ -163,22 +174,19 @@ namespace CNCMaps.Engine.Rendering {
 				hBufVal += shp.Height;
 
 			// BuildingClass::Draw_It (0x43d767) hands the building's own shapes BUILDNGZ.SHA as
-			// Shape_Draw_Z's ZShape: a cone centred on the object's draw point that recedes 1 z per 3 px
-			// sideways as well as per 3 rows down. The plain 4/3 standing profile is only its vertical
-			// half; without the sideways half a tower at the edge of a wide sprite sits up to 24 z too far
-			// forward and pokes through the cliff art in front of it. Anims are drawn by AnimClass and get
-			// no shape, so they keep the plain profile.
+			// Shape_Draw_Z z-shape: a pyramid that falls 1 z per 3 rows down and per 3 px sideways from
+			// its top centre, cut off below by the lower half of an iso diamond whose tip is the
+			// foundation bottom corner. The blitter adds the byte (unsigned, biased) to the z of the
+			// sprite bottom row and applies no standing gradient of its own. Anims are drawn by
+			// AnimClass and get no shape, so they keep the plain profile.
 			byte[] zShape = isBuilding && !dr.Flat && !(dr is AnimDrawable) ? BuildingZShape : null;
-			int zShapeX = 0, zShapeY = 0, zShapeBase = 0;
+			int zShapeX = 0, zShapeY = 0;
 			if (zShape != null) {
-				// the game offsets the shape by the foundation's client-space diagonal
-				// (BuildingClass::Draw_It 0x43d730: CoordsToClient of (w-1, h-1) cells), which
-				// on screen is only a sideways move for a non-square footprint
 				var fnd = obj.Drawable?.Foundation ?? new Size(1, 1);
-				zShapeX = obj.Tile.Dx * _config.TileWidth / 2 + _config.TileWidth / 2
-					+ (fnd.Width - fnd.Height) * (_config.TileWidth / 2) - ZShapeWidth / 2;
-				zShapeY = (obj.Tile.Dy - obj.Tile.Z) * _config.TileHeight / 2 - ZShapeHeight / 2 - 1;
-				zShapeBase = SampleZShape(zShape, zShapeX + ZShapeWidth / 2, zAnchorY, zShapeX, zShapeY);
+				var move = props.ZShapePointMove;
+				int drawX = offset.X - img.X + shp.Width / 2, drawY = offset.Y - img.Y + shp.Height / 2;
+				zShapeX = drawX - ZShapeWidth / 2 - move.X + (fnd.Width - fnd.Height) * (_config.TileWidth / 2);
+				zShapeY = drawY - ZShapeRefY - move.Y + (fnd.Width + fnd.Height - 2) * (_config.TileHeight / 2);
 			}
 
 			for (int y = 0; y < img.Height; y++) {
@@ -198,14 +206,8 @@ namespace CNCMaps.Engine.Rendering {
 						if (dr.Flat)
 							zBufVal = (short)(zGround + zLift + (offset.Y + y) - zAnchorY - props.ZAdjust);
 						else if (zShape != null) {
-							zBufVal = (short)(zGround + zLift - props.ZAdjust
-								+ SampleZShape(zShape, offset.X + x, offset.Y + y, zShapeX, zShapeY) - zShapeBase);
-							// the cone only ever moves a pixel closer: the engine floors it at the crown's own lift above
-							// the ground plane, so the sideways fall-off cannot push the edge of a wide sprite behind its
-							// own ground
-							short floor = (short)(zGround + (offset.Y + y) - zAnchorY + zLift);
-							if (zBufVal < floor)
-								zBufVal = floor;
+							int sample = SampleZShape(zShape, offset.X + x, offset.Y + y, zShapeX, zShapeY);
+							zBufVal = (short)(zGround + BodyLift - props.ZAdjust + (sample > 0 ? sample + ZShapeBias : 0));
 						}
 						else
 							zBufVal = (short)(zGround + zLift + (zAnchorY - (offset.Y + y)) / 3 - props.ZAdjust);
