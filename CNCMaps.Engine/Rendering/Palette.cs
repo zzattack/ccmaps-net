@@ -4,6 +4,7 @@ using System.IO;
 using CNCMaps.Engine.Map;
 using CNCMaps.FileFormats;
 using CNCMaps.FileFormats.Map;
+using CNCMaps.Engine.Utility;
 
 namespace CNCMaps.Engine.Rendering {
 
@@ -178,18 +179,44 @@ namespace CNCMaps.Engine.Rendering {
 		}
 
 
-		internal void Remap(Color color) {
+		// The 16 remap shades a house colour gets, in palette indices 16-31. gamemd builds them at
+		// 0x0068C3B0: the colour's hue is kept, its saturation swept up a sine and its value swept
+		// down a cosine, so a shade grows more saturated as it darkens. Both sweeps end at pi/2, so
+		// shade 15 is black. The angles are the binary's own doubles; in degrees they run 20 + 14i/3
+		// for the value, overridden to 11.25 at i=0, and 50 + 8i/3 for the saturation.
+		internal void Remap(HsvColor color) {
 			if (!_originalColorsLoaded)
 				LoadOriginalColors();
-			double[] mults = { 0xFC >> 2, 0xEC >> 2, 0xDC >> 2, 0xD0 >> 2,
-						0xC0 >> 2, 0xB0 >> 2, 0xA4 >> 2, 0x94 >> 2,
-						0x84 >> 2, 0x78 >> 2, 0x68 >> 2, 0x58 >> 2,
-						0x4C >> 2, 0x3C >> 2, 0x2C >> 2, 0x20 >> 2 };
 
-			for (int i = 16; i < 32; i++) {
-				_origColors[i * 3 + 0] = (byte)(color.R / 255.0 * mults[i - 16]);
-				_origColors[i * 3 + 1] = (byte)(color.G / 255.0 * mults[i - 16]);
-				_origColors[i * 3 + 2] = (byte)(color.B / 255.0 * mults[i - 16]);
+			for (int i = 0; i < 16; i++) {
+				double value = i == 0 ? 0.19634954084936207
+					: i * 0.08144869842640204 + 0.3490658503988659;
+				double saturation = i * 0.046542113386515455 + 0.8726646259971648;
+				var shade = EngineHsvToRgb(color.Hue,
+					(int)(Math.Sin(saturation) * color.Saturation),
+					(int)(Math.Cos(value) * color.Value));
+				// The palette is six bit; the engine's conversion hands back eight.
+				_origColors[(16 + i) * 3 + 0] = (byte)(shade.R * 63 / 255);
+				_origColors[(16 + i) * 3 + 1] = (byte)(shade.G * 63 / 255);
+				_origColors[(16 + i) * 3 + 2] = (byte)(shade.B * 63 / 255);
+			}
+		}
+
+		// The engine's own HSV conversion (0x00517440), not the floating point one on HsvColor: it
+		// splits the hue on 255 rather than 256 or 360 and truncates every intermediate, which moves
+		// a shade a unit or two against a textbook conversion.
+		private static Color EngineHsvToRgb(int h, int s, int v) {
+			int sector = h * 6 / 255, frac = h * 6 % 255;
+			int p = (255 - s) * v / 255;
+			int q = (255 - frac * s / 255) * v / 255;
+			int t = (255 - (255 - frac) * s / 255) * v / 255;
+			switch (sector) {
+				case 1: return Color.FromArgb(q, v, p);
+				case 2: return Color.FromArgb(p, v, t);
+				case 3: return Color.FromArgb(p, q, v);
+				case 4: return Color.FromArgb(t, p, v);
+				case 5: return Color.FromArgb(v, p, q);
+				default: return Color.FromArgb(v, t, p); // 0, and 6 when the hue is 255
 			}
 		}
 

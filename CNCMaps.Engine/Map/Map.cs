@@ -50,8 +50,10 @@ namespace CNCMaps.Engine.Map {
 		private readonly List<AircraftObject> _aircraftObjects = new List<AircraftObject>();
 		private readonly List<Waypoint> _wayPoints = new List<Waypoint>();
 
-		private readonly Dictionary<string, Color> _countryColors = new Dictionary<string, Color>();
-		private readonly Dictionary<string, Color> _namedColors = new Dictionary<string, Color>();
+		// HSV, not RGB: the engine builds a house's 16 remap shades by sweeping the saturation and
+		// value of this triple, so converting to RGB here would lose what it needs.
+		private readonly Dictionary<string, HsvColor> _countryColors = new Dictionary<string, HsvColor>();
+		private readonly Dictionary<string, HsvColor> _namedColors = new Dictionary<string, HsvColor>();
 
 		private Lighting _lighting;
 		private readonly List<LightSource> _lightSources = new List<LightSource>();
@@ -768,7 +770,7 @@ namespace CNCMaps.Engine.Map {
 				var h = new HsvColor(int.Parse(colorComponents[0]),
 									int.Parse(colorComponents[1]),
 									int.Parse(colorComponents[2]));
-				_namedColors[entry.Key] = h.ToRGB();
+				_namedColors[entry.Key] = h;
 			}
 		}
 
@@ -828,7 +830,7 @@ namespace CNCMaps.Engine.Map {
 			foreach (var entry in countriesSection.OrderedEntries) {
 				IniFile.IniSection countrySection = _rules.GetSection(entry.Value);
 				if (countrySection == null) continue;
-				Color c;
+				HsvColor c;
 				if (!_namedColors.TryGetValue(countrySection.ReadString("Color"), out c))
 					c = _namedColors.Values.First();
 				_countryColors[entry.Value] = c;
@@ -1043,7 +1045,7 @@ namespace CNCMaps.Engine.Map {
 				OverlayTibType type = (OverlayTibType)Enum.Parse(typeof(OverlayTibType), tiberiums[i]);
 				string namedColor = remaps[i];
 				if (_namedColors.ContainsKey(namedColor))
-					markerPalettes[type] = Palette.MakePalette(_namedColors[namedColor]);
+					markerPalettes[type] = Palette.MakePalette(_namedColors[namedColor].ToRGB());
 			}
 
 			// apply the 'marking' by replacing the tile containing ore by a partly
