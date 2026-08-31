@@ -43,6 +43,9 @@ namespace CNCMaps.Engine.Rendering {
 			TmpFile.TmpImage img = tmp.Images[tile.SubTile];
 			var zBuffer = ds.GetZBuffer();
 			var heightBuffer = ds.GetHeightBuffer();
+			// a repainted pixel is no longer darkened: clear the shadow stamp so the
+			// localized redraw passes can re-apply shadows exactly once
+			var classes = ds.GetShadowClasses();
 			Palette p = tile.Palette;
 			byte[] bgr = p.GetBgrBytes();
 			byte[] zData = img.ZData;
@@ -95,6 +98,7 @@ namespace CNCMaps.Engine.Rendering {
 						if (useZ)
 							zBuffer[zIdx] = zBufVal;
 						heightBuffer[zIdx] = hBufVal;
+						classes[zIdx] = 0;
 					}
 					w += 3;
 					zIdx++;
@@ -120,6 +124,7 @@ namespace CNCMaps.Engine.Rendering {
 						if (useZ)
 							zBuffer[zIdx] = zBufVal;
 						heightBuffer[zIdx] = hBufVal;
+						classes[zIdx] = 0;
 					}
 					w += 3;
 					zIdx++;
@@ -174,6 +179,7 @@ namespace CNCMaps.Engine.Rendering {
 						if (useXz)
 							zBuffer[zIdx] = zBufVal;
 						heightBuffer[zIdx] = (short)(img.ExtraHeight - y + hBufVal);
+						classes[zIdx] = 0;
 					}
 					else
 						w += 3;

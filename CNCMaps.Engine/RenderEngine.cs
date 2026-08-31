@@ -822,7 +822,7 @@ namespace CNCMaps.Engine {
 				foreach (short v in ds.GetZBuffer()) w.Write(v);
 			});
 			WriteNpy(path + ".shadow.npy", "|b1", ds.Height, ds.Width, w => {
-				foreach (bool v in ds.GetShadows()) w.Write(v ? (byte)1 : (byte)0);
+				foreach (byte v in ds.GetShadowClasses()) w.Write(v != 0 ? (byte)1 : (byte)0);
 			});
 		}
 

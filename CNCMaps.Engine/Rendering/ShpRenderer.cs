@@ -271,24 +271,27 @@ namespace CNCMaps.Engine.Rendering {
 			Logger.Trace("Drawing SHP shadow {0} (frame {1}) at ({2},{3})", shp.FileName, frameIndex, offset.X, offset.Y);
 
 			int stride = ds.BitmapData.Stride;
-			var shadows = ds.GetShadows();
+			var classes = ds.GetShadowClasses();
 			var zBuffer = ds.GetZBuffer();
 
 			byte* w = (byte*)ds.BitmapData.Scan0 + offset.X * 3 + stride * offset.Y;
 			int zIdx = offset.X + offset.Y * ds.Width;
 			int rIdx = 0;
 
-			// Shadows lie on the caster's ground plane, 2 z in front of it: gamemd draws them with the
-			// Ground z-gradient and darkens only where that plane is in front of what the pixel holds.
-			// Terrain and building shadows use the ZReadWrite darken blitter and store their z; unit
-			// shadows only test. A building's shadow keeps the ground gradient and carries no z-shape,
-			// but the engine gives it ZAdjust -4 against the body's -2 (FUN_00705e00: iStack_c = -4 -
-			// heightAdjust, gradient 0, z-shape args zeroed) and draws it one call after the body, so it
-			// darkens the body wherever the cone has dipped below it.
+			// Shadows lie on the caster's ground plane, a per-class lift in front of it: gamemd draws them
+			// with the Ground z-gradient and darkens only where that plane is in front of what the pixel
+			// holds; as with overlays, the gradient keeps one less than the game's ZAdjust. A building's
+			// shadow keeps the ground gradient and carries no z-shape, but the engine gives it ZAdjust -4
+			// against the body's -2 (FUN_00705e00: iStack_c = -4 - heightAdjust, gradient 0, z-shape args
+			// zeroed) and draws it one call after the body, so it darkens the body wherever the cone has
+			// dipped below it. Terrain shadows carry ZAdjust base-3 (0x71c320); unit shadows only test.
+			// gamemd stacks a building shadow and a tree shadow on one pixel but never two shadows of one
+			// class; the class stamp encodes that.
 			bool building = obj is StructureObject && !(dr is AnimDrawable) && (dr == null || !dr.Flat);
-			int shadowLift = building ? 4 : 2;
 			bool unitLike = obj is UnitObject || obj is InfantryObject || obj is AircraftObject;
 			bool isAnim = dr is AnimDrawable && !(obj is MapTile);
+			int shadowLift = building || unitLike ? 3 : 2;
+			byte shadowClass = building ? (byte)1 : obj is TerrainObject ? (byte)2 : (byte)3;
 			var t = obj.Tile;
 			int cellBottomY = (t.Dy - t.Z) * _config.TileHeight / 2 + _config.TileHeight - 1;
 			int zBase = (t.Rx + t.Ry) * _config.TileHeight / 2;
@@ -306,13 +309,15 @@ namespace CNCMaps.Engine.Rendering {
 
 				for (int x = 0; x < img.Width; x++) {
 					if (0 <= offset.X + x && offset.X + x < ds.Width && 0 <= y + offset.Y && y + offset.Y < ds.Height &&
-						imgData[rIdx] != 0 && !shadows[zIdx] &&
-						zBufVal > zBuffer[zIdx]) {
+						imgData[rIdx] != 0 &&
+						zBufVal > zBuffer[zIdx] &&
+						// undarkened, or the one cross-class stack the game shows (building <--> terrain)
+						(classes[zIdx] == 0 || (classes[zIdx] == 1 && shadowClass == 2) || (classes[zIdx] == 2 && shadowClass == 1))) {
 
 						*(w + 0) /= 2;
 						*(w + 1) /= 2;
 						*(w + 2) /= 2;
-						shadows[zIdx] = true;
+						classes[zIdx] = shadowClass;
 						if (!unitLike && !isAnim)
 							zBuffer[zIdx] = zBufVal;
 					}

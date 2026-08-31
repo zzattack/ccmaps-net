@@ -1136,15 +1136,30 @@ namespace CNCMaps.Engine.Map {
 			}
 			Logger.Info("Overlays drawn");
 
+			// gamemd draws every TerrainClass before the techno layer (TREE -> BLDG -> ANIM): a tree's
+			// write-only shadow lands on the tile art first and anything standing in front repaints it
+			// with its own z
+			for (int y = 0; y < FullSize.Height; y++) {
+				for (int x = FullSize.Width * 2 - 2; x >= 0; x -= 2)
+					foreach (GameObject o in _tiles[x, y].AllObjects.OfType<TerrainObject>())
+						_theater.Draw(o, _drawingSurface);
+				for (int x = FullSize.Width * 2 - 3; x >= 0; x -= 2)
+					foreach (GameObject o in _tiles[x, y].AllObjects.OfType<TerrainObject>())
+						_theater.Draw(o, _drawingSurface);
+			}
+			Logger.Info("Terrain objects drawn");
+
 			for (int y = 0; y < FullSize.Height; y++) {
 				Logger.Trace("Drawing objects row {0}", y);
 				for (int x = FullSize.Width * 2 - 2; x >= 0; x -= 2)
 					foreach (GameObject o in GetObjectsAt(x, y, false))
-						_theater.Draw(o, _drawingSurface);
+						if (!(o is TerrainObject))
+							_theater.Draw(o, _drawingSurface);
 
 				for (int x = FullSize.Width * 2 - 3; x >= 0; x -= 2)
 					foreach (GameObject o in GetObjectsAt(x, y, false))
-						_theater.Draw(o, _drawingSurface);
+						if (!(o is TerrainObject))
+							_theater.Draw(o, _drawingSurface);
 
 				if (Progress != null)
 					Progress.Span(20 + (Progress.DrawEnd - 20) / 2, Progress.DrawEnd, (double)y / FullSize.Height, "drawing objects");

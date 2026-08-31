@@ -43,6 +43,7 @@ namespace CNCMaps.Engine.Rendering {
 		byte[] _data;
 		int[] _heightBuffer;
 		bool[] _shadowBuffer;
+		byte[] _shadowClass;
 		short[] zBuffer;
 		static Logger logger = LogManager.GetCurrentClassLogger();
 
@@ -63,23 +64,27 @@ namespace CNCMaps.Engine.Rendering {
 			};
 			zBuffer = new short[width * height];
 			_heightBuffer = new int[width * height];
-			_shadowBuffer = new bool[width * height];
+			_shadowClass = new byte[width * height];
 		}
 
 		// The surface is always directly addressable now; kept for call-site compatibility.
 		public void Lock() { }
 		public void Unlock() { }
 
-		public bool IsShadow(int x, int y) {
-			return _shadowBuffer[x + y * Width];
-		}
-
-		public void SetShadow(int x, int y) {
-			_shadowBuffer[x + y * Width] = true;
-		}
-
+		/// <summary>Per-pixel shadow mask, only used on the voxel rasteriser's private surface
+		/// to hand the blitter the rendered voxel's shadow silhouette; allocated on first use so
+		/// the map-sized surface never pays for it.</summary>
 		public bool[] GetShadows() {
-			return _shadowBuffer;
+			return _shadowBuffer ??= new bool[Width * Height];
+		}
+
+		/// <summary>Which class of shadow (ShpRenderer: 1 building, 2 terrain, 3 other) last darkened
+		/// each pixel. gamemd stacks a building shadow and a tree shadow on the same pixel but never
+		/// two of one class, whatever their z; the stamp encodes that, and also keeps the localized
+		/// redraw passes (ore restore, start-position markers) idempotent. A tile repaint clears it so
+		/// the pixel accepts its shadow again.</summary>
+		public byte[] GetShadowClasses() {
+			return _shadowClass;
 		}
 
 		public short[] GetZBuffer() {
@@ -217,11 +222,13 @@ namespace CNCMaps.Engine.Rendering {
 		public void FreeNonBitmap() {
 			zBuffer = null;
 			_shadowBuffer = null;
+			_shadowClass = null;
 		}
 
 		internal void Dispose() {
 			zBuffer = null;
 			_shadowBuffer = null;
+			_shadowClass = null;
 			_data = null;
 			BitmapData = null;
 		}

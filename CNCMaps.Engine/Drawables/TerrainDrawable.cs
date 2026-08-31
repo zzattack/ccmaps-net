@@ -25,9 +25,10 @@ namespace CNCMaps.Engine.Drawables {
 				sub.Draw(obj, ds, false);
 			}
 
+			// the engine emits body then shadow (0x71c304 / 0x71c34e)
+			terrainShp.Draw(obj, ds, false);
 			if (shadows)
 				terrainShp.DrawShadow(obj, ds);
-			terrainShp.Draw(obj, ds, false);
 		}
 
 		public override Rectangle GetBounds(GameObject obj) {

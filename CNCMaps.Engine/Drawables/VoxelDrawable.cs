@@ -46,7 +46,7 @@ namespace CNCMaps.Engine.Drawables {
 			byte* w_high = w_low + ds.BitmapData.Stride * ds.BitmapData.Height;
 			var zBuffer = ds.GetZBuffer();
 			var shadowBufVxl = vxl_ds.GetShadows();
-			var shadowBuf = ds.GetShadows();
+			var shadowClasses = ds.GetShadowClasses();
 			var voxelMask = ds.GetVoxelMask();
 
 			// bottom-most drawn source row; source rows are stored bottom-up, so source
@@ -122,11 +122,11 @@ namespace CNCMaps.Engine.Drawables {
 					// blit keep covering their own shadow
 					if ((!bodyPx || flight != 0) && shadRowValid && shadowBufVxl[x + y * vxl_ds.Width]) {
 						int shadIdx = (d.Y + y) * ds.Width + d.X + x;
-						if (!shadowBuf[shadIdx] && zShadowVal > zBuffer[shadIdx]) {
+						if (shadowClasses[shadIdx] == 0 && zShadowVal > zBuffer[shadIdx]) {
 							*(shad_row + x * 3) /= 2;
 							*(shad_row + x * 3 + 1) /= 2;
 							*(shad_row + x * 3 + 2) /= 2;
-							shadowBuf[shadIdx] = true;
+							shadowClasses[shadIdx] = 3;
 						}
 					}
 					zIdx++;
