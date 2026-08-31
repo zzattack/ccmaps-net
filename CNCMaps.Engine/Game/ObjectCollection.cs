@@ -163,6 +163,12 @@ namespace CNCMaps.Engine.Game {
 			InitDrawableDefaults(drawable);
 			drawable.LoadFromRules();
 
+			// Infantry draw from the name rules' Image= resolves the art section to, never from an Image=
+			// inside that art section: gamemd renders CAML as a camel although artmd's [CAML] carries
+			// Image=JOSH.
+			if (Type == CollectionType.Infantry)
+				drawable.Image = drawable.Art.Name;
+
 			string shpFile = drawable.GetFilename();
 			drawable.Shp = _vfs.Open<ShpFile>(shpFile);
 
