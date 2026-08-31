@@ -134,7 +134,7 @@ def capture_one(map_path: str, work: str, timeout: int) -> subprocess.CompletedP
         "--mergeini", os.path.join(PRESETS, "reveal_ra2yr.ini"),
         "--names", "mpmaps",
     ]
-    return subprocess.run(cmd, capture_output=True, text=True, timeout=timeout + 300)
+    return subprocess.run(cmd, capture_output=True, text=True, timeout=timeout + 60)
 
 
 def cmd_capture(args):
@@ -233,7 +233,8 @@ def mix_dirs() -> list[str]:
     return dirs
 
 
-def render_cmd(out: str, key: str, entry: dict, base: str, render_json: str) -> list[str]:
+def render_cmd(out: str, key: str, entry: dict, base: str, render_json: str,
+               extra: list[str] | None = None) -> list[str]:
     cmd = [
         RENDERER,
         "-i", entry["map"],
@@ -252,7 +253,7 @@ def render_cmd(out: str, key: str, entry: dict, base: str, render_json: str) -> 
     if lattice:
         cmd += ["--tile-lattice", ",".join(str(v) for v in lattice)]
     cmd += ["--anim-frame", str(cap.get("frame", 6))]
-    return cmd
+    return cmd + (extra or [])
 
 
 def cmd_render(args):
@@ -295,7 +296,7 @@ def cmd_render(args):
     if args.jobs <= 1 or len(todo) == 1:
         for key, entry, name, base, png, render_json in todo:
             print(f"#{key} {name}: rendering...", flush=True)
-            code, output = run_streaming(render_cmd(out, key, entry, base, render_json))
+            code, output = run_streaming(render_cmd(out, key, entry, base, render_json, args.render_arg))
             if finish(key, entry, name, base, png, render_json, code, output):
                 save_manifest(out, manifest)
                 print(f"#{key} {name}: rendered", flush=True)
@@ -310,7 +311,7 @@ def cmd_render(args):
         futures = {}
         for item in todo:
             key, entry, name, base, png, render_json = item
-            cmd = render_cmd(out, key, entry, base, render_json)
+            cmd = render_cmd(out, key, entry, base, render_json, args.render_arg)
             futures[pool.submit(subprocess.run, cmd, capture_output=True, text=True)] = item
         for fut in as_completed(futures):
             key, entry, name, base, png, render_json = futures[fut]
@@ -456,11 +457,15 @@ def main():
     ap.add_argument("--limit", type=int, help="only the first N maps, for smoke tests")
     ap.add_argument("--jobs", type=int, default=8,
                     help="parallel renders; 1 keeps the streaming progress output")
+    ap.add_argument("--render-arg", action="append", default=[], metavar="ARG",
+                    help="extra argument passed to every renderer invocation; repeat for more. Lets "
+                         "one capture set be rendered twice under different options and compared.")
     ap.add_argument("--tolerance", type=int, default=8)
     ap.add_argument("--min-area", type=int, default=30)
-    ap.add_argument("--timeout", type=int, default=600,
-                    help="per-map CLI timeout; its own frame wait floor is max(120, timeout/2)s, so "
-                         "anything short aborts a stitch sweep mid-way")
+    ap.add_argument("--timeout", type=int, default=60,
+                    help="per-map CLI budget covering launch, first frame and the stitch sweep. The "
+                         "slowest of 440 corpus maps takes 13s; a map that misses this is one the "
+                         "game refuses to load, and every second above it is spent waiting on that.")
     args = ap.parse_args()
 
     os.makedirs(meta_dir(args.outdir), exist_ok=True)
