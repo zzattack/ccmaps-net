@@ -165,7 +165,8 @@ namespace CNCMaps.Engine {
 					IgnoreLighting = _settings.IgnoreLighting,
 					StartPosMarking = _settings.StartPositionMarking,
 					StartMarkerSize = _settings.MarkerStartSize,
-					MarkOreFields = _settings.MarkOreFields
+					MarkOreFields = _settings.MarkOreFields,
+					PreCaptureColors = _settings.PreCaptureColors
 				};
 
 				string resolvedName = Path.GetFileNameWithoutExtension(_settings.InputFile);

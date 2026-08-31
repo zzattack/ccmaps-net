@@ -43,6 +43,7 @@ namespace CNCMaps.Shared {
 		public string TileLattice { get; set; }
 		public bool PinRandomDraws { get; set; }
 		public int AnimFrame { get; set; }
+		public string[] PreCaptureColors { get; set; }
 		public bool ReportProgress { get; set; }
 		public bool MarkIceGrowth { get; set; }
 		public bool Backup { get; set; }
@@ -77,6 +78,7 @@ namespace CNCMaps.Shared {
 			TileLattice = "";
 			PinRandomDraws = false;
 			AnimFrame = -1;
+			PreCaptureColors = (string[])DefaultPreCaptureColors.Clone();
 			MarkIceGrowth = false;
 			Backup = false;
 			FixOverlays = false;
@@ -84,6 +86,23 @@ namespace CNCMaps.Shared {
 			TunnelPaths = false;
 			TunnelPosition = false;
 			MarkStartPos = false;
+		}
+
+		/// <summary>The game's own multiplayer colour order: start position N carries colour N.
+		/// Read off captures whose spawn pinned one player per start position.</summary>
+		public static readonly string[] DefaultPreCaptureColors =
+			{ "Gold", "DarkRed", "DarkBlue", "DarkGreen", "Orange", "DarkSky", "Purple", "Magenta" };
+
+		private static string[] ParsePreCaptureColors(string value) {
+			if (string.IsNullOrWhiteSpace(value)) return (string[])DefaultPreCaptureColors.Clone();
+			if (value.Trim().Equals("none", StringComparison.OrdinalIgnoreCase)) return null;
+			var parts = value.Split(',');
+			var colors = new string[DefaultPreCaptureColors.Length];
+			for (int i = 0; i < colors.Length && i < parts.Length; i++) {
+				string name = parts[i].Trim();
+				if (name.Length > 0) colors[i] = name;
+			}
+			return colors;
 		}
 
 		private readonly List<(string invocation, string description)> _helpEntries = new List<(string, string)>();
@@ -155,6 +174,7 @@ namespace CNCMaps.Shared {
 			Value<string>("--tile-lattice", null, "Override the 8x8 tile-variant lattice with 64 comma-separated values 0-7 (row-major), e.g. one exported from an engine capture", v => TileLattice = v);
 			Flag("--pin-random", null, "Pin every randomised draw choice (animation loop frame, random SHP frame, building fire art, generated veins) to its first option, so a render is byte-comparable with an engine capture whose game logic was frozen", () => PinRandomDraws = true);
 			Value<int>("--anim-frame", null, "Draw every animation at the frame the game engine shows at game-loop frame VALUE, for comparing against an engine capture whose logic was frozen at that frame", v => AnimFrame = v);
+			Value<string>("--precapture", null, "Colour of each start position A-H for objects a map trigger hands to a starting player at game start (oil derricks and other tech buildings): one rules [Colors] name per position, comma-separated, empty where nobody starts, or \"none\" to leave them neutral grey. Default " + string.Join(",", DefaultPreCaptureColors), v => PreCaptureColors = ParsePreCaptureColors(v));
 			Flag("--replace-preview-nomarkers", "-k", "Update the maps [PreviewPack] data with the rendered image, using no markers on the start positions", () => {
 				GeneratePreviewPack = true;
 				PreviewMarkers = PreviewMarkersType.None;

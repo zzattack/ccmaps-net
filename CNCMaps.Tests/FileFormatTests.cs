@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using CNCMaps.FileFormats;
 using CNCMaps.FileFormats.Encodings;
+using CNCMaps.FileFormats.Map;
 using CNCMaps.FileFormats.VirtualFileSystem;
 using Xunit;
 
@@ -131,6 +132,76 @@ namespace CNCMaps.Tests {
 			var ini = Parse("[S]\nA=1;inline comment\n;full line comment\nB=2\n");
 			Assert.Equal("1", ini.GetSection("S").ReadString("A"));
 			Assert.Equal("2", ini.GetSection("S").ReadString("B"));
+		}
+	}
+
+	public class PreCaptureTests {
+
+		// Seven tags on one map: a plain hand-over, one whose trigger is disabled, one waiting on a
+		// timer, one waiting on a zero timer (which the game springs at once), one naming a start
+		// position nobody occupies, one whose second Change House names an occupied slot, and one
+		// pointing at a trigger that is not there.
+		const string Map = @"[Tags]
+0100000A=0,plain,01000001
+0100000B=0,off,01000002
+0100000C=0,timed,01000003
+0100000D=0,nodelay,01000004
+0100000E=0,empty slot,01000005
+0100000F=0,two actions,01000006
+01000010=0,dangling,0100BEEF
+[Triggers]
+01000001=Neutral,<none>,plain,0,1,1,1,0
+01000002=Neutral,<none>,off,1,1,1,1,0
+01000003=Neutral,<none>,timed,0,1,1,1,0
+01000004=Neutral,<none>,nodelay,0,1,1,1,0
+01000005=Neutral,<none>,empty slot,0,1,1,1,0
+01000006=Neutral,<none>,two actions,0,1,1,1,0
+[Events]
+01000001=1,8,0,0
+01000002=1,8,0,0
+01000003=1,13,0,5
+01000004=1,13,0,0
+01000005=1,8,0,0
+01000006=2,61,2,0,GTGCAN,8,0,0
+[Actions]
+01000001=1,14,0,4475,0,0,0,0,A
+01000002=1,14,0,4475,0,0,0,0,A
+01000003=1,14,0,4476,0,0,0,0,A
+01000004=1,14,0,4476,0,0,0,0,A
+01000005=1,14,0,4478,0,0,0,0,A
+01000006=3,14,0,4477,0,0,0,0,A,14,0,4478,0,0,0,0,A,21,6,EVA_Tech,0,0,0,0,A
+";
+
+		static IniFile Parse(string content) {
+			var bytes = Encoding.ASCII.GetBytes(content);
+			return new IniFile(new MemoryStream(bytes), "test.ini", 0, bytes.Length);
+		}
+
+		[Fact]
+		public void GameStartHandoversResolveToTheirStartSlot() {
+			// Start positions A, B and C exist; D does not.
+			var available = new[] { true, true, true, false, false, false, false, false };
+			var slots = MapFile.ResolveTagOwnerSlots(Parse(Map), available);
+
+			Assert.Equal(0, slots["0100000A"]);            // Any Event
+			Assert.Equal(1, slots["0100000D"]);            // Elapsed Time 0 springs at once
+			Assert.Equal(2, slots["0100000F"]);            // last action naming an OCCUPIED slot wins
+			Assert.False(slots.ContainsKey("0100000B"));   // trigger is disabled
+			Assert.False(slots.ContainsKey("0100000C"));   // Elapsed Time 5 has not fired
+			Assert.False(slots.ContainsKey("0100000E"));   // nobody starts at D
+			Assert.False(slots.ContainsKey("01000010"));   // tag points at a trigger that is not there
+		}
+
+		[Fact]
+		public void NoStartPositionsMeansNoHandovers() {
+			Assert.Empty(MapFile.ResolveTagOwnerSlots(Parse(Map), new bool[8]));
+		}
+
+		[Fact]
+		public void MissingSectionsAreTolerated() {
+			Assert.Empty(MapFile.ResolveTagOwnerSlots(Parse(@"[Basic]
+Name=x
+"), new bool[8]));
 		}
 	}
 }

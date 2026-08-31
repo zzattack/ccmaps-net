@@ -28,6 +28,10 @@ namespace CNCMaps.FileFormats.Map {
 		public readonly List<TunnelLine> TunnelEntries = new List<TunnelLine>();
 		public Lighting Lighting;
 
+		/// <summary>House value a trigger action uses for "Player @ A"; A..H run to 4482.
+		/// The engine maps it to the player who spawns at start waypoint 0..7.</summary>
+		private const int PlayerAtStartHouse = 4475;
+
 		/// <summary>Constructor.</summary>
 		/// <param name="baseStream">The base stream.</param>
 		public MapFile(Stream baseStream, string filename = "")
@@ -271,6 +275,7 @@ namespace CNCMaps.FileFormats.Map {
 					short direction = (short)(short.Parse(entries[7]) & 0xFF); // the game stores facings as a byte
 					bool onBridge = entries[11] == "1";
 					var i = new Infantry(owner, name, health, direction, onBridge);
+					i.Tag = ReadTag(entries, 8);
 					i.Tile = Tiles.GetTileR(rx, ry);
 					if (i.Tile != null)
 						Infantries.Add(i);
@@ -304,6 +309,7 @@ namespace CNCMaps.FileFormats.Map {
 					short direction = (short)(short.Parse(entries[5]) & 0xFF); // the game stores facings as a byte
 					bool onBridge = entries[10] == "1";
 					var u = new Unit(owner, name, health, direction, onBridge);
+					u.Tag = ReadTag(entries, 7);
 					u.Tile = Tiles.GetTileR(rx, ry);
 					if (u.Tile != null)
 						Units.Add(u);
@@ -334,6 +340,7 @@ namespace CNCMaps.FileFormats.Map {
 					short direction = (short)(short.Parse(entries[5]) & 0xFF); // the game stores facings as a byte
 					bool onBridge = entries[entries.Length - 4] == "1";
 					var a = new Aircraft(owner, name, health, direction, onBridge);
+					a.Tag = ReadTag(entries, 7);
 					a.Tile = Tiles.GetTileR(rx, ry);
 					if (a.Tile != null)
 						Aircrafts.Add(a);
@@ -364,6 +371,7 @@ namespace CNCMaps.FileFormats.Map {
 					int ry = int.Parse(entries[4]);
 					short direction = (short)(short.Parse(entries[5]) & 0xFF); // the game stores facings as a byte
 					var s = new Structure(owner, name, health, direction);
+					s.Tag = ReadTag(entries, 6);
 					s.Upgrade1 = entries[12];
 					s.Upgrade2 = entries[13];
 					s.Upgrade3 = entries[14];
@@ -378,6 +386,115 @@ namespace CNCMaps.FileFormats.Map {
 				}
 			}
 			Logger.Trace("Read {0} structures", Structures.Count);
+		}
+
+		/// <summary>The trigger tag in an object's line, or null when it carries none.</summary>
+		private static string ReadTag(string[] entries, int index) {
+			if (entries.Length <= index) return null;
+			string tag = entries[index].Trim();
+			return tag.Length == 0 || tag.Equals("None", StringComparison.OrdinalIgnoreCase) ? null : tag;
+		}
+
+		/// <summary>Tag id -> the start slot whose player a game-start trigger hands the tagged objects
+		/// to, for every tag that carries one.
+		///
+		/// [Tags] TagID=Repeat,Name,TriggerID -> [Triggers] TrigID=House,Attached,Name,Disabled,...
+		/// -> [Actions] TrigID=Count, then Count groups of eight ActionID,P1..P6,Waypoints. Action 14
+		/// is "Change House" and its house parameter P2 is 4475+N for "Player @ A".."H", the player who
+		/// spawns at start waypoint N. A slot nobody occupies makes the action a no-op in the game, so
+		/// the last action naming an available slot wins.</summary>
+		public static Dictionary<string, int> ResolveTagOwnerSlots(IniFile ini, bool[] slotAvailable) {
+			var byTag = new Dictionary<string, int>();
+			var tags = ini.GetSection("Tags");
+			var triggers = ini.GetSection("Triggers");
+			var actions = ini.GetSection("Actions");
+			var events = ini.GetSection("Events");
+			if (tags == null || triggers == null || actions == null) return byTag;
+
+			// Trigger id -> slot, for the triggers that hand objects to a starting player.
+			var byTrigger = new Dictionary<string, int>();
+			foreach (var entry in actions.OrderedEntries) {
+				string[] f = ((string)entry.Value).Split(',');
+				if (f.Length == 0 || !int.TryParse(f[0], out int count)) continue;
+				int slot = -1;
+				for (int i = 0; i < count; i++) {
+					int g = 1 + i * 8;
+					if (g + 8 > f.Length) break;
+					if (f[g].Trim() != "14") continue;
+					if (!int.TryParse(f[g + 2].Trim(), out int house)) continue;
+					int n = house - PlayerAtStartHouse;
+					if (n >= 0 && n < slotAvailable.Length && slotAvailable[n])
+						slot = n;
+				}
+				if (slot >= 0) byTrigger[entry.Key] = slot;
+			}
+
+			foreach (var entry in tags.OrderedEntries) {
+				string[] f = ((string)entry.Value).Split(',');
+				if (f.Length < 3) continue;
+				if (!byTrigger.TryGetValue(f[2].Trim(), out int slot)) continue;
+				// Field 3 is Disabled. An empty read also lands here when the trigger id is not in [Triggers]
+				// at all, which is the wanted result.
+				string[] trigger = triggers.ReadString(f[2].Trim()).Split(',');
+				if (trigger.Length < 4 || trigger[3].Trim() == "1") continue;
+				if (events != null && IsDelayed(events.ReadString(f[2].Trim()))) continue;
+				byTag[entry.Key] = slot;
+			}
+			return byTag;
+		}
+
+		/// <summary>Whether a trigger waits on the clock. [Events] is Count, then per event
+		/// EventID,ArgFlag,Arg; ArgFlag 2 means two args follow, so the list has to be walked rather
+		/// than chunked. Event 13 is "Elapsed Time"; with a non-zero argument the hand-over has not
+		/// happened yet at the moment we render.</summary>
+		private static bool IsDelayed(string eventList) {
+			string[] f = eventList.Split(',');
+			if (f.Length == 0 || !int.TryParse(f[0], out int count)) return false;
+			int i = 1;
+			for (int n = 0; n < count && i + 2 < f.Length + 1; n++) {
+				if (!int.TryParse(f[i].Trim(), out int id) || !int.TryParse(f[i + 1].Trim(), out int argFlag))
+					return false;
+				int args = argFlag == 2 ? 2 : 1;
+				if (i + 2 + args > f.Length) return false;
+				if (id == 13 && (!int.TryParse(f[i + 2].Trim(), out int delay) || delay != 0))
+					return true;
+				i += 2 + args;
+			}
+			return false;
+		}
+
+		/// <summary>Rewrites the owner of every object a game-start trigger hands to a starting
+		/// player. slotOwners[N] is the owner name for start position N, null when nobody starts
+		/// there. Returns the number of objects changed.</summary>
+		public int ApplyPreCapturedOwners(string[] slotOwners) {
+			// Only multiplayer maps: on a campaign map the waypoints are script positions, not
+			// start positions, and "Player @ A" resolves to nothing.
+			var basic = GetSection("Basic");
+			if (basic == null || !basic.ReadBool("MultiplayerOnly")) return 0;
+
+			// Read [Waypoints] straight from the ini: ReadWaypoints has its own gate, and a slot
+			// with no start position is one the game leaves neutral.
+			var waypoints = GetSection("Waypoints");
+			var available = new bool[slotOwners.Length];
+			for (int i = 0; i < available.Length; i++)
+				available[i] = !string.IsNullOrEmpty(slotOwners[i])
+					&& waypoints != null && waypoints.HasKey(i.ToString());
+
+			var slots = ResolveTagOwnerSlots(this, available);
+			if (slots.Count == 0) return 0;
+
+			int changed = 0;
+			foreach (var o in Structures)
+				if (o.Tag != null && slots.TryGetValue(o.Tag, out int s)) { o.Owner = slotOwners[s]; changed++; }
+			foreach (var o in Infantries)
+				if (o.Tag != null && slots.TryGetValue(o.Tag, out int s)) { o.Owner = slotOwners[s]; changed++; }
+			foreach (var o in Units)
+				if (o.Tag != null && slots.TryGetValue(o.Tag, out int s)) { o.Owner = slotOwners[s]; changed++; }
+			foreach (var o in Aircrafts)
+				if (o.Tag != null && slots.TryGetValue(o.Tag, out int s)) { o.Owner = slotOwners[s]; changed++; }
+
+			Logger.Debug("Pre-captured {0} objects from {1} tagged triggers", changed, slots.Count);
+			return changed;
 		}
 
 		private void ReadWaypoints() {

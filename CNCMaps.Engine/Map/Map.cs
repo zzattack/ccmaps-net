@@ -58,6 +58,10 @@ namespace CNCMaps.Engine.Map {
 		private readonly List<Palette> _palettePerLevel = new List<Palette>(19);
 		private readonly HashSet<Palette> _palettesToBeRecalculated = new HashSet<Palette>();
 
+		/// <summary>One rules [Colors] name per start position A-H, empty where nobody starts.
+		/// null switches the pre-capture pass off entirely.</summary>
+		public string[] PreCaptureColors { get; set; }
+
 		private DrawingSurface _drawingSurface;
 		private MapFile _mapFile;
 
@@ -72,6 +76,12 @@ namespace CNCMaps.Engine.Map {
 			LocalSize = mf.LocalSize;
 
 			_tiles = new TileLayer(FullSize.Size, config);
+
+			// Before the objects are copied in: a map trigger can hand a neutral tech building to a
+			// starting player at game start, and rewriting the owner here lets the usual owner-to-colour
+			// path pick it up.
+			if (PreCaptureColors != null)
+				mf.ApplyPreCapturedOwners(PreCaptureSlotOwners());
 
 			LoadAllObjects(mf);
 
@@ -783,6 +793,25 @@ namespace CNCMaps.Engine.Map {
 
 				}
 			}
+
+			// Last in LoadTheater, so nothing overwrites these. An unknown colour name falls back to
+			// the neutral grey the object would have had anyway.
+			var slotOwners = PreCaptureColors == null ? null : PreCaptureSlotOwners();
+			for (int i = 0; slotOwners != null && i < slotOwners.Length; i++) {
+				if (slotOwners[i] == null) continue;
+				_countryColors[slotOwners[i]] = _namedColors.TryGetValue(PreCaptureColors[i], out var c)
+					? c : _namedColors["LightGrey"];
+			}
+		}
+
+		/// <summary>The owner name given to objects handed to each start position, or null for a
+		/// slot with no colour. FinalSun's own label for the house, so a render log reads plainly.</summary>
+		private string[] PreCaptureSlotOwners() {
+			var owners = new string[PreCaptureColors.Length];
+			for (int i = 0; i < owners.Length; i++)
+				owners[i] = string.IsNullOrEmpty(PreCaptureColors[i])
+					? null : "<Player @ " + (char)('A' + i) + ">";
+			return owners;
 		}
 
 		/// <summary>Loads the countries. </summary>

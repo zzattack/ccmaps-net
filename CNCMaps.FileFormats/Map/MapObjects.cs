@@ -60,6 +60,8 @@ namespace CNCMaps.FileFormats.Map {
 		public short Direction { get; set; }
 		public bool OnBridge { get; set; }
 		public string Owner { get; set; }
+		/// <summary>The map trigger tag attached to this object, or null when it carries none.</summary>
+		public string Tag { get; set; }
 	}
 
 	public class Infantry : NamedMapObject {
@@ -74,6 +76,8 @@ namespace CNCMaps.FileFormats.Map {
 		public short Direction { get; set; }
 		public bool OnBridge { get; set; }
 		public string Owner { get; set; }
+		/// <summary>The map trigger tag attached to this object, or null when it carries none.</summary>
+		public string Tag { get; set; }
 	}
 
 	public class Overlay : NumberedMapObject {
@@ -105,6 +109,8 @@ namespace CNCMaps.FileFormats.Map {
 		public short Direction { get; set; }
 		public bool OnBridge { get; set; }
 		public string Owner { get; set; }
+		/// <summary>The map trigger tag attached to this object, or null when it carries none.</summary>
+		public string Tag { get; set; }
 
 		public string Upgrade1 { get; set; }
 		public string Upgrade2 { get; set; }
@@ -127,6 +133,8 @@ namespace CNCMaps.FileFormats.Map {
 		public short Direction { get; set; }
 		public bool OnBridge { get; set; }
 		public string Owner { get; set; }
+		/// <summary>The map trigger tag attached to this object, or null when it carries none.</summary>
+		public string Tag { get; set; }
 	}
 
 	public class Waypoint : NumberedMapObject { }
