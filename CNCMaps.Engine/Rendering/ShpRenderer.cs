@@ -143,9 +143,10 @@ namespace CNCMaps.Engine.Rendering {
 			// buildings anchor at their body's drawn bottom row; turrets and upgrades share that anchor
 			// so they tie with the body, while a bib extending below keeps its own deeper anchor. Anims
 			// keep the game's per-shape anchor: a flag or flare on a mast draws from its own bottom row,
-			// so it recedes behind the roof it rises out of.
+			// so it recedes behind the roof it rises out of. AnchorToBody opts an anim back in; a damage
+			// fire burns against the body it sits on.
 			int zAnchorY = spriteBottomY;
-			if (isBuilding && !(dr is AnimDrawable)) {
+			if (isBuilding && (!(dr is AnimDrawable) || dr.AnchorToBody)) {
 				int? bodyAnchor = ((StructureObject)obj).DrawnBodyAnchorY;
 				zAnchorY = Math.Max(spriteBottomY, bodyAnchor ?? cellBottomY);
 			}

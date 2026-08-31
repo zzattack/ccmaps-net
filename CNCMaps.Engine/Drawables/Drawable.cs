@@ -54,6 +54,9 @@ namespace CNCMaps.Engine.Drawables {
 		public int Ready_CountNext { get; set; } = 1;
 		public bool Theater { get; set; }
 		public bool IsBuildingPart = true;
+		/// <summary>Anim that takes its building body's z anchor instead of its own drawn bottom
+		/// row. A damage fire burns against the body, not in front of the cell below it.</summary>
+		public bool AnchorToBody;
 
 		public bool IsVoxel { get; set; }
 		public bool NewTheater { get; set; }

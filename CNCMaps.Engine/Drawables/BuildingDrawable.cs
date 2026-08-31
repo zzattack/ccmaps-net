@@ -235,6 +235,9 @@ namespace CNCMaps.Engine.Drawables {
 		// Adds fire animations to a building. Supports custom-paletted animations.
 		private void LoadFireAnimations() {
 			// http://modenc.renegadeprojects.com/DamageFireTypes
+			// BuildingClass::Start_Damage_Fires rolls one DamageFireTypes index for the whole
+			// building and then walks the list round-robin over its remaining offsets
+			int fireType = Rand.Next(OwnerCollection.FireNames.Length);
 			int f = 0;
 			while (true) { // enumerate as many fires as are existing
 				string dfo = Art.ReadString("DamageFireOffset" + f++);
@@ -242,13 +245,18 @@ namespace CNCMaps.Engine.Drawables {
 					break;
 
 				string[] coords = dfo.Split(new[] { ',', '.' }, StringSplitOptions.RemoveEmptyEntries);
-				string fireAnim = OwnerCollection.FireNames[Rand.Next(OwnerCollection.FireNames.Length)];
+				string fireAnim = OwnerCollection.FireNames[(fireType + f - 1) % OwnerCollection.FireNames.Length];
+				IniFile.IniSection fireRules = OwnerCollection.Rules.GetOrCreateSection(fireAnim);
 				IniFile.IniSection fireArt = OwnerCollection.Art.GetOrCreateSection(fireAnim);
 
-				var fire = new AnimDrawable(_config, _vfs, Rules, Art, _vfs.Open<ShpFile>(fireAnim + ".shp"));
+				// built on the fire's own sections instead of the building's, so it animates off FIRE0x's own
+				// Rate/LoopEnd like every other anim
+				var fire = new AnimDrawable(_config, _vfs, fireRules, fireArt, _vfs.Open<ShpFile>(fireAnim + ".shp"));
+				fire.OwnerCollection = OwnerCollection;
+				fire.LoadFromRules();
+				fire.AnchorToBody = true;
 				fire.Props.PaletteOverride = GetFireAnimPalette(fireArt);
 				fire.Props.Offset = new Point(Int32.Parse(coords[0]) + (_config.TileWidth / 2), Int32.Parse(coords[1]));
-				fire.Props.FrameDecider = FrameDeciders.RandomFrameDecider;
 				_fires.Add(fire);
 			}
 		}
@@ -310,10 +318,10 @@ namespace CNCMaps.Engine.Drawables {
 				}
 				_baseShp.Props.FrameDecider = FrameDeciders.BaseBuildingFrameDecider(isDamaged);
 
-				if (_config.Engine >= EngineType.RedAlert2) {
-					if (isDamaged) isOnFire = true;
-					if (health > _conditionRedHealth && _canBeOccupied) isOnFire = false;
-				}
+				// BuildingClass::AI gates the fire on health alone, against ConditionRed for an
+				// occupiable building and ConditionYellow for every other one
+				if (_config.Engine >= EngineType.RedAlert2)
+					isOnFire = health <= (_canBeOccupied ? _conditionRedHealth : _conditionYellowHealth);
 			}
 
 			// the body's drawn bottom row is the z anchor the game uses for the whole
@@ -324,13 +332,12 @@ namespace CNCMaps.Engine.Drawables {
 			var drawList = new List<Drawable>();
 			drawList.Add(_baseShp);
 
-			if (obj is StructureObject && isDamaged) {
+			if (obj is StructureObject && isDamaged)
 				drawList.AddRange(_animsDamaged);
-				if (isOnFire)
-					drawList.AddRange(_fires);
-			}
 			else
 				drawList.AddRange(_anims);
+			if (isOnFire)
+				drawList.AddRange(_fires);
 
 			drawList.AddRange(SubDrawables); // bib
 			/* order:
