@@ -198,7 +198,7 @@ namespace CNCMaps.Engine {
 					foreach (string mixFile in modConfig.ExtraMixes)
 						vfs.Add(mixFile);
 
-					vfs.LoadMixes(_settings.Engine);
+					vfs.LoadMixes(_settings.Engine, !_settings.NoExpandMixes);
 
 					if (!map.Initialize(mapFile, modConfig, vfs)) {
 						_logger.Error("Could not successfully load this map. Try specifying the engine type manually.");

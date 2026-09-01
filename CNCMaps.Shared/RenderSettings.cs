@@ -19,6 +19,7 @@ namespace CNCMaps.Shared {
 		public int JPEGCompression { get; set; }
 		public List<string> MixFilesDirectories { get; set; }
 		public string ModConfig { get; set; }
+		public bool NoExpandMixes { get; set; }
 		public string MetadataOutFile { get; set; }
 		public bool ShowHelp { get; set; }
 		public bool MarkOreFields { get; set; }
@@ -66,6 +67,7 @@ namespace CNCMaps.Shared {
 			OutputFile = "";
 			MixFilesDirectories = new List<string>();
 			ModConfig = "";
+			NoExpandMixes = false;
 			MetadataOutFile = "";
 			ThumbnailConfig = "";
 			ThumbnailMarkers = StartPositionMarking.None;
@@ -153,6 +155,7 @@ namespace CNCMaps.Shared {
 			Flag("--output-png", "-p", "Output PNG file", () => SavePNG = true);
 			Value<int>("--png-compression", "-c", "Set PNG compression level (1-9)", v => PNGQuality = v);
 			Value<string[]>("--mixdir", "-m", "Specify location of .mix files, read from registry if not specified (win only). May be repeated when a game keeps its mixes and inis in separate directories", v => MixFilesDirectories.AddRange(v.Where(d => !string.IsNullOrWhiteSpace(d))));
+			Flag("--no-expand-mixes", null, "Skip the expand(md)##.mix files. The CnCNet spawner never loads them, so a map rendered for CnCNet play should not use them either", () => NoExpandMixes = true);
 			Value<string>("--modconfig", "-M", "Filename of a game configuration specific to your mod (create with GUI)", v => ModConfig = v);
 			Value<string>("--meta-json", null, "Write resolved map metadata (name, engine, theater, size, start positions) as JSON to the given file", v => MetadataOutFile = v);
 			Flag("--progress", null, "Print machine-readable render progress to stdout as progress:N:phase lines", () => ReportProgress = true);

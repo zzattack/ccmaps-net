@@ -121,7 +121,7 @@ namespace CNCMaps.FileFormats.VirtualFileSystem {
 			return LoadMixes(engine);
 		}
 
-		public bool LoadMixes(EngineType engine) {
+		public bool LoadMixes(EngineType engine, bool loadExpandMixes = true) {
 			if (engine == EngineType.AutoDetect) {
 				Logger.Fatal("Scanning mixdir for auto detect theater is no longer supported!");
 				return false;
@@ -135,7 +135,7 @@ namespace CNCMaps.FileFormats.VirtualFileSystem {
 					AddItem("patch.mix");
 
 			// try all expand(md).mix files
-			for (int i = 99; i >= 0; i--) {
+			for (int i = loadExpandMixes ? 99 : -1; i >= 0; i--) {
 				string file = "";
 				if (engine == EngineType.YurisRevenge) {
 					file = "expandmd" + i.ToString("00") + ".mix";

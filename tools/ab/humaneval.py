@@ -247,6 +247,11 @@ def render_cmd(out: str, key: str, entry: dict, base: str, render_json: str,
     ]
     for d in mix_dirs():
         cmd += ["-m", d]
+    # The captures come from the CnCNet spawner, whose InitBootstrapMixFiles_CustomMixes hook jumps
+    # over gamemd's expandmd##.mix loop and registers cncnet.mix (its own rulesmd/artmd and tree
+    # art) in that slot. A Terrain Expansion pack installed as expandmd06.mix never reaches the
+    # game, and neither does the 1.001 patch's expandmd01.mix.
+    cmd += ["--no-expand-mixes", "-m", os.path.join(GAME_DIR, "cncnet.mix")]
     with open(os.path.join(meta_dir(out), entry["capture"])) as fh:
         cap = json.load(fh)
     lattice = (cap.get("provenance") or {}).get("variantLattice")
