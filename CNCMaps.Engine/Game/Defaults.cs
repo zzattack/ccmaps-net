@@ -15,8 +15,10 @@ namespace CNCMaps.Engine.Game {
 				case CollectionType.Infantry:
 				case CollectionType.Vehicle:
 					return PaletteType.Unit;
+				// CellClass::DrawOverlay draws every overlay but walls and tiberium through the cell's own
+				// LightConvert, which IsoTileTypeClass builds from ISO<theater>.PAL; the theater .PAL only
+				// backs tiberium. LoadOverlayDrawable sets those two exceptions.
 				case CollectionType.Overlay:
-					return PaletteType.Overlay;
 				case CollectionType.Smudge:
 				case CollectionType.Terrain:
 				case CollectionType.Animation:

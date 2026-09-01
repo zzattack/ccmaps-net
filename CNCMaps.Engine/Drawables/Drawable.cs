@@ -95,11 +95,6 @@ namespace CNCMaps.Engine.Drawables {
 			}
 
 			// Used palet can be overriden
-			bool noUseTileLandType = Rules.ReadString("NoUseTileLandType") != "";
-			if (noUseTileLandType) {
-				Props.PaletteType = PaletteType.Iso;
-				Props.LightingType = LightingType.Full;
-			}
 			if (Art.ReadBool("TerrainPalette")) {
 				Props.PaletteType = PaletteType.Iso;
 				IsRemapable = false;
@@ -187,7 +182,6 @@ namespace CNCMaps.Engine.Drawables {
 				else
 					Props.Offset.Y = 14;
 				Props.LightingType = LightingType.Full;
-				Props.PaletteType = PaletteType.Iso;
 				// Foundation = new Size(2, 2); // hack to get these later in the drawing order
 			}
 			if (Rules.ReadBool("SpawnsTiberium")) {
