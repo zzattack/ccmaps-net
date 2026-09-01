@@ -115,6 +115,8 @@ namespace CNCMaps.FileFormats.Map {
 		public string Upgrade1 { get; set; }
 		public string Upgrade2 { get; set; }
 		public string Upgrade3 { get; set; }
+		/// <summary>Handed to a starting player by a game-start trigger (see MapFile.ApplyPreCapturedOwners).</summary>
+		public bool PreCaptured { get; set; }
 	}
 	public class Terrain : NamedMapObject {
 		public Terrain(string name) {

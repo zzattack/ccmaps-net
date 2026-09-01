@@ -88,5 +88,7 @@ Caveats: the map list is read once at startup — restart to see corpus entries 
   The tick simulation lives in `CNCMaps.Engine\Game\FrameDeciders.SimulateAnimStage`; power-gated
   anim slots (`<slot>Powered`, default yes) on `NeedsEngineer` or `Powered=true` buildings hold at
   their start frame like the game's unpowered-anim pause (a neutral oil derrick's pump stands
-  still while its `Powered=no` flare keeps burning).
+  still while its `Powered=no` flare keeps burning). A `NeedsEngineer` building that a game-start
+  trigger hands to a player (`MapFile.ApplyPreCapturedOwners`) runs freely from tick 0 instead,
+  which is what the engine's change-house capture path does.
 - TS/FS comparisons: planned, not built. The pipeline defaults (map dir, game dir, presets, `-Y`) are YR-specific.

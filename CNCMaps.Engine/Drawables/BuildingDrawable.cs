@@ -174,12 +174,14 @@ namespace CNCMaps.Engine.Drawables {
 			var anim = new AnimDrawable(_config, _vfs, extraRules, extraArt);
 			anim.OwnerCollection = OwnerCollection;
 			// gamemd pauses power-gated anims (<slot>Powered, default yes) on buildings that are not
-			// operating: capture-to-operate ones (NeedsEngineer, e.g. a neutral oil derrick's pump)
-			// and power-dependent ones (Powered=true; preplaced owners have no power at the frames
+			// operating: capture-to-operate ones (NeedsEngineer: BuildingClass::Read_INI powers them off
+			// whoever owns them, and a change-house trigger turns them back on like a capture) and
+			// power-dependent ones (Powered=true; preplaced owners have no power at the frames
 			// --anim-frame simulates, so the owner's actual power balance is not modelled)
 			string slot = extraImage.EndsWith("Damaged") ? extraImage.Substring(0, extraImage.Length - 7) : extraImage;
-			anim.HoldAtStart = (Rules.ReadBool("NeedsEngineer") || Rules.ReadBool("Powered"))
-				&& Art.ReadBool(slot + "Powered", true);
+			bool powerGated = Art.ReadBool(slot + "Powered", true);
+			anim.HoldAtStart = powerGated && Rules.ReadBool("Powered");
+			anim.HoldUntilCaptured = powerGated && Rules.ReadBool("NeedsEngineer");
 			anim.LoadFromRules();
 
 			anim.NewTheater = this.NewTheater;

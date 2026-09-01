@@ -222,6 +222,8 @@ namespace CNCMaps.Engine.Map {
 		public string Upgrade1 { get; set; }
 		public string Upgrade2 { get; set; }
 		public string Upgrade3 { get; set; }
+		/// <summary>Handed to a starting player by a game-start trigger, which the engine treats as a capture.</summary>
+		public bool PreCaptured { get; set; }
 
 		public int WallBuildingFrame { get; set; }
 

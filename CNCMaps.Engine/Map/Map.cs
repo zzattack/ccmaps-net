@@ -189,6 +189,7 @@ namespace CNCMaps.Engine.Map {
 				str.Upgrade1 = s.Upgrade1;
 				str.Upgrade2 = s.Upgrade2;
 				str.Upgrade3 = s.Upgrade3;
+				str.PreCaptured = s.PreCaptured;
 				_tiles.GetTile(s.Tile).AddObject(str);
 				_structureObjects.Add(str);
 			}

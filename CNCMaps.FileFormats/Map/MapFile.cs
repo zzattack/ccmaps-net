@@ -485,7 +485,7 @@ namespace CNCMaps.FileFormats.Map {
 
 			int changed = 0;
 			foreach (var o in Structures)
-				if (o.Tag != null && slots.TryGetValue(o.Tag, out int s)) { o.Owner = slotOwners[s]; changed++; }
+				if (o.Tag != null && slots.TryGetValue(o.Tag, out int s)) { o.Owner = slotOwners[s]; o.PreCaptured = true; changed++; }
 			foreach (var o in Infantries)
 				if (o.Tag != null && slots.TryGetValue(o.Tag, out int s)) { o.Owner = slotOwners[s]; changed++; }
 			foreach (var o in Units)
