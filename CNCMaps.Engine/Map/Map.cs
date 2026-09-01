@@ -831,8 +831,10 @@ namespace CNCMaps.Engine.Map {
 			foreach (var entry in countriesSection.OrderedEntries) {
 				IniFile.IniSection countrySection = _rules.GetSection(entry.Value);
 				if (countrySection == null) continue;
+				// the game draws the civilian houses in LightGrey whatever their Color= says
+				string color = entry.Value == "Neutral" || entry.Value == "Special" ? "LightGrey" : countrySection.ReadString("Color");
 				HsvColor c;
-				if (!_namedColors.TryGetValue(countrySection.ReadString("Color"), out c))
+				if (!_namedColors.TryGetValue(color, out c))
 					c = _namedColors.Values.First();
 				_countryColors[entry.Value] = c;
 			}

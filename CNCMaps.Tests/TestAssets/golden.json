@@ -3,7 +3,7 @@
   "hillbtwn-png": "d465bd932faabb675fb3400a074a560cd7c70f4ef905c1d97b3846214c9fc3c6",
   "hillbtwn-markers-png": "137ab88e020404a971c567cb970f5602464573bf086ed8c4a3417ca2e1a2c53d",
   "hillbtwn-previewpack": "fd08f13542c9ad007cd6725f91ac30baa5d1caa48211df4b44ec4034ed6c1053",
-  "austintx-png": "9c6c6b206e0b01792e6da3f84a686cd367c4faa395d5f7e1c1fa89cd909a853d",
+  "austintx-png": "d885da8406487beba909459fc75475ee166ea4da94d86ca76d41dba07e1d354a",
   "hillbtwn-override-png": "707911c6745151c91e556eb4cfea45e987be86829902d50393a4ad4a5ed92abd",
   "duel-png": "c2a4235663a3ab153fd004765df105addbe6e59d93344b105610ac77b24491f2",
   "_comment": "pixel hashes of renders of the TestAssets maps against unmodified RA2/YR game data; regenerate by deleting an entry and copying the hash a failing test reports"
