@@ -74,7 +74,8 @@ namespace CNCMaps.Engine.Game {
 		}
 
 		public bool HasObject(GameObject o) {
-			return GetDrawable(o) != null;
+			var d = GetDrawable(o);
+			return d != null && !d.IsUndefined;
 		}
 
 		protected abstract Drawable MakeDrawable(string objName);

@@ -58,6 +58,9 @@ namespace CNCMaps.Engine.Drawables {
 		/// row. A damage fire burns against the body, not in front of the cell below it.</summary>
 		public bool AnchorToBody;
 
+		/// <summary>Listed in a types list without a rules section. ObjectTypeClass::Read_INI returns before
+		/// reading anything for such a type, so the game has no strength or image for it and never shows it.</summary>
+		public bool IsUndefined { get; set; }
 		public bool IsVoxel { get; set; }
 		public bool NewTheater { get; set; }
 		public string Image { get; set; }

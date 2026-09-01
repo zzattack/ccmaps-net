@@ -41,6 +41,8 @@ namespace CNCMaps.Engine.Game {
 
 		protected override Drawable MakeDrawable(string objName) {
 			Drawable drawable;
+			// anims are defined in the art ini and have no rules section to check
+			bool undefined = Type != CollectionType.Animation && Rules.GetSection(objName) == null;
 			var rulesSection = Rules.GetOrCreateSection(objName);
 			string artSectionName = rulesSection.ReadString("Image", objName);
 			var artSection = Art.GetOrCreateSection(artSectionName);
@@ -67,6 +69,7 @@ namespace CNCMaps.Engine.Game {
 				default:
 					throw new InvalidEnumArgumentException();
 			}
+			drawable.IsUndefined = undefined;
 			return drawable;
 		}
 
