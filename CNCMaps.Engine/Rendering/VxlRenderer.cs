@@ -41,6 +41,12 @@ namespace CNCMaps.Engine.Rendering {
 		DrawingSurface _surface;
 		float[] _zBuffer; // window-space depth in [-1,1] (ndc z), depth-test "less"
 
+		/// <summary>Canvas row (top-down, as the blit reads it) of the lowest point the rendered
+		/// model's volume projects to. gamemd keeps a cached voxel in the region its volume occupies
+		/// and anchors the standing z gradient at that region's bottom row, which for a turret whose
+		/// box reaches under its visible geometry lies below the last drawn pixel.</summary>
+		public int VolumeBottomRow { get; private set; }
+
 		public void Initialize() {
 			Logger.Info("Initializing voxel renderer");
 			_isInit = true;
@@ -113,6 +119,7 @@ namespace CNCMaps.Engine.Rendering {
 			// clear shadowbuf
 			var shadBuf = _surface.GetShadows();
 			Array.Clear(shadBuf, 0, shadBuf.Length);
+			float volumeMinY = float.MaxValue;
 
 			foreach (var section in vxl.Sections) {
 				var frameRot = hva.LoadGLMatrix(section.Index);
@@ -126,6 +133,15 @@ namespace CNCMaps.Engine.Rendering {
 				// full modelview-projection for this section, mirroring the former GL
 				// matrix stack (row-vector convention: leftmost matrix applies first)
 				var mvp = MatrixMath.Mul(frame, @object, world, trans, lookat, persp);
+				for (int i = 0; i < 8; i++) {
+					var corner = new Vector4(
+						(((i & 1) != 0) ? section.SizeX - 0.5f : -0.5f) * section.Scale.X,
+						(((i & 2) != 0) ? section.SizeY - 0.5f : -0.5f) * section.Scale.Y,
+						(((i & 4) != 0) ? section.SizeZ - 0.5f : -0.5f) * section.Scale.Z, 1f);
+					var clip = MatrixMath.TransformRow(corner, mvp);
+					if (clip.W > 1e-6f)
+						volumeMinY = MathF.Min(volumeMinY, (clip.Y / clip.W + 1f) * _surface.Height / 2f);
+				}
 
 				// shadow: flatten the model onto the ground plane (z=0 in upright world
 				// space, i.e. after the model/facing/tilt transforms but before the
@@ -176,6 +192,7 @@ namespace CNCMaps.Engine.Rendering {
 				}
 			}
 
+			VolumeBottomRow = _surface.Height - 1 - Math.Clamp((int)MathF.Floor(volumeMinY), 0, _surface.Height - 1);
 			return _surface;
 		}
 

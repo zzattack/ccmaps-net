@@ -65,13 +65,15 @@ namespace CNCMaps.Engine.Drawables {
 				return;
 
 			// gamemd blits the cached voxel through the same Shape_Draw_Z path as SHP objects, with the
-			// Deg90 standing gradient anchored at the drawn sprite's bottom row and BlitterFlags Alpha|Flat:
-			// the pixels are z-tested against the buffer but never written back. Flying bodies draw raised
-			// while their z stays anchored at the ground-projected bottom row.
+			// Deg90 standing gradient anchored at the bottom row of the region the model's volume projects
+			// to, and BlitterFlags Alpha|Flat: the pixels are z-tested against the buffer but never written
+			// back. Anchoring at the last drawn pixel instead puts a turret whose box reaches under its
+			// geometry behind its own post. Flying bodies draw raised while their z stays anchored at the
+			// ground-projected row.
 			int flight = props.FlightHeight;
 			var t = obj.Tile;
 			int cellBottomY = (t.Dy - t.Z) * _config.TileHeight / 2 + _config.TileHeight - 1;
-			int anchorY = d.Y + (vxl_ds.Height - 1 - firstDrawnRow);
+			int anchorY = d.Y + VoxelRenderer.VolumeBottomRow;
 			// ZAdjust uses the game's sign, as in ShpRenderer: positive pushes away from the screen.
 			// A voxel turret on a building carries the building's TurretAnimZAdjust; without it the
 			// turret loses the z-test against the body it sits on (the Grand Cannon's mounting plate
