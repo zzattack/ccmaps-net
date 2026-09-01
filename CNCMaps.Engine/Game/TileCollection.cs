@@ -272,6 +272,10 @@ namespace CNCMaps.Engine.Game {
 			MMRampBase = General.ReadShort("MMRampBase", -1);
 			MMWaterCliffAPieces = General.ReadShort("MMWaterCliffAPieces", -1);
 			Medians = General.ReadShort("Medians", -1);
+			// snowmd.ini is the one theater without a Medians key; Ares (hook 0x545904, MediansFix)
+			// substitutes set 71, the snow "Paved road bits", so pavement LAT joins those tiles
+			if (Medians == -1 && _theaterSettings.Type == TheaterType.Snow && _config?.Engine >= EngineType.RedAlert2)
+				Medians = 71;
 			MiscPaveTile = General.ReadShort("MiscPaveTile", -1);
 			MonorailSlopes = General.ReadShort("MonorailSlopes", -1);
 			PaveTile = General.ReadShort("PaveTile", -1);

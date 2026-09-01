@@ -97,4 +97,8 @@ Caveats: the map list is read once at startup — restart to see corpus entries 
   CnCNet game) plus `-m <game>\cncnet.mix` in that slot (CnCNet's own rulesmd/artmd, `$Include`
   files and tree art). Rendering with the plain game dir instead draws Terrain Expansion tile
   overrides (grey slope17-20 wedges in NewUrban) and 1.001 rules the captures never saw.
+- The captured game runs with Ares and Phobos injected (Syringe), so their engine hooks are part of
+  the ground truth. Ares' `MediansFix` (hook 0x545904) gives snow `Medians = 71` when snowmd.ini
+  omits the key; the renderer mirrors it in `TileCollection`. Check `Ares.dll` strings for a hook name
+  before concluding that a gamemd decompile alone explains a capture.
 - TS/FS comparisons: planned, not built. The pipeline defaults (map dir, game dir, presets, `-Y`) are YR-specific.
