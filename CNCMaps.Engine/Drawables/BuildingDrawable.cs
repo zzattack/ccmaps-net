@@ -255,6 +255,11 @@ namespace CNCMaps.Engine.Drawables {
 				fire.OwnerCollection = OwnerCollection;
 				fire.LoadFromRules();
 				fire.AnchorToBody = true;
+				// Start_Damage_Fires (0x43C25B) gives the anim ZAdjust min(0, ((dfoY - 15*(W+H)) * 3 >> 1) - 10),
+				// which keeps the flame in front of its building whatever depth the body has; without it a
+				// flame on a flat-profile body ties that profile and the strict test drops it
+				int fireY = Int32.Parse(coords[1]), halfH = _config.TileHeight / 2;
+				fire.Props.ZAdjust = Math.Min(0, (((fireY - (Foundation.Width + Foundation.Height) * halfH) * 3) >> 1) - 10);
 				fire.Props.PaletteOverride = GetFireAnimPalette(fireArt);
 				fire.Props.Offset = new Point(Int32.Parse(coords[0]) + (_config.TileWidth / 2), Int32.Parse(coords[1]));
 				_fires.Add(fire);
@@ -300,9 +305,9 @@ namespace CNCMaps.Engine.Drawables {
 					rubble.Props.PaletteOverride = OwnerCollection.Palettes.IsoPalette;
 					rubble.Props.FrameDecider = FrameDeciders.BuildingRubbleFrameDecider(rubble.Shp.NumImages);
 					(obj as StructureObject).DrawnBodyAnchorY = rubble.GetDrawnBottomY(obj);
+					rubble.Draw(obj, ds, false);
 					if (shadows)
 						rubble.DrawShadow(obj, ds);
-					rubble.Draw(obj, ds, false);
 					return;
 				}
 			}
@@ -321,8 +326,7 @@ namespace CNCMaps.Engine.Drawables {
 				// BuildingClass::AI gates the fire on health alone, against ConditionRed for an
 				// occupiable building and ConditionYellow for every other one
 				if (_config.Engine >= EngineType.RedAlert2)
-					isOnFire = health <= (_canBeOccupied ? _conditionRedHealth : _conditionYellowHealth);
-			}
+					isOnFire = health <= (_canBeOccupied ? _conditionRedHealth : _conditionYellowHealth);			}
 
 			// the body's drawn bottom row is the z anchor the game uses for the whole
 			// building; parts above it (anims, turrets) share it via StructureObject

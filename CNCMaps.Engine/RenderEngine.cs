@@ -821,9 +821,6 @@ namespace CNCMaps.Engine {
 			WriteNpy(path, "<i2", ds.Height, ds.Width, w => {
 				foreach (short v in ds.GetZBuffer()) w.Write(v);
 			});
-			WriteNpy(path + ".shadow.npy", "|b1", ds.Height, ds.Width, w => {
-				foreach (byte v in ds.GetShadowClasses()) w.Write(v != 0 ? (byte)1 : (byte)0);
-			});
 		}
 
 		private static void DumpVoxelMask(Rendering.DrawingSurface ds, string path) {

@@ -46,7 +46,6 @@ namespace CNCMaps.Engine.Drawables {
 			byte* w_high = w_low + ds.BitmapData.Stride * ds.BitmapData.Height;
 			var zBuffer = ds.GetZBuffer();
 			var shadowBufVxl = vxl_ds.GetShadows();
-			var shadowClasses = ds.GetShadowClasses();
 			var voxelMask = ds.GetVoxelMask();
 
 			// bottom-most drawn source row; source rows are stored bottom-up, so source
@@ -103,7 +102,7 @@ namespace CNCMaps.Engine.Drawables {
 				for (int x = 0; x < vxl_ds.Width; x++) {
 					bool bodyPx = *(src_row + x * 4 + 3) > 0;
 					// only non-transparent pixels in front of what the buffer holds
-					if (bodyPx && bodyRowValid && zBufVal >= zBuffer[zIdx]) {
+					if (bodyPx && bodyRowValid && zBufVal > zBuffer[zIdx]) {
 						if (transLucency != 0) {
 							*(body_row + x * 3) = (byte)(a * *(body_row + x * 3) + b * *(src_row + x * 4));
 							*(body_row + x * 3 + 1) = (byte)(a * *(body_row + x * 3 + 1) + b * *(src_row + x * 4 + 1));
@@ -122,11 +121,10 @@ namespace CNCMaps.Engine.Drawables {
 					// blit keep covering their own shadow
 					if ((!bodyPx || flight != 0) && shadRowValid && shadowBufVxl[x + y * vxl_ds.Width]) {
 						int shadIdx = (d.Y + y) * ds.Width + d.X + x;
-						if (shadowClasses[shadIdx] == 0 && zShadowVal > zBuffer[shadIdx]) {
+						if (zShadowVal > zBuffer[shadIdx]) {
 							*(shad_row + x * 3) /= 2;
 							*(shad_row + x * 3 + 1) /= 2;
 							*(shad_row + x * 3 + 2) /= 2;
-							shadowClasses[shadIdx] = 3;
 						}
 					}
 					zIdx++;

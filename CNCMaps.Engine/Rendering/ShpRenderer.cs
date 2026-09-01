@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Drawing;
 using CNCMaps.Engine.Drawables;
 using CNCMaps.Engine.Game;
@@ -124,9 +124,10 @@ namespace CNCMaps.Engine.Rendering {
 			// (ore, roads, bridge decks) 2, other standing overlays 17, units/infantry/aircraft 1.
 			// Units and their shadows are only z-tested, never written (the game blits them with the
 			// ZRead blitter family), so anything drawn later must carry its own closer z or cover them.
-			// Buildings anchor at their cell's bottom row so attached parts (anims, turrets, upgrades)
-			// drawn later tie with the body instead of losing against its lifted wall z.
+			// A smudge is tested but never written either (SmudgeTypeClass::Draw_It blits without
+			// SHAPE_ZWRITE): a cliff face in front of it keeps its pixels, ore drawn after it paints over it.
 			bool unitLike = obj is UnitObject || obj is InfantryObject || obj is AircraftObject;
+			bool zWrite = !(obj is SmudgeObject);
 			bool isBuilding = obj is StructureObject;
 			// AnimClass never carries SHAPE_ZWRITE: it is constructed with SHAPE_WIN_REL|SHAPE_CENTER and
 			// no draw path adds the flag, so an anim paints colour without storing depth. This covers a
@@ -141,23 +142,24 @@ namespace CNCMaps.Engine.Rendering {
 				// standing ones take the full lift
 				zLift = dr.Flat ? 1 : dr.IsWall || dr.IsRock ? 2 : 17;
 			else if (isBuilding)
-				// the body itself takes its z from the z-shape below; this lift is for the plain-profile
-				// parts drawn on it (turret, upgrades) and for Tiberian Sun bodies, which have no shape
-				zLift = BuildingZShape != null ? 3 : 1;
+				// the body itself takes its z from the z-shape below. An attached anim draws at ZAdjust -2
+				// plus its own art value (AnimClass::Draw_It), a turret at TurretAnimZAdjust alone
+				// (BuildingClass turret z). A bib or flat anim lies on the Ground gradient one in front of
+				// its tile like ore; Tiberian Sun bodies, which have no shape, keep 1
+				zLift = BuildingZShape != null ? (dr.Flat ? 1 : dr is AnimDrawable ? 2 : 0) : 1;
 			else if (unitLike)
 				zLift = 1;
 			else
-				zLift = dr.Flat ? 0 : 12;
+				// a smudge or a flat anim lies on the Ground gradient one in front of its tile, like ore
+				zLift = dr.Flat ? 1 : 12;
 			var bt = obj.BottomTile;
 			int cellBottomY = (bt.Dy - bt.Z) * _config.TileHeight / 2 + _config.TileHeight - 1;
 			int spriteBottomY = offset.Y + img.Height - 1;
-			// buildings anchor at their body's drawn bottom row; turrets and upgrades share that anchor
-			// so they tie with the body, while a bib extending below keeps its own deeper anchor. Anims
-			// keep the game's per-shape anchor: a flag or flare on a mast draws from its own bottom row,
-			// so it recedes behind the roof it rises out of. AnchorToBody opts an anim back in; a damage
-			// fire burns against the body it sits on.
+			// every shape anchors its gradient at its own drawn bottom row (ddrect bottom in Shape_Draw_Z).
+			// A damage fire is the exception: its game coordinate carries a height we do not model, so it
+			// borrows the body anchor and burns against the body
 			int zAnchorY = spriteBottomY;
-			if (isBuilding && (!(dr is AnimDrawable) || dr.AnchorToBody)) {
+			if (isBuilding && dr is AnimDrawable && dr.AnchorToBody) {
 				int? bodyAnchor = ((StructureObject)obj).DrawnBodyAnchorY;
 				zAnchorY = Math.Max(spriteBottomY, bodyAnchor ?? cellBottomY);
 			}
@@ -172,6 +174,13 @@ namespace CNCMaps.Engine.Rendering {
 
 			if (!dr.Flat)
 				hBufVal += shp.Height;
+
+			// Shape_Draw_Z (0x4373b0) starts the standing profile at the bottom row's depth plus ZAdjust
+			// rounded down to a multiple of 3, plus 1. Over the ground that is -ZAdjust - 1 plus the phase
+			// (depth + ZAdjust) mod 3; the phase constant 2 is where the goldens' capture puts the buffer.
+			// A z-shape body skips the rounding; units keep the flat +1 until their gradient is measured.
+			int lift = zLift - props.ZAdjust;
+			int standingLift = unitLike ? lift : lift - 1 + (((2 - zAnchorY - lift) % 3) + 3) % 3;
 
 			// BuildingClass::Draw_It (0x43d767) hands the building's own shapes BUILDNGZ.SHA as
 			// Shape_Draw_Z z-shape: a pyramid that falls 1 z per 3 rows down and per 3 px sideways from
@@ -210,9 +219,10 @@ namespace CNCMaps.Engine.Rendering {
 							zBufVal = (short)(zGround + BodyLift - props.ZAdjust + (sample > 0 ? sample + ZShapeBias : 0));
 						}
 						else
-							zBufVal = (short)(zGround + zLift + (zAnchorY - (offset.Y + y)) / 3 - props.ZAdjust);
+							zBufVal = (short)(zGround + standingLift + (zAnchorY - (offset.Y + y)) / 3);
 
-						if (w_low <= w && w < w_high && zBufVal >= zBuffer[zIdx]) {
+						// the RLE blitters draw only a strictly nearer pixel: ties keep the earlier drawing
+						if (w_low <= w && w < w_high && zBufVal > zBuffer[zIdx]) {
 							int ci = paletteValue * 3;
 							if (transLucency != 0) {
 								*(w + 0) = (byte)(a * *(w + 0) + b * bgr[ci]);
@@ -225,7 +235,7 @@ namespace CNCMaps.Engine.Rendering {
 								*(w + 2) = bgr[ci + 2];
 							}
 							if (!unitLike) {
-								if (!isAnim)
+								if (!isAnim && zWrite)
 									zBuffer[zIdx] = zBufVal;
 								heightBuffer[zIdx] = hBufVal;
 							}
@@ -273,7 +283,6 @@ namespace CNCMaps.Engine.Rendering {
 			Logger.Trace("Drawing SHP shadow {0} (frame {1}) at ({2},{3})", shp.FileName, frameIndex, offset.X, offset.Y);
 
 			int stride = ds.BitmapData.Stride;
-			var classes = ds.GetShadowClasses();
 			var zBuffer = ds.GetZBuffer();
 
 			byte* w = (byte*)ds.BitmapData.Scan0 + offset.X * 3 + stride * offset.Y;
@@ -287,13 +296,12 @@ namespace CNCMaps.Engine.Rendering {
 			// against the body's -2 (FUN_00705e00: iStack_c = -4 - heightAdjust, gradient 0, z-shape args
 			// zeroed) and draws it one call after the body, so it darkens the body wherever the cone has
 			// dipped below it. Terrain shadows carry ZAdjust base-3 (0x71c320); unit shadows only test.
-			// gamemd stacks a building shadow and a tree shadow on one pixel but never two shadows of one
-			// class; the class stamp encodes that.
+			// gamemd stacks a building shadow on a tree shadow but never two shadows of one class: the
+			// strict test on the lifts alone does that, a tie is never darkened twice.
 			bool building = obj is StructureObject && !(dr is AnimDrawable) && (dr == null || !dr.Flat);
 			bool unitLike = obj is UnitObject || obj is InfantryObject || obj is AircraftObject;
 			bool isAnim = dr is AnimDrawable && !(obj is MapTile);
 			int shadowLift = building || unitLike ? 3 : 2;
-			byte shadowClass = building ? (byte)1 : obj is TerrainObject ? (byte)2 : (byte)3;
 			var t = obj.Tile;
 			int cellBottomY = (t.Dy - t.Z) * _config.TileHeight / 2 + _config.TileHeight - 1;
 			int zBase = (t.Rx + t.Ry) * _config.TileHeight / 2;
@@ -312,14 +320,11 @@ namespace CNCMaps.Engine.Rendering {
 				for (int x = 0; x < img.Width; x++) {
 					if (0 <= offset.X + x && offset.X + x < ds.Width && 0 <= y + offset.Y && y + offset.Y < ds.Height &&
 						imgData[rIdx] != 0 &&
-						zBufVal > zBuffer[zIdx] &&
-						// undarkened, or the one cross-class stack the game shows (building <--> terrain)
-						(classes[zIdx] == 0 || (classes[zIdx] == 1 && shadowClass == 2) || (classes[zIdx] == 2 && shadowClass == 1))) {
+						zBufVal > zBuffer[zIdx]) {
 
 						*(w + 0) /= 2;
 						*(w + 1) /= 2;
 						*(w + 2) /= 2;
-						classes[zIdx] = shadowClass;
 						if (!unitLike && !isAnim)
 							zBuffer[zIdx] = zBufVal;
 					}

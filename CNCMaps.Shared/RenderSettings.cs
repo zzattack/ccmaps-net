@@ -168,7 +168,7 @@ namespace CNCMaps.Shared {
 			Flag("--force-fullmap", "-F", "Ignore LocalSize definition and just save the full map", () => SizeMode = SizeMode.Full);
 			Flag("--force-localsize", "-f", "Use localsize for map dimensions; without this or -F the size is picked automatically", () => SizeMode = SizeMode.Local);
 			Flag("--debug", "-D", "", () => Debug = true);
-			Value<string>("--debug-zbuffer", null, "Write the render's z-buffer (.npy) and shadow mask (.shadow.npy) to the given path for diagnostics", v => DebugZBufferFile = v);
+			Value<string>("--debug-zbuffer", null, "Write the render's z-buffer (.npy) to the given path for diagnostics", v => DebugZBufferFile = v);
 			Value<string>("--debug-tiles", null, "Write one CSV row per map cell (rx,ry,z,ramp,tile,subtile) for diagnostics that need to know a cell's height or slope", v => DebugTilesFile = v);
 			Value<string>("--debug-voxelmask", null, "Write a mask (.npy) of the pixels drawn by the voxel rasterizer, so a comparison against a game capture can exclude them: the game shades voxels differently on purpose", v => DebugVoxelMaskFile = v);
 			Value<string>("--tile-lattice", null, "Override the 8x8 tile-variant lattice with 64 comma-separated values 0-7 (row-major), e.g. one exported from an engine capture", v => TileLattice = v);

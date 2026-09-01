@@ -1123,27 +1123,27 @@ namespace CNCMaps.Engine.Map {
 			}
 			Logger.Info("Tiles drawn");
 
-			// overlays belong to the terrain pass like the game's CellClass draw: their z values (walls,
-			// ore, bridge decks) are written before any object is tested, and units, which never write z,
-			// cannot be repainted by a later overlay
-			for (int y = 0; y < FullSize.Height; y++) {
-				for (int x = FullSize.Width * 2 - 2; x >= 0; x -= 2)
-					foreach (GameObject o in _tiles[x, y].AllObjects.OfType<OverlayObject>())
-						_theater.Draw(o, _drawingSurface);
-				for (int x = FullSize.Width * 2 - 3; x >= 0; x -= 2)
-					foreach (GameObject o in _tiles[x, y].AllObjects.OfType<OverlayObject>())
-						_theater.Draw(o, _drawingSurface);
+			// the game's cell pass (CellClass::Draw_It: smudge, then overlay) and its terrain pass walk the
+			// map from the bottom row up and left to right; with the strict z-test the earlier drawing
+			// keeps a tie, so this order decides which of two equal-z deck pieces or neighbouring trees
+			// shows. Overlay z (walls, ore, bridge decks) is written before any object is tested, and
+			// units, which never write z, cannot be repainted by an overlay
+			for (int y = FullSize.Height - 1; y >= 0; y--) {
+				for (int x = 1; x <= FullSize.Width * 2 - 3; x += 2)
+					DrawCellPass(_tiles[x, y]);
+				for (int x = 0; x <= FullSize.Width * 2 - 2; x += 2)
+					DrawCellPass(_tiles[x, y]);
 			}
 			Logger.Info("Overlays drawn");
 
 			// gamemd draws every TerrainClass before the techno layer (TREE -> BLDG -> ANIM): a tree's
 			// write-only shadow lands on the tile art first and anything standing in front repaints it
 			// with its own z
-			for (int y = 0; y < FullSize.Height; y++) {
-				for (int x = FullSize.Width * 2 - 2; x >= 0; x -= 2)
+			for (int y = FullSize.Height - 1; y >= 0; y--) {
+				for (int x = 1; x <= FullSize.Width * 2 - 3; x += 2)
 					foreach (GameObject o in _tiles[x, y].AllObjects.OfType<TerrainObject>())
 						_theater.Draw(o, _drawingSurface);
-				for (int x = FullSize.Width * 2 - 3; x >= 0; x -= 2)
+				for (int x = 0; x <= FullSize.Width * 2 - 2; x += 2)
 					foreach (GameObject o in _tiles[x, y].AllObjects.OfType<TerrainObject>())
 						_theater.Draw(o, _drawingSurface);
 			}
@@ -1153,12 +1153,12 @@ namespace CNCMaps.Engine.Map {
 				Logger.Trace("Drawing objects row {0}", y);
 				for (int x = FullSize.Width * 2 - 2; x >= 0; x -= 2)
 					foreach (GameObject o in GetObjectsAt(x, y, false))
-						if (!(o is TerrainObject))
+						if (!(o is TerrainObject) && !(o is SmudgeObject))
 							_theater.Draw(o, _drawingSurface);
 
 				for (int x = FullSize.Width * 2 - 3; x >= 0; x -= 2)
 					foreach (GameObject o in GetObjectsAt(x, y, false))
-						if (!(o is TerrainObject))
+						if (!(o is TerrainObject) && !(o is SmudgeObject))
 							_theater.Draw(o, _drawingSurface);
 
 				if (Progress != null)
@@ -1185,6 +1185,13 @@ namespace CNCMaps.Engine.Map {
 #endif
 
 			Logger.Info("Map drawing completed");
+		}
+
+		private void DrawCellPass(MapTile tile) {
+			foreach (GameObject o in tile.AllObjects.OfType<SmudgeObject>())
+				_theater.Draw(o, _drawingSurface);
+			foreach (GameObject o in tile.AllObjects.OfType<OverlayObject>())
+				_theater.Draw(o, _drawingSurface);
 		}
 
 		public void GeneratePreviewPack(PreviewMarkersType previewMarkers, SizeMode sizeMode, IniFile map, bool fixDimensions) {
