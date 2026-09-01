@@ -94,8 +94,9 @@ namespace CNCMaps.Engine.Rendering {
 			Point offset = props.GetOffset(obj);
 			offset.X += obj.Tile.Dx * _config.TileWidth / 2 - shp.Width / 2 + img.X;
 			offset.Y += (obj.Tile.Dy - obj.Tile.Z) * _config.TileHeight / 2 - shp.Height / 2 + img.Y;
-			// something standing on a slope stands on its surface, not on the cell's stored corner
-			int rampLift = dr.Flat ? 0 : RampHeight.PixelLift(obj.Tile, _config);
+			// something standing on a slope stands on its surface, not on the cell's stored corner;
+			// an overlay is drawn from its cell's level alone (CellClass::Overlay_Draw_Offset 0x480110)
+			int rampLift = dr.Flat || obj is OverlayObject ? 0 : RampHeight.PixelLift(obj.Tile, _config);
 			offset.Y -= rampLift;
 			Logger.Trace("Drawing SHP file {0} (Frame {1}) at ({2},{3})", shp.FileName, frameIndex, offset.X, offset.Y);
 
@@ -277,7 +278,7 @@ namespace CNCMaps.Engine.Rendering {
 			Point offset = props.GetShadowOffset(obj);
 			offset.X += obj.Tile.Dx * _config.TileWidth / 2 - shp.Width / 2 + img.X;
 			offset.Y += (obj.Tile.Dy - obj.Tile.Z) * _config.TileHeight / 2 - shp.Height / 2 + img.Y;
-			int rampLift = obj.Drawable != null && !obj.Drawable.Flat
+			int rampLift = obj.Drawable != null && !obj.Drawable.Flat && !(obj is OverlayObject)
 				? RampHeight.PixelLift(obj.Tile, _config) : 0;
 			offset.Y -= rampLift;
 			Logger.Trace("Drawing SHP shadow {0} (frame {1}) at ({2},{3})", shp.FileName, frameIndex, offset.X, offset.Y);
