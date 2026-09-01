@@ -126,6 +126,41 @@ def diff_mask(a: np.ndarray, b: np.ndarray, tolerance: int = 8) -> np.ndarray:
     return channel_delta(a, b) > tolerance
 
 
+def split_tonal(a: np.ndarray, b: np.ndarray, tolerance: int = 8, radius: int = 3, tint_max: int = 40):
+    """Split the differing pixels into a structural mask and a tonal mask.
+
+    Most of what the corpus still flags is a slightly different tint on the same art: a cell lit
+    one intensity step apart, a lamp falling off differently. Those are subjective and drown the
+    zone list, so a differing pixel only counts as structural when the difference cannot be
+    explained by the surrounding (2*radius+1)^2 window as either a constant colour shift or a
+    gain-plus-offset of the same texture, or when that shift is larger than `tint_max` on any
+    channel, which is where a missing shadow or a wrong palette lives rather than a tint. A sprite
+    drawn a pixel off fails both fits along its edges and stays structural.
+    """
+    from scipy import ndimage  # optional; only needed for the split
+
+    fa = a.astype(np.float32)
+    fb = b.astype(np.float32)
+    d = fb - fa
+    k = 2 * radius + 1
+
+    def box(x):
+        return ndimage.uniform_filter(x, size=(k, k, 1), mode="nearest")
+
+    ma, mb, md = box(fa), box(fb), box(d)
+    resid_offset = np.abs(d - md)
+    # b ~ g*a + o per window; the small ridge keeps g finite on flat windows
+    var_a = box(fa * fa) - ma * ma
+    cov = box(fa * fb) - ma * mb
+    g = cov / (var_a + 4.0)
+    resid_gain = np.abs(fb - (g * fa + (mb - g * ma)))
+    resid = np.minimum(resid_offset, resid_gain).max(axis=2)
+    tint = np.abs(md).max(axis=2)
+    raw = np.abs(d).max(axis=2) > tolerance
+    tonal = raw & (resid <= tolerance) & (tint <= tint_max)
+    return raw & ~tonal, tonal
+
+
 def clusters(mask: np.ndarray, min_area: int = 20, values: np.ndarray | None = None):
     """Connected components of a boolean mask, largest first.
 
