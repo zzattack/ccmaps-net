@@ -116,6 +116,12 @@ namespace CNCMaps.Engine.Map {
 		public double LightGreenTint { get; set; }
 		public double LightBlueTint { get; set; }
 
+		// The engine lights from the building's centre coordinate, Location + (Foundation - 1)
+		// half cells per axis (BuildingClass::GetCoords 0x447ac0), so the GALITE lamps with
+		// Foundation=0x0 light from their cell's top corner and reach the 2x2 block up-left of it.
+		public double PosX { get; set; }
+		public double PosY { get; set; }
+
 		// not yet used
 		Lighting scenario;
 
@@ -165,14 +171,13 @@ namespace CNCMaps.Engine.Map {
 				return false;
 
 			var drawLocation = obj.Tile;
-			double sqX = (lamp.Tile.Rx - drawLocation.Rx) * (lamp.Tile.Rx - drawLocation.Rx);
-			double sqY = (lamp.Tile.Ry - (drawLocation.Ry)) * (lamp.Tile.Ry - (drawLocation.Ry));
+			double dx = lamp.PosX - drawLocation.Rx;
+			double dy = lamp.PosY - drawLocation.Ry;
+			double leptons = 256 * Math.Sqrt(dx * dx + dy * dy);
 
-			double distance = Math.Sqrt(sqX + sqY);
-
-			// checks whether we're in range
-			if ((0 < lamp.LightVisibility) && (distance < lamp.LightVisibility / 256)) {
-				double lsEffect = (lamp.LightVisibility - 256 * distance) / lamp.LightVisibility;
+			// LightSourceClass::Process (0x554af0) truncates the distance and keeps d <= visibility
+			if ((0 < lamp.LightVisibility) && (Math.Floor(leptons) <= lamp.LightVisibility)) {
+				double lsEffect = (lamp.LightVisibility - leptons) / lamp.LightVisibility;
 
 				// we don't want to apply lamps to shared palettes, so clone first
 				if (obj.Palette.IsShared)

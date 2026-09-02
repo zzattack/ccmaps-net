@@ -634,6 +634,9 @@ namespace CNCMaps.Engine.Map {
 				if (section != null && section.HasKey("LightVisibility")) {
 					var ls = new LightSource(section, _lighting);
 					ls.Tile = s.Tile;
+					var fnd = s.Drawable?.Foundation ?? new Size(1, 1);
+					ls.PosX = s.Tile.Rx + (fnd.Width - 1) * 0.5;
+					ls.PosY = s.Tile.Ry + (fnd.Height - 1) * 0.5;
 					var mapSection = _mapFile.GetSection(s.Name);
 					if (mapSection != null) ls.TruncateKeysOmittedBy(mapSection);
 					_lightSources.Add(ls);
