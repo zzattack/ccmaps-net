@@ -21,7 +21,7 @@ namespace CNCMaps.Engine.Drawables {
 
 		public override void Draw(GameObject obj, DrawingSurface ds, bool shadows = true) {
 			if (Vxl == null || Hva == Stream.Null) return;
-			DrawingSurface vxl_ds = VoxelRenderer.Render(Vxl, Hva, obj, Props);
+			DrawingSurface vxl_ds = VoxelRenderer.Render(Vxl, Hva, obj, Props, Art?.ReadInt("ShadowIndex") ?? 0);
 			if (vxl_ds != null)
 				BlitVoxelToSurface(ds, vxl_ds, obj, Props, Props.Cloakable ? 50 : 0);
 		}
@@ -41,15 +41,12 @@ namespace CNCMaps.Engine.Drawables {
 			d.Offset(props.GetOffset(obj));
 			d.Offset(-vxl_ds.BitmapData.Width / 2, -vxl_ds.BitmapData.Height / 2);
 
-			// rows inverted!
 			var w_low = (byte*)ds.BitmapData.Scan0;
 			byte* w_high = w_low + ds.BitmapData.Stride * ds.BitmapData.Height;
 			var zBuffer = ds.GetZBuffer();
 			var shadowBufVxl = vxl_ds.GetShadows();
 			var voxelMask = ds.GetVoxelMask();
 
-			// bottom-most drawn source row; source rows are stored bottom-up, so source
-			// row r appears on display row (Height - 1 - r)
 			int firstDrawnRow = int.MaxValue;
 			for (int y = 0; y < vxl_ds.Height; y++) {
 				byte* src = (byte*)vxl_ds.BitmapData.Scan0 + vxl_ds.BitmapData.Stride * y;
@@ -90,7 +87,7 @@ namespace CNCMaps.Engine.Drawables {
 			float b = 1 - a;
 
 			for (int y = 0; y < vxl_ds.Height; y++) {
-				byte* src_row = (byte*)vxl_ds.BitmapData.Scan0 + vxl_ds.BitmapData.Stride * (vxl_ds.Height - y - 1);
+				byte* src_row = (byte*)vxl_ds.BitmapData.Scan0 + vxl_ds.BitmapData.Stride * y;
 				byte* body_row = ((byte*)ds.BitmapData.Scan0 + (d.Y + y - flight) * ds.BitmapData.Stride + d.X * 3);
 				byte* shad_row = ((byte*)ds.BitmapData.Scan0 + (d.Y + y) * ds.BitmapData.Stride + d.X * 3);
 				int zIdx = (d.Y + y - flight) * ds.Width + d.X;
