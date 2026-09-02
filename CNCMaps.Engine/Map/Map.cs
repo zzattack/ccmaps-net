@@ -184,7 +184,7 @@ namespace CNCMaps.Engine.Map {
 			// import infantry
 			foreach (var i in mf.Infantries) {
 				if (!Exists(i.Owner)) continue;
-				var inf = new InfantryObject(i.Owner, i.Name, i.Health, i.Direction, i.OnBridge);
+				var inf = new InfantryObject(i.Owner, i.Name, i.Health, i.Direction, i.SubCell, i.OnBridge);
 				_tiles.GetTile(i.Tile).AddObject(inf);
 				_infantryObjects.Add(inf);
 			}

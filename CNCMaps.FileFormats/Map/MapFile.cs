@@ -272,9 +272,10 @@ namespace CNCMaps.FileFormats.Map {
 					short health = short.Parse(entries[2]);
 					int rx = int.Parse(entries[3]);
 					int ry = int.Parse(entries[4]);
+					int subCell = int.Parse(entries[5]);
 					short direction = (short)(short.Parse(entries[7]) & 0xFF); // the game stores facings as a byte
 					bool onBridge = entries[11] == "1";
-					var i = new Infantry(owner, name, health, direction, onBridge);
+					var i = new Infantry(owner, name, health, direction, subCell, onBridge);
 					i.Tag = ReadTag(entries, 8);
 					i.Tile = Tiles.GetTileR(rx, ry);
 					if (i.Tile != null)

@@ -93,13 +93,15 @@ namespace CNCMaps.Engine.Map {
 		public string Owner { get; set; }
 	}
 	public class InfantryObject : NamedObject, OwnableObject {
-		public InfantryObject(string owner, string name, short health, short direction, bool onBridge) {
+		public InfantryObject(string owner, string name, short health, short direction, int subCell, bool onBridge) {
 			Owner = owner;
 			Name = name;
 			Health = health;
 			Direction = direction;
+			SubCell = subCell;
 			OnBridge = onBridge;
 		}
+		public int SubCell { get; set; }
 		public short Health { get; set; }
 		public short Direction { get; set; }
 		public bool OnBridge { get; set; }
@@ -270,4 +272,4 @@ namespace CNCMaps.Engine.Map {
 		//public override MapTile BottomTile { get; set; }
 		//public override MapTile TopTile { get; set; }
 	}
-}
+}

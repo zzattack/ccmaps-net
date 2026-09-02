@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 
 namespace CNCMaps.FileFormats.Map {
@@ -65,13 +65,15 @@ namespace CNCMaps.FileFormats.Map {
 	}
 
 	public class Infantry : NamedMapObject {
-		public Infantry(string owner, string name, short health, short direction, bool onBridge) {
+		public Infantry(string owner, string name, short health, short direction, int subCell, bool onBridge) {
 			Owner = owner;
 			Name = name;
 			Health = health;
 			Direction = direction;
+			SubCell = subCell;
 			OnBridge = onBridge;
 		}
+		public int SubCell { get; set; }
 		public short Health { get; set; }
 		public short Direction { get; set; }
 		public bool OnBridge { get; set; }
@@ -140,4 +142,4 @@ namespace CNCMaps.FileFormats.Map {
 	}
 
 	public class Waypoint : NumberedMapObject { }
-}
+}
