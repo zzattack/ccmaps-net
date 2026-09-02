@@ -1,10 +1,10 @@
 {
   "mp22s8-png": "8a437cdaa236e67da3521cdae041f5a9768ca8d6db3bd67cbb83dae0e44bdd97",
-  "hillbtwn-png": "d465bd932faabb675fb3400a074a560cd7c70f4ef905c1d97b3846214c9fc3c6",
-  "hillbtwn-markers-png": "137ab88e020404a971c567cb970f5602464573bf086ed8c4a3417ca2e1a2c53d",
-  "hillbtwn-previewpack": "fd08f13542c9ad007cd6725f91ac30baa5d1caa48211df4b44ec4034ed6c1053",
-  "austintx-png": "4b92b85acddad70326865a606750ae119066bf1d2e62753902cc3350a9ee308c",
-  "hillbtwn-override-png": "707911c6745151c91e556eb4cfea45e987be86829902d50393a4ad4a5ed92abd",
+  "hillbtwn-png": "7b0c306bbcb59de078275cf2990de9ba275c8a60cc3d5ab4e00b156603db284e",
+  "hillbtwn-markers-png": "d0ecb75c49caf3b4d05150e15ad7503186c34a59543630dd9d0149f303078faa",
+  "hillbtwn-previewpack": "643b48b8fc7d27fe31a6f04cdce566aee5485ddec45867e178512ff0e4f396e9",
+  "austintx-png": "00fd6e82e1dd30ef2659d69086258e8d89493847a6eaccb76d2534513ca300d5",
+  "hillbtwn-override-png": "056b3bfa92bc638c295c4a63f1348c9c22985f9ec21cabb6a0734442fa8ead82",
   "duel-png": "b4790dd4fbb9fc2de0b8f378e621c659146caf6336a7660bf49eac75e71c9f17",
   "_comment": "pixel hashes of renders of the TestAssets maps against unmodified RA2/YR game data; regenerate by deleting an entry and copying the hash a failing test reports"
 }

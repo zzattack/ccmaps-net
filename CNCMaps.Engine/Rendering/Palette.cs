@@ -99,6 +99,11 @@ namespace CNCMaps.Engine.Rendering {
 			return level / 31.0;
 		}
 
+		/// <summary>Adds a flat intensity, in the game's per-mille units divided by 1000.</summary>
+		public void AddLight(double intensity) {
+			_ambientMult += intensity;
+		}
+
 		public void ApplyLamp(LightSource lamp, double lsEffect, bool ambientOnly = false) {
 			_ambientMult += lsEffect * lamp.LightIntensity;
 			if (!ambientOnly) {

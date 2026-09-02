@@ -514,6 +514,14 @@ namespace CNCMaps.Engine.Map {
 			var pc = _theater.GetPalettes();
 			foreach (var p in pc) _palettesToBeRecalculated.Add(p);
 
+			// InfantryClass/UnitClass/AircraftClass::Draw_It add the [AudioVisual] Extra*Light of their
+			// class to the cell brightness (gamemd 0x51944d, 0x73d0c9, 0x41492a; rulesmd.ini has 0.2 for
+			// all three), so units draw a shade lighter than the ground they stand on
+			var audioVisual = _rules.GetOrCreateSection("AudioVisual");
+			double extraUnitLight = audioVisual.ReadDouble("ExtraUnitLight"),
+				extraInfantryLight = audioVisual.ReadDouble("ExtraInfantryLight"),
+				extraAircraftLight = audioVisual.ReadDouble("ExtraAircraftLight");
+
 			foreach (var tile in _tiles) {
 				if (tile == null) continue;
 				
@@ -545,6 +553,9 @@ namespace CNCMaps.Engine.Map {
 						p = _theater.GetPalette(obj.Drawable).Clone();
 						int z = obj.Tile.Z + (obj.Drawable != null ? obj.Drawable.TileElevation : 0);
 						p.ApplyLighting(_lighting, z, lt == LightingType.Full);
+						if (obj is InfantryObject) p.AddLight(extraInfantryLight);
+						else if (obj is UnitObject) p.AddLight(extraUnitLight);
+						else if (obj is AircraftObject) p.AddLight(extraAircraftLight);
 					}
 					else {
 						p = _theater.GetPalette(obj.Drawable).Clone();
