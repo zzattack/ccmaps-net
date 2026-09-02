@@ -173,26 +173,38 @@ namespace CNCMaps.Engine.Map {
 				_overlayObjects.Add(ovl);
 			}
 
+			// A skirmish game creates only the players' houses, Neutral and Special; a pre-placed object
+			// owned by a country is never created (the Americans lamps, civilians and buildings on the
+			// multiplayer maps stay absent in captures). Trigger-captured objects carry the "<Player @ X>"
+			// owner the pre-capture pass gave them.
+			bool skirmish = _config.Engine >= EngineType.RedAlert2
+				&& (mf.GetSection("Basic")?.ReadBool("MultiplayerOnly") ?? false);
+			bool Exists(string owner) => !skirmish || owner == "Neutral" || owner == "Special" || owner.StartsWith("<Player");
+
 			// import infantry
 			foreach (var i in mf.Infantries) {
+				if (!Exists(i.Owner)) continue;
 				var inf = new InfantryObject(i.Owner, i.Name, i.Health, i.Direction, i.OnBridge);
 				_tiles.GetTile(i.Tile).AddObject(inf);
 				_infantryObjects.Add(inf);
 			}
 
 			foreach (var u in mf.Units) {
+				if (!Exists(u.Owner)) continue;
 				var un = new UnitObject(u.Owner, u.Name, u.Health, u.Direction, u.OnBridge);
 				_tiles.GetTile(u.Tile).AddObject(un);
 				_unitObjects.Add(un);
 			}
 
 			foreach (var a in mf.Aircrafts) {
+				if (!Exists(a.Owner)) continue;
 				var ac = new AircraftObject(a.Owner, a.Name, a.Health, a.Direction, a.OnBridge);
 				_tiles.GetTile(a.Tile).AddObject(ac);
 				_aircraftObjects.Add(ac);
 			}
 
 			foreach (var s in mf.Structures) {
+				if (!Exists(s.Owner)) continue;
 				var str = new StructureObject(s.Owner, s.Name, s.Health, s.Direction);
 				str.Upgrade1 = s.Upgrade1;
 				str.Upgrade2 = s.Upgrade2;
