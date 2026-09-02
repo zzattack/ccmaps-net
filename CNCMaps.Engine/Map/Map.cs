@@ -132,7 +132,15 @@ namespace CNCMaps.Engine.Map {
 			}
 
 			Logger.Info("Overriding rules.ini with map INI entries");
+			// InvisibleInGame is sticky in the engine: Read_INI sets the hide flag on yes and never
+			// clears it (gamemd 0x460e07), so a map override of no leaves a rules-invisible
+			// building undrawn.
+			var stickyInvisible = mf.Sections
+				.Where(s => _rules.GetSection(s.Name)?.ReadBool("InvisibleInGame") == true)
+				.Select(s => s.Name).ToList();
 			_rules.MergeWith(mf);
+			foreach (var name in stickyInvisible)
+				_rules.GetSection(name).SetValue("InvisibleInGame", "yes");
 
 			return true;
 		}
