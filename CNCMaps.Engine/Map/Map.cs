@@ -283,6 +283,7 @@ namespace CNCMaps.Engine.Map {
 
 			RemoveUnknownObjects();
 			SetDrawables();
+			ExpandSmudgeFootprints();
 
 			LoadColors();
 			if (_config.Engine >= EngineType.RedAlert2)
@@ -490,6 +491,26 @@ namespace CNCMaps.Engine.Map {
 					if (obj is OverlayObject ovl)
 						Operations.ApplyTiberiumArt(tile, ovl, _config.Engine);
 				}
+			}
+		}
+
+		// gamemd draws a multi-cell smudge once from every cell of its foundation (CellClass::Draw_It
+		// 0x480350 -> SmudgeTypeClass::DrawIt 0x6b55f0): each copy at the entry cell's screen spot, lifted
+		// by the drawing cell's own level and lit by that cell. The copies get their own objects so the
+		// tile pass draws them in the game's cell order with the drawing cell's height and palette.
+		private void ExpandSmudgeFootprints() {
+			foreach (var sm in _smudgeObjects) {
+				var fnd = sm.Drawable?.Foundation ?? new Size(1, 1);
+				for (int j = 0; j < fnd.Height; j++)
+					for (int i = 0; i < fnd.Width; i++) {
+						if (i == 0 && j == 0) continue;
+						var tile = _tiles.GetTileR(sm.Tile.Rx + i, sm.Tile.Ry + j);
+						if (tile == null) continue;
+						tile.AddObject(new SmudgeObject(sm.Name) {
+							FoundationCell = new Point(i, j), Collection = sm.Collection, Drawable = sm.Drawable,
+							BottomTile = tile, TopTile = tile
+						});
+					}
 			}
 		}
 
@@ -1145,9 +1166,9 @@ namespace CNCMaps.Engine.Map {
 			for (int y = 0; y < FullSize.Height; y++) {
 				Logger.Trace("Drawing tiles row {0}", y);
 				for (int x = FullSize.Width * 2 - 2; x >= 0; x -= 2)
-					_theater.Draw(_tiles.GetTile(x, y), _drawingSurface);
+					DrawTilePass(_tiles.GetTile(x, y));
 				for (int x = FullSize.Width * 2 - 3; x >= 0; x -= 2)
-					_theater.Draw(_tiles.GetTile(x, y), _drawingSurface);
+					DrawTilePass(_tiles.GetTile(x, y));
 
 				if (Progress != null)
 					Progress.Span(20, 20 + (Progress.DrawEnd - 20) / 2, (double)y / FullSize.Height, "drawing tiles");
@@ -1159,11 +1180,11 @@ namespace CNCMaps.Engine.Map {
 			}
 			Logger.Info("Tiles drawn");
 
-			// the game's cell pass (CellClass::Draw_It: smudge, then overlay) and its terrain pass walk the
-			// map from the bottom row up and left to right; with the strict z-test the earlier drawing
-			// keeps a tie, so this order decides which of two equal-z deck pieces or neighbouring trees
-			// shows. Overlay z (walls, ore, bridge decks) is written before any object is tested, and
-			// units, which never write z, cannot be repainted by an overlay
+			// the game's overlay pass (TacticalClass 0x6d6d10) and its terrain pass walk the map from the
+			// bottom row up and left to right; with the strict z-test the earlier drawing keeps a tie, so
+			// this order decides which of two equal-z deck pieces or neighbouring trees shows. Overlay z
+			// (walls, ore, bridge decks) is written before any object is tested, and units, which never
+			// write z, cannot be repainted by an overlay
 			for (int y = FullSize.Height - 1; y >= 0; y--) {
 				for (int x = 1; x <= FullSize.Width * 2 - 3; x += 2)
 					DrawCellPass(_tiles[x, y]);
@@ -1223,9 +1244,16 @@ namespace CNCMaps.Engine.Map {
 			Logger.Info("Map drawing completed");
 		}
 
-		private void DrawCellPass(MapTile tile) {
+		// the game's tile walk (TacticalClass 0x6d7560, top row down) blits each cell's smudge right after
+		// its tile without a z-test, so the tiles of later cells paint over it and, for a multi-cell
+		// smudge, the copy from the last cell of the foundation ends on top
+		private void DrawTilePass(MapTile tile) {
+			_theater.Draw(tile, _drawingSurface);
 			foreach (GameObject o in tile.AllObjects.OfType<SmudgeObject>())
 				_theater.Draw(o, _drawingSurface);
+		}
+
+		private void DrawCellPass(MapTile tile) {
 			foreach (GameObject o in tile.AllObjects.OfType<OverlayObject>())
 				_theater.Draw(o, _drawingSurface);
 		}

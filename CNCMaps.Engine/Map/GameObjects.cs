@@ -214,6 +214,8 @@ namespace CNCMaps.Engine.Map {
 		public SmudgeObject(string name) {
 			Name = name;
 		}
+		/// <summary>This copy's cell within the smudge's foundation; (0,0) is the map's own entry.</summary>
+		public Point FoundationCell { get; set; }
 		public override MapTile BottomTile { get; set; }
 		public override MapTile TopTile { get; set; }
 	}
@@ -272,4 +274,4 @@ namespace CNCMaps.Engine.Map {
 		//public override MapTile BottomTile { get; set; }
 		//public override MapTile TopTile { get; set; }
 	}
-}
+}

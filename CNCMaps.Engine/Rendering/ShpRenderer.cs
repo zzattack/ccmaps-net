@@ -98,6 +98,11 @@ namespace CNCMaps.Engine.Rendering {
 			// an overlay is drawn from its cell's level alone (CellClass::Overlay_Draw_Offset 0x480110)
 			int rampLift = dr.Flat || obj is OverlayObject ? 0 : RampHeight.PixelLift(obj.Tile, _config);
 			offset.Y -= rampLift;
+			// a foundation cell's copy of a smudge draws at the entry cell's spot (SmudgeTypeClass::DrawIt)
+			if (obj is SmudgeObject smudge) {
+				offset.X -= (smudge.FoundationCell.X - smudge.FoundationCell.Y) * _config.TileWidth / 2;
+				offset.Y -= (smudge.FoundationCell.X + smudge.FoundationCell.Y) * _config.TileHeight / 2;
+			}
 			Logger.Trace("Drawing SHP file {0} (Frame {1}) at ({2},{3})", shp.FileName, frameIndex, offset.X, offset.Y);
 
 			int stride = ds.BitmapData.Stride;
@@ -125,10 +130,10 @@ namespace CNCMaps.Engine.Rendering {
 			// (ore, roads, bridge decks) 2, other standing overlays 17, units/infantry/aircraft 1.
 			// Units and their shadows are only z-tested, never written (the game blits them with the
 			// ZRead blitter family), so anything drawn later must carry its own closer z or cover them.
-			// A smudge is tested but never written either (SmudgeTypeClass::Draw_It blits without
-			// SHAPE_ZWRITE): a cliff face in front of it keeps its pixels, ore drawn after it paints over it.
+			// A smudge is a plain blit (SmudgeTypeClass::DrawIt flags 0xE00: neither z-tested nor
+			// written); it is drawn in the tile pass, so the tiles of later cells paint over it.
 			bool unitLike = obj is UnitObject || obj is InfantryObject || obj is AircraftObject;
-			bool zWrite = !(obj is SmudgeObject);
+			bool plainBlit = obj is SmudgeObject;
 			bool isBuilding = obj is StructureObject;
 			// AnimClass never carries SHAPE_ZWRITE: it is constructed with SHAPE_WIN_REL|SHAPE_CENTER and
 			// no draw path adds the flag, so an anim paints colour without storing depth. This covers a
@@ -226,7 +231,7 @@ namespace CNCMaps.Engine.Rendering {
 							zBufVal = (short)(zGround + standingLift + (zAnchorY - (offset.Y + y)) / 3);
 
 						// the RLE blitters draw only a strictly nearer pixel: ties keep the earlier drawing
-						if (w_low <= w && w < w_high && zBufVal > zBuffer[zIdx]) {
+						if (w_low <= w && w < w_high && (plainBlit || zBufVal > zBuffer[zIdx])) {
 							int ci = paletteValue * 3;
 							if (transLucency != 0) {
 								*(w + 0) = (byte)(a * *(w + 0) + b * bgr[ci]);
@@ -239,7 +244,7 @@ namespace CNCMaps.Engine.Rendering {
 								*(w + 2) = bgr[ci + 2];
 							}
 							if (!unitLike) {
-								if (!isAnim && zWrite)
+								if (!isAnim && !plainBlit)
 									zBuffer[zIdx] = zBufVal;
 								heightBuffer[zIdx] = hBufVal;
 							}
