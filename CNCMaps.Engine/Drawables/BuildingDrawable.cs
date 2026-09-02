@@ -263,9 +263,33 @@ namespace CNCMaps.Engine.Drawables {
 				int fireY = Int32.Parse(coords[1]), halfH = _config.TileHeight / 2;
 				fire.Props.ZAdjust = Math.Min(0, (((fireY - (Foundation.Width + Foundation.Height) * halfH) * 3) >> 1) - 10);
 				fire.Props.PaletteOverride = GetFireAnimPalette(fireArt);
-				fire.Props.Offset = new Point(Int32.Parse(coords[0]) + (_config.TileWidth / 2), Int32.Parse(coords[1]));
+				int dfoX = Int32.Parse(coords[0]), dfoY = Int32.Parse(coords[1]);
+				// AnimClass::Draw_It adds the art's YDrawOffset to the draw point (nothing for X)
+				fire.Props.Offset = new Point(_config.TileWidth / 2, fireArt.ReadInt("YDrawOffset"));
+				fire.Props.OffsetHack = obj => DamageFireOffset(obj, dfoX, dfoY);
 				_fires.Add(fire);
 			}
+		}
+
+		// Start_Damage_Fires (0x43C0D0) does not place a fire at the pixel pair the art declares: it
+		// pushes the offset through the tactical pixel-to-lepton matrix (TacticalClass+0xDE4, the
+		// float literals 4.2667 / 8.5334 rather than 128/30 and 128/15) and truncates each lepton
+		// with _ftol, adds that to the building's coordinate minus half a cell (BuildingClass
+		// GetCoords 0x459EF0; the building sits at its entry cell's centre), and the anim's draw
+		// point is CoordsToClient (0x6D1F10, truncating integer division) of the sum. Both
+		// truncations move the flame up to a pixel. Returned relative to the cell's top corner;
+		// Props.Offset carries the TileWidth/2 from there to the point ShpRenderer centres on.
+		private static readonly float TacticalInvX = BitConverter.Int32BitsToSingle(0x408888CE); // 4.2667f
+		private static readonly float TacticalInvY = BitConverter.Int32BitsToSingle(0x410888CE); // 8.5334f
+		private Point DamageFireOffset(GameObject obj, int dfoX, int dfoY) {
+			int cx = obj.Tile.Rx, cy = obj.Tile.Ry;
+			int halfW = _config.TileWidth / 2, halfH = _config.TileHeight / 2;
+			// Matrix3D * Vector3 in x87 extended precision, stored to float, then _ftol truncates
+			int dx = (int)(float)((double)TacticalInvX * dfoX + (double)TacticalInvY * dfoY);
+			int dy = (int)(float)(-(double)TacticalInvX * dfoX + (double)TacticalInvY * dfoY);
+			int fx = cx * 256 + dx, fy = cy * 256 + dy;
+			int px = halfW * (fx - fy) / 256, py = halfH * (fx + fy) / 256;
+			return new Point(px - halfW * (cx - cy), py - halfH * (cx + cy));
 		}
 
 		/* Finds out the correct name for an animation palette to use with fire animations.
