@@ -153,7 +153,10 @@ namespace CNCMaps.Engine.Rendering {
 			else
 				// a smudge or a flat anim lies on the Ground gradient one in front of its tile, like ore
 				zLift = dr.Flat ? 1 : 12;
-			var bt = obj.BottomTile;
+			// a high bridge piece's BottomTile is two cells down-right for draw order only; its deck sits
+			// TileElevation above its own cell, so a piece landing on the abutment must not also take that
+			// tile's height or the units on the last deck piece vanish behind it
+			var bt = obj is OverlayObject ? obj.Tile : obj.BottomTile;
 			int cellBottomY = (bt.Dy - bt.Z) * _config.TileHeight / 2 + _config.TileHeight - 1;
 			int spriteBottomY = offset.Y + img.Height - 1;
 			// every shape anchors its gradient at its own drawn bottom row (ddrect bottom in Shape_Draw_Z).
