@@ -580,8 +580,10 @@ namespace CNCMaps.Engine.Map {
 			foreach (StructureObject s in _structureObjects.ToList()) {
 				var section = _rules.GetSection(s.Name);
 				if (section != null && section.HasKey("LightVisibility")) {
-					var ls = new LightSource(_rules.GetSection(s.Name), _lighting);
+					var ls = new LightSource(section, _lighting);
 					ls.Tile = s.Tile;
+					var mapSection = _mapFile.GetSection(s.Name);
+					if (mapSection != null) ls.TruncateKeysOmittedBy(mapSection);
 					_lightSources.Add(ls);
 				}
 			}

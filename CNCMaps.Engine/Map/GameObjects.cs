@@ -139,6 +139,17 @@ namespace CNCMaps.Engine.Map {
 			this.scenario = scenario;
 		}
 
+		// A map section for the type makes the engine re-read it (BuildingTypeClass::Read_INI, gamemd
+		// 0x460cac; OpenTS builtype.cpp:1206) with the per-mille field / 1000 as the default, and that
+		// division is integer. Every light key the map section omits is truncated to whole units,
+		// which turns off a lamp with a fractional intensity (xeb2 Sinkhole's INGRNLMP override).
+		public void TruncateKeysOmittedBy(IniFile.IniSection mapSection) {
+			if (!mapSection.HasKey("LightIntensity")) LightIntensity = Math.Truncate(LightIntensity);
+			if (!mapSection.HasKey("LightRedTint")) LightRedTint = Math.Truncate(LightRedTint);
+			if (!mapSection.HasKey("LightGreenTint")) LightGreenTint = Math.Truncate(LightGreenTint);
+			if (!mapSection.HasKey("LightBlueTint")) LightBlueTint = Math.Truncate(LightBlueTint);
+		}
+
 		/// <summary>
 		/// Applies a lamp to this object's palette if it's in range
 		/// </summary>

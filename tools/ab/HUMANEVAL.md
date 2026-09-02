@@ -101,4 +101,8 @@ Caveats: the map list is read once at startup — restart to see corpus entries 
   the ground truth. Ares' `MediansFix` (hook 0x545904) gives snow `Medians = 71` when snowmd.ini
   omits the key; the renderer mirrors it in `TileCollection`. Check `Ares.dll` strings for a hook name
   before concluding that a gamemd decompile alone explains a capture.
+- A map section for a lamp type that omits a light key turns that key into whole units in the game
+  (`BuildingTypeClass::Read_INI` re-reads the type with the per-mille field / 1000 as default, integer
+  division), so an override without `LightIntensity` switches the lamp off. `LightSource.TruncateKeysOmittedBy`
+  mirrors it; xeb2 Sinkhole is the reference case. Proven with scratch captures, not a hook.
 - TS/FS comparisons: planned, not built. The pipeline defaults (map dir, game dir, presets, `-Y`) are YR-specific.
