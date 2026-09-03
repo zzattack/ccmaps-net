@@ -528,9 +528,10 @@ def cmd_compare(args):
 def main():
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("step", choices=["capture", "render", "compare", "all"])
-    ap.add_argument("--game", choices=sorted(PROFILES), default="yr",
-                    help="yr: the Steam YR install's loose multiplayer maps (default); ts: the CnCNet "
-                         "Tiberian Sun client's Tiberian Sun and Firestorm multiplayer maps")
+    ap.add_argument("--game", choices=sorted(PROFILES),
+                    help="yr: the Steam YR install's loose multiplayer maps; ts: the CnCNet Tiberian "
+                         "Sun client's maps. Without it the corpus folder's name decides (ComparisonRenders\\TS "
+                         "is ts), which is how the viewer's re-render lands on the right profile; else yr")
     ap.add_argument("--outdir", help="corpus folder; defaults to ComparisonRenders\\<GAME>")
     ap.add_argument("--mapdir", help="override the profile's (first) map folder")
     ap.add_argument("--limit", type=int, help="only the first N maps, for smoke tests")
@@ -552,7 +553,11 @@ def main():
                          "game refuses to load, and every second above it is spent waiting on that.")
     args = ap.parse_args()
     global PROFILE
-    PROFILE = PROFILES[args.game]
+    game = args.game
+    if not game and args.outdir:
+        folder = os.path.basename(os.path.normpath(args.outdir)).lower()
+        game = folder if folder in PROFILES else None
+    PROFILE = PROFILES[game or "yr"]
     if not args.outdir:
         args.outdir = PROFILE["out"]
 
