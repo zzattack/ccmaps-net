@@ -123,6 +123,7 @@ namespace CNCMaps.Engine.Drawables {
 				turret.Props.FrameDecider = FrameDeciders.TurretFrameDecider;
 				turret.Props.ZAdjust = Rules.ReadInt("TurretAnimZAdjust");
 				turret.Props.Cloakable = Props.Cloakable;
+				turret.IsTurret = true;
 				SubDrawables.Add(turret);
 
 				if (turret is VoxelDrawable && turretName.ToUpper().Contains("TUR")) {

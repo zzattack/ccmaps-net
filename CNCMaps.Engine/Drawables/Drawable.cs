@@ -57,6 +57,9 @@ namespace CNCMaps.Engine.Drawables {
 		/// <summary>Anim that takes its building body's z anchor instead of its own drawn bottom
 		/// row. A damage fire burns against the body, not in front of the cell below it.</summary>
 		public bool AnchorToBody;
+		/// <summary>A building's SHP turret. The game draws it as its turret anim (an AnimClass at
+		/// TurretAnimZAdjust), so it takes the anim z path, not the body's z-shape.</summary>
+		public bool IsTurret;
 
 		/// <summary>Listed in a types list without a rules section. ObjectTypeClass::Read_INI returns before
 		/// reading anything for such a type, so the game has no strength or image for it and never shows it.</summary>

@@ -162,11 +162,13 @@ namespace CNCMaps.Engine.Rendering {
 			// z cone across the whole footprint. A tile's animation is not an AnimClass: the game draws
 			// those from IsoTileTypeClass with SHAPE_ZWRITE set (isotype.cpp, cell.cpp), so animated
 			// water and its kin keep storing depth.
-			bool isAnim = dr is AnimDrawable && !(obj is MapTile);
+			// a SHP turret is the building's turret anim (BANIM_TURRET), an AnimClass like the rest
+			bool animLike = dr is AnimDrawable || dr.IsTurret;
+			bool isAnim = animLike && !(obj is MapTile);
 			// the building body takes its z from BUILDNGZ below. Tiberian Sun draws a foundation six or more
 			// cells wide (UFO) on the plain standing profile instead (BuildingClass::Draw_It); gamemd keeps the
 			// shape on its 6x4s. Anims are drawn by AnimClass and get no shape either way
-			byte[] zShape = isBuilding && !dr.Flat && !(dr is AnimDrawable) ? BuildingZShape : null;
+			byte[] zShape = isBuilding && !dr.Flat && !animLike ? BuildingZShape : null;
 			if (zShape != null && _config.Engine <= EngineType.Firestorm && (obj.Drawable?.Foundation.Width ?? 1) >= 6)
 				zShape = null;
 			int zLift;
@@ -176,10 +178,10 @@ namespace CNCMaps.Engine.Rendering {
 				zLift = dr.Flat ? 1 : dr.IsWall || dr.IsRock ? 2 : 17;
 			else if (isBuilding)
 				// an attached anim draws at ZAdjust -2 plus its own art value (AnimClass::Draw_It), a turret
-				// at TurretAnimZAdjust alone (BuildingClass turret z). A bib or flat anim lies on the Ground
-				// gradient one in front of its tile like ore. A body without the shape stands on the plain profile at the
+				// with TurretAnimZAdjust as that value. A bib or flat anim lies on the Ground gradient one in
+				// front of its tile like ore. A body without the shape stands on the plain profile at the
 				// same -2 (Techno_Draw_Object)
-				zLift = dr.Flat ? 1 : dr is AnimDrawable ? 2 : zShape == null ? 2 : 0;
+				zLift = dr.Flat ? 1 : animLike || zShape == null ? 2 : 0;
 			else if (unitLike)
 				zLift = 1;
 			else
@@ -195,7 +197,7 @@ namespace CNCMaps.Engine.Rendering {
 			// A damage fire is the exception: its game coordinate carries a height we do not model, so it
 			// borrows the body anchor and burns against the body
 			int zAnchorY = spriteBottomY;
-			if (isBuilding && dr is AnimDrawable && dr.AnchorToBody) {
+			if (isBuilding && animLike && dr.AnchorToBody) {
 				int? bodyAnchor = ((StructureObject)obj).DrawnBodyAnchorY;
 				zAnchorY = Math.Max(spriteBottomY, bodyAnchor ?? cellBottomY);
 			}
@@ -332,9 +334,10 @@ namespace CNCMaps.Engine.Rendering {
 			// dipped below it. Terrain shadows carry ZAdjust base-3 (0x71c320); unit shadows only test.
 			// gamemd stacks a building shadow on a tree shadow but never two shadows of one class: the
 			// strict test on the lifts alone does that, a tie is never darkened twice.
-			bool building = obj is StructureObject && !(dr is AnimDrawable) && (dr == null || !dr.Flat);
+			bool animLike = dr is AnimDrawable || (dr != null && dr.IsTurret);
+			bool building = obj is StructureObject && !animLike && (dr == null || !dr.Flat);
 			bool unitLike = obj is UnitObject || obj is InfantryObject || obj is AircraftObject;
-			bool isAnim = dr is AnimDrawable && !(obj is MapTile);
+			bool isAnim = animLike && !(obj is MapTile);
 			int shadowLift = building || unitLike ? 3 : 2;
 			var t = obj.Tile;
 			int cellBottomY = (t.Dy - t.Z) * _config.TileHeight / 2 + _config.TileHeight - 1;
