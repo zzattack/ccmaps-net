@@ -376,6 +376,51 @@ namespace CNCMaps.Engine.Rendering {
 			}
 		}
 
+		/// <summary>A cliff piece's cast shadow (Tiberian Sun Draw_Shadow_Caster): the frame is centred on the
+		/// given point and darkens whatever lies behind the plane the game gives it, the Ground gradient at
+		/// ZAdjust -2 - 12*(Height-4), written to z like a building shadow.</summary>
+		public unsafe void DrawTileShadow(MapTile tile, ShpFile shp, int frameIndex, Point centre, DrawingSurface ds) {
+			shp.Initialize();
+			if (frameIndex < 0 || frameIndex >= shp.Images.Count)
+				return;
+			var img = shp.GetImage(frameIndex);
+			var imgData = img.GetImageData();
+			if (imgData == null || img.Width * img.Height != imgData.Length)
+				return;
+			var offset = new Point(centre.X - shp.Width / 2 + img.X, centre.Y - shp.Height / 2 + img.Y);
+
+			int stride = ds.BitmapData.Stride;
+			var zBuffer = ds.GetZBuffer();
+			byte* w = (byte*)ds.BitmapData.Scan0 + offset.X * 3 + stride * offset.Y;
+			int zIdx = offset.X + offset.Y * ds.Width;
+			int rIdx = 0;
+			int cellBottomY = (tile.Dy - tile.Z) * _config.TileHeight / 2 + _config.TileHeight - 1;
+			int zBase = (tile.Rx + tile.Ry) * _config.TileHeight / 2;
+			// ZAdjust -2 - 12*(Height-4) at rows the game draws 12*Height higher: against the anchor above,
+			// which already carries the height, the plane lies 12*4 - 2 behind the caster's own tile, less
+			// the usual 1 (the building shadow's 3 is -1 - (-4)). That is one z in front of ground four
+			// levels lower, so the shadow darkens the low ground beyond the rim and never the plateau
+			int lift = -1 - (4 * _config.TileHeight / 2 - 2);
+
+			for (int y = 0; y < img.Height; y++) {
+				short zBufVal = (short)(zBase + (offset.Y + y) - cellBottomY + lift);
+				for (int x = 0; x < img.Width; x++) {
+					if (0 <= offset.X + x && offset.X + x < ds.Width && 0 <= offset.Y + y && offset.Y + y < ds.Height &&
+						imgData[rIdx] != 0 && zBufVal > zBuffer[zIdx]) {
+						*(w + 0) /= 2;
+						*(w + 1) /= 2;
+						*(w + 2) /= 2;
+						zBuffer[zIdx] = zBufVal;
+					}
+					rIdx++;
+					zIdx++;
+					w += 3;
+				}
+				w += stride - 3 * img.Width;
+				zIdx += ds.Width - img.Width;
+			}
+		}
+
 		public unsafe void DrawAlpha(GameObject obj, ShpFile shp, DrawProperties props, DrawingSurface ds) {
 			shp.Initialize();
 

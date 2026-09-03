@@ -5,6 +5,6 @@
   "hillbtwn-previewpack": "43cfd5d1c71beb38314adde2b54f0197dee1d1c7162ebd30536bb786d14b4f16",
   "austintx-png": "91c737fe91455526d17e44f6714ab2a4432a9469e13101f64e47e1e39e97b3af",
   "hillbtwn-override-png": "956992ef2e85ac06259dd292558e41b101c22aac312c56ad6107487c5f3ab6b4",
-  "duel-png": "197befa74fe9442e19817549ddf5d0dec8d5446bc26d4e1e37f7508d86638772",
+  "duel-png": "c2b0b8986006b0a381b826f948e8db106012145fa54b519eaa9b1cc9b3d3cfb7",
   "_comment": "pixel hashes of renders of the TestAssets maps against unmodified RA2/YR game data; regenerate by deleting an entry and copying the hash a failing test reports"
 }

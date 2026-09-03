@@ -1183,6 +1183,16 @@ namespace CNCMaps.Engine.Map {
 			}
 			Logger.Info("Tiles drawn");
 
+			// Tiberian Sun darkens the ground beside cliff and slope pieces with a shadow of their own, in a
+			// pass after every tile is down (Tactical::Draw_Tile_Shadows) and before overlays and objects
+			var tileTypes = _theater.GetTileCollection();
+			for (int y = 0; y < FullSize.Height; y++) {
+				for (int x = FullSize.Width * 2 - 2; x >= 0; x -= 2)
+					tileTypes.DrawTileShadow(_tiles.GetTile(x, y), _drawingSurface);
+				for (int x = FullSize.Width * 2 - 3; x >= 0; x -= 2)
+					tileTypes.DrawTileShadow(_tiles.GetTile(x, y), _drawingSurface);
+			}
+
 			// the game's overlay pass (TacticalClass 0x6d6d10) and its terrain pass walk the map from the
 			// bottom row up and left to right; with the strict z-test the earlier drawing keeps a tie, so
 			// this order decides which of two equal-z deck pieces or neighbouring trees shows. Overlay z

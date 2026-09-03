@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using CNCMaps.Engine.Drawables;
 using CNCMaps.Engine.Map;
+using CNCMaps.Engine.Rendering;
 using CNCMaps.FileFormats;
 using CNCMaps.FileFormats.VirtualFileSystem;
 using CNCMaps.Shared;
@@ -27,6 +28,9 @@ namespace CNCMaps.Engine.Game {
 			public int TilesInSet { get; private set; }
 			public List<TileSetEntry> Entries { get; private set; }
 			public short TileSetNum { get; private set; }
+			/// <summary>Theater ini ShadowCaster: Tiberian Sun darkens the ground beside some of this
+			/// set's cliff pieces with a shadow of its own.</summary>
+			public bool ShadowCaster { get; set; }
 
 			public TileSet(string fileName, string setName, int tilesInSet, short tileSetNum) {
 				FileName = fileName;
@@ -321,6 +325,7 @@ namespace CNCMaps.Engine.Game {
 
 				Logger.Trace("Loading tileset {0}", sectionName);
 				var ts = new TileSet(sect.ReadString("FileName"), sect.ReadString("SetName"), sect.ReadInt("TilesInSet"), (short)sectionIdx);
+				ts.ShadowCaster = sect.ReadBool("ShadowCaster");
 				_setNumToFirstTile.Add((short)_drawables.Count);
 				_tileSets.Add(ts);
 				sectionIdx++;
@@ -496,6 +501,43 @@ namespace CNCMaps.Engine.Game {
 		public int GetSetNum(int tileNum) {
 			if (tileNum < 0 || tileNum >= _tileNumToSet.Count) return 0;
 			return _tileNumToSet[tileNum];
+		}
+
+		// IsometricTileTypeClass::Draw_Shadow_Caster (OpenTS isotype.cpp): engine literals keyed by the piece's
+		// index within its set, giving the C_SHADOW.SHP frame (1-based), the one subtile of the piece that
+		// casts, and where the shadow is centred relative to the cell diamond's centre (48x24 cell)
+		private static readonly Dictionary<int, (int Frame, int SubTile, int X, int Y)> CliffCasters = new() {
+			[20] = (1, 0, 24, 24), [21] = (1, 0, 24, 24), [22] = (2, 1, 48, 12), [23] = (3, 1, 48, 12), [24] = (4, 1, 48, 12),
+			[25] = (5, 0, 72, 24), [26] = (6, 0, 48, 12), [27] = (7, 1, 24, 0), [28] = (8, 0, 48, 12), [29] = (9, 0, 48, 12),
+			[30] = (10, 1, 0, -12), [31] = (11, 1, 0, -12), [32] = (12, 0, 48, 12),
+		};
+		private static readonly Dictionary<int, (int Frame, int SubTile, int X, int Y)> SlopeCasters = new() {
+			[4] = (13, 6, 48, 12), [6] = (14, 1, 48, 12),
+		};
+		private ShpFile _cellShadow;
+		private bool _cellShadowTried;
+
+		/// <summary>Tiberian Sun's cast shadow of a cliff or slope piece: a C_SHADOW frame darkening the ground
+		/// beside it (CellClass::Draw_Shadow_Cast). The slope sets take their own table; every other set casts
+		/// only when its theater ini section says ShadowCaster=true. gamemd has no such pass.</summary>
+		public void DrawTileShadow(MapTile tile, DrawingSurface ds) {
+			if (_config == null || _config.Engine > EngineType.Firestorm || tile == null)
+				return;
+			int setNum = GetSetNum(tile.TileNum);
+			if (setNum >= _tileSets.Count)
+				return;
+			var table = IsSlope(setNum) ? SlopeCasters : _tileSets[setNum].ShadowCaster ? CliffCasters : null;
+			if (table == null || !table.TryGetValue(tile.TileNum - _setNumToFirstTile[setNum], out var caster) || caster.SubTile != tile.SubTile)
+				return;
+			if (!_cellShadowTried) {
+				_cellShadowTried = true;
+				_cellShadow = _vfs.Open<ShpFile>("c_shadow.shp");
+			}
+			if (_cellShadow == null)
+				return;
+			var centre = new Point(tile.Dx * _config.TileWidth / 2 + _config.TileWidth / 2 + caster.X,
+				(tile.Dy - tile.Z) * _config.TileHeight / 2 + _config.TileHeight / 2 + caster.Y);
+			new ShpRenderer(_config, _vfs).DrawTileShadow(tile, _cellShadow, caster.Frame - 1, centre, ds);
 		}
 
 		public int GetTileNumFromSet(int setNum, byte tileNumWithinSet = 0) {

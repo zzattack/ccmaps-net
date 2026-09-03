@@ -29,8 +29,6 @@ namespace CNCMaps.Engine.Drawables {
 					TsEntry.AnimationDrawable.Draw(obj, ds, false);
 				}
 			}
-
-			// todo: tile shadows (TS)
 		}
 
 		public override Rectangle GetBounds(GameObject obj) {
