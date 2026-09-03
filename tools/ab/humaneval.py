@@ -61,7 +61,15 @@ PROFILES = {
                map_dirs=[(MAP_DIR, "-Y", os.path.join(GAME_DIR, "spawn.ini"))]),
     "ts": dict(out=os.path.join(os.path.dirname(DEFAULT_OUT), "TS"), game_dir=TS_CLIENT,
                map_dirs=[(os.path.join(TS_CLIENT, "Maps", "Tiberian Sun"), "-t", os.path.join(PRESETS, "spawn-ts.ini")),
-                         (os.path.join(TS_CLIENT, "Maps", "Firestorm"), "-T", os.path.join(PRESETS, "spawn-fs.ini"))]),
+                         (os.path.join(TS_CLIENT, "Maps", "Firestorm"), "-T", os.path.join(PRESETS, "spawn-fs.ini")),
+                         # the campaign maps of both games in one folder; the fs* names are Firestorm's. A campaign map
+                         # needs IsSinglePlayer in its spawn template (its units belong to GDI and Nod, not to a spawn
+                         # slot), and it opens on the mission restatement screen: the briefing is blanked and the
+                         # capture tool posts Space to leave it
+                         (os.path.join(TS_CLIENT, "Maps", "Missions"),
+                          lambda p: "-T" if os.path.basename(p).lower().startswith("fs") else "-t",
+                          lambda p: os.path.join(PRESETS, "spawn-fs-campaign.ini" if os.path.basename(p).lower().startswith("fs") else "spawn-ts-campaign.ini"),
+                          ["--dismiss", "--mergeini", os.path.join(PRESETS, "campaign_ts.ini")])]),
 }
 PROFILE = PROFILES["yr"]
 
@@ -106,10 +114,13 @@ def enumerate_maps(map_dirs: list) -> list[tuple[str, str, str]]:
     """(map, engine flag, spawn template) for the loose maps at each folder's root, folder by
     folder; the subfolders hold campaign and mission files."""
     found = []
-    for map_dir, engine, spawn in map_dirs:
+    for map_dir, engine, spawn, *rest in map_dirs:
+        extra = rest[0] if rest else []
         files = [f for f in glob.glob(os.path.join(map_dir, "*.map")) if os.path.isfile(f)]
         files.sort(key=lambda p: os.path.splitext(os.path.basename(p))[0].lower())
-        found += [(f, engine, spawn) for f in files]
+        # a folder that mixes both games decides per file
+        found += [(f, engine(f) if callable(engine) else engine, spawn(f) if callable(spawn) else spawn, extra)
+                  for f in files]
     return found
 
 
@@ -117,7 +128,7 @@ def index_maps(out: str, map_dirs: list) -> dict:
     """Assign every map its permanent index. Indices come from the full listing, so a --limit run
     and a full run agree on which map is #001."""
     manifest = load_manifest(out)
-    for i, (path, engine, spawn) in enumerate(enumerate_maps(map_dirs), start=1):
+    for i, (path, engine, spawn, extra) in enumerate(enumerate_maps(map_dirs), start=1):
         key = f"{i:03d}"
         entry = manifest.setdefault(key, {})
         entry["index"] = i
@@ -125,6 +136,7 @@ def index_maps(out: str, map_dirs: list) -> dict:
         entry["map"] = path
         entry["engine"] = engine
         entry["spawn"] = spawn
+        entry["captureArgs"] = extra
     save_manifest(out, manifest)
     return manifest
 
@@ -173,6 +185,7 @@ def capture_one(entry: dict, work: str, timeout: int) -> subprocess.CompletedPro
         "--timeout", str(timeout),
         "--nozip", "--stitch", "--hidden",
         "--names", "mpmaps",
+        *entry.get("captureArgs", []),
     ]
     return subprocess.run(cmd, capture_output=True, text=True, timeout=timeout + 60)
 

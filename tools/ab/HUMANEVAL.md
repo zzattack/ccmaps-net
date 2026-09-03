@@ -113,6 +113,8 @@ Caveats: the map list is read once at startup — restart to see corpus entries 
   `Firestorm=True` or the wrong rules load, so each map folder carries its own template
   (`presets\spawn-ts.ini` / `spawn-fs.ini`); the manifest records the engine flag and template per
   map. Renders take the client dir plus its `INI` and `MIX` subfolders as mix dirs and none of the
-  CnCNet-YR mix juggling. The `Maps\Missions` folder (60 campaign maps) is not indexed yet. Known
+  CnCNet-YR mix juggling. `Maps\Missions` adds the 60 campaign maps of both games as #041-#100
+  (the `fs*` files are Firestorm's); a campaign map has no start positions, so the capture runs it
+  with two players and the spawns left to the game. Known
   TS-only divergence classes: vein art is a per-cell RNG pick at placement (see the
   ts-parity-campaign memory), and voxel shading.
