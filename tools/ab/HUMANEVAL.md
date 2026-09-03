@@ -105,4 +105,14 @@ Caveats: the map list is read once at startup — restart to see corpus entries 
   (`BuildingTypeClass::Read_INI` re-reads the type with the per-mille field / 1000 as default, integer
   division), so an override without `LightIntensity` switches the lamp off. `LightSource.TruncateKeysOmittedBy`
   mirrors it; xeb2 Sinkhole is the reference case. Proven with scratch captures, not a hook.
-- TS/FS comparisons: planned, not built. The pipeline defaults (map dir, game dir, presets, `-Y`) are YR-specific.
+- `--game ts` switches every step to the Tiberian Sun corpus at `ComparisonRenders\TS`: the CnCNet
+  TS client's `Maps\Tiberian Sun` (25 maps, rendered `-t`) and `Maps\Firestorm` (15, `-T`), captured
+  through the client's Vinifera `game.exe` (`--engine Vinifera`, `SUN.ini`, 12 s a map) with logic
+  frozen by stubbing `LogicClass::AI`, `quiet_ts.ini` stopping tiberium and vein growth, and
+  `--lattice default` pinning tile variants. A Firestorm map needs a spawn template with
+  `Firestorm=True` or the wrong rules load, so each map folder carries its own template
+  (`presets\spawn-ts.ini` / `spawn-fs.ini`); the manifest records the engine flag and template per
+  map. Renders take the client dir plus its `INI` and `MIX` subfolders as mix dirs and none of the
+  CnCNet-YR mix juggling. The `Maps\Missions` folder (60 campaign maps) is not indexed yet. Known
+  TS-only divergence classes: vein art is a per-cell RNG pick at placement (see the
+  ts-parity-campaign memory), and voxel shading.

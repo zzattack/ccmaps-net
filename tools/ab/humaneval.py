@@ -51,6 +51,19 @@ PRESETS = r"C:\Users\Frank\Desktop\workspace\cnc-buffer-spy\presets"
 REPO = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 RENDERER = os.path.join(REPO, "CNCMaps.Renderer", "bin", "Release", "net10.0", "CNCMaps.Renderer.exe")
 DEFAULT_OUT = os.path.join(os.path.expanduser("~"), "Desktop", "ComparisonRenders", "YR")
+TS_CLIENT = r"C:\Users\Frank\Desktop\Tiberian Sun Client"
+
+# --game picks one: where the maps and game data live, and how the engine is launched. Each map
+# folder carries the renderer's engine flag and the spawn.ini template its captures need (a
+# Firestorm map loads the wrong rules unless the template says Firestorm=True).
+PROFILES = {
+    "yr": dict(out=DEFAULT_OUT, game_dir=GAME_DIR,
+               map_dirs=[(MAP_DIR, "-Y", os.path.join(GAME_DIR, "spawn.ini"))]),
+    "ts": dict(out=os.path.join(os.path.dirname(DEFAULT_OUT), "TS"), game_dir=TS_CLIENT,
+               map_dirs=[(os.path.join(TS_CLIENT, "Maps", "Tiberian Sun"), "-t", os.path.join(PRESETS, "spawn-ts.ini")),
+                         (os.path.join(TS_CLIENT, "Maps", "Firestorm"), "-T", os.path.join(PRESETS, "spawn-fs.ini"))]),
+}
+PROFILE = PROFILES["yr"]
 
 # The CLI reports these on stdout and still exits 0; a short composite is worth knowing about
 # before someone blames the renderer for the missing strip.
@@ -89,22 +102,29 @@ def log_failure(out: str, line: str):
         fh.write(line.rstrip() + "\n")
 
 
-def enumerate_maps(map_dir: str) -> list[str]:
-    """The loose maps at the root only; the subfolders hold campaign and mission files."""
-    files = [f for f in glob.glob(os.path.join(map_dir, "*.map")) if os.path.isfile(f)]
-    return sorted(files, key=lambda p: os.path.splitext(os.path.basename(p))[0].lower())
+def enumerate_maps(map_dirs: list) -> list[tuple[str, str, str]]:
+    """(map, engine flag, spawn template) for the loose maps at each folder's root, folder by
+    folder; the subfolders hold campaign and mission files."""
+    found = []
+    for map_dir, engine, spawn in map_dirs:
+        files = [f for f in glob.glob(os.path.join(map_dir, "*.map")) if os.path.isfile(f)]
+        files.sort(key=lambda p: os.path.splitext(os.path.basename(p))[0].lower())
+        found += [(f, engine, spawn) for f in files]
+    return found
 
 
-def index_maps(out: str, map_dir: str) -> dict:
+def index_maps(out: str, map_dirs: list) -> dict:
     """Assign every map its permanent index. Indices come from the full listing, so a --limit run
     and a full run agree on which map is #001."""
     manifest = load_manifest(out)
-    for i, path in enumerate(enumerate_maps(map_dir), start=1):
+    for i, (path, engine, spawn) in enumerate(enumerate_maps(map_dirs), start=1):
         key = f"{i:03d}"
         entry = manifest.setdefault(key, {})
         entry["index"] = i
         entry["stem"] = os.path.splitext(os.path.basename(path))[0]
         entry["map"] = path
+        entry["engine"] = engine
+        entry["spawn"] = spawn
     save_manifest(out, manifest)
     return manifest
 
@@ -117,24 +137,41 @@ def selected(manifest: dict, limit: int | None) -> list[tuple[str, dict]]:
 # ---------------------------------------------------------------------------- capture
 
 
-def capture_one(map_path: str, work: str, timeout: int) -> subprocess.CompletedProcess:
+def capture_one(entry: dict, work: str, timeout: int) -> subprocess.CompletedProcess:
     shutil.rmtree(work, ignore_errors=True)
     os.makedirs(work, exist_ok=True)
+    game = PROFILE["game_dir"]
+    if PROFILE is PROFILES["yr"]:
+        launch = [
+            "--engine", "YR",
+            "--exe", os.path.join(game, "gamemd-spawn.exe"),
+            "--settings", os.path.join(game, "RA2MD.ini"),
+            "--freezeframe", "1",
+            "--mergeini", os.path.join(PRESETS, "hide_mcv_ra2yr.ini"),
+            "--mergeini", os.path.join(PRESETS, "reveal_ra2yr.ini"),
+        ]
+    else:
+        # The CnCNet TS client runs Vinifera, which the hook reads straight from its SDL buffer.
+        # Logic is frozen by stubbing LogicClass::AI; quiet_ts.ini stops tiberium and vein growth
+        # before that, and the fixed lattice pins the tile variants the engine would roll.
+        launch = [
+            "--engine", "Vinifera",
+            "--exe", os.path.join(game, "game.exe"),
+            "--settings", os.path.join(game, "SUN.ini"),
+            "--lattice", "default",
+            "--mergeini", os.path.join(PRESETS, "reveal_ts.ini"),
+            "--mergeini", os.path.join(PRESETS, "hide_mcv_ts.ini"),
+            "--mergeini", os.path.join(PRESETS, "quiet_ts.ini"),
+        ]
     cmd = [
-        SPY_CLI,
-        "--engine", "YR",
-        "--exe", os.path.join(GAME_DIR, "gamemd-spawn.exe"),
-        "--settings", os.path.join(GAME_DIR, "RA2MD.ini"),
-        "--spawn", os.path.join(GAME_DIR, "spawn.ini"),
-        "--map", map_path,
+        SPY_CLI, *launch,
+        "--spawn", entry["spawn"],
+        "--map", entry["map"],
         "--out", work,
         "--maxcells", "150",
         "--frames", "1",
         "--timeout", str(timeout),
-        "--freezeframe", "1",
         "--nozip", "--stitch", "--hidden",
-        "--mergeini", os.path.join(PRESETS, "hide_mcv_ra2yr.ini"),
-        "--mergeini", os.path.join(PRESETS, "reveal_ra2yr.ini"),
         "--names", "mpmaps",
     ]
     return subprocess.run(cmd, capture_output=True, text=True, timeout=timeout + 60)
@@ -143,7 +180,10 @@ def capture_one(map_path: str, work: str, timeout: int) -> subprocess.CompletedP
 def cmd_capture(args):
     out = args.outdir
     os.makedirs(out, exist_ok=True)
-    manifest = index_maps(out, args.mapdir)
+    map_dirs = PROFILE["map_dirs"]
+    if args.mapdir:
+        map_dirs = [(args.mapdir, *map_dirs[0][1:])]
+    manifest = index_maps(out, map_dirs)
     work = os.path.join(meta_dir(out), "_work")
 
     for key, entry in selected(manifest, args.limit):
@@ -160,7 +200,7 @@ def cmd_capture(args):
         print(f"#{key} {entry['stem']}: capturing...", flush=True)
         started = time.time()
         try:
-            proc = capture_one(entry["map"], work, args.timeout)
+            proc = capture_one(entry, work, args.timeout)
         except subprocess.TimeoutExpired:
             log_failure(out, f"#{key} {entry['stem']}: CLI wall-clock timeout")
             print("  TIMEOUT")
@@ -228,9 +268,11 @@ def build_renderer():
 
 
 def mix_dirs() -> list[str]:
-    dirs = [GAME_DIR]
+    """The game dir plus the MIX and INI subfolders a CnCNet client keeps its files in."""
+    game = PROFILE["game_dir"]
+    dirs = [game]
     for sub in ("MIX", "INI"):
-        path = os.path.join(GAME_DIR, sub)
+        path = os.path.join(game, sub)
         if os.path.isdir(path):
             dirs.append(path)
     return dirs
@@ -243,7 +285,7 @@ def render_cmd(out: str, key: str, entry: dict, base: str, render_json: str,
         "-i", entry["map"],
         "-d", out,
         "-o", base,
-        "-p", "-f", "-Y",
+        "-p", "-f", entry.get("engine", "-Y"),
         "--pin-random",
         "--progress",
         "--meta-json", os.path.join(meta_dir(out), render_json),
@@ -254,7 +296,8 @@ def render_cmd(out: str, key: str, entry: dict, base: str, render_json: str,
     # over gamemd's expandmd##.mix loop and registers cncnet.mix (its own rulesmd/artmd and tree
     # art) in that slot. A Terrain Expansion pack installed as expandmd06.mix never reaches the
     # game, and neither does the 1.001 patch's expandmd01.mix.
-    cmd += ["--no-expand-mixes", "-m", os.path.join(GAME_DIR, "cncnet.mix")]
+    if PROFILE is PROFILES["yr"]:
+        cmd += ["--no-expand-mixes", "-m", os.path.join(GAME_DIR, "cncnet.mix")]
     with open(os.path.join(meta_dir(out), entry["capture"])) as fh:
         cap = json.load(fh)
     lattice = (cap.get("provenance") or {}).get("variantLattice")
@@ -472,8 +515,11 @@ def cmd_compare(args):
 def main():
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("step", choices=["capture", "render", "compare", "all"])
-    ap.add_argument("--outdir", default=DEFAULT_OUT)
-    ap.add_argument("--mapdir", default=MAP_DIR)
+    ap.add_argument("--game", choices=sorted(PROFILES), default="yr",
+                    help="yr: the Steam YR install's loose multiplayer maps (default); ts: the CnCNet "
+                         "Tiberian Sun client's Tiberian Sun and Firestorm multiplayer maps")
+    ap.add_argument("--outdir", help="corpus folder; defaults to ComparisonRenders\\<GAME>")
+    ap.add_argument("--mapdir", help="override the profile's (first) map folder")
     ap.add_argument("--limit", type=int, help="only the first N maps, for smoke tests")
     ap.add_argument("--jobs", type=int, default=8,
                     help="parallel renders; 1 keeps the streaming progress output")
@@ -492,6 +538,10 @@ def main():
                          "slowest of 440 corpus maps takes 13s; a map that misses this is one the "
                          "game refuses to load, and every second above it is spent waiting on that.")
     args = ap.parse_args()
+    global PROFILE
+    PROFILE = PROFILES[args.game]
+    if not args.outdir:
+        args.outdir = PROFILE["out"]
 
     os.makedirs(meta_dir(args.outdir), exist_ok=True)
     for step in (["capture", "render", "compare"] if args.step == "all" else [args.step]):
