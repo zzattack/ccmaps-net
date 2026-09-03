@@ -21,45 +21,55 @@ namespace CNCMaps.Engine.Rendering {
 			_vfs = vfs;
 		}
 
-		private const int ZShapeWidth = 396, ZShapeHeight = 477;
 		// gamemd BuildingClass::Draw_It hands CC_Draw_Shape the z-shape reference point (198, 446),
 		// moved by the art ZShapePointMove and back by the foundation far corner, laid on the building
-		// draw point
-		private const int ZShapeRefY = 446;
+		// draw point. The point is an engine literal (0x43d6ff), not derived from the shape, so a mod's
+		// BUILDNGZ of another size keeps it
+		private const int ZShapeRefX = 198, ZShapeRefY = 446;
 		// the body stands 2 in front of the ground at its sprite bottom row (ZAdjust -2 - Zpix) and
 		// each shape byte adds its value less 66, a constant bias, not a normalisation. Where the
 		// shape holds no byte the pixel keeps the plain 2, which draws a wide sprite's lower fringe
 		// beside its foundation (CAMEX02) instead of sinking it
 		private const int BodyLift = 2, ZShapeBias = -66;
 		private byte[] _buildingZShape;
+		private int _zShapeX, _zShapeY, _zShapeWidth, _zShapeHeight; // frame 0's place and size on its canvas
 		private bool _buildingZShapeTried;
 
-		/// <summary>BUILDNGZ.SHA, the per-pixel z cone the game blits under a building's own
-		/// shapes. Absent in Tiberian Sun, where buildings keep the plain standing profile.</summary>
+		/// <summary>BUILDNGZ, the per-pixel z cone the game blits under a building's own shapes (396x477).
+		/// gamemd loads it as BUILDNGZ.SHA from conqmd.mix, Red Alert 2's game.exe the same file as
+		/// BUILDNGZ.SHP from conquer.mix. Absent in Tiberian Sun, where buildings keep the plain
+		/// standing profile.</summary>
 		private byte[] BuildingZShape {
 			get {
 				if (!_buildingZShapeTried) {
 					_buildingZShapeTried = true;
 					var sha = _vfs.Open<ShpFile>("buildngz.sha");
+					if (sha == null && _config.Engine >= EngineType.RedAlert2)
+						sha = _vfs.Open<ShpFile>("buildngz.shp");
 					if (sha != null) {
 						sha.Initialize();
 						var frame = sha.NumImages > 0 ? sha.GetImage(0) : null;
 						var data = frame?.GetImageData();
-						if (data != null && frame.Width == ZShapeWidth && frame.Height == ZShapeHeight)
+						if (data != null && data.Length == frame.Width * frame.Height && data.Length > 0) {
 							_buildingZShape = data;
+							_zShapeX = frame.X;
+							_zShapeY = frame.Y;
+							_zShapeWidth = frame.Width;
+							_zShapeHeight = frame.Height;
+						}
 					}
 					if (_buildingZShape == null)
-						Logger.Debug("No usable buildngz.sha; buildings fall back to the flat standing z profile");
+						Logger.Debug("No usable BUILDNGZ z-shape; buildings fall back to the flat standing z profile");
 				}
 				return _buildingZShape;
 			}
 		}
 
-		private static int SampleZShape(byte[] zShape, int x, int y, int originX, int originY) {
-			int col = x - originX, row = y - originY;
-			if (col < 0 || col >= ZShapeWidth || row < 0 || row >= ZShapeHeight)
+		private int SampleZShape(byte[] zShape, int x, int y, int originX, int originY) {
+			int col = x - originX - _zShapeX, row = y - originY - _zShapeY;
+			if (col < 0 || col >= _zShapeWidth || row < 0 || row >= _zShapeHeight)
 				return 0;
-			return zShape[row * ZShapeWidth + col];
+			return zShape[row * _zShapeWidth + col];
 		}
 
 		public Rectangle GetBounds(GameObject obj, ShpFile shp, DrawProperties props) {
@@ -203,7 +213,7 @@ namespace CNCMaps.Engine.Rendering {
 				var fnd = obj.Drawable?.Foundation ?? new Size(1, 1);
 				var move = props.ZShapePointMove;
 				int drawX = offset.X - img.X + shp.Width / 2, drawY = offset.Y - img.Y + shp.Height / 2;
-				zShapeX = drawX - ZShapeWidth / 2 - move.X + (fnd.Width - fnd.Height) * (_config.TileWidth / 2);
+				zShapeX = drawX - ZShapeRefX - move.X + (fnd.Width - fnd.Height) * (_config.TileWidth / 2);
 				zShapeY = drawY - ZShapeRefY - move.Y + (fnd.Width + fnd.Height - 2) * (_config.TileHeight / 2);
 			}
 
