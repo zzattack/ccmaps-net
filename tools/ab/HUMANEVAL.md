@@ -118,3 +118,9 @@ Caveats: the map list is read once at startup — restart to see corpus entries 
   with two players and the spawns left to the game. Known
   TS-only divergence classes: vein art is a per-cell RNG pick at placement (see the
   ts-parity-campaign memory), and voxel shading.
+- A Vinifera capture taken without `--nozip` exports the engine's `DepthBuffer` layer (one screen,
+  the frame the logic froze on). `tools\ab\depthparity.py` lays our `--debug-zbuffer` dump over it:
+  `ours + engine` is constant wherever the two z models agree, so its image shows every per-object
+  offset directly. This is how the TS BUILDNGZ port was fitted (reference point (144,172) from OpenTS
+  exact, bias one more than the source's 39). The buffer is a torus, rows and columns wrapping
+  separately; an earlier flat-ring reading put a one-row seam through the picture.
