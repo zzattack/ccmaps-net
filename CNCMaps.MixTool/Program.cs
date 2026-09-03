@@ -28,6 +28,7 @@ namespace CNCMaps.MixTool {
 			}
 
 			try {
+				GmdFile = Arg(args, "--gmd") ?? Environment.GetEnvironmentVariable("XCC_GMD") ?? FindGmd();
 				switch (args[0].ToLowerInvariant()) {
 					case "list": return List(args.Skip(1).ToArray());
 					case "extract": return Extract(args.Skip(1).ToArray());
@@ -77,7 +78,9 @@ namespace CNCMaps.MixTool {
   hash <name>...
       Print the mix index hash of a filename.
 
-Names stored in an XCC 'local mix database.dat' are picked up automatically.
+Names stored in an XCC 'local mix database.dat' are picked up automatically, and so
+is XCC Mixer's 'global mix database.dat' when it sits beside the tool or in the XCC
+install (override with --gmd <file> or the XCC_GMD environment variable).
 Encrypted archives (ra2md.mix and friends) are decrypted transparently; index
 entries pointing outside the archive (XCC-breaking protection) are reported
 as 'bogus' and skipped.");
@@ -102,7 +105,7 @@ as 'bogus' and skipped.");
 		}
 
 		static IEnumerable<string> Positional(string[] args) {
-			var withValue = new[] { "-o", "--names", "--filter" };
+			var withValue = new[] { "-o", "--names", "--filter", "--gmd" };
 			for (int i = 0; i < args.Length; i++) {
 				if (withValue.Contains(args[i])) { i++; continue; }
 				if (args[i].StartsWith("-")) continue;
@@ -122,6 +125,52 @@ as 'bogus' and skipped.");
 
 		const uint LmdHash = 0x366e051f;   // "local mix database.dat"
 		const string XccId = "XCC by Olaf van der Spek";
+		const string GmdName = "global mix database.dat";
+
+		static string GmdFile;
+		static List<string> _gmdNames;
+
+		/// <summary>XCC Mixer's global filename database: beside the tool, or in the XCC install.</summary>
+		static string FindGmd() {
+			var dirs = new[] {
+				AppContext.BaseDirectory,
+				Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), "XCC", "Utilities"),
+				Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "XCC", "Utilities"),
+			};
+			return dirs.Select(d => Path.Combine(d, GmdName)).FirstOrDefault(File.Exists);
+		}
+
+		/// <summary>
+		/// Filenames from the global mix database. The file is one section per game, each an
+		/// int32 count followed by that many NUL-terminated name, NUL-terminated comment pairs;
+		/// every game's names are candidates, a name that hashes to nothing costs nothing.
+		/// </summary>
+		static List<string> GmdNames() {
+			if (_gmdNames != null)
+				return _gmdNames;
+			_gmdNames = new List<string>();
+			if (GmdFile == null || !File.Exists(GmdFile))
+				return _gmdNames;
+			byte[] data = File.ReadAllBytes(GmdFile);
+			int pos = 0;
+			while (pos + 4 <= data.Length) {
+				int count = BitConverter.ToInt32(data, pos);
+				pos += 4;
+				if (count < 0)
+					break;
+				for (int i = 0; i < count && pos < data.Length; i++) {
+					int end = Array.IndexOf(data, (byte)0, pos);
+					if (end < 0) return _gmdNames;
+					if (end > pos)
+						_gmdNames.Add(Encoding.ASCII.GetString(data, pos, end - pos));
+					pos = end + 1;
+					end = Array.IndexOf(data, (byte)0, pos); // the comment
+					if (end < 0) return _gmdNames;
+					pos = end + 1;
+				}
+			}
+			return _gmdNames;
+		}
 
 		/// <summary>Filenames from the archive's XCC local mix database, if any.</summary>
 		static List<string> LmdNames(MixFile mix) {
@@ -167,6 +216,7 @@ as 'bogus' and skipped.");
 		/// <summary>Hash -> name, for every candidate name that is actually present.</summary>
 		static Dictionary<uint, string> ResolveNames(MixFile mix, string namesFile, bool harvest = false) {
 			var candidates = new List<string>(KnownNames.All());
+			candidates.AddRange(GmdNames());
 			if (namesFile != null) {
 				if (!File.Exists(namesFile))
 					throw new FileNotFoundException("no such names file: " + namesFile);
