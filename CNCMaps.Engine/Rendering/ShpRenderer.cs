@@ -21,31 +21,42 @@ namespace CNCMaps.Engine.Rendering {
 			_vfs = vfs;
 		}
 
-		// gamemd BuildingClass::Draw_It hands CC_Draw_Shape the z-shape reference point (198, 446),
-		// moved by the art ZShapePointMove and back by the foundation far corner, laid on the building
-		// draw point. The point is an engine literal (0x43d6ff), not derived from the shape, so a mod's
-		// BUILDNGZ of another size keeps it
-		private const int ZShapeRefX = 198, ZShapeRefY = 446;
-		// the body stands 2 in front of the ground at its sprite bottom row (ZAdjust -2 - Zpix) and
-		// each shape byte adds its value less 66, a constant bias, not a normalisation. Where the
-		// shape holds no byte the pixel keeps the plain 2, which draws a wide sprite's lower fringe
-		// beside its foundation (CAMEX02) instead of sinking it
-		private const int BodyLift = 2, ZShapeBias = -66;
+		// BuildingClass::Draw_It hands Draw_Shape a z-shape reference point, moved by the art
+		// ZShapePointMove and back by the foundation far corner, laid on the building draw point. Both
+		// are engine literals, not derived from the shape, so a mod's BUILDNGZ of another size keeps
+		// them: Tiberian Sun's (144, 172) is in OpenTS building.cpp, gamemd's (198, 446) at 0x43d6ff
+		private int _zShapeRefX, _zShapeRefY;
+		// the body stands 2 in front of the ground at its sprite bottom row (Techno_Draw_Object's
+		// zadjust - 2) and each shape byte adds its value less a bias. Tiberian Sun takes 39 off every
+		// byte when it loads the shape (BuildingTypeClass::Fetch_Z_Data) and the blitter reads them
+		// signed; captured depth buffers put every building one z behind that, so 40. gamemd's 66 is a
+		// constant measured the same way, not a normalisation. Where the shape holds no byte the pixel
+		// keeps the plain 2, which draws a wide sprite's lower fringe beside its foundation (CAMEX02)
+		// instead of sinking it
+		private const int BodyLift = 2;
+		private int _zShapeBias;
 		private byte[] _buildingZShape;
 		private int _zShapeX, _zShapeY, _zShapeWidth, _zShapeHeight; // frame 0's place and size on its canvas
 		private bool _buildingZShapeTried;
 
-		/// <summary>BUILDNGZ, the per-pixel z cone the game blits under a building's own shapes (396x477).
-		/// gamemd loads it as BUILDNGZ.SHA from conqmd.mix, Red Alert 2's game.exe the same file as
-		/// BUILDNGZ.SHP from conquer.mix. Absent in Tiberian Sun, where buildings keep the plain
-		/// standing profile.</summary>
+		/// <summary>BUILDNGZ, the per-pixel z pyramid the game blits under a building's own shapes: 288x197
+		/// BUILDNGZ.SHP in Tiberian Sun's conquer.mix, 396x477 BUILDNGZ.SHA in gamemd's conqmd.mix (Red Alert 2's
+		/// game.exe reads the same file as BUILDNGZ.SHP from conquer.mix).</summary>
 		private byte[] BuildingZShape {
 			get {
 				if (!_buildingZShapeTried) {
 					_buildingZShapeTried = true;
-					var sha = _vfs.Open<ShpFile>("buildngz.sha");
-					if (sha == null && _config.Engine >= EngineType.RedAlert2)
-						sha = _vfs.Open<ShpFile>("buildngz.shp");
+					if (_config.Engine >= EngineType.RedAlert2) {
+						_zShapeRefX = 198;
+						_zShapeRefY = 446;
+						_zShapeBias = -66;
+					}
+					else {
+						_zShapeRefX = 144;
+						_zShapeRefY = 172;
+						_zShapeBias = -40;
+					}
+					var sha = _vfs.Open<ShpFile>("buildngz.sha") ?? _vfs.Open<ShpFile>("buildngz.shp");
 					if (sha != null) {
 						sha.Initialize();
 						var frame = sha.NumImages > 0 ? sha.GetImage(0) : null;
@@ -152,17 +163,23 @@ namespace CNCMaps.Engine.Rendering {
 			// those from IsoTileTypeClass with SHAPE_ZWRITE set (isotype.cpp, cell.cpp), so animated
 			// water and its kin keep storing depth.
 			bool isAnim = dr is AnimDrawable && !(obj is MapTile);
+			// the building body takes its z from BUILDNGZ below. Tiberian Sun draws a foundation six or more
+			// cells wide (UFO) on the plain standing profile instead (BuildingClass::Draw_It); gamemd keeps the
+			// shape on its 6x4s. Anims are drawn by AnimClass and get no shape either way
+			byte[] zShape = isBuilding && !dr.Flat && !(dr is AnimDrawable) ? BuildingZShape : null;
+			if (zShape != null && _config.Engine <= EngineType.Firestorm && (obj.Drawable?.Foundation.Width ?? 1) >= 6)
+				zShape = null;
 			int zLift;
 			if (obj is OverlayObject)
 				// flat overlays sit at ground+1 (the Ground gradient keeps 1 of the game's +2 overlay ZAdjust),
 				// standing ones take the full lift
 				zLift = dr.Flat ? 1 : dr.IsWall || dr.IsRock ? 2 : 17;
 			else if (isBuilding)
-				// the body itself takes its z from the z-shape below. An attached anim draws at ZAdjust -2
-				// plus its own art value (AnimClass::Draw_It), a turret at TurretAnimZAdjust alone
-				// (BuildingClass turret z). A bib or flat anim lies on the Ground gradient one in front of
-				// its tile like ore; Tiberian Sun bodies, which have no shape, keep 1
-				zLift = BuildingZShape != null ? (dr.Flat ? 1 : dr is AnimDrawable ? 2 : 0) : 1;
+				// an attached anim draws at ZAdjust -2 plus its own art value (AnimClass::Draw_It), a turret
+				// at TurretAnimZAdjust alone (BuildingClass turret z). A bib or flat anim lies on the Ground
+				// gradient one in front of its tile like ore. A body without the shape stands on the plain profile at the
+				// same -2 (Techno_Draw_Object)
+				zLift = dr.Flat ? 1 : dr is AnimDrawable ? 2 : zShape == null ? 2 : 0;
 			else if (unitLike)
 				zLift = 1;
 			else
@@ -201,20 +218,18 @@ namespace CNCMaps.Engine.Rendering {
 			int lift = zLift - props.ZAdjust;
 			int standingLift = unitLike ? lift : lift - 1 + (((2 - zAnchorY - lift) % 3) + 3) % 3;
 
-			// BuildingClass::Draw_It (0x43d767) hands the building's own shapes BUILDNGZ.SHA as
-			// Shape_Draw_Z z-shape: a pyramid that falls 1 z per 3 rows down and per 3 px sideways from
+			// BuildingClass::Draw_It (gamemd 0x43d767) hands the building's own shapes BUILDNGZ as the
+			// Draw_Shape z-shape: a pyramid that falls 1 z per 3 rows down and per 3 px sideways from
 			// its top centre, cut off below by the lower half of an iso diamond whose tip is the
-			// foundation bottom corner. The blitter adds the byte (unsigned, biased) to the z of the
-			// sprite bottom row and applies no standing gradient of its own. Anims are drawn by
-			// AnimClass and get no shape, so they keep the plain profile.
-			byte[] zShape = isBuilding && !dr.Flat && !(dr is AnimDrawable) ? BuildingZShape : null;
+			// foundation bottom corner. The blitter adds the biased byte to the z of the sprite bottom
+			// row and applies no standing gradient of its own (RLE_Blit rounds only without a shape).
 			int zShapeX = 0, zShapeY = 0;
 			if (zShape != null) {
 				var fnd = obj.Drawable?.Foundation ?? new Size(1, 1);
 				var move = props.ZShapePointMove;
 				int drawX = offset.X - img.X + shp.Width / 2, drawY = offset.Y - img.Y + shp.Height / 2;
-				zShapeX = drawX - ZShapeRefX - move.X + (fnd.Width - fnd.Height) * (_config.TileWidth / 2);
-				zShapeY = drawY - ZShapeRefY - move.Y + (fnd.Width + fnd.Height - 2) * (_config.TileHeight / 2);
+				zShapeX = drawX - _zShapeRefX - move.X + (fnd.Width - fnd.Height) * (_config.TileWidth / 2);
+				zShapeY = drawY - _zShapeRefY - move.Y + (fnd.Width + fnd.Height - 2) * (_config.TileHeight / 2);
 			}
 
 			for (int y = 0; y < img.Height; y++) {
@@ -235,7 +250,7 @@ namespace CNCMaps.Engine.Rendering {
 							zBufVal = (short)(zGround + zLift + (offset.Y + y) - zAnchorY - props.ZAdjust);
 						else if (zShape != null) {
 							int sample = SampleZShape(zShape, offset.X + x, offset.Y + y, zShapeX, zShapeY);
-							zBufVal = (short)(zGround + BodyLift - props.ZAdjust + (sample > 0 ? sample + ZShapeBias : 0));
+							zBufVal = (short)(zGround + BodyLift - props.ZAdjust + (sample > 0 ? sample + _zShapeBias : 0));
 						}
 						else
 							zBufVal = (short)(zGround + standingLift + (zAnchorY - (offset.Y + y)) / 3);
