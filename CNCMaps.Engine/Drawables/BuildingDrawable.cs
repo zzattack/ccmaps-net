@@ -163,6 +163,10 @@ namespace CNCMaps.Engine.Drawables {
 				_baseShp.Shp.Initialize();
 				if (_baseShp.Shp.NumImages >= 32) IsActualWall = true;
 			}
+
+			// the body's own z offset (BuildingClass::Draw_It zadjust = NormalZAdjust); the anims, bib and
+			// turret above cloned Props before this and carry their own keys
+			Props.ZAdjust = Art.ReadInt("NormalZAdjust");
 		}
 
 		private AnimDrawable LoadExtraImage(string extraImage, DrawProperties inheritProps) {
@@ -224,6 +228,7 @@ namespace CNCMaps.Engine.Drawables {
 			AnimDrawable upgrade = new AnimDrawable(_config, _vfs, upgRules, upgArt);
 			upgrade.OwnerCollection = OwnerCollection;
 			upgrade.Props = inheritProps;
+			upgrade.Props.ZAdjust = 0; // the body's NormalZAdjust is not the upgrade's
 			upgrade.LoadFromRules();
 			upgrade.NewTheater = this.NewTheater;
 			upgrade.IsBuildingPart = true;
