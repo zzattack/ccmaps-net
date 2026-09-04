@@ -67,6 +67,15 @@ namespace CNCMaps.Engine {
 				}
 				Game.TileCollection.SetVariantLattice(lattice);
 
+				uint[] veinRng = null;
+				if (!string.IsNullOrEmpty(_settings.VeinRandomizer)) {
+					var vals = _settings.VeinRandomizer.Split(',');
+					if (vals.Length != 252)
+						throw new ArgumentException("--vein-rng needs 252 comma-separated values");
+					veinRng = vals.Select(uint.Parse).ToArray();
+				}
+				Operations.SetVeinRandomizer(veinRng);
+
 				var sink = ProgressChanged;
 				if (sink == null && _settings.ReportProgress)
 					sink = (pct, phase) => { Console.WriteLine("progress:{0}:{1}", pct, phase); Console.Out.Flush(); };

@@ -124,3 +124,11 @@ Caveats: the map list is read once at startup — restart to see corpus entries 
   offset directly. This is how the TS BUILDNGZ port was fitted (reference point (144,172) from OpenTS
   exact, bias one more than the source's 39). The buffer is a torus, rows and columns wrapping
   separately; an earlier flat-ring reading put a one-row seam through the picture.
+- TS vein pieces are rolled from the scenario randomizer at load (`OverlayClass::Post_Read_Vein_Fixups`
+  -> `CellClass::Place_Veins`, `abs(Scen->RandomNumber()) % 3`), and the game seeds that generator from the
+  tick count and consumes a run-dependent number of rolls before the fixup, so no seed setting reproduces
+  it. Since 2026-09-04 the capture hook snapshots the generator (Random2Class: Index1, Index2, Table[250])
+  on entry to the fixup and exports it as `provenance.scenarioRandom`; `render` passes it as `--vein-rng`
+  and the renderer replays the rolls in the engine's cell order, so the vein frames match cell for cell.
+  Captures taken before that date have no randomizer and their vein frames stay unmatched (the old
+  goldens of the 32 vein maps are kept in `meta\pre-veinrng`).

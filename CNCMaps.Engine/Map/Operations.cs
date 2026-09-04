@@ -43,14 +43,46 @@ namespace CNCMaps.Engine.Map {
 			var veins = ovls.Where(o => IsVeins(o) && !o.Drawable.IsVeinHoleMonster && (o.Drawable as ShpDrawable)?.Shp != null).ToList();
 			if (veins.Count == 0) return;
 			var field = new VeinField(ovls, veins[0].OverlayID, veins[0].Drawable);
-			var solid = veins.Where(o => o.OverlayValue >= VeinField.FirstSolid).Select(o => o.Tile).ToList();
+			// MapClass::Iterate walks screen rows top to bottom, left to right; the fixup takes the
+			// solid cells it collected from the last back to the first
+			var solid = veins.Where(o => o.OverlayValue >= VeinField.FirstSolid).Select(o => o.Tile)
+				.OrderByDescending(t => t.Rx + t.Ry).ThenByDescending(t => t.Rx).ToList();
 			foreach (var o in veins) {
 				o.Tile.RemoveObject(o, true);
 				ovls.Remove(o);
 			}
-			for (int i = solid.Count - 1; i >= 0; i--)
-				if (field.CanPlaceVeins(solid[i]))
-					field.PlaceVeins(solid[i]);
+			foreach (var t in solid)
+				if (field.CanPlaceVeins(t))
+					field.PlaceVeins(t);
+		}
+
+		/// <summary>The scenario randomizer as the engine entered its vein fixup, from a capture; null
+		/// rolls the pieces from the renderer's own generator instead.</summary>
+		public static void SetVeinRandomizer(uint[] state) {
+			_veinRandom = state == null ? null : new Random2(state);
+		}
+
+		private static Random2 _veinRandom;
+
+		// Random2Class: a 250-entry XOR lagged-Fibonacci table, Index1 and Index2 = Index1 + 103
+		private class Random2 {
+			private readonly int[] _table = new int[250];
+			private int _i1, _i2;
+
+			public Random2(uint[] state) {
+				_i1 = (int)state[0];
+				_i2 = (int)state[1];
+				for (int i = 0; i < 250; i++)
+					_table[i] = unchecked((int)state[i + 2]);
+			}
+
+			public int Next() {
+				_table[_i1] ^= _table[_i2];
+				int val = _table[_i1];
+				if (++_i1 >= 250) _i1 = 0;
+				if (++_i2 >= 250) _i2 = 0;
+				return val;
+			}
 		}
 
 		public static bool IsVeins(OverlayObject o) {
@@ -60,6 +92,10 @@ namespace CNCMaps.Engine.Map {
 		private class VeinField {
 			public const int FirstSolid = 48;
 			private const int FirstRamp = FirstSolid + 3;
+
+			// the engine's abs(RandomNumber()) % 3 and abs(RandomNumber()) & 1
+			private static int Roll3() => _veinRandom != null ? Math.Abs(_veinRandom.Next()) % 3 : Rand.Next(3);
+			private static int Roll2() => _veinRandom != null ? Math.Abs(_veinRandom.Next()) & 1 : Rand.Next(2);
 
 			// CellClass::Adjacent_Cell order N, E, S, W; map north is the screen's top right
 			private static readonly TileLayer.TileDirection[] Cardinal = {
@@ -109,10 +145,10 @@ namespace CNCMaps.Engine.Map {
 			public void PlaceVeins(MapTile t) {
 				int ramp = Ramp(t);
 				if (ramp != 0) {
-					Set(t, FirstRamp + 2 * ramp + Rand.Next(2));
+					Set(t, FirstRamp + 2 * ramp + Roll2());
 					return;
 				}
-				Set(t, FirstSolid + Rand.Next(3));
+				Set(t, FirstSolid + Roll3());
 				foreach (var dir in Cardinal) {
 					var n = t.Layer.GetNeighbourTile(t, dir);
 					if (n == null) continue;
@@ -120,12 +156,12 @@ namespace CNCMaps.Engine.Map {
 					if (IsVeinType(ovl) && (!IsPlain(ovl) || ovl.OverlayValue >= FirstSolid)) continue;
 					int nRamp = Ramp(n);
 					if (nRamp != 0) {
-						Set(n, FirstRamp + 2 * nRamp + Rand.Next(2));
+						Set(n, FirstRamp + 2 * nRamp + Roll2());
 						continue;
 					}
 					int frame = VeinFrame(n);
 					if (ovl == null || ovl.OverlayValue / 3 != frame)
-						Set(n, 3 * frame + Rand.Next(3));
+						Set(n, 3 * frame + Roll3());
 				}
 			}
 

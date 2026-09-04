@@ -42,6 +42,7 @@ namespace CNCMaps.Shared {
 		public string DebugVoxelMaskFile { get; set; }
 		public string DebugTilesFile { get; set; }
 		public string TileLattice { get; set; }
+		public string VeinRandomizer { get; set; }
 		public bool PinRandomDraws { get; set; }
 		public int AnimFrame { get; set; }
 		public string[] PreCaptureColors { get; set; }
@@ -78,6 +79,7 @@ namespace CNCMaps.Shared {
 			DebugZBufferFile = "";
 			DebugVoxelMaskFile = "";
 			TileLattice = "";
+			VeinRandomizer = "";
 			PinRandomDraws = false;
 			AnimFrame = -1;
 			PreCaptureColors = (string[])DefaultPreCaptureColors.Clone();
@@ -175,6 +177,7 @@ namespace CNCMaps.Shared {
 			Value<string>("--debug-tiles", null, "Write one CSV row per map cell (rx,ry,z,ramp,tile,subtile) for diagnostics that need to know a cell's height or slope", v => DebugTilesFile = v);
 			Value<string>("--debug-voxelmask", null, "Write a mask (.npy) of the pixels drawn by the voxel rasterizer, so a comparison against a game capture can exclude them: the game shades voxels differently on purpose", v => DebugVoxelMaskFile = v);
 			Value<string>("--tile-lattice", null, "Override the 8x8 tile-variant lattice with 64 comma-separated values 0-7 (row-major), e.g. one exported from an engine capture", v => TileLattice = v);
+			Value<string>("--vein-rng", null, "Tiberian Sun: replay the engine's vein placement rolls from a scenario randomizer state, 252 comma-separated values (Index1, Index2, Table[250]) as exported by an engine capture", v => VeinRandomizer = v);
 			Flag("--pin-random", null, "Pin every randomised draw choice (animation loop frame, random SHP frame, building fire art, generated veins) to its first option, so a render is byte-comparable with an engine capture whose game logic was frozen", () => PinRandomDraws = true);
 			Value<int>("--anim-frame", null, "Draw every animation at the frame the game engine shows at game-loop frame VALUE, for comparing against an engine capture whose logic was frozen at that frame", v => AnimFrame = v);
 			Value<string>("--precapture", null, "Colour of each start position A-H for objects a map trigger hands to a starting player at game start (oil derricks and other tech buildings): one rules [Colors] name per position, comma-separated, empty where nobody starts, or \"none\" to leave them neutral grey. Default " + string.Join(",", DefaultPreCaptureColors), v => PreCaptureColors = ParsePreCaptureColors(v));

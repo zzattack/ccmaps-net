@@ -316,6 +316,11 @@ def render_cmd(out: str, key: str, entry: dict, base: str, render_json: str,
     lattice = (cap.get("provenance") or {}).get("variantLattice")
     if lattice:
         cmd += ["--tile-lattice", ",".join(str(v) for v in lattice)]
+    # the scenario randomizer as the engine entered its vein fixup; the renderer rolls the vein
+    # pieces from it exactly as CellClass::Place_Veins did
+    rng = (cap.get("provenance") or {}).get("scenarioRandom")
+    if rng:
+        cmd += ["--vein-rng", ",".join(str(v) for v in rng)]
     cmd += ["--anim-frame", str(cap.get("frame", 6))]
     return cmd + (extra or [])
 
