@@ -152,8 +152,10 @@ namespace CNCMaps.Engine.Drawables {
 			if (Rules.ReadBool("IsRubble")) {
 				InvisibleInGame = true;
 			}
+			// veins and the veinhole draw at the cell's TileBrightness like the tile under them
+			// (CellClass::Draw_Overlay, VeinholeMonsterClass::Draw_It)
 			if (Rules.ReadBool("IsVeins")) {
-				Props.LightingType = LightingType.None;
+				Props.LightingType = LightingType.Full;
 				Props.PaletteType = PaletteType.Unit;
 				IsVeins = true;
 				Flat = true;
@@ -161,7 +163,7 @@ namespace CNCMaps.Engine.Drawables {
 			}
 			if (Rules.ReadBool("IsVeinholeMonster")) {
 				Props.Offset.Y = -49; // why is this needed???
-				Props.LightingType = LightingType.None;
+				Props.LightingType = LightingType.Full;
 				Props.PaletteType = PaletteType.Unit;
 				IsVeinHoleMonster = true;
 			}
