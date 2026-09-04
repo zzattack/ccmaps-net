@@ -292,7 +292,7 @@ namespace CNCMaps.Engine.Map {
 
 			Operations.FixTiles(_tiles, _theater.GetTileCollection());
 			if (_config.Engine <= EngineType.Firestorm)
-				Operations.RecalculateVeinsSpread(_overlayObjects, _tiles);
+				Operations.RecalculateVeinsSpread(_overlayObjects);
 
 			RevisitWallBuildings();
 
@@ -1355,7 +1355,6 @@ namespace CNCMaps.Engine.Map {
 			_theater.Draw(tile, _drawingSurface);
 			foreach (GameObject o in GetObjectsAt(tile.Dx, tile.Dy / 2))
 				_theater.Draw(o, _drawingSurface);
-			Operations.CountNeighbouringVeins(tile, Operations.IsVeins);
 		}
 
 		// keep the two-arg overload: the external preview plugin is compiled against it

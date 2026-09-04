@@ -209,8 +209,6 @@ namespace CNCMaps.Engine.Map {
 			OverlayValue = overlayValue;
 		}
 
-		public bool IsGeneratedVeins = false;
-
 		public override string ToString() {
 			return string.Format("{0} ({1})", Drawable != null ? Drawable.Name : OverlayID.ToString(), OverlayValue);
 		}

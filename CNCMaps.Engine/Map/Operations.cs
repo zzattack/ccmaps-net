@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using CNCMaps.Engine.Drawables;
 using CNCMaps.Engine.Game;
+using CNCMaps.FileFormats;
 using CNCMaps.Shared;
 using CNCMaps.Shared.Utility;
 using NLog;
@@ -33,127 +33,132 @@ namespace CNCMaps.Engine.Map {
 			ovl.Drawable = pooledDrawable;
 		}
 
-		public static void RecalculateVeinsSpread(IEnumerable<OverlayObject> ovls, TileLayer tiles) {
-			OverlayObject anyVeins = null;
-
-			// VEINHOLEDUMMY marks the cells covered by a veinhole monster; the game renders
-			// them as fully grown veins (its rules entry has IsVeins=true but points to a
-			// nonexistent image), so give these overlays the real veins drawable.
-			var veinsDrawable = ovls.Where(o => IsVeins(o) && !o.Drawable.IsVeinHoleMonster
-				&& (o.Drawable as ShpDrawable)?.Shp != null).Select(o => o.Drawable).FirstOrDefault();
-			if (veinsDrawable != null)
-				foreach (var o in ovls)
-					if (IsVeins(o) && !o.Drawable.IsVeinHoleMonster && (o.Drawable as ShpDrawable)?.Shp == null)
-						o.Drawable = veinsDrawable;
-
-			foreach (var o in ovls) {
-				if (IsVeins(o) && !o.Drawable.IsVeinHoleMonster && o.OverlayValue / 3 == 15)
-					o.IsGeneratedVeins = true;
+		// Tiberian Sun rebuilds the vein field when a scenario loads (OverlayClass::Post_Read_Vein_Fixups):
+		// every VEINS cell is cleared and only the solid pieces (OverlayData 48 and up, ramp pieces
+		// included) are placed again, each spreading a connecting piece onto its four cardinal
+		// neighbours. The map's own connecting pieces are discarded, and a solid piece the terrain
+		// rejects disappears with them. The engine walks the solid cells in reverse, which only changes
+		// which random roll a cell gets.
+		public static void RecalculateVeinsSpread(List<OverlayObject> ovls) {
+			var veins = ovls.Where(o => IsVeins(o) && !o.Drawable.IsVeinHoleMonster && (o.Drawable as ShpDrawable)?.Shp != null).ToList();
+			if (veins.Count == 0) return;
+			var field = new VeinField(ovls, veins[0].OverlayID, veins[0].Drawable);
+			var solid = veins.Where(o => o.OverlayValue >= VeinField.FirstSolid).Select(o => o.Tile).ToList();
+			foreach (var o in veins) {
+				o.Tile.RemoveObject(o, true);
+				ovls.Remove(o);
 			}
+			for (int i = solid.Count - 1; i >= 0; i--)
+				if (field.CanPlaceVeins(solid[i]))
+					field.PlaceVeins(solid[i]);
 
-			foreach (var t in tiles) {
-				var o = t.AllObjects.OfType<OverlayObject>().FirstOrDefault();
-
-				int veins = 0, rnd = 0, mul = 1;
-				bool amIVeins = IsVeins(o);
-
-				if (amIVeins && !o.Drawable.IsVeinHoleMonster) {
-					// see if veins are positioned on ramp
-					anyVeins = o;
-					var tmpImg = (o.Tile.Drawable as TileDrawable).GetTileImage(o.Tile);
-					if (tmpImg != null && tmpImg.RampType != 0) {
-						if (tmpImg.RampType == 7) veins = 51;
-						else if (tmpImg.RampType == 2) veins = 55;
-						else if (tmpImg.RampType == 3) veins = 57;
-						else if (tmpImg.RampType == 4) veins = 59;
-						else {
-							continue;
-						}
-						rnd = 2;
-						mul = 1;
-					}
-					else {
-						var ne = t.Layer.GetNeighbourTile(t, TileLayer.TileDirection.TopRight);
-						var se = t.Layer.GetNeighbourTile(t, TileLayer.TileDirection.BottomRight);
-						var sw = t.Layer.GetNeighbourTile(t, TileLayer.TileDirection.BottomLeft);
-						var nw = t.Layer.GetNeighbourTile(t, TileLayer.TileDirection.TopLeft);
-
-						bool neV = ne != null && ne.AllObjects.OfType<OverlayObject>().Any(IsVeins);
-						bool seV = se != null && se.AllObjects.OfType<OverlayObject>().Any(IsVeins);
-						bool swV = sw != null && sw.AllObjects.OfType<OverlayObject>().Any(IsVeins);
-						bool nwV = nw != null && nw.AllObjects.OfType<OverlayObject>().Any(IsVeins);
-
-						int numNeighbours = CountNeighbouringVeins(ne, se, sw, nw, IsVeins);
-						int threshold = numNeighbours != 4 ? 4 : 0;
-						var compare = numNeighbours == 4 ? (Func<OverlayObject, bool>)IsFullVeins : IsVeins;
-						Func<OverlayObject, bool> thresholdCompare = ov => threshold <= CountNeighbouringVeins(ov.Tile, compare);
-
-						if (neV && ne.AllObjects.OfType<OverlayObject>().Any(thresholdCompare))
-							veins += 1;
-
-						if (seV && se.AllObjects.OfType<OverlayObject>().Any(thresholdCompare))
-							veins += 2;
-
-						if (swV && sw.AllObjects.OfType<OverlayObject>().Any(thresholdCompare))
-							veins += 4;
-
-						if (nwV && nw.AllObjects.OfType<OverlayObject>().Any(thresholdCompare))
-							veins += 8;
-
-						if (veins == 15 && !o.IsGeneratedVeins)
-							veins++;
-
-						mul = 3;
-						rnd = 3;
-					}
+			// the veinhole's VEINHOLEDUMMY ring has no image of its own; the game shows it as solid veins
+			// that never spread
+			foreach (var o in ovls)
+				if (IsVeins(o) && !o.Drawable.IsVeinHoleMonster && (o.Drawable as ShpDrawable)?.Shp == null) {
+					o.Drawable = veins[0].Drawable;
+					o.OverlayValue = (byte)(VeinField.FirstSolid + Rand.Next(3));
 				}
-
-				if (veins != 0 || amIVeins) {
-					if (o == null) {
-						// on the fly veins creation..
-						o = new OverlayObject(anyVeins.OverlayID, (byte)Rand.Next(3));
-						o.IsGeneratedVeins = true;
-						o.Drawable = anyVeins.Drawable;
-						o.Palette = anyVeins.Palette;
-						o.TopTile = o.BottomTile = o.Tile;
-						t.AddObject(o);
-					}
-					else {
-						o.OverlayValue = (byte)(veins * mul + Rand.Next(rnd));
-						Debug.WriteLine("Replacing veins with value {0} ({1})", o.OverlayValue, veins);
-					}
-				}
-
-
-			}
 		}
 
 		public static bool IsVeins(OverlayObject o) {
 			return o != null && o.Drawable.IsVeins;
 		}
-		public static bool IsFullVeins(OverlayObject o) {
-			return o != null && !o.IsGeneratedVeins && o.Drawable.IsVeins && (o.Drawable.IsVeinHoleMonster || o.OverlayValue / 3 == 16);
+
+		private class VeinField {
+			public const int FirstSolid = 48;
+			private const int FirstRamp = FirstSolid + 3;
+
+			// CellClass::Adjacent_Cell order N, E, S, W; map north is the screen's top right
+			private static readonly TileLayer.TileDirection[] Cardinal = {
+				TileLayer.TileDirection.TopRight, TileLayer.TileDirection.BottomRight,
+				TileLayer.TileDirection.BottomLeft, TileLayer.TileDirection.TopLeft,
+			};
+
+			private readonly List<OverlayObject> _ovls;
+			private readonly byte _id;
+			private readonly Drawable _drawable;
+
+			public VeinField(List<OverlayObject> ovls, byte id, Drawable drawable) {
+				_ovls = ovls;
+				_id = id;
+				_drawable = drawable;
+			}
+
+			private static OverlayObject Overlay(MapTile t) => t?.AllObjects.OfType<OverlayObject>().FirstOrDefault();
+			private static TmpFile.TmpImage Image(MapTile t) => (t?.Drawable as TileDrawable)?.GetTileImage(t);
+			private static int Ramp(MapTile t) => Image(t)?.RampType ?? 0;
+
+			// IsometricTileTypeClass::Land_Type maps the tmp terrain byte to ice (1-4), rock (7, 8, 15),
+			// water (9) and beach (10); CellClass::Can_Place_Veins refuses those four land types
+			private static bool LandRefusesVeins(MapTile t) {
+				int type = Image(t)?.TerrainType ?? 0;
+				return type is >= 1 and <= 4 or 7 or 8 or 9 or 10 or 15;
+			}
+
+			private static bool IsVeinType(OverlayObject o) => o != null && o.Drawable.IsVeins;
+			private bool IsPlain(OverlayObject o) => o != null && o.Drawable == _drawable;
+
+			public bool CanPlaceVeins(MapTile t) {
+				if (Ramp(t) > 4 || LandRefusesVeins(t)) return false;
+				var own = Overlay(t);
+				if (own != null && !own.Drawable.IsVeins) return false;
+				foreach (var dir in Cardinal) {
+					var n = t.Layer.GetNeighbourTile(t, dir);
+					if (n == null) continue;
+					var ovl = Overlay(n);
+					if (Ramp(n) > 4 && Ramp(t) == 0 && !IsVeinType(ovl)) return false;
+					if (LandRefusesVeins(n)) return false;
+					if (ovl != null && !ovl.Drawable.IsVeins) return false;
+				}
+				return true;
+			}
+
+			public void PlaceVeins(MapTile t) {
+				int ramp = Ramp(t);
+				if (ramp != 0) {
+					Set(t, FirstRamp + 2 * ramp + Rand.Next(2));
+					return;
+				}
+				Set(t, FirstSolid + Rand.Next(3));
+				foreach (var dir in Cardinal) {
+					var n = t.Layer.GetNeighbourTile(t, dir);
+					if (n == null) continue;
+					var ovl = Overlay(n);
+					if (IsVeinType(ovl) && (!IsPlain(ovl) || ovl.OverlayValue >= FirstSolid)) continue;
+					int nRamp = Ramp(n);
+					if (nRamp != 0) {
+						Set(n, FirstRamp + 2 * nRamp + Rand.Next(2));
+						continue;
+					}
+					int frame = VeinFrame(n);
+					if (ovl == null || ovl.OverlayValue / 3 != frame)
+						Set(n, 3 * frame + Rand.Next(3));
+				}
+			}
+
+			// CellClass::Get_Vein_Frame: one bit per cardinal neighbour holding a solid or ramp piece
+			// or a veinhole cell
+			private int VeinFrame(MapTile t) {
+				int frame = 0;
+				for (int i = 0; i < Cardinal.Length; i++) {
+					var ovl = Overlay(t.Layer.GetNeighbourTile(t, Cardinal[i]));
+					if (IsPlain(ovl) ? ovl.OverlayValue >= FirstSolid : IsVeinType(ovl))
+						frame |= 1 << i;
+				}
+				return frame;
+			}
+
+			private void Set(MapTile t, int value) {
+				var ovl = Overlay(t);
+				if (ovl == null) {
+					ovl = new OverlayObject(_id, 0) { Drawable = _drawable };
+					t.AddObject(ovl);
+					_ovls.Add(ovl);
+				}
+				ovl.OverlayValue = (byte)value;
+			}
 		}
-
-		public static int CountNeighbouringVeins(MapTile t, Func<OverlayObject, bool> test) {
-			var ne = t.Layer.GetNeighbourTile(t, TileLayer.TileDirection.TopRight);
-			var se = t.Layer.GetNeighbourTile(t, TileLayer.TileDirection.BottomRight);
-			var sw = t.Layer.GetNeighbourTile(t, TileLayer.TileDirection.BottomLeft);
-			var nw = t.Layer.GetNeighbourTile(t, TileLayer.TileDirection.TopLeft);
-			return CountNeighbouringVeins(ne, se, sw, nw, test);
-		}
-
-		private static int CountNeighbouringVeins(MapTile ne, MapTile se, MapTile sw, MapTile nw, Func<OverlayObject, bool> test) {
-			bool neV = ne != null && ne.AllObjects.OfType<OverlayObject>().Any(test);
-			bool seV = se != null && se.AllObjects.OfType<OverlayObject>().Any(test);
-			bool swV = sw != null && sw.AllObjects.OfType<OverlayObject>().Any(test);
-			bool nwV = nw != null && nw.AllObjects.OfType<OverlayObject>().Any(test);
-			int numNeighbours =
-							(neV ? 1 : 0) + (seV ? 1 : 0) + (swV ? 1 : 0) + (nwV ? 1 : 0);
-			return numNeighbours;
-		}
-
-
 
 		/// <summary>Recalculates tile system. </summary>
 		public static void FixTiles(TileLayer tiles, TileCollection collection) {
