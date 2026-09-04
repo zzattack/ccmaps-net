@@ -456,8 +456,8 @@ namespace CNCMaps.Engine.Map {
 				else {
 					ShpDrawable drawable = (ShpDrawable)c.GetDrawable(obj);
 					if (drawable.Shp == null) {
-						// Image-less veins overlays (VEINHOLEDUMMY) are valid game objects; they
-						// receive the real veins drawable in RecalculateVeinsSpread.
+						// Image-less veins overlays (VEINHOLEDUMMY) are valid game objects: nothing is
+						// drawn on them, but the vein field connects to them.
 						if (!drawable.IsVeins) {
 							obj.Tile.RemoveObject(obj);
 							_overlayObjects.Remove(obj);

@@ -164,6 +164,10 @@ namespace CNCMaps.Engine.Drawables {
 			if (Rules.ReadBool("IsVeinholeMonster")) {
 				Props.Offset.Y = -49; // why is this needed???
 				Props.LightingType = LightingType.Full;
+				// VeinholeMonsterClass::Draw_It: ground gradient at -2 - LEVEL_PIXEL_H_1 - height, one level
+				// nearer than the overlays of its cell, so the sprite's own vein-covered floor shows over
+				// the sunken pit's ramp faces and the surrounding pieces still win their ties
+				Props.ZAdjust = -_config.TileHeight / 2;
 				Props.PaletteType = PaletteType.Unit;
 				IsVeinHoleMonster = true;
 			}

@@ -51,14 +51,6 @@ namespace CNCMaps.Engine.Map {
 			for (int i = solid.Count - 1; i >= 0; i--)
 				if (field.CanPlaceVeins(solid[i]))
 					field.PlaceVeins(solid[i]);
-
-			// the veinhole's VEINHOLEDUMMY ring has no image of its own; the game shows it as solid veins
-			// that never spread
-			foreach (var o in ovls)
-				if (IsVeins(o) && !o.Drawable.IsVeinHoleMonster && (o.Drawable as ShpDrawable)?.Shp == null) {
-					o.Drawable = veins[0].Drawable;
-					o.OverlayValue = (byte)(VeinField.FirstSolid + Rand.Next(3));
-				}
 		}
 
 		public static bool IsVeins(OverlayObject o) {

@@ -164,7 +164,8 @@ namespace CNCMaps.Engine.Rendering {
 			// water and its kin keep storing depth.
 			// a SHP turret is the building's turret anim (BANIM_TURRET), an AnimClass like the rest
 			bool animLike = dr is AnimDrawable || dr.IsTurret;
-			bool isAnim = animLike && !(obj is MapTile);
+			// the veinhole monster draws with SHAPE_ZGRAD and no ZWRITE either (VeinholeMonsterClass::Draw_It)
+			bool isAnim = (animLike || dr.IsVeinHoleMonster) && !(obj is MapTile);
 			// the building body takes its z from BUILDNGZ below. Tiberian Sun draws a foundation six or more
 			// cells wide (UFO) on the plain standing profile instead (BuildingClass::Draw_It); gamemd keeps the
 			// shape on its 6x4s. Anims are drawn by AnimClass and get no shape either way
