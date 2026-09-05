@@ -399,13 +399,17 @@ namespace CNCMaps.Engine.Game {
 		public bool ConnectTiles(int setNum1, int setNum2) {
 			if (setNum1 == setNum2) return false;
 
+			// gamemd's green LAT pass (0x47CA80) exempts shore and water-bridge neighbours; the TS
+			// engine's Fixup_LAT has no such exemption and keeps the map's transition pieces there
+			bool greenExemptions = _config == null || _config.Engine >= EngineType.RedAlert2;
+
 			// grass doesn't connect with shores
-			else if (setNum1 == GreenTile && setNum2 == ShorePieces ||
-				(setNum2 == GreenTile && setNum1 == ShorePieces)) return false;
+			if (greenExemptions && (setNum1 == GreenTile && setNum2 == ShorePieces ||
+				(setNum2 == GreenTile && setNum1 == ShorePieces))) return false;
 
 			// grass doesn't connect with waterbridges
-			else if (setNum1 == GreenTile && setNum2 == WaterBridge ||
-				(setNum2 == GreenTile && setNum1 == WaterBridge)) return false;
+			else if (greenExemptions && (setNum1 == GreenTile && setNum2 == WaterBridge ||
+				(setNum2 == GreenTile && setNum1 == WaterBridge))) return false;
 
 			// pave's don't connect with paved roads
 			else if (setNum1 == PaveTile && setNum2 == PavedRoads ||
