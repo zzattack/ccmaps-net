@@ -132,3 +132,8 @@ Caveats: the map list is read once at startup — restart to see corpus entries 
   and the renderer replays the rolls in the engine's cell order, so the vein frames match cell for cell.
   Captures taken before that date have no randomizer and their vein frames stay unmatched (the old
   goldens of the 32 vein maps are kept in `meta\pre-veinrng`).
+- A spawn template with `Crates=True` makes the game drop `max(CrateMinimum, players)` crates on random
+  cells at scenario start (`ScenarioClass::Start_Scenario`), so a golden shows crates the map does not
+  hold. The TS/FS presets (`spawn-ts.ini`, `spawn-fs.ini` and the campaign pair) carry `Crates=False`
+  since 2026-09-05 and the 40 multiplayer maps were recaptured; the crate-carrying goldens are kept in
+  `meta\pre-nocrates`. The campaign goldens predate the change (single-player sessions; crates not seen).
