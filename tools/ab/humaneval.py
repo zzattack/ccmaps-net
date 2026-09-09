@@ -57,8 +57,10 @@ TS_CLIENT = r"C:\Users\Frank\Desktop\Tiberian Sun Client"
 # folder carries the renderer's engine flag and the spawn.ini template its captures need (a
 # Firestorm map loads the wrong rules unless the template says Firestorm=True).
 PROFILES = {
+    # the game dir's own spawn.ini is the CnCNet client's last launch (a campaign mission, RA2
+    # mode), so the YR template lives with the TS ones
     "yr": dict(out=DEFAULT_OUT, game_dir=GAME_DIR,
-               map_dirs=[(MAP_DIR, "-Y", os.path.join(GAME_DIR, "spawn.ini"))]),
+               map_dirs=[(MAP_DIR, "-Y", os.path.join(PRESETS, "spawn-yr.ini"))]),
     "ts": dict(out=os.path.join(os.path.dirname(DEFAULT_OUT), "TS"), game_dir=TS_CLIENT,
                map_dirs=[(os.path.join(TS_CLIENT, "Maps", "Tiberian Sun"), "-t", os.path.join(PRESETS, "spawn-ts.ini")),
                          (os.path.join(TS_CLIENT, "Maps", "Firestorm"), "-T", os.path.join(PRESETS, "spawn-fs.ini")),
@@ -125,24 +127,27 @@ def enumerate_maps(map_dirs: list) -> list[tuple[str, str, str]]:
 
 
 def index_maps(out: str, map_dirs: list) -> dict:
-    """Assign every map its permanent index. Indices come from the full listing, so a --limit run
-    and a full run agree on which map is #001."""
+    """Assign every map its permanent index. A map already in the manifest keeps its index (the
+    captures are named by it), a new file gets the next free one; a listing that gained or lost
+    files therefore never renumbers the corpus."""
     manifest = load_manifest(out)
-    for i, (path, engine, spawn, extra) in enumerate(enumerate_maps(map_dirs), start=1):
-        key = f"{i:03d}"
-        entry = manifest.setdefault(key, {})
-        entry["index"] = i
-        entry["stem"] = os.path.splitext(os.path.basename(path))[0]
-        entry["map"] = path
-        entry["engine"] = engine
-        entry["spawn"] = spawn
-        entry["captureArgs"] = extra
+    by_stem = {v["stem"].lower(): v for v in manifest.values()}
+    next_index = max((v["index"] for v in manifest.values()), default=0) + 1
+    for path, engine, spawn, extra in enumerate_maps(map_dirs):
+        stem = os.path.splitext(os.path.basename(path))[0]
+        entry = by_stem.get(stem.lower())
+        if entry is None:
+            entry = manifest[f"{next_index:03d}"] = {"index": next_index}
+            next_index += 1
+        entry.update(stem=stem, map=path, engine=engine, spawn=spawn, captureArgs=extra)
     save_manifest(out, manifest)
     return manifest
 
 
-def selected(manifest: dict, limit: int | None) -> list[tuple[str, dict]]:
+def selected(manifest: dict, limit: int | None, only: str | None = None) -> list[tuple[str, dict]]:
     items = sorted(manifest.items(), key=lambda kv: kv[1]["index"])
+    if only:
+        items = [kv for kv in items if kv[1]["stem"].lower() == only.lower()]
     return items[:limit] if limit else items
 
 
@@ -199,7 +204,7 @@ def cmd_capture(args):
     manifest = index_maps(out, map_dirs)
     work = os.path.join(meta_dir(out), "_work")
 
-    for key, entry in selected(manifest, args.limit):
+    for key, entry in selected(manifest, args.limit, args.only):
         existing = glob.glob(os.path.join(out, f"#{key}_GAMEMD_*.png"))
         if existing:
             # Recovered from the files themselves, so a lost manifest does not cost hours of recapture.
@@ -333,7 +338,7 @@ def cmd_render(args):
     build_renderer()
 
     todo = []
-    for key, entry in selected(manifest, args.limit):
+    for key, entry in selected(manifest, args.limit, args.only):
         name = entry.get("name")
         if not name:
             continue
@@ -461,13 +466,17 @@ def cmd_compare(args):
         raise SystemExit("no manifest; run capture first")
     rows = []
 
-    work = []
-    for key, entry in selected(manifest, args.limit):
+    # --limit/--only restrict what gets compared; the summary always lists the whole corpus
+    work, corpus = [], []
+    chosen = {key for key, _ in selected(manifest, args.limit, args.only)}
+    for key, entry in selected(manifest, None):
         if not all(entry.get(k) for k in ("gamemd", "ccmaps", "capture", "render")):
             continue
         zones_name = f"#{key}_{entry['name']}.zones.json"
         zones_path = os.path.join(meta_dir(out), zones_name)
-        work.append((key, entry, zones_name, zones_path))
+        corpus.append((key, entry, zones_name, zones_path))
+        if key in chosen:
+            work.append((key, entry, zones_name, zones_path))
 
     # Diffing two full-map PNGs is numpy-bound and releases the GIL, so threads get most of the win
     # without pickling the images across processes.
@@ -499,7 +508,7 @@ def cmd_compare(args):
         save_manifest(out, manifest)
         print(f"compared {len(fresh)} maps in {time.time() - started:.0f}s", flush=True)
 
-    for key, entry, zones_name, zones_path in work:
+    for key, entry, zones_name, zones_path in corpus:
         report = reports.get(key)
         if report is None:
             if not os.path.exists(zones_path):
@@ -540,6 +549,7 @@ def main():
     ap.add_argument("--outdir", help="corpus folder; defaults to ComparisonRenders\\<GAME>")
     ap.add_argument("--mapdir", help="override the profile's (first) map folder")
     ap.add_argument("--limit", type=int, help="only the first N maps, for smoke tests")
+    ap.add_argument("--only", metavar="STEM", help="only the map with this file stem")
     ap.add_argument("--jobs", type=int, default=8,
                     help="parallel renders; 1 keeps the streaming progress output")
     ap.add_argument("--render-arg", action="append", default=[], metavar="ARG",

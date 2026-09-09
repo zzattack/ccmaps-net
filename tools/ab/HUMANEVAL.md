@@ -69,6 +69,7 @@ Captures are the stable reference — an engine change on our side never invalid
 
 - Needs the game dir free (launches gamemd hidden, patches spawn.ini/RA2MD.ini, kills every gamemd/Syringe process); strictly one at a time.
 - `#108 4_limbo_of_the_lost` fails deterministically ("no frames from the game", twice) — skip it, don't debug it as a pipeline fault.
+- Adding one map: drop the file in the maps folder and run `capture`, `render` and `compare` with `--only <file stem>`. A new file gets the next free index (maps already in the manifest keep theirs, so a Steam update that adds or removes files never renumbers the corpus); `compare --only` still rewrites the summary for the whole corpus. The YR spawn template is `presets\spawn-yr.ini` (cnc-buffer-spy repo), never the game dir's `spawn.ini`: the CnCNet client overwrites that one with its last launch, and a campaign launch leaves `Ra2Mode=True` behind, which hangs a YR map on load. #458 The Great Wall (PreCaptured), from spysat.cc, was added this way on 2026-09-09; #451-#457 are Steam maps that appeared after the corpus was built and have no capture yet.
 - Never use the `all` subcommand while #108 has no capture: it retries that map and stalls for minutes. Use `render` + `compare`.
 - Re-rendering depends on the capture sidecars: `--tile-lattice` comes from `provenance.variantLattice`, which is what keeps random tile variants from polluting the zones.
 
