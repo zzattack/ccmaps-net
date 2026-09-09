@@ -818,11 +818,13 @@ namespace CNCMaps.Engine {
 		/// either out on its own.</summary>
 		private static void DumpTiles(Map.Map map, string path) {
 			using var w = new StreamWriter(path);
-			w.WriteLine("rx,ry,z,ramp,tile,subtile");
+			w.WriteLine("rx,ry,z,ramp,tile,subtile,height,extraX,extraY,extraW,extraH");
 			foreach (var t in map.GetTiles()) {
 				if (t == null) continue;
-				int ramp = (t.Drawable as Drawables.TileDrawable)?.GetTileImage(t)?.RampType ?? 0;
-				w.WriteLine($"{t.Rx},{t.Ry},{t.Z},{ramp},{t.TileNum},{t.SubTile}");
+				var img = (t.Drawable as Drawables.TileDrawable)?.GetTileImage(t);
+				int ramp = img?.RampType ?? 0, height = img?.Height ?? 0;
+				var extra = img != null && img.HasExtraData ? $"{img.ExtraX},{img.ExtraY},{img.ExtraWidth},{img.ExtraHeight}" : ",,,";
+				w.WriteLine($"{t.Rx},{t.Ry},{t.Z},{ramp},{t.TileNum},{t.SubTile},{height},{extra}");
 			}
 		}
 
