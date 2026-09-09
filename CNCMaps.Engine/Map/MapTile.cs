@@ -68,11 +68,11 @@ namespace CNCMaps.Engine.Map {
 		}
 
 		public TmpFile GetTileFile() {
-			return (Drawable as TileDrawable).GetTileFile(this);
+			return (Drawable as TileDrawable)?.GetTileFile(this);
 		}
 
 		public TmpFile.TmpImage GetTileImage() {
-			return (Drawable as TileDrawable).GetTileImage(this);
+			return (Drawable as TileDrawable)?.GetTileImage(this);
 		}
 	}
 }

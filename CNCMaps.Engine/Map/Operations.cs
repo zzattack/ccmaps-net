@@ -268,12 +268,12 @@ namespace CNCMaps.Engine.Map {
 				// smooth piece whose flat neighbours are gone reverts to the plain ramp
 				else if (t.SetNum == collection.RampBase || t.SetNum == collection.RampSmooth) {
 					var ti = t.GetTileImage();
-					if (ti.RampType < 1 || 4 < ti.RampType) continue;
+					if (ti == null || ti.RampType < 1 || 4 < ti.RampType) continue;
 
 					// an off-map neighbour counts as flat, like the game's blank cell
 					bool FlatAt(TileLayer.TileDirection dir) {
 						var n = tiles.GetNeighbourTile(t, dir);
-						return n == null || n.GetTileImage().RampType == 0;
+						return (n?.GetTileImage()?.RampType ?? 0) == 0;
 					}
 
 					int fixup = -1;

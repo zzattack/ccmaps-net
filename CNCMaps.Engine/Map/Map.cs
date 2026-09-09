@@ -477,8 +477,12 @@ namespace CNCMaps.Engine.Map {
 		}
 
 		private void SetDrawables() {
+			var tileTypes = _theater.GetTileCollection();
+			int unknownTiles = 0;
 			foreach (var tile in _tiles) {
-				tile.Drawable = _theater.GetCollection(CollectionType.Tiles).GetDrawable(tile);
+				tile.Drawable = tileTypes.GetDrawable(tile);
+				if (tile.Drawable == null)
+					unknownTiles++;
 				foreach (var obj in tile.AllObjects) {
 					obj.Collection = _theater.GetObjectCollection(obj);
 					// an object type without a collection must not crash the whole render
@@ -492,6 +496,9 @@ namespace CNCMaps.Engine.Map {
 						Operations.ApplyTiberiumArt(tile, ovl, _config.Engine);
 				}
 			}
+			if (unknownTiles > 0)
+				Logger.Warn("{0} cells use tile indices beyond this theater's {1} tiles (a terrain expansion this game data lacks); they stay black",
+					unknownTiles, tileTypes.NumTiles);
 		}
 
 		// gamemd draws a multi-cell smudge once from every cell of its foundation (CellClass::Draw_It
