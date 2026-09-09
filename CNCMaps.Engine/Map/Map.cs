@@ -303,6 +303,7 @@ namespace CNCMaps.Engine.Map {
 				LoadLightSources();
 				ApplyLightSources();
 			}
+			LightTunnelRoofs();
 
 			SetBaseTiles(); // requires .AnimationDrawable set on objects
 
@@ -676,6 +677,23 @@ namespace CNCMaps.Engine.Map {
 			}
 			Logger.Debug("Determined palettes to be recalculated due to lightsources ({0})",
 						_palettesToBeRecalculated.Count - before);
+		}
+
+		// A tunnel piece keeps every cell at the road level while its extra image carries the cliff
+		// face and roof above it, so the game lights that roof as the tunnel floor. Light the extra
+		// art like the highest cardinal neighbour instead, the plateau it belongs to.
+		private void LightTunnelRoofs() {
+			var coll = _theater.GetTileCollection();
+			foreach (MapTile t in _tiles) {
+				if (t == null || !coll.IsTunnel(t.SetNum)) continue;
+				var img = (t.Drawable as TileDrawable)?.GetTileImage(t);
+				if (img == null || !img.HasExtraData) continue;
+				MapTile top = null;
+				foreach (var n in new[] { _tiles.GetTileR(t.Rx - 1, t.Ry), _tiles.GetTileR(t.Rx + 1, t.Ry),
+						_tiles.GetTileR(t.Rx, t.Ry - 1), _tiles.GetTileR(t.Rx, t.Ry + 1) })
+					if (n != null && n.Z > t.Z && (top == null || n.Z > top.Z)) top = n;
+				if (top != null) t.ExtraPalette = top.Palette;
+			}
 		}
 
 		private void RecalculatePalettes() {

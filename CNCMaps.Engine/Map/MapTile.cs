@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using CNCMaps.Engine.Drawables;
 using CNCMaps.Engine.Game;
+using CNCMaps.Engine.Rendering;
 using CNCMaps.FileFormats;
 using NLog;
 
@@ -27,6 +28,8 @@ namespace CNCMaps.Engine.Map {
 		public ushort SubTile { get; set; }
 
 		internal TileLayer Layer { get; private set; }
+		// lights the subtile's extra image when that art sits at another level than the cell (tunnel roofs)
+		internal Palette ExtraPalette { get; set; }
 		internal bool ExtraDataAffected { get; set; }
 
 		public ReadOnlyCollection<GameObject> AllObjects {

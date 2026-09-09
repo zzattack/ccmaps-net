@@ -131,6 +131,7 @@ namespace CNCMaps.Engine.Rendering {
 
 			if (!img.HasExtraData) return; // we're done now
 			byte[] xzData = img.ExtraZData;
+			if (tile.ExtraPalette != null) bgr = tile.ExtraPalette.GetBgrBytes();
 
 			offset.X += img.ExtraX - img.X;
 			offset.Y += img.ExtraY - img.Y;

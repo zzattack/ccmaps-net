@@ -441,6 +441,10 @@ namespace CNCMaps.Engine.Game {
 			return setNum == SlopeSetPieces || setNum == SlopeSetPieces2;
 		}
 
+		public bool IsTunnel(int setNum) {
+			return setNum != -1 && (setNum == Tunnels || setNum == DirtTunnels || setNum == TrackTunnels || setNum == DirtTrackTunnels);
+		}
+
 		public bool IsCLAT(int setNum) {
 			return
 				setNum == ClearToRoughLat ||
