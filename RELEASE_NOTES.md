@@ -1,14 +1,16 @@
-# CNCMaps 3.1.0 (unreleased)
+# CNCMaps 3.1.0
 
-Every change below was checked against frames captured from the running game (gamemd with logic frozen at a known tick) over the 450 loose multiplayer maps that ship with Yuri's Revenge. Where the game's behaviour was not obvious it was read out of the engine itself, and the numbers quoted are the share of pixels that still differ from the capture, averaged over that corpus.
+This release is about drawing what the game draws. Every change was checked against frames captured from the running game with its logic frozen at a known tick: the 450 multiplayer maps that ship with Yuri's Revenge, and 100 Tiberian Sun and Firestorm maps. Where the game's behaviour was not obvious it was read out of the engine itself.
 
 ## Depth and occlusion
 
-- Per-pixel depth now follows the engine's model: standing shapes recede 1 z per 3 rows from their own drawn bottom row, flat shapes lie on the ground ramp, and the test is strict (a tie keeps the earlier drawing) with the engine's rounding of the profile start to a multiple of 3.
-- Buildings are depth-shaped with BUILDNGZ.SHA, the 396x477 pyramid the game blits with every building body, placed and biased the way the engine does. Wide sprites no longer stand in front of cliffs and trees that hide their edges in game.
-- Units, infantry and aircraft are depth-tested but never write depth; voxel bodies get the standing test they never had and anchor at the bottom of their projected volume, so a turret no longer draws behind the post it is mounted on.
-- Overlays draw in the terrain pass with the engine's lifts (flat overlays one in front of the ground, walls and rocks likewise, standing overlays 17); bridge deck pieces take their depth from their own cell, so cars on the last piece of a high bridge are visible again.
-- Building animations draw after every object and write no depth, as AnimClass does; each anchors at its own bottom row, so a mast-mounted flag disappears into the roof where it should.
+- Per-pixel depth follows the engine's model: standing shapes recede 1 z per 3 rows from their own drawn bottom row, flat shapes lie on the ground ramp, and the test is strict (a tie keeps the earlier drawing) with the engine's rounding of the profile start to a multiple of 3.
+- Buildings are depth-shaped with BUILDNGZ, the pyramid the game blits with every building body, placed and biased the way the engine does. Wide sprites no longer stand in front of cliffs and trees that hide their edges in game.
+- Red Alert 2 renders get that shape too. The game loads it as BUILDNGZ.SHP from conquer.mix, a name the loader did not try, so every RA2-engine render drew buildings on the flat profile. A mod's own shape of another size is accepted.
+- The building body draws at its art NormalZAdjust; SHP turrets draw as the game's turret animation, without the body's shape.
+- Units, infantry and aircraft are depth-tested but never write depth. Voxel bodies get the standing test they never had and anchor at the bottom of their projected volume, so a turret no longer draws behind the post it is mounted on.
+- Overlays draw in the terrain pass with the engine's lifts. Bridge deck pieces take their depth from their own cell, so cars on the last piece of a high bridge are visible again.
+- Building animations draw after every object and write no depth, as AnimClass does. Each anchors at its own bottom row, so a mast-mounted flag disappears into the roof where it should.
 - Smudges are tested against depth but never write it, and a multi-cell crater is drawn once per footprint cell at that cell's level.
 - Tiles without a z-data section draw untested, like Blit_Iso_Tile.
 - Cells, overlays and terrain objects are walked bottom row up, left to right, which decides which of two equal-depth bridge pieces or neighbouring trees shows.
@@ -21,45 +23,57 @@ Every change below was checked against frames captured from the running game (ga
 
 ## Lighting
 
-- Light intensity quantizes to the game's 63 steps for RA2 and YR as well as TS; previously only maps whose lighting worked out to exactly 1.0 were exact.
+- Light intensity quantizes to the game's 63 steps for RA2 and YR as well as TS. Before, only maps whose lighting worked out to exactly 1.0 were exact.
 - Lamp light is clamped and normalized like CellClass::ComputeLighting, so stacked or negative lamps saturate instead of discolouring.
-- A lamp lights from its building's centre coordinate. GALITE-style posts declare a 0x0 foundation and light from their cell's top corner, half a cell up-left of where we had them.
-- A map section that overrides a lamp type without restating its light keys switches the lamp off, as the game's integer re-read does; a map override of InvisibleInGame=no does not bring a hidden building back.
-- Infantry, vehicles and aircraft add ExtraUnitLight / ExtraInfantryLight / ExtraAircraftLight to their brightness.
+- A lamp lights from its building's centre coordinate. GALITE-style posts declare a 0x0 foundation and light from their cell's top corner, half a cell up-left of where they were.
+- A map section that overrides a lamp type without restating its light keys switches the lamp off, as the game's integer re-read does. A map override of InvisibleInGame=no does not bring a hidden building back.
+- Infantry, vehicles and aircraft add ExtraUnitLight, ExtraInfantryLight and ExtraAircraftLight to their brightness.
 - AlphaImage glows of invisible lamp buildings (TSTLAMP) are drawn again, and every glow is applied after the map is complete, over whatever ends up beneath it.
+- Tunnel roofs are lit at the plateau level instead of as the tunnel floor. This deviates from the game on purpose.
 
 ## Terrain
 
 - Tile variants are picked the way the game picks them: a fixed Latin square for small sets and an 8x8 lattice for larger ones, so LAT transitions match the engine cell for cell.
-- Ramp smoothing pieces are substituted like the game's LAT recalculation; temperate slopes were never smoothed before.
+- Ramp smoothing pieces are substituted like the game's LAT recalculation. Temperate slopes were never smoothed before.
 - Objects on a ramp stand on the slope surface, and the lift rounds like Z_Lepton_To_Pixel (7 or 8 px depending on the cell's height).
 - A cell that autolat downgrades to plain draws the plain tile instead of the map's transition art.
-- Snow pavement joins the "paved road bits" set seamlessly, matching Ares' MediansFix that the game runs with.
-- Ore and gems draw the type's pooled per-cell image (pool[(x*y) % 12]) instead of the stored overlay id; high bridge spans vary their frame per cell.
-- Plain overlays (crates, drums, pallets) use the cell's ISO palette; rocks on a slope stay at their cell's level.
+- Snow pavement joins the "paved road bits" set seamlessly, matching the Ares MediansFix the game runs with.
+- Ore and gems draw the type's pooled per-cell image (pool[(x*y) % 12]) instead of the stored overlay id. High bridge spans vary their frame per cell.
+- Plain overlays (crates, drums, pallets) use the cell's ISO palette. Rocks on a slope stay at their cell's level.
 
 ## Objects
 
 - Infantry stand at the sub-cell spot the map gives them and draw the art of their own section (a camel is no longer a monkey).
-- Voxels render one pixel per voxel, stepped in 8.8 fixed point from the far corner like the game's voxel library; vehicles were a half voxel too fat on every side.
-- Buildings burn: damage fires are drawn, picked round-robin from DamageFireTypes like Start_Damage_Fires, gated on ConditionRed for occupiable buildings, and placed through the game's lepton round trip.
+- Voxels render one pixel per voxel, stepped in 8.8 fixed point from the far corner like the game's voxel library. Vehicles were half a voxel too fat on every side.
+- Buildings burn. Damage fires are drawn, picked round-robin from DamageFireTypes like Start_Damage_Fires, gated on ConditionRed for occupiable buildings, and placed through the game's lepton round trip.
 - House colours use the engine's remap ramp (hue kept, saturation up a sine, value down a cosine to black) and its integer HSV conversion. Neutral and Special objects remap in LightGrey under RA2/YR rules.
 - Tech buildings handed to a starting player by a map trigger take that player's colour and run their pumps and flares from the first tick, while a neutral derrick stands still.
-- Animations are drawn at the frame the game shows at a given tick (--anim-frame), with the load-time phase the game applies.
-- Object types listed without a rules section (CALOND02, CALA02) are dropped instead of drawn as a placeholder slab; country-owned objects on multiplayer-only maps are dropped, as a skirmish never creates them.
-- Only a rules-declared InvisibleInGame hides a building; the old hardcoded lamp list also swallowed real light posts.
+- Animations are drawn at the frame the game shows at a given tick, with the load-time phase the game applies.
+- Object types listed without a rules section (CALOND02, CALA02) are dropped instead of drawn as a placeholder slab. Country-owned objects on multiplayer-only maps are dropped, as a skirmish never creates them.
+- Only a rules-declared InvisibleInGame hides a building. The old hardcoded lamp list also swallowed real light posts.
+
+## Tiberian Sun
+
+- Buildings are depth-shaped with the game's own BUILDNGZ.SHP.
+- Cliff and slope pieces cast their C_SHADOW shadow on the ground beside them. The pass runs after the overlays, like the game's, so veins and ore on shadowed ground stay bright.
+- The vein field is rebuilt at load like OverlayClass::Post_Read_Vein_Fixups: only the solid pieces survive, each spreading connecting pieces onto its neighbours, and veins take the cell's lighting. The veinhole monster draws a level nearer with its own pit floor.
+- Blossom trees stand 16 px above the cell centre, as TerrainClass::Draw_It draws them.
+- Green LAT keeps its transition pieces against shore and water-bridge tiles. That exemption belongs to Red Alert 2 only.
 
 ## Robustness
 
 - Facings outside 0-255, negative frame indices, one-past-the-end IsoMapPack5 entries, malformed base64 tails and a missing buildngz no longer crash a render.
+- Maps built for a larger terrain expansion than the game data provides render with those cells black instead of failing.
 - The preview plugin loads again (the two-argument GetObjectsAt it binds to is back).
 
-## Command line and tools
+## Command line
 
-- --anim-frame, --pin-random, --tile-lattice, --no-expand-mixes, --precapture, --thumb-markers, --debug-zbuffer, --debug-tiles, --debug-voxelmask; --meta-json now carries terrain, resource and object statistics.
-- tools/ab: the capture-render-compare pipeline against the running game, with a structural difference metric that ignores pure tint shifts.
-- CNCMaps.MixTool inspects and extracts .mix archives; CNCMaps.TileScan reports each map's theater and tile usage.
-- A TS golden render covers the alpha light posts; 70 golden tests in all.
+- `--no-expand-mixes` skips expandmd##.mix, for maps meant for the CnCNet client, which never loads them.
+- `--thumb-markers` gives thumbnails their own start position marker style.
+- `--anim-frame N` draws animations at the frame the game shows at game-loop frame N.
+- `--precapture` controls the colouring of tech buildings that map triggers hand to a start position: on by default, one `[Colors]` name per position, or `none`.
+- `--meta-json` now carries terrain, resource and object statistics.
+- The golden render suite covers Tiberian Sun as well.
 
 # CNCMaps 3.0.0
 
