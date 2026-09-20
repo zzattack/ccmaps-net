@@ -1,16 +1,16 @@
 # CNCMaps 3.1.0
 
-This release is about drawing what the game draws. Every change was checked against frames captured from the running game with its logic frozen at a known tick: the 450 multiplayer maps that ship with Yuri's Revenge, and 100 Tiberian Sun and Firestorm maps. Where the game's behaviour was not obvious it was read out of the engine itself.
+Most of this release makes the renderer draw what the game draws. Each change was checked against frames captured from the running game with its logic frozen at a known tick, over the 450 multiplayer maps that ship with Yuri's Revenge and 100 Tiberian Sun and Firestorm maps. Where the game's behaviour was not obvious, it was read out of the engine.
 
 ## Depth and occlusion
 
 - Per-pixel depth follows the engine's model: standing shapes recede 1 z per 3 rows from their own drawn bottom row, flat shapes lie on the ground ramp, and the test is strict (a tie keeps the earlier drawing) with the engine's rounding of the profile start to a multiple of 3.
-- Buildings are depth-shaped with BUILDNGZ, the pyramid the game blits with every building body, placed and biased the way the engine does. Wide sprites no longer stand in front of cliffs and trees that hide their edges in game.
+- Buildings are depth-shaped with BUILDNGZ, the pyramid the game blits with every building body, placed and biased the way the engine does. Wide sprites no longer stand in front of the cliffs and trees that hide their edges in game.
 - Red Alert 2 renders get that shape too. The game loads it as BUILDNGZ.SHP from conquer.mix, a name the loader did not try, so every RA2-engine render drew buildings on the flat profile. A mod's own shape of another size is accepted.
 - The building body draws at its art NormalZAdjust; SHP turrets draw as the game's turret animation, without the body's shape.
-- Units, infantry and aircraft are depth-tested but never write depth. Voxel bodies get the standing test they never had and anchor at the bottom of their projected volume, so a turret no longer draws behind the post it is mounted on.
+- Units, infantry and aircraft are depth-tested but never write depth. Voxel bodies now get the standing test and anchor at the bottom of their projected volume, so a turret no longer draws behind the post it is mounted on.
 - Overlays draw in the terrain pass with the engine's lifts. Bridge deck pieces take their depth from their own cell, so cars on the last piece of a high bridge are visible again.
-- Building animations draw after every object and write no depth, as AnimClass does. Each anchors at its own bottom row, so a mast-mounted flag disappears into the roof where it should.
+- Building animations draw after every object and write no depth, as AnimClass does. Each anchors at its own bottom row, so a mast-mounted flag disappears into the roof instead of crossing it.
 - Smudges are tested against depth but never write it, and a multi-cell crater is drawn once per footprint cell at that cell's level.
 - Tiles without a z-data section draw untested, like Blit_Iso_Tile.
 - Cells, overlays and terrain objects are walked bottom row up, left to right, which decides which of two equal-depth bridge pieces or neighbouring trees shows.
@@ -37,7 +37,7 @@ This release is about drawing what the game draws. Every change was checked agai
 - Ramp smoothing pieces are substituted like the game's LAT recalculation. Temperate slopes were never smoothed before.
 - Objects on a ramp stand on the slope surface, and the lift rounds like Z_Lepton_To_Pixel (7 or 8 px depending on the cell's height).
 - A cell that autolat downgrades to plain draws the plain tile instead of the map's transition art.
-- Snow pavement joins the "paved road bits" set seamlessly, matching the Ares MediansFix the game runs with.
+- Snow pavement joins the "paved road bits" set without a transition edge, matching the Ares MediansFix the game runs with.
 - Ore and gems draw the type's pooled per-cell image (pool[(x*y) % 12]) instead of the stored overlay id. High bridge spans vary their frame per cell.
 - Plain overlays (crates, drums, pallets) use the cell's ISO palette. Rocks on a slope stay at their cell's level.
 
@@ -45,7 +45,7 @@ This release is about drawing what the game draws. Every change was checked agai
 
 - Infantry stand at the sub-cell spot the map gives them and draw the art of their own section (a camel is no longer a monkey).
 - Voxels render one pixel per voxel, stepped in 8.8 fixed point from the far corner like the game's voxel library. Vehicles were half a voxel too fat on every side.
-- Buildings burn. Damage fires are drawn, picked round-robin from DamageFireTypes like Start_Damage_Fires, gated on ConditionRed for occupiable buildings, and placed through the game's lepton round trip.
+- Damage fires on burning buildings are drawn: one DamageFireTypes roll per building, walked round-robin like Start_Damage_Fires, gated on ConditionRed for occupiable buildings, and placed through the game's lepton round trip.
 - House colours use the engine's remap ramp (hue kept, saturation up a sine, value down a cosine to black) and its integer HSV conversion. Neutral and Special objects remap in LightGrey under RA2/YR rules.
 - Tech buildings handed to a starting player by a map trigger take that player's colour and run their pumps and flares from the first tick, while a neutral derrick stands still.
 - Animations are drawn at the frame the game shows at a given tick, with the load-time phase the game applies.
@@ -101,7 +101,7 @@ First release since 2.4.0 (June 2020). The project now targets .NET 10, no longe
 ## Engine autodetection
 
 - TS maps are no longer mistaken for RA2 when only TS game data is present.
-- For of RA2/YR maps, file extension settle ties (`.yrm`/`.yro` map prefers Yuri's Revenge, `.mpr` prefers RA2).
+- Between RA2 and YR, the file extension settles ties (`.yrm`/`.yro` prefers Yuri's Revenge, `.mpr` prefers RA2).
 - Detection is much faster: probes run lazily and their game data is cached across renders.
 
 ## Mod support
@@ -133,7 +133,7 @@ First release since 2.4.0 (June 2020). The project now targets .NET 10, no longe
 
 - Malformed or truncated map data can no longer crash the renderer (LZO bounds, missing sections, short art names, unopenable mix files, objects without a collection).
 - Missing game data fails with a clear error instead of a crash.
-- Added a regression test suite with some golden renders to hopefully catch regressions for future changes.
+- Added a regression test suite with golden renders to catch regressions in future changes.
 
 ## Downloads
 
