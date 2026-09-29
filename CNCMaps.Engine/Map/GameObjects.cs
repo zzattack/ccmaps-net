@@ -204,6 +204,10 @@ namespace CNCMaps.Engine.Map {
 		/// pooled art, because the shadow still comes from the stored id.</summary>
 		public Drawables.Drawable StoredDrawable { get; set; }
 
+		/// <summary>The wall connection frame recalculated from the current neighbours by
+		/// Map.RevisitWallBuildings; the frame the map stores is often stale in hand-edited maps.</summary>
+		public int WallBuildingFrame { get; set; }
+
 		public OverlayObject(byte overlayID, byte overlayValue) {
 			OverlayID = overlayID;
 			OverlayValue = overlayValue;

@@ -101,8 +101,9 @@ namespace CNCMaps.Engine.Rendering {
 			Palette p = props.PaletteOverride ?? obj.Palette;
 			byte[] bgr = p.GetBgrBytes();
 			int frameIndex = props.FrameDecider(obj);
-			if (obj.Drawable.IsActualWall)
-				frameIndex = ((StructureObject)obj).WallBuildingFrame;
+			if (obj.Drawable.IsActualWall || obj.Drawable.IsWall)
+				frameIndex = obj is StructureObject so ? so.WallBuildingFrame
+					: obj is OverlayObject ov ? ov.WallBuildingFrame : 0;
 			frameIndex = DecideFrameIndex(frameIndex, shp.NumImages);
 			if (frameIndex < 0 || frameIndex >= shp.Images.Count)
 				return;
@@ -297,8 +298,9 @@ namespace CNCMaps.Engine.Rendering {
 		public unsafe void DrawShadow(GameObject obj, ShpFile shp, Drawable dr, DrawProperties props, DrawingSurface ds) {
 			shp.Initialize();
 			int frameIndex = props.FrameDecider(obj);
-			if (obj.Drawable.IsActualWall)
-				frameIndex = ((StructureObject)obj).WallBuildingFrame;
+			if (obj.Drawable.IsActualWall || obj.Drawable.IsWall)
+				frameIndex = obj is StructureObject so ? so.WallBuildingFrame
+					: obj is OverlayObject ov ? ov.WallBuildingFrame : 0;
 			frameIndex = DecideFrameIndex(frameIndex, shp.NumImages);
 			if (frameIndex < 0)
 				return;
