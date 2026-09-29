@@ -371,6 +371,33 @@ namespace CNCMaps.Engine.Map {
 					obj.WallBuildingFrame = frame;
 				}
 			}
+
+			// Overlay walls (RA2 sandbags and walls): the stored overlay value is the connection
+			// frame, but hand-edited maps can carry stale pieces — connections to walls that were
+			// deleted and missing connections to walls added later — while the game resolves the
+			// piece from the current neighbours. Bits are the four edge neighbours:
+			// 1=north(0,-1), 2=east(+1,0), 4=south(0,+1), 8=west(-1,0); any wall type connects,
+			// as do gates and the wall tower.
+			foreach (OverlayObject obj in _overlayObjects) {
+				if (obj.Drawable == null || !obj.Drawable.IsWall || obj.Tile == null)
+					continue;
+				int frame = 0;
+				var dirs = new[] {
+					new[] { 0, -1, 1 }, new[] { 1, 0, 2 }, new[] { 0, 1, 4 }, new[] { -1, 0, 8 }
+				};
+				foreach (var d in dirs) {
+					var n = _tiles.GetTileR(obj.Tile.Rx + d[0], obj.Tile.Ry + d[1]);
+					if (n == null)
+						continue;
+					bool wall = n.AllObjects.Any(o =>
+						(o is OverlayObject ov && ov.Drawable != null && ov.Drawable.IsWall) ||
+						(o is StructureObject so && so.Drawable != null &&
+							(so.Drawable.IsWall || so.Drawable.IsGate || so.Name == WallTower)));
+					if (wall)
+						frame |= d[2];
+				}
+				obj.WallBuildingFrame = frame;
+			}
 		}
 
 		private void SetBaseTiles() {
